@@ -48,11 +48,16 @@ function bandClass(band) {
       </p>
     </header>
 
-    <div class="flex flex-wrap gap-1 border-b border-slate-100 px-4 pt-3">
+    <div role="tablist" aria-label="Simulation graphs" class="flex flex-wrap gap-1 border-b border-slate-100 px-4 pt-3">
       <button
         v-for="tab in TABS"
+        :id="`tab-${tab.id}`"
         :key="tab.id"
         type="button"
+        role="tab"
+        :aria-selected="activeTab === tab.id"
+        :aria-controls="`tabpanel-${tab.id}`"
+        :tabindex="activeTab === tab.id ? 0 : -1"
         class="rounded-t border-b-2 px-3 py-1.5 text-sm transition"
         :class="
           activeTab === tab.id
@@ -65,7 +70,12 @@ function bandClass(band) {
       </button>
     </div>
 
-    <div class="space-y-4 p-4">
+    <div
+      :id="`tabpanel-${activeTab}`"
+      role="tabpanel"
+      :aria-labelledby="`tab-${activeTab}`"
+      class="space-y-4 p-4"
+    >
       <p class="text-xs text-slate-500">{{ TABS.find((t) => t.id === activeTab)?.blurb }}</p>
 
       <PressureChart v-if="activeTab === 'pressure'" />

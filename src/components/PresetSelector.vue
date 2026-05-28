@@ -46,12 +46,9 @@ function apply(preset) {
 
 <template>
   <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-    <div class="flex items-baseline justify-between">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Presets</h2>
-      <span class="text-xs text-slate-500">
-        Click a preset to snap parameters to its values. The hardware spec is not changed.
-      </span>
-    </div>
+    <p class="text-xs text-slate-500">
+      Click a preset to snap every parameter to its values. Your hardware spec stays unchanged.
+    </p>
 
     <ul class="mt-3 flex flex-wrap gap-2">
       <li v-for="preset in PRESETS" :key="preset.id">

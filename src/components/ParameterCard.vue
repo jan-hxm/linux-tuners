@@ -19,6 +19,9 @@ const expanded = ref(false)
 
 const formatted = computed(() => formatValue(value.value, def.value.unit, tuner.hardware.ramGiB))
 
+// Stable id used to link the slider to the param-name button via aria-labelledby.
+const labelId = computed(() => `param-label-${props.paramKey}`)
+
 const isWorkloadTuned = computed(() => {
   // True when the workload's hardware-derived default differs from the kernel default.
   // Surfaces e.g. "Workload-specific" on swappiness when workload=k8s.
@@ -84,8 +87,10 @@ function openInDrawer() {
     <header class="flex items-start justify-between gap-3">
       <div class="min-w-0 flex-1">
         <button
+          :id="labelId"
           type="button"
           class="font-mono text-sm font-semibold text-slate-900 hover:underline"
+          :aria-label="`${def.sysctlName} — open reference`"
           @click="openInDrawer"
         >
           {{ def.sysctlName }}
@@ -133,6 +138,8 @@ function openInDrawer() {
         :min="range.min"
         :max="range.max"
         :step="def.step"
+        :aria-labelledby="labelId"
+        :aria-valuetext="formatted"
         class="w-full accent-slate-800"
         @input="setValue($event.target.value)"
       />

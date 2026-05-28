@@ -1,3 +1,38 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Smooth anchor scrolling for the step-chain links in the hero. */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Visible focus indicator on every interactive control. The default browser
+   * outline is suppressed by Tailwind's preflight, so we re-add a clear ring
+   * for keyboard users without affecting mouse users (focus-visible only). */
+  button:focus-visible,
+  [role='switch']:focus-visible,
+  [role='tab']:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid rgb(15 23 42);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

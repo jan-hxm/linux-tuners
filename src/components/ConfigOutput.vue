@@ -96,16 +96,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 <template>
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
-    <header class="flex flex-wrap items-baseline justify-between gap-3 border-b border-slate-200 px-4 py-3">
-      <div>
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Config output</h2>
-        <p class="text-xs text-slate-500">
-          Drop this into
-          <code class="rounded bg-slate-100 px-1 py-0.5 font-mono text-[11px]">/etc/sysctl.d/99-swap-tuning.conf</code>
-          and apply with
-          <code class="rounded bg-slate-100 px-1 py-0.5 font-mono text-[11px]">sudo sysctl --system</code>.
-        </p>
-      </div>
+    <header class="flex flex-wrap items-baseline justify-between gap-3 border-b border-slate-100 px-4 py-2">
+      <p class="text-xs text-slate-500">
+        Generated live from your current parameter values.
+      </p>
       <span class="text-[10px] text-slate-400">Copy shortcut: Ctrl+Shift+C</span>
     </header>
 

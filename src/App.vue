@@ -3,6 +3,7 @@ import HardwareForm from '@/components/HardwareForm.vue'
 import PresetSelector from '@/components/PresetSelector.vue'
 import ParameterPanel from '@/components/ParameterPanel.vue'
 import GraphPanel from '@/components/GraphPanel.vue'
+import ConfigOutput from '@/components/ConfigOutput.vue'
 import InfoDrawer from '@/components/InfoDrawer.vue'
 </script>
 
@@ -27,6 +28,7 @@ import InfoDrawer from '@/components/InfoDrawer.vue'
       </div>
     </div>
 
+    <ConfigOutput />
     <InfoDrawer />
   </main>
 </template>

@@ -9,6 +9,9 @@ export default defineConfig({
     },
   },
   test: {
+    environmentMatchGlobs: [
+      ['src/components/**', 'happy-dom'],
+    ],
     environment: 'node',
     include: ['src/**/*.test.js'],
   },

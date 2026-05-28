@@ -24,6 +24,8 @@ export const useTunerStore = defineStore('tuner', {
       activePreset: null,
       /** 'pressure' | 'watermarks' | 'dirty' */
       activeTab: 'pressure',
+      /** key of the parameter currently shown in the InfoDrawer, or null */
+      drawerParamKey: null,
       _urlWriteTimer: null,
     }
   },
@@ -98,6 +100,15 @@ export const useTunerStore = defineStore('tuner', {
     setActiveTab(tab) {
       this.activeTab = tab
       this.syncUrl()
+    },
+
+    /** @param {string|null} key */
+    openDrawer(key) {
+      this.drawerParamKey = key
+    },
+
+    closeDrawer() {
+      this.drawerParamKey = null
     },
 
     /**

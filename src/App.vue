@@ -2,11 +2,12 @@
 import HardwareForm from '@/components/HardwareForm.vue'
 import PresetSelector from '@/components/PresetSelector.vue'
 import ParameterPanel from '@/components/ParameterPanel.vue'
+import GraphPanel from '@/components/GraphPanel.vue'
 import InfoDrawer from '@/components/InfoDrawer.vue'
 </script>
 
 <template>
-  <main class="mx-auto max-w-5xl space-y-4 p-6">
+  <main class="mx-auto max-w-6xl space-y-4 p-6">
     <header>
       <h1 class="text-2xl font-semibold tracking-tight">sysctl swap tuner</h1>
       <p class="text-sm text-slate-600">
@@ -16,7 +17,16 @@ import InfoDrawer from '@/components/InfoDrawer.vue'
 
     <HardwareForm />
     <PresetSelector />
-    <ParameterPanel />
+
+    <div class="grid gap-4 lg:grid-cols-5">
+      <div class="lg:col-span-3">
+        <ParameterPanel />
+      </div>
+      <div class="lg:col-span-2">
+        <GraphPanel />
+      </div>
+    </div>
+
     <InfoDrawer />
   </main>
 </template>

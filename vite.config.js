@@ -11,6 +11,7 @@ export default defineConfig({
   test: {
     environmentMatchGlobs: [
       ['src/components/**', 'happy-dom'],
+      ['src/composables/**', 'happy-dom'],
     ],
     environment: 'node',
     include: ['src/**/*.test.js'],

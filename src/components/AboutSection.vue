@@ -103,7 +103,7 @@ function toggle() {
         <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Licence</h3>
         <p class="mt-1">
           Released under the MIT licence — see the
-          <a href="https://github.com/jan-hxm/swap-sysctl-generator/blob/main/LICENSE" class="text-sky-700 underline" target="_blank" rel="noopener">
+          <a href="https://github.com/jan-hxm/linux-tuners/blob/main/LICENSE" class="text-sky-700 underline" target="_blank" rel="noopener">
             LICENSE file ↗
           </a>
           in the repository.

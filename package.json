@@ -1,12 +1,13 @@
 {
-  "name": "sysctl-swap-tuner",
+  "name": "linux-tuners",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Interactive Linux vm.* sysctl tuner with hardware-aware defaults and live graph feedback.",
+  "description": "linux-tuners.dev — interactive, hardware-aware tuners for Linux system configuration (swap, systemd, …) with live impact graphs and copy-pasteable configs.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "postbuild": "node scripts/generate-static-routes.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

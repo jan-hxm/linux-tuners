@@ -232,6 +232,7 @@ watch(
           />
           <p class="mt-1 text-xs text-slate-500">
             Used to surface notes about kernel-version-specific behaviour (e.g. swappiness 0–200 in 5.8+).
+            <br>Run <code class="font-mono bg-slate-100 px-1 py-0.5">uname -r</code> to find out your kernel-version.
           </p>
         </div>
       </div>

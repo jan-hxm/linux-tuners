@@ -15,8 +15,8 @@ const VIEW_LOADERS = {
   '/': () => import('@/views/LandingView.vue'),
   '/swap': () => import('@/views/SwapTunerView.vue'),
   '/systemd': () => import('@/views/SystemdTunerView.vue'),
-  '/impressum': () => import('@/views/ImpressumView.vue'),
-  '/datenschutz': () => import('@/views/DatenschutzView.vue'),
+  '/imprint': () => import('@/views/ImpressumView.vue'),
+  '/privacy': () => import('@/views/DatenschutzView.vue'),
 }
 
 const routes = [

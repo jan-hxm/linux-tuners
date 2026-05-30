@@ -1,92 +1,80 @@
 <script setup>
-// NOTE: every value below marked with `[TODO …]` must be filled in with real
-// data before this page goes live. § 5 TMG requires a real legal name, a
-// physical postal address (P.O. box does not suffice), and a contact email.
-// A phone number is not strictly mandatory but is strongly recommended.
+// NOTE: § 5 TMG (German Telemedia Act) requires a real legal name, a physical
+// postal address (P.O. box does not suffice), and a contact email. A phone
+// number is not strictly mandatory but is strongly recommended.
 //
 // For commercially registered operators (Gewerbe, GmbH, etc.) additional
 // disclosures apply (HRB number, registry court, USt-IdNr., editorial
 // responsibility under § 18 Abs. 2 MStV). Add them here when the site goes
 // commercial.
+//
+// Language note: the rest of the site is English, so this page is too. § 5
+// TMG does not mandate German — the law requires the information be "easily
+// recognisable" in clear, plain language the audience understands. English is
+// defensible and consistent for an English-targeted site.
 </script>
 
 <template>
   <section class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
     <header>
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Impressum</h1>
-      <p class="mt-1 text-xs text-slate-500">Angaben gemäß § 5 TMG</p>
+      <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Imprint</h1>
+      <p class="mt-1 text-xs text-slate-500">Information per § 5 TMG (German Telemedia Act)</p>
     </header>
 
-    <aside class="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-      <p class="font-semibold">Platzhalter — vor dem Live-Gang ausfüllen.</p>
-      <p class="mt-1 text-xs leading-relaxed">
-        Diese Seite enthält Platzhalter (<code class="rounded bg-amber-100 px-1 font-mono">[TODO …]</code>),
-        die durch deine echten Daten ersetzt werden müssen, bevor die Seite öffentlich erreichbar wird. § 5 TMG
-        fordert vollen Namen und ladungsfähige Anschrift (ein Postfach reicht nicht). Bei kommerziellem Betrieb
-        kommen Eintragungen aus Handelsregister, USt-IdNr. und ggf. Aufsichtsbehörde hinzu.
-      </p>
-    </aside>
-
     <section class="space-y-3 text-sm text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Verantwortlich für den Inhalt</h2>
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Responsible for content</h2>
       <address class="not-italic space-y-0.5 font-mono">
-        <div>[TODO: voller bürgerlicher Name]</div>
-        <div>[TODO: Straße und Hausnummer]</div>
-        <div>[TODO: PLZ und Ort]</div>
-        <div>Deutschland</div>
+        <div>Jan Steffen Henke</div>
+        <div>Am Heidelberg 6</div>
+        <div>02742 Neusalza-Spremberg</div>
+        <div>Germany</div>
       </address>
     </section>
 
     <section class="space-y-3 text-sm text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Kontakt</h2>
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Contact</h2>
       <dl class="space-y-1">
         <div class="flex gap-2">
-          <dt class="w-24 shrink-0 text-slate-500">E-Mail:</dt>
-          <dd class="font-mono">[TODO: Kontakt-Mailadresse]</dd>
-        </div>
-        <div class="flex gap-2">
-          <dt class="w-24 shrink-0 text-slate-500">Telefon:</dt>
-          <dd class="font-mono">[TODO: optional, sonst Zeile löschen]</dd>
+          <dt class="w-24 shrink-0 text-slate-500">Email:</dt>
+          <dd class="font-mono">info@linux-tuners.dev</dd>
         </div>
       </dl>
     </section>
 
     <section class="space-y-2 text-xs leading-relaxed text-slate-600">
-      <h2 class="text-sm font-semibold text-slate-900">Haftung für Inhalte</h2>
+      <h2 class="text-sm font-semibold text-slate-900">Liability for content</h2>
       <p>
-        Die Inhalte dieser Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und
-        Aktualität der Inhalte kann jedoch keine Gewähr übernommen werden. Als Diensteanbieter sind wir gemäß
-        § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach
-        §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte
-        fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit
-        hinweisen.
+        The content of these pages has been created with the greatest possible care. No guarantee can be
+        given, however, for the accuracy, completeness, or currency of the content. As a service provider
+        we are responsible for our own content on these pages in accordance with § 7 (1) TMG and general
+        law. Under §§ 8 to 10 TMG, however, we as service providers are not obliged to monitor third-party
+        information transmitted or stored, or to investigate circumstances that indicate illegal activity.
       </p>
       <p>
-        Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen
-        bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis
-        einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden
-        wir diese Inhalte umgehend entfernen.
+        Obligations to remove or block the use of information under general law remain unaffected. Any
+        such liability arises only from the moment we become aware of a specific infringement. Upon
+        notification of any such infringements we will remove the content concerned without delay.
       </p>
 
-      <h2 class="mt-4 text-sm font-semibold text-slate-900">Haftung für Links</h2>
+      <h2 class="mt-4 text-sm font-semibold text-slate-900">Liability for links</h2>
       <p>
-        Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben.
-        Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der
-        verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die
-        verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft.
-        Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar.
+        Our offering contains links to external websites of third parties whose content we have no
+        influence over. We therefore cannot accept any liability for these external contents. The
+        respective provider or operator of the pages is always responsible for the content of the linked
+        pages. The linked pages were checked for possible legal violations at the time of linking; no
+        illegal content was apparent at the time of linking.
       </p>
 
-      <h2 class="mt-4 text-sm font-semibold text-slate-900">Urheberrecht</h2>
+      <h2 class="mt-4 text-sm font-semibold text-slate-900">Copyright</h2>
       <p>
-        Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen
-        Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der
-        Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
-        Downloads und Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet.
+        The content and works on these pages created by the site operators are subject to German copyright
+        law. Reproduction, editing, distribution, and any kind of exploitation outside the limits of
+        copyright law require the written consent of the respective author or creator. Downloads and copies
+        of this page are permitted only for private, non-commercial use.
       </p>
       <p>
-        Der Quellcode der Anwendung selbst steht unter der MIT-Lizenz (siehe
-        <a href="https://github.com/jan-hxm/linux-tuners/blob/main/LICENSE" target="_blank" rel="noopener" class="text-sky-700 underline">LICENSE im Repository</a>).
+        The application's source code itself is released under the MIT License (see the
+        <a href="https://github.com/jan-hxm/linux-tuners/blob/main/LICENSE" target="_blank" rel="noopener" class="text-sky-700 underline">LICENSE file in the repository</a>).
       </p>
     </section>
   </section>

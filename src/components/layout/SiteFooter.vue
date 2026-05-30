@@ -13,8 +13,8 @@ const year = new Date().getFullYear()
     <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-slate-500 sm:px-6">
       <p>© {{ year }} linux-tuners.dev — interactive Linux config tuners.</p>
       <nav aria-label="Legal" class="flex flex-wrap items-center gap-4">
-        <RouterLink to="/impressum" class="hover:text-slate-900 hover:underline">Impressum</RouterLink>
-        <RouterLink to="/datenschutz" class="hover:text-slate-900 hover:underline">Datenschutz</RouterLink>
+        <RouterLink to="/imprint" class="hover:text-slate-900 hover:underline">Imprint</RouterLink>
+        <RouterLink to="/privacy" class="hover:text-slate-900 hover:underline">Privacy</RouterLink>
         <!--
           Revoke link only shows when ads are configured *and* the user has
           already made a decision. Before deciding, the banner itself is the
@@ -25,7 +25,7 @@ const year = new Date().getFullYear()
           type="button"
           class="hover:text-slate-900 hover:underline"
           @click="revoke"
-        >Cookie-Einstellungen</button>
+        >Cookie settings</button>
         <!--
           Sponsor link points at GitHub Sponsors by default. Swap the URL or
           replace with Ko-fi / Buy Me a Coffee / Liberapay if you prefer a

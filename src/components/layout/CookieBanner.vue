@@ -29,9 +29,9 @@ const show = computed(() => adsEnabled() && !decided.value)
         <p id="consent-body" class="mt-1 text-xs leading-relaxed text-slate-300">
           We'd like to load Google AdSense to display a small number of ads. AdSense sets cookies and processes your IP address.
           You can change your mind any time via the
-          <em>Cookie-Einstellungen</em>
+          <em>Cookie settings</em>
           link in the footer. See the
-          <RouterLink to="/datenschutz" class="underline hover:no-underline">Datenschutzerklärung</RouterLink>
+          <RouterLink to="/privacy" class="underline hover:no-underline">privacy policy</RouterLink>
           for details.
         </p>
       </div>

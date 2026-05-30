@@ -1,9 +1,5 @@
 <script setup>
 import { RouterLink } from 'vue-router'
-import { useConsent } from '@/composables/useConsent.js'
-import { adsEnabled } from '@/config/ads.js'
-
-const { decided, revoke } = useConsent()
 
 const year = new Date().getFullYear()
 </script>
@@ -16,16 +12,11 @@ const year = new Date().getFullYear()
         <RouterLink to="/imprint" class="hover:text-slate-900 hover:underline">Imprint</RouterLink>
         <RouterLink to="/privacy" class="hover:text-slate-900 hover:underline">Privacy</RouterLink>
         <!--
-          Revoke link only shows when ads are configured *and* the user has
-          already made a decision. Before deciding, the banner itself is the
-          control; revoking before there's anything to revoke is meaningless.
+          Re-consent UI is provided by Google's CMP (a small "Privacy options"
+          link injected near the bottom-left once consent has been collected).
+          No custom button needed here.
         -->
-        <button
-          v-if="adsEnabled() && decided"
-          type="button"
-          class="hover:text-slate-900 hover:underline"
-          @click="revoke"
-        >Cookie settings</button>
+
         <!--
           Sponsor link points at GitHub Sponsors by default. Swap the URL or
           replace with Ko-fi / Buy Me a Coffee / Liberapay if you prefer a

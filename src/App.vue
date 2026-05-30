@@ -2,7 +2,6 @@
 import { RouterView } from 'vue-router'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import SiteFooter from '@/components/layout/SiteFooter.vue'
-import CookieBanner from '@/components/layout/CookieBanner.vue'
 </script>
 
 <template>
@@ -20,5 +19,9 @@ import CookieBanner from '@/components/layout/CookieBanner.vue'
     </main>
     <SiteFooter />
   </div>
-  <CookieBanner />
+  <!--
+    Consent banner is provided by Google's IAB TCF-certified CMP, injected by
+    the AdSense script (loaded on demand by <AdSlot>). The CMP also injects
+    its own "Privacy options" link for re-consent.
+  -->
 </template>

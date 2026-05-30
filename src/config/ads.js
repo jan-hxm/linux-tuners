@@ -27,9 +27,10 @@ export const AD_SLOTS = {
 }
 
 /**
- * True only when both a publisher ID exists. The CookieBanner is hidden when
- * `false` — there's nothing to consent to, so showing a banner would be both
- * misleading and a UX nuisance.
+ * True when a publisher ID is configured. Used by <AdSlot> together with a
+ * per-slot ID check to decide whether to render an actual <ins> tag or a dev
+ * placeholder. Consent itself is handled by Google's IAB TCF-certified CMP at
+ * the ad-serving layer (configured in the AdSense dashboard).
  */
 export function adsEnabled() {
   return Boolean(ADSENSE_CLIENT)

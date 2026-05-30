@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onMounted, watch } from 'vue'
 import { ADSENSE_CLIENT, AD_SLOTS, adsEnabled } from '@/config/ads.js'
-import { useConsent } from '@/composables/useConsent.js'
 
 const props = defineProps({
   /** Key into AD_SLOTS — picks which slot ID to render. */
@@ -12,13 +11,19 @@ const props = defineProps({
   format: { type: String, default: 'auto' },
 })
 
-const { accepted } = useConsent()
 const slotId = computed(() => AD_SLOTS[props.slot] ?? '')
 const adsConfigured = computed(() => adsEnabled() && Boolean(slotId.value))
-const shouldRender = computed(() => adsConfigured.value && accepted.value)
 
-// Load the AdSense library lazily — only after consent. Doing it from the
-// shell would load a tracker before the user agreed.
+// Show the labelled placeholder only during local dev, so layout planning is
+// obvious in the editor / browser. In production we render nothing until both
+// publisher and slot IDs are configured — a half-finished "ad placeholder"
+// box visible to real visitors looks unprofessional.
+const showDevPlaceholder = computed(() => !adsConfigured.value && import.meta.env.DEV)
+
+// Consent is no longer gated by our own banner — Google's IAB TCF-certified
+// CMP (configured in the AdSense dashboard under Privacy & messaging) collects
+// consent at the ad-serving layer. The AdSense script we load below will show
+// the CMP overlay to EEA/UK/CH visitors before any ad request fires.
 let scriptInjected = false
 function ensureScript() {
   if (scriptInjected) return
@@ -46,13 +51,13 @@ function pushSlot() {
 }
 
 onMounted(() => {
-  if (shouldRender.value) {
+  if (adsConfigured.value) {
     ensureScript()
     pushSlot()
   }
 })
 
-watch(shouldRender, (now) => {
+watch(adsConfigured, (now) => {
   if (now) {
     ensureScript()
     pushSlot()
@@ -63,14 +68,12 @@ watch(shouldRender, (now) => {
 <template>
   <!--
     Three render states:
-      a) ads aren't configured (dev / no publisher ID) → show a labelled
-         placeholder so layout planning is obvious during development
-      b) ads configured but no consent → render nothing (don't reserve space
-         until the user accepts; one-time layout shift on accept is fine)
-      c) configured + accepted → render the AdSense <ins> block
+      a) prod + not configured → render nothing (clean layout for visitors)
+      b) dev + not configured → labelled placeholder for layout planning
+      c) configured (any env) → real AdSense <ins>; Google's CMP gates serving
   -->
   <aside
-    v-if="!adsConfigured"
+    v-if="showDevPlaceholder"
     class="rounded border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-xs text-slate-500"
     aria-hidden="true"
   >
@@ -79,7 +82,7 @@ watch(shouldRender, (now) => {
   </aside>
 
   <aside
-    v-else-if="shouldRender"
+    v-else-if="adsConfigured"
     aria-label="Advertisement"
     class="overflow-hidden"
   >

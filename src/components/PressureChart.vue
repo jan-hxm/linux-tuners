@@ -36,7 +36,7 @@ const chartData = computed(() => {
     // Kswapd band: two boundary lines + filled area between via the same
     // dataset's fill. We achieve this with paired dummy datasets.
     {
-      label: 'kswapd band — high watermark',
+      label: 'kswapd band (high watermark)',
       data: [
         { x: p.highFillPct, y: 0 },
         { x: p.highFillPct, y: 100 },
@@ -49,7 +49,7 @@ const chartData = computed(() => {
       showLine: true,
     },
     {
-      label: 'kswapd band — low watermark',
+      label: 'kswapd band (low watermark)',
       data: [
         { x: p.lowFillPct, y: 0 },
         { x: p.lowFillPct, y: 100 },
@@ -120,7 +120,7 @@ const chartOptions = computed(() => ({
         <span class="inline-block h-0.5 w-4 border-t border-dashed border-red-600"></span> direct reclaim / OOM
       </span>
       <span v-if="pressure.noSwap" class="rounded bg-amber-50 px-2 py-0.5 text-amber-800">
-        Swap disabled — curve stays at 0.
+        Swap disabled, so the curve stays at 0.
       </span>
     </div>
   </div>

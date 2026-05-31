@@ -50,7 +50,7 @@ function toggle() {
         </p>
         <ul class="mt-1 list-disc space-y-1 pl-5">
           <li>
-            <strong>Swap pressure curve</strong>: a piecewise model — no swap above the high watermark, linear ramp through the kswapd band scaled by swappiness, steeper ramp from low to min watermark for direct reclaim.
+            <strong>Swap pressure curve</strong>: a piecewise model with no swap above the high watermark, a linear ramp through the kswapd band scaled by swappiness, and a steeper ramp from low to min watermark for direct reclaim.
           </li>
           <li>
             <strong>Watermark zones</strong>: derived directly from the kernel formula
@@ -67,7 +67,7 @@ function toggle() {
         <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Limitations</h3>
         <ul class="mt-1 list-disc space-y-1 pl-5">
           <li>The graphs are simplified pedagogical models, not kernel-accurate predictions. NUMA effects, per-zone watermarks, transparent huge pages, and MGLRU are not modelled.</li>
-          <li>Per-cgroup swappiness (cgroup v1 only) is not configurable here — the tool emits system-wide values that <code class="font-mono">sudo sysctl --system</code> applies to all cgroups.</li>
+          <li>Per-cgroup swappiness (cgroup v1 only) is not configurable here; the tool emits system-wide values that <code class="font-mono">sudo sysctl --system</code> applies to all cgroups.</li>
           <li>Real-time kernel metrics (/proc/meminfo, PSI) are not imported; the tuner is purely a configuration-time aid.</li>
           <li>The starting defaults are intended for typical Linux server workloads. Always test in a non-production environment before applying.</li>
         </ul>
@@ -77,13 +77,13 @@ function toggle() {
         <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sources</h3>
         <ul class="mt-1 list-disc space-y-1 pl-5">
           <li>
-            Kernel administrator docs —
+            Kernel administrator docs:
             <a href="https://docs.kernel.org/admin-guide/sysctl/vm.html" class="text-sky-700 underline" target="_blank" rel="noopener">
               docs.kernel.org/admin-guide/sysctl/vm.html ↗
             </a>
           </li>
           <li>
-            "Tuning Linux Swap for Kubernetes: A Deep Dive" (Kubernetes blog, Aug 2025) —
+            "Tuning Linux Swap for Kubernetes: A Deep Dive" (Kubernetes blog, Aug 2025):
             <a href="https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/" class="text-sky-700 underline" target="_blank" rel="noopener">
               kubernetes.io/blog ↗
             </a>
@@ -102,7 +102,7 @@ function toggle() {
       <section>
         <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Licence</h3>
         <p class="mt-1">
-          Released under the MIT licence — see the
+          Released under the MIT licence. See the
           <a href="https://github.com/jan-hxm/linux-tuners/blob/main/LICENSE" class="text-sky-700 underline" target="_blank" rel="noopener">
             LICENSE file ↗
           </a>

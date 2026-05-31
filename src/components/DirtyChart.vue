@@ -106,7 +106,7 @@ const chartOptions = computed(() => {
         <span class="inline-block h-0.5 w-4 border-t border-dashed border-red-600"></span> stall ceiling
       </span>
       <span v-if="dirty.stallReached" class="rounded bg-red-50 px-2 py-0.5 text-red-800">
-        Stalls reached in this window — writes synchronously waited for the flusher.
+        Stalls reached in this window: writes synchronously waited for the flusher.
       </span>
       <span v-if="!dirty.flushEvents.length" class="rounded bg-amber-50 px-2 py-0.5 text-amber-800">
         Periodic writeback disabled (dirty_writeback_centisecs = 0).

@@ -151,11 +151,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
       <p v-if="copyStatus === 'ok'" class="text-xs text-emerald-700">Copied to clipboard.</p>
       <p v-else-if="copyStatus === 'fail'" class="text-xs text-red-700">
-        Clipboard write failed — select the textarea and copy manually.
+        Clipboard write failed. Select the textarea and copy manually.
       </p>
       <p v-if="shareStatus === 'ok'" class="text-xs text-emerald-700">Share URL copied.</p>
       <p v-else-if="shareStatus === 'fail'" class="text-xs text-red-700">
-        Clipboard write failed — the URL bar already holds the current state.
+        Clipboard write failed, but the URL bar already holds the current state.
       </p>
     </div>
   </section>

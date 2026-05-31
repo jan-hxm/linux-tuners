@@ -3,10 +3,12 @@ import {
   deriveDefaults,
   clampSwappinessForDevice,
   swappinessMaxForDevice,
+  swappinessKernelMax,
   watermarkWindowMiB,
   watermarkLevelsMiB,
   rangeFor,
 } from './calculations.js'
+import { PARAMETER_DEFS_BY_KEY } from '../data/parameterDefs.js'
 
 describe('deriveDefaults', () => {
   it('returns kernel defaults for a general-purpose 16 GiB / NVMe / 8 GiB swap node', () => {
@@ -63,6 +65,21 @@ describe('deriveDefaults', () => {
       kernelVersion: null,
     })
     expect(p.swappiness).toBe(60)
+  })
+
+  it('caps the derived min_free_kbytes at the kernel max on very large RAM', () => {
+    // 0.4% of multi-TiB RAM would exceed the slider's own range (kernelMax) and
+    // blow up the card layout — the derived default must stay within range.
+    const kernelMax = PARAMETER_DEFS_BY_KEY.min_free_kbytes.kernelMax
+    const p = deriveDefaults({
+      ramGiB: 2304,
+      swapGiB: 0,
+      swapDevice: 'nvme-ssd',
+      workload: 'general',
+      cgroupVersion: 'v2',
+      kernelVersion: null,
+    })
+    expect(p.min_free_kbytes).toBe(kernelMax)
   })
 
   it('tightens dirty ratios for database workloads', () => {
@@ -129,17 +146,37 @@ describe('watermark math', () => {
   })
 })
 
+describe('swappinessKernelMax', () => {
+  it.each([
+    [null, 200],
+    [undefined, 200],
+    ['', 200],
+    ['6.6', 200],
+    ['5.8', 200],
+    ['5.10', 200], // minor parsed as 10, not 1 — must be ≥ 8
+    ['5.7', 100],
+    ['5.4', 100],
+    ['4.19', 100],
+    ['garbage', 200], // unparseable → assume modern
+  ])('%s → %i', (version, expected) => {
+    expect(swappinessKernelMax(version)).toBe(expected)
+  })
+})
+
 describe('rangeFor', () => {
-  it('returns device-specific swappiness range', () => {
-    const hw = {
-      ramGiB: 16,
-      swapGiB: 8,
-      swapDevice: 'hdd',
-      workload: 'general',
-      cgroupVersion: 'v2',
-      kernelVersion: null,
+  it('swappiness slider reaches the kernel-legal max, independent of device', () => {
+    // The slider max is a kernel-version limit, not a device cap. An HDD on a
+    // modern kernel still allows the full 0–200 range; device-appropriateness is
+    // a soft validation warning, not a hard slider stop.
+    const hdd = {
+      ramGiB: 16, swapGiB: 8, swapDevice: 'hdd',
+      workload: 'general', cgroupVersion: 'v2', kernelVersion: null,
     }
-    expect(rangeFor('swappiness', hw)).toEqual({ min: 0, max: 60 })
+    expect(rangeFor('swappiness', hdd)).toEqual({ min: 0, max: 200 })
+
+    // Pre-5.8 kernel caps the slider at 100 regardless of device.
+    expect(rangeFor('swappiness', { ...hdd, kernelVersion: '5.4' }))
+      .toEqual({ min: 0, max: 100 })
   })
 
   it('caps min_free_kbytes upper bound at 10% of RAM', () => {

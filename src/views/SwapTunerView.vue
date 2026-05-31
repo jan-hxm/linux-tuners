@@ -69,7 +69,7 @@ const STEPS = [
       <StepHeader
         :num="2"
         title="Pick a starting point"
-        subtitle="Optional — jump to a tuned baseline for your workload, then fine-tune."
+        subtitle="Optional: jump to a tuned baseline for your workload, then fine-tune."
       />
       <PresetSelector />
     </section>
@@ -78,7 +78,7 @@ const STEPS = [
       <StepHeader
         :num="3"
         title="Tune and preview"
-        subtitle="Drag any slider on the left — the simulation on the right updates live."
+        subtitle="Drag any slider on the left and the simulation on the right updates live."
       />
       <div class="grid gap-4 lg:grid-cols-5 lg:items-start">
         <div class="lg:col-span-3">

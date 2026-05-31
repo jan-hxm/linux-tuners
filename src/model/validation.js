@@ -122,7 +122,7 @@ export function validate(hw, p) {
       blocking: false,
       params: ['vfs_cache_pressure'],
       message:
-        'vfs_cache_pressure=0 is documented as dangerous — the kernel will refuse to reclaim dentry/inode caches even under memory pressure.',
+        'vfs_cache_pressure=0 is documented as dangerous: the kernel will refuse to reclaim dentry/inode caches even under memory pressure.',
     })
   }
 
@@ -143,7 +143,7 @@ export function validate(hw, p) {
       blocking: false,
       params: [],
       message:
-        'Swap over a network device (e.g. NFS) is fragile — a network blip can stall every userspace process.',
+        'Swap over a network device (e.g. NFS) is fragile: a network blip can stall every userspace process.',
     })
   }
 

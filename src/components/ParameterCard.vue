@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useTunerStore } from '@/stores/tuner.js'
-import { PARAMETER_DEFS_BY_KEY } from '@/data/parameterDefs.js'
+import { PARAMETER_DEFS_BY_KEY, K8S_BLOG } from '@/data/parameterDefs.js'
 import { rangeFor, deriveDefaults } from '@/model/calculations.js'
 import { formatValue } from '@/utils/formatting.js'
 
@@ -30,7 +30,7 @@ const isWorkloadTuned = computed(() => {
 })
 
 const SEGMENTED_LABELS = {
-  overcommit_memory: ['0 — heuristic', '1 — always', '2 — strict'],
+  overcommit_memory: ['0: heuristic', '1: always', '2: strict'],
 }
 
 // Slider DOM ref + uncontrolled-with-external-sync pattern.
@@ -67,6 +67,57 @@ function setValue(v) {
   tuner.setParam(props.paramKey, n)
 }
 
+// Filled portion of the slider track, 0–100%. Drives the gradient/progress fill
+// in the scoped styles below. Reactive on the store value, so it follows drags,
+// preset applies, and inline edits alike. Updating this (a style custom property)
+// mid-drag is safe — unlike rewriting the input's `value`, it doesn't cancel the
+// drag (see the selfWrite note above).
+const pct = computed(() => {
+  const { min, max } = range.value
+  if (max <= min) return 0
+  const clamped = Math.max(min, Math.min(max, value.value))
+  return ((clamped - min) / (max - min)) * 100
+})
+
+// Click-to-edit the current value (slider params only).
+//
+// Wide-range sliders (min_free_kbytes, dirty_expire_centisecs,
+// watermark_scale_factor) map many value units per pixel, so landing on an
+// exact number by mouse is impractical. Clicking the value text swaps it for an
+// inline number input pre-filled with the *raw* value (not the formatted
+// "262144 kB (256 MiB)" string). Commit on Enter/blur via setParam (which
+// clamps); Escape reverts.
+const editing = ref(false)
+const editValue = ref('')
+const numberEl = ref(null)
+
+function startEdit() {
+  if (def.value.control !== 'slider') return
+  editValue.value = String(value.value)
+  editing.value = true
+  nextTick(() => {
+    numberEl.value?.focus()
+    numberEl.value?.select()
+  })
+}
+
+function commitEdit() {
+  if (!editing.value) return
+  editing.value = false
+  if (String(editValue.value).trim() === '') return
+  const n = Number(editValue.value)
+  if (!Number.isFinite(n)) return
+  // Commit directly via setParam (NOT setValue): the edit came from the number
+  // field, not a slider drag, so we deliberately leave selfWrite false. That
+  // lets the `value` watcher push the new (clamped) value to the slider DOM so
+  // the thumb moves to match what was typed.
+  tuner.setParam(props.paramKey, n)
+}
+
+function cancelEdit() {
+  editing.value = false
+}
+
 function levelClasses(level) {
   return {
     error: 'border-red-300 bg-red-50 text-red-900',
@@ -90,7 +141,7 @@ function openInDrawer() {
           :id="labelId"
           type="button"
           class="font-mono text-sm font-semibold text-slate-900 hover:underline"
-          :aria-label="`${def.sysctlName} — open reference`"
+          :aria-label="`${def.sysctlName}, open reference`"
           @click="openInDrawer"
         >
           {{ def.sysctlName }}
@@ -107,7 +158,7 @@ function openInDrawer() {
           <li
             v-if="def.k8sNote"
             class="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-800"
-            title="Discussed in the K8s swap blog"
+            title="Has Kubernetes-specific guidance"
           >K8s</li>
           <li
             v-if="isWorkloadTuned"
@@ -125,7 +176,28 @@ function openInDrawer() {
       </div>
 
       <div class="shrink-0 text-right">
-        <div class="font-mono text-sm font-semibold text-slate-900">{{ formatted }}</div>
+        <input
+          v-if="editing"
+          ref="numberEl"
+          v-model="editValue"
+          type="number"
+          :min="range.min"
+          :max="range.max"
+          :step="def.step"
+          :aria-label="`${def.sysctlName} value`"
+          class="w-28 rounded border border-slate-400 px-1.5 py-0.5 text-right font-mono text-sm font-semibold text-slate-900 focus:border-slate-600 focus:outline-none"
+          @keydown.enter.prevent="commitEdit"
+          @keydown.esc.prevent="cancelEdit"
+          @blur="commitEdit"
+        />
+        <button
+          v-else-if="def.control === 'slider'"
+          type="button"
+          class="rounded px-1 font-mono text-sm font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 hover:bg-slate-100 hover:decoration-slate-500"
+          title="Click to type an exact value"
+          @click="startEdit"
+        >{{ formatted }}</button>
+        <div v-else class="font-mono text-sm font-semibold text-slate-900">{{ formatted }}</div>
         <div class="text-[10px] text-slate-400">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
       </div>
     </header>
@@ -140,10 +212,11 @@ function openInDrawer() {
         :step="def.step"
         :aria-labelledby="labelId"
         :aria-valuetext="formatted"
-        class="w-full accent-slate-800"
+        class="range-slider"
+        :style="{ '--range-pct': pct + '%' }"
         @input="setValue($event.target.value)"
       />
-      <ul v-if="def.zones" class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500">
+      <ul v-if="def.zones" class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-slate-600">
         <li v-for="z in def.zones" :key="z">{{ z }}</li>
       </ul>
     </div>
@@ -178,7 +251,7 @@ function openInDrawer() {
         />
       </button>
       <span class="text-xs text-slate-600">
-        {{ value === 1 ? 'ENABLED — kernel will panic on OOM' : 'disabled — kernel will invoke OOM killer' }}
+        {{ value === 1 ? 'ENABLED: kernel will panic on OOM' : 'disabled: kernel will invoke OOM killer' }}
       </span>
     </div>
 
@@ -190,8 +263,8 @@ function openInDrawer() {
         class="rounded border px-2 py-1 text-xs"
         :class="levelClasses(issue.level)"
       >
-        <span class="font-semibold uppercase tracking-wide">{{ issue.level }}</span>
-        — {{ issue.message }}
+        <span class="font-semibold uppercase tracking-wide">{{ issue.level }}</span>:
+        {{ issue.message }}
       </li>
     </ul>
 
@@ -206,9 +279,13 @@ function openInDrawer() {
         {{ expanded ? '▾' : '▸' }} Learn more
       </button>
       <div v-if="expanded" class="mt-2 space-y-2 text-xs leading-relaxed text-slate-700">
-        <p>{{ def.longDesc }}</p>
+        <p v-for="(para, i) in def.longDesc" :key="i">{{ para }}</p>
+        <p v-if="def.tuningTip" class="rounded bg-slate-50 p-2 font-medium text-slate-800">
+          <span class="font-semibold">Rule of thumb:</span> {{ def.tuningTip }}
+        </p>
         <p v-if="def.k8sNote" class="rounded bg-sky-50 p-2 text-sky-900">
-          <span class="font-semibold">K8s blog:</span> {{ def.k8sNote }}
+          <span class="font-semibold">Kubernetes:</span> {{ def.k8sNote }}
+          <a :href="K8S_BLOG" target="_blank" rel="noopener" class="whitespace-nowrap underline">Source ↗</a>
         </p>
         <p>
           <a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="text-slate-600 underline">
@@ -223,3 +300,91 @@ function openInDrawer() {
     </div>
   </article>
 </template>
+
+<style scoped>
+/* Custom range slider in the page's slate palette. Native `accent-color` only
+ * tints the control; here we shape the track and thumb and draw a filled
+ * progress portion up to --range-pct (set inline from the reactive `pct`).
+ * Colours are literal slate hexes so they don't depend on theme() resolution:
+ *   slate-200 #e2e8f0 · slate-300 #cbd5e1 · slate-700 #334155 · slate-900 #0f172a
+ */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1.25rem; /* generous hit area; visual track is thinner */
+  background: transparent;
+  cursor: pointer;
+}
+.range-slider:focus {
+  outline: none;
+}
+
+/* Track — WebKit/Blink. Gradient gives the filled-then-empty look. */
+.range-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    #0f172a 0%,
+    #0f172a var(--range-pct, 0%),
+    #e2e8f0 var(--range-pct, 0%),
+    #e2e8f0 100%
+  );
+}
+/* Track + progress — Firefox draws the fill for us via ::-moz-range-progress. */
+.range-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+}
+.range-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 9999px;
+  background: #0f172a;
+}
+
+/* Thumb */
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  margin-top: -5px; /* centre the 16px thumb on the 6px track */
+  border-radius: 9999px;
+  background: #0f172a;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px #cbd5e1;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.range-slider::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 9999px;
+  background: #0f172a;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px #cbd5e1;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.range-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+.range-slider:hover::-moz-range-thumb {
+  transform: scale(1.15);
+}
+.range-slider:active::-webkit-slider-thumb,
+.range-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 4px rgba(15, 23, 42, 0.2);
+}
+.range-slider:active::-moz-range-thumb,
+.range-slider:focus-visible::-moz-range-thumb {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 4px rgba(15, 23, 42, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .range-slider::-webkit-slider-thumb,
+  .range-slider::-moz-range-thumb {
+    transition: none;
+  }
+}
+</style>

@@ -31,7 +31,7 @@ export const ROUTES_META = [
   {
     path: '/',
     name: 'landing',
-    title: 'linux-tuners.dev — hardware-aware Linux config tuners',
+    title: 'linux-tuners.dev | hardware-aware Linux config tuners',
     description:
       'Interactive Linux configuration tuners with hardware-aware defaults, live impact graphs, and copy-pasteable configs. Tune swap, memory reclaim, dirty-page writeback, and more.',
     ogTitle: 'Hardware-aware Linux config tuners',
@@ -42,7 +42,7 @@ export const ROUTES_META = [
   {
     path: '/swap',
     name: 'swap',
-    title: 'Swap & memory tuner — linux-tuners.dev',
+    title: 'Swap & memory tuner | linux-tuners.dev',
     description:
       'Hardware-aware tuner for Linux vm.* sysctl parameters: swappiness, min_free_kbytes, watermark scaling, dirty-page writeback, OOM behaviour. Live simulation of swap pressure, watermark zones, and dirty timeline.',
     ogTitle: 'Swap & memory tuner',
@@ -53,7 +53,7 @@ export const ROUTES_META = [
   {
     path: '/systemd',
     name: 'systemd',
-    title: 'systemd & resource limits tuner — linux-tuners.dev',
+    title: 'systemd & resource limits tuner | linux-tuners.dev',
     description:
       'Coming soon: hardware-aware tuner for systemd resource accounting defaults, slice configuration, and /etc/security/limits.conf for clustered and containerised Linux workloads.',
     ogTitle: 'systemd & resource limits tuner (coming soon)',
@@ -64,7 +64,7 @@ export const ROUTES_META = [
   {
     path: '/imprint',
     name: 'imprint',
-    title: 'Imprint — linux-tuners.dev',
+    title: 'Imprint | linux-tuners.dev',
     description: 'Imprint per § 5 TMG (German Telemedia Act).',
     ogTitle: 'Imprint',
     noindex: true,
@@ -72,7 +72,7 @@ export const ROUTES_META = [
   {
     path: '/privacy',
     name: 'privacy',
-    title: 'Privacy policy — linux-tuners.dev',
+    title: 'Privacy policy | linux-tuners.dev',
     description: 'Information on the processing of personal data per Art. 13 GDPR.',
     ogTitle: 'Privacy policy',
     noindex: true,

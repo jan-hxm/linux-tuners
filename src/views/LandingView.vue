@@ -16,7 +16,7 @@ const TUNERS = [
     available: false,
     to: '/systemd',
     title: 'systemd & resource limits',
-    blurb: 'Coming soon — tune systemd resource accounting defaults, slice configuration, and /etc/security/limits.conf for clustered and containerised Linux workloads.',
+    blurb: 'Coming soon: tune systemd resource accounting defaults, slice configuration, and /etc/security/limits.conf for clustered and containerised Linux workloads.',
     keys: ['DefaultMemoryAccounting', 'DefaultCPUAccounting', 'limits.nofile', '…'],
   },
 ]
@@ -32,7 +32,7 @@ const TUNERS = [
           Interactive Linux config tuners, grounded in the docs.
         </h1>
         <p class="mt-4 text-sm leading-relaxed text-slate-200 sm:text-base">
-          Drag sliders. Watch the impact. Copy the config. Each tuner explains every option in plain language, derives sensible defaults from your hardware, and shows the kernel-level effect live — so you understand what you're changing, not just what to type.
+          Drag sliders. Watch the impact. Copy the config. Each tuner explains every option in plain language, derives sensible defaults from your hardware, and shows the kernel-level effect live, so you understand what you're changing, not just what to type.
         </p>
         <p class="mt-4 text-xs text-slate-400">
           URL-encodable state for sharing.
@@ -89,7 +89,7 @@ const TUNERS = [
       <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Why this exists</h2>
       <div class="rounded-lg border border-slate-200 bg-white p-5 text-sm leading-relaxed text-slate-700 shadow-sm sm:p-6">
         <p>
-          Linux system-tuning advice lives in scattered blog posts, kernel.org pages, and tribal ops knowledge. The values you should pick depend strongly on your hardware (RAM, swap device, disk type, NIC) and your workload (Kubernetes node, database server, desktop) — yet most tuning guides are static, generic, and silent about the tradeoffs.
+          Linux system-tuning advice lives in scattered blog posts, kernel.org pages, and tribal ops knowledge. The values you should pick depend strongly on your hardware (RAM, swap device, disk type, NIC) and your workload (Kubernetes node, database server, desktop), yet most tuning guides are static, generic, and silent about the tradeoffs.
         </p>
         <p class="mt-3">
           Each tuner here asks about your system first, derives sensible starting values from the documentation, lets you customise via sliders, and shows the kernel-level impact through live graphs grounded in the same formulas the kernel uses internally. The output is a ready-to-paste config file with citations to the source documentation.

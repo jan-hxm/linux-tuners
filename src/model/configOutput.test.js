@@ -19,7 +19,7 @@ function baseOpts(overrides = {}) {
 describe('generateConfig — header', () => {
   it('includes generated date, hardware summary, apply/persist hints, and source citations', () => {
     const out = generateConfig(baseOpts())
-    expect(out).toMatch(/^# sysctl swap tuner — generated 2026-05-28/m)
+    expect(out).toMatch(/^# sysctl swap tuner \(generated 2026-05-28/m)
     expect(out).toMatch(/^# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server/m)
     expect(out).toMatch(/^# Apply: sudo sysctl --system/m)
     expect(out).toMatch(/^# Persist: \/etc\/sysctl\.d\/99-swap-tuning\.conf/m)
@@ -76,8 +76,8 @@ describe('generateConfig — body', () => {
 
   it('precedes each assignment with an explanatory comment line', () => {
     const out = generateConfig(baseOpts())
-    // Each vm.* assignment must be immediately preceded by a "# key: value — …" line.
-    const re = /^# (swappiness|min_free_kbytes|dirty_ratio): \d+ — .+\n^vm\./gm
+    // Each vm.* assignment must be immediately preceded by a "# key: value - …" line.
+    const re = /^# (swappiness|min_free_kbytes|dirty_ratio): \d+ - .+\n^vm\./gm
     expect(out).toMatch(re)
   })
 
@@ -85,13 +85,13 @@ describe('generateConfig — body', () => {
     const out = generateConfig(baseOpts({
       params: { ...deriveDefaults(DEFAULT_HARDWARE), vfs_cache_pressure: 0 },
     }))
-    expect(out).toMatch(/# vfs_cache_pressure: 0 — DANGEROUS/m)
+    expect(out).toMatch(/# vfs_cache_pressure: 0 - DANGEROUS/m)
   })
 
   it('flags panic_on_oom=1 as PANIC in the inline comment', () => {
     const out = generateConfig(baseOpts({
       params: { ...deriveDefaults(DEFAULT_HARDWARE), panic_on_oom: 1 },
     }))
-    expect(out).toMatch(/# panic_on_oom: 1 — PANIC/m)
+    expect(out).toMatch(/# panic_on_oom: 1 - PANIC/m)
   })
 })

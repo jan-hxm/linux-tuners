@@ -16,6 +16,19 @@ const collapsed = ref(false)
 const RAM_PICKS = [2, 4, 8, 16, 32, 64, 128, 192, 256]
 const SWAP_PICKS = [0, 2, 4, 8, 16, 32, 64, 128, 192, 256, 384, 512]
 
+// Sanity ceilings: 2304 TiB, covering even very high-end server racks while
+// keeping derived values and the card layout bounded — without a cap, pasting
+// something like 1e65 produces astronomically long parameter values.
+const RAM_MAX_GIB = 2304 * 1024
+const SWAP_MAX_GIB = 2304 * 1024
+
+/** Floor to an int and clamp into [min, max]; non-numeric falls back to min. */
+function clampInt(value, min, max) {
+  const n = Math.floor(Number(value))
+  if (!Number.isFinite(n)) return min
+  return Math.max(min, Math.min(max, n))
+}
+
 const DEVICE_OPTIONS = [
   { value: 'hdd', label: 'HDD (rotational)', note: 'caps swappiness at 60' },
   { value: 'sata-ssd', label: 'SATA SSD', note: null },
@@ -60,9 +73,16 @@ const cgroupNote = computed(() =>
 const swapDisabled = computed(() => Number(swapGiB.value) === 0)
 
 function apply() {
+  // Normalise + clamp first, and write the result back into the draft so the
+  // field reflects what was actually applied (otherwise an out-of-range entry
+  // would keep showing "Unsaved changes" against the clamped store value).
+  const ram = clampInt(ramGiB.value, 1, RAM_MAX_GIB)
+  const swap = clampInt(swapGiB.value, 0, SWAP_MAX_GIB)
+  ramGiB.value = ram
+  swapGiB.value = swap
   tuner.setHardware({
-    ramGiB: Math.max(1, Math.floor(Number(ramGiB.value) || 1)),
-    swapGiB: Math.max(0, Math.floor(Number(swapGiB.value) || 0)),
+    ramGiB: ram,
+    swapGiB: swap,
     swapDevice: swapDevice.value,
     workload: workload.value,
     cgroupVersion: cgroupVersion.value,
@@ -123,6 +143,7 @@ watch(
             v-model.number="ramGiB"
             type="number"
             min="1"
+            :max="RAM_MAX_GIB"
             step="1"
             class="w-24 rounded border border-slate-300 px-2 py-1 text-sm font-mono"
           />
@@ -147,6 +168,7 @@ watch(
             v-model.number="swapGiB"
             type="number"
             min="0"
+            :max="SWAP_MAX_GIB"
             step="1"
             class="w-24 rounded border border-slate-300 px-2 py-1 text-sm font-mono"
           />
@@ -231,7 +253,7 @@ watch(
             class="mt-2 w-full rounded border border-slate-300 px-2 py-1.5 text-sm font-mono"
           />
           <p class="mt-1 text-xs text-slate-500">
-            Used to surface notes about kernel-version-specific behaviour (e.g. swappiness 0–200 in 5.8+).
+            Sets the swappiness slider range: 0–200 on kernel 5.8+, 0–100 before. Left blank, we assume a modern (≥5.8) kernel.
             <br>Run <code class="font-mono bg-slate-100 px-1 py-0.5">uname -r</code> to find out your kernel-version.
           </p>
         </div>

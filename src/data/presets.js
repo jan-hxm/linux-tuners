@@ -18,7 +18,7 @@ export const PRESETS = [
   {
     id: 'kernel-defaults',
     label: 'Kernel defaults',
-    description: 'Every parameter at its stock kernel default — useful as a known baseline.',
+    description: 'Every parameter at its stock kernel default, useful as a known baseline.',
     source: 'docs.kernel.org/admin-guide/sysctl/vm.html',
     values: Object.fromEntries(
       Object.values(PARAMETER_DEFS_BY_KEY).map((d) => [d.key, d.kernelDefault]),
@@ -28,7 +28,7 @@ export const PRESETS = [
     id: 'k8s-node',
     label: 'Kubernetes node',
     description: 'Latency-friendly profile for K8s workers with disk-backed swap.',
-    source: 'kubernetes.io/blog Aug 2025 — tuning Linux swap for Kubernetes',
+    source: 'kubernetes.io/blog Aug 2025, tuning Linux swap for Kubernetes',
     values: {
       swappiness: 10,
       min_free_kbytes: 262144,
@@ -68,7 +68,7 @@ export const PRESETS = [
   {
     id: 'desktop',
     label: 'Desktop workstation',
-    description: 'Standard interactive desktop — moderate swap, default writeback.',
+    description: 'Standard interactive desktop with moderate swap and default writeback.',
     source: 'General desktop guidance',
     values: {
       swappiness: 100,

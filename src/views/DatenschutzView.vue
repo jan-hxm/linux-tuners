@@ -109,7 +109,7 @@ import { RouterLink } from 'vue-router'
       <p>
         <strong>Consent collection (CMP):</strong> Visitors from the EEA, the United Kingdom, or
         Switzerland are presented with Google's IAB TCF v2-certified Consent Management Platform on their
-        first visit. The CMP banner offers three options — <em>Consent</em>, <em>Don't consent</em>, and
+        first visit. The CMP banner offers three options: <em>Consent</em>, <em>Don't consent</em>, and
         <em>Manage options</em>. Your decision is recorded in a cookie / local-storage entry containing an
         IAB TCF v2 consent string, which is signalled to Google's advertising partners according to your
         choice.

@@ -7,7 +7,7 @@ const year = new Date().getFullYear()
 <template>
   <footer class="mt-12 border-t border-slate-200 bg-white">
     <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-slate-500 sm:px-6">
-      <p>© {{ year }} linux-tuners.dev — interactive Linux config tuners.</p>
+      <p>© {{ year }} linux-tuners.dev · interactive Linux config tuners.</p>
       <nav aria-label="Legal" class="flex flex-wrap items-center gap-4">
         <RouterLink to="/imprint" class="hover:text-slate-900 hover:underline">Imprint</RouterLink>
         <RouterLink to="/privacy" class="hover:text-slate-900 hover:underline">Privacy</RouterLink>

@@ -18,12 +18,19 @@ const KIB_PER_MIB = 1024
 export function deriveDefaults(hw) {
   const ramKib = hw.ramGiB * KIB_PER_GIB
 
-  // min_free_kbytes: ~0.4% of RAM, floored at 8 MiB.
-  // The kernel itself uses a sqrt-based heuristic, but the K8s blog's reference
-  // is "raise this to widen the kswapd window" — a simple percentage is closer
-  // to what an operator wants to reason about than the kernel internal formula.
+  // min_free_kbytes: ~0.4% of RAM, floored at 8 MiB and capped at the kernel
+  // max. The kernel itself uses a sqrt-based heuristic, but the K8s blog's
+  // reference is "raise this to widen the kswapd window" — a simple percentage
+  // is closer to what an operator wants to reason about than the kernel internal
+  // formula. The kernelMax cap keeps the default inside the slider's own range
+  // (which also tops out at kernelMax) on very large-RAM hosts, instead of
+  // producing a multi-GiB value the slider can't represent and the card can't
+  // lay out.
   const minFreeFromRatio = Math.round(ramKib * 0.004)
-  const min_free_kbytes = Math.max(minFreeFromRatio, 8 * KIB_PER_MIB)
+  const min_free_kbytes = Math.min(
+    Math.max(minFreeFromRatio, 8 * KIB_PER_MIB),
+    PARAMETER_DEFS_BY_KEY.min_free_kbytes.kernelMax,
+  )
 
   // watermark_scale_factor default 10 (kernel). Raise it on workloads where
   // proactive reclaim matters.
@@ -105,7 +112,41 @@ export function clampSwappinessForDevice(value, device) {
   return value
 }
 
-/** @param {import('./parameters.js').SwapDevice} device */
+const SWAPPINESS_MAX_MODERN = 200
+const SWAPPINESS_MAX_LEGACY = 100
+
+/**
+ * Hard kernel limit for vm.swappiness, which is purely a *kernel-version* matter,
+ * NOT a device matter. Kernel 5.8 raised MAX_SWAPPINESS from 100 to 200 for all
+ * swap, regardless of backing device. Whether values > 100 are *advisable* is a
+ * separate (device-dependent) question handled by swappinessMaxForDevice + the
+ * validation warnings — the slider should still let you reach any kernel-legal
+ * value.
+ *
+ * Unknown/blank version is treated as modern (200): kernel 5.8 shipped in 2020,
+ * so an unspecified kernel is far likelier to be ≥ 5.8 than not.
+ *
+ * @param {string|null|undefined} kernelVersion  "major.minor" string, e.g. "6.6"
+ * @returns {number}
+ */
+export function swappinessKernelMax(kernelVersion) {
+  if (!kernelVersion) return SWAPPINESS_MAX_MODERN
+  const m = /^\s*(\d+)\.(\d+)/.exec(kernelVersion)
+  if (!m) return SWAPPINESS_MAX_MODERN
+  const major = Number(m[1])
+  const minor = Number(m[2])
+  if (major < 5 || (major === 5 && minor < 8)) return SWAPPINESS_MAX_LEGACY
+  return SWAPPINESS_MAX_MODERN
+}
+
+/**
+ * Device-appropriate *recommended* swappiness ceiling. This is advisory only —
+ * it drives the deriveDefaults clamp (so starting values stay device-safe) and
+ * the "exceeds recommended cap" validation warning. It is deliberately NOT the
+ * slider's hard max; see swappinessKernelMax for that.
+ *
+ * @param {import('./parameters.js').SwapDevice} device
+ */
 export function swappinessMaxForDevice(device) {
   switch (device) {
     case 'hdd':
@@ -166,7 +207,9 @@ export function rangeFor(key, hw) {
   const def = PARAMETER_DEFS_BY_KEY[key]
   if (!def) throw new Error(`Unknown parameter: ${key}`)
   if (key === 'swappiness') {
-    return { min: def.kernelMin, max: swappinessMaxForDevice(hw.swapDevice) }
+    // Slider reaches the kernel-legal max (200 on ≥5.8, 100 before). Whether a
+    // high value suits the device is a soft warning, not a hard cap.
+    return { min: def.kernelMin, max: swappinessKernelMax(hw.kernelVersion) }
   }
   if (key === 'min_free_kbytes') {
     // Cap upper bound at 10% of RAM — beyond that the slider becomes useless.

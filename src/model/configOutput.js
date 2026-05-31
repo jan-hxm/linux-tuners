@@ -26,7 +26,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   const lines = []
   const date = (now ?? new Date()).toISOString().slice(0, 10)
 
-  lines.push(`# sysctl swap tuner — generated ${date}`)
+  lines.push(`# sysctl swap tuner (generated ${date})`)
   lines.push(`# Hardware: ${describeHardware(hardware)}`)
   if (presetLabel) {
     lines.push(`# Profile: ${presetLabel}${customised ? ' (customised)' : ''}`)
@@ -49,7 +49,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
       // it from the output when it has no effect so the file isn't misleading.
       if (def.key === 'overcommit_ratio' && params.overcommit_memory !== 2) continue
       const value = params[def.key]
-      lines.push(`# ${def.key}: ${value} — ${commentFor(def, value, hardware, params)}`)
+      lines.push(`# ${def.key}: ${value} - ${commentFor(def, value, hardware, params)}`)
       lines.push(`${def.sysctlName} = ${value}`)
       lines.push('')
     }
@@ -109,11 +109,11 @@ function sectionHeader(title) {
 function commentFor(def, value, hw, params) {
   switch (def.key) {
     case 'swappiness':
-      if (hw.swapGiB === 0) return 'no swap configured — value has no effect'
+      if (hw.swapGiB === 0) return 'no swap configured, value has no effect'
       if (value <= 10) return 'low swap aggressiveness, prioritise latency'
       if (value <= 60) return 'balanced bias between page cache and swap'
-      if (value <= 100) return 'swap-friendly — useful when swap is fast'
-      return 'aggressive — only safe with in-memory swap (zram/zswap)'
+      if (value <= 100) return 'swap-friendly, useful when swap is fast'
+      return 'aggressive, only safe with in-memory swap (zram/zswap)'
     case 'min_free_kbytes': {
       const mib = Math.round(value / 1024)
       return `reserve ~${mib} MiB as the kernel free-memory floor`
@@ -124,7 +124,7 @@ function commentFor(def, value, hw, params) {
       return `kswapd reclaim window ~${mib} MiB wide`
     }
     case 'vfs_cache_pressure':
-      if (value === 0) return 'DANGEROUS — kernel will not reclaim dentry/inode caches'
+      if (value === 0) return 'DANGEROUS, kernel will not reclaim dentry/inode caches'
       if (value < 100) return 'prefer keeping filesystem metadata in cache'
       if (value === 100) return 'balanced dentry/inode vs page-cache reclaim'
       return 'aggressively reclaim filesystem metadata'
@@ -138,7 +138,7 @@ function commentFor(def, value, hw, params) {
       if (value === 0) return 'periodic writeback disabled'
       return `flusher wakes every ${(value / 100).toFixed(1)} s`
     case 'overcommit_memory':
-      return value === 0 ? 'heuristic — kernel default' : value === 1 ? 'always overcommit' : 'strict — no overcommit'
+      return value === 0 ? 'heuristic, kernel default' : value === 1 ? 'always overcommit' : 'strict, no overcommit'
     case 'overcommit_ratio':
       return `CommitLimit = swap + RAM × ${value}/100`
     case 'panic_on_oom':

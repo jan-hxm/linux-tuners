@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, watch, nextTick, ref } from 'vue'
 import { useTunerStore } from '@/stores/tuner.js'
-import { PARAMETER_DEFS_BY_KEY } from '@/data/parameterDefs.js'
+import { PARAMETER_DEFS_BY_KEY, K8S_BLOG } from '@/data/parameterDefs.js'
 import { deriveDefaults, watermarkLevelsMiB } from '@/model/calculations.js'
 import { formatValue } from '@/utils/formatting.js'
 
@@ -120,7 +120,12 @@ watch(isOpen, async (open) => {
       <div class="space-y-5 p-4 text-sm text-slate-800">
         <section>
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Documentation</h3>
-          <p class="mt-1 leading-relaxed">{{ def.longDesc }}</p>
+          <div class="mt-1 space-y-2 leading-relaxed">
+            <p v-for="(para, i) in def.longDesc" :key="i">{{ para }}</p>
+          </div>
+          <p v-if="def.tuningTip" class="mt-2 rounded border border-slate-200 bg-slate-50 p-2 text-xs font-medium text-slate-800">
+            <span class="font-semibold">Rule of thumb:</span> {{ def.tuningTip }}
+          </p>
           <p class="mt-2 text-xs">
             <a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="text-sky-700 underline">
               kernel.org source ↗
@@ -132,6 +137,11 @@ watch(isOpen, async (open) => {
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kubernetes context</h3>
           <p class="mt-1 rounded bg-sky-50 p-2 text-xs leading-relaxed text-sky-900">
             {{ def.k8sNote }}
+          </p>
+          <p class="mt-2 text-xs">
+            <a :href="K8S_BLOG" target="_blank" rel="noopener" class="text-sky-700 underline">
+              Source ↗
+            </a>
           </p>
         </section>
 

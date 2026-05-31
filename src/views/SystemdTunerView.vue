@@ -4,12 +4,12 @@ import { RouterLink } from 'vue-router'
 const PLANNED_AREAS = [
   {
     title: 'systemd resource accounting',
-    blurb: 'DefaultCPUAccounting, DefaultMemoryAccounting, DefaultIOAccounting — system-wide defaults that govern what every unit gets accounted for.',
+    blurb: 'DefaultCPUAccounting, DefaultMemoryAccounting, DefaultIOAccounting: system-wide defaults that govern what every unit gets accounted for.',
     keys: ['system.conf · Default*Accounting', 'slice defaults'],
   },
   {
     title: '/etc/security/limits.conf',
-    blurb: 'Per-user and per-group ulimits — nofile, nproc, memlock, stack size. Critical for databases, container runtimes, and high-connection services.',
+    blurb: 'Per-user and per-group ulimits (nofile, nproc, memlock, stack size). Critical for databases, container runtimes, and high-connection services.',
     keys: ['nofile', 'nproc', 'memlock', 'stack'],
   },
   {
@@ -31,7 +31,7 @@ const PLANNED_AREAS = [
         Coming soon
       </p>
       <p class="mt-4 max-w-2xl text-sm leading-relaxed text-slate-200">
-        A tuner for systemd resource accounting defaults, slice configuration, and per-user/per-group resource limits — built in the same style as the
+        A tuner for systemd resource accounting defaults, slice configuration, and per-user/per-group resource limits, built in the same style as the
         <RouterLink to="/swap" class="underline hover:text-white">Swap & memory tuner</RouterLink>:
         hardware- and workload-aware defaults, live impact graphs, and a copy-pasteable config file.
       </p>

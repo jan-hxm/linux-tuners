@@ -79,11 +79,18 @@ export const useTunerStore = defineStore('tuner', {
 
     /**
      * Snap all parameters to a preset's values.
+     *
+     * Resets to hardware-derived defaults *first*, then layers the preset's
+     * partial values over that. This matches user intent — clicking a preset
+     * means "make my config look like this preset", so parameters the preset
+     * doesn't mention return to their hardware default rather than retaining
+     * whatever the user had customised them to.
+     *
      * @param {string} id
      * @param {Partial<import('@/model/parameters.js').ParameterValues>} values
      */
     applyPreset(id, values) {
-      this.params = { ...this.params, ...values }
+      this.params = { ...deriveDefaults(this.hardware), ...values }
       this.activePreset = id
       this.syncUrl()
     },

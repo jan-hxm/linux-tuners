@@ -15,7 +15,7 @@
  * @property {string|null}   kernelVersion  Optional "major.minor" string (e.g. "6.6")
  *
  * @typedef {Object} ParameterValues
- * @property {number} swappiness                 0–200 (0–100 capped for non-fast devices)
+ * @property {number} swappiness                 0–200 on kernel ≥5.8, else 0–100
  * @property {number} min_free_kbytes            In kB
  * @property {number} watermark_scale_factor     Tenths of a per-cent (kernel raw units)
  * @property {number} vfs_cache_pressure         0–500
@@ -44,8 +44,11 @@ export const PARAMETER_KEYS = /** @type {(keyof ParameterValues)[]} */ ([
 ])
 
 /**
- * Fast swap devices for which the kernel allows swappiness > 100.
- * (kernel 5.8+ extended the range to 0–200 for in-memory / compressed swap.)
+ * Fast (in-memory / compressed) swap devices for which swappiness > 100 is
+ * *advisable*. Note this is about what makes sense, not what the kernel allows:
+ * kernel 5.8+ accepts 0–200 on any device — the 200 cap is a kernel-version
+ * limit, not a device limit (see swappinessKernelMax). These devices just make
+ * high values pay off, so deriveDefaults biases them upward.
  */
 export const FAST_SWAP_DEVICES = /** @type {SwapDevice[]} */ (['zram', 'zswap'])
 

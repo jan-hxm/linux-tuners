@@ -84,7 +84,7 @@ const STEPS = [
         <div class="lg:col-span-3">
           <ParameterPanel />
         </div>
-        <div class="lg:sticky lg:top-16 lg:col-span-2 lg:self-start">
+        <div class="lg:sticky lg:top-14 lg:col-span-2 lg:self-start">
           <GraphPanel />
         </div>
       </div>

@@ -35,7 +35,7 @@ const TUNERS = [
           Drag sliders. Watch the impact. Copy the config. Each tuner explains every option in plain language, derives sensible defaults from your hardware, and shows the kernel-level effect live — so you understand what you're changing, not just what to type.
         </p>
         <p class="mt-4 text-xs text-slate-400">
-          No accounts. No tracking. URL-encodable state for sharing. Open source.
+          URL-encodable state for sharing.
         </p>
       </div>
     </header>

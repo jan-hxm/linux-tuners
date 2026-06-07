@@ -1,44 +1,20 @@
 <script setup>
 import { ref, computed } from 'vue'
 import ParameterCard from './ParameterCard.vue'
-import { useTunerStore } from '@/stores/tuner.js'
+import { useActiveTuner, useTunerDomain } from '@/composables/useActiveTuner.js'
 
-const tuner = useTunerStore()
+const tuner = useActiveTuner()
+const domain = useTunerDomain()
 
-const SECTIONS = [
-  {
-    id: 'memory-reclaim',
-    title: 'Memory reclaim & swap',
-    summary: 'When does the kernel reclaim pages, and how aggressively does it swap?',
-    keys: ['swappiness', 'min_free_kbytes', 'watermark_scale_factor', 'vfs_cache_pressure'],
-  },
-  {
-    id: 'dirty-writeback',
-    title: 'Dirty page writeback',
-    summary: 'How long modified pages can stay in RAM before being flushed to disk.',
-    keys: ['dirty_ratio', 'dirty_background_ratio', 'dirty_expire_centisecs', 'dirty_writeback_centisecs'],
-  },
-  {
-    id: 'oom-overcommit',
-    title: 'OOM & overcommit',
-    summary: 'Allocation policy and what happens when the system runs out of memory.',
-    keys: ['overcommit_memory', 'overcommit_ratio', 'panic_on_oom'],
-  },
-]
+const SECTIONS = domain.sections
 
-const open = ref({
-  'memory-reclaim': true,
-  'dirty-writeback': true,
-  'oom-overcommit': true,
-})
+// Start with every section expanded.
+const open = ref(Object.fromEntries(SECTIONS.map((s) => [s.id, true])))
 
-// Hide overcommit_ratio unless strict overcommit (mode 2) is selected — it's
-// only meaningful in that mode.
+// The domain may hide context-dependent keys (e.g. swap hides overcommit_ratio
+// unless strict overcommit is selected). Falls back to showing all keys.
 function visibleKeys(section) {
-  if (section.id !== 'oom-overcommit') return section.keys
-  return section.keys.filter(
-    (k) => k !== 'overcommit_ratio' || tuner.params.overcommit_memory === 2,
-  )
+  return domain.visibleKeys ? domain.visibleKeys(section, tuner.params) : section.keys
 }
 
 const issueCountsBySection = computed(() => {

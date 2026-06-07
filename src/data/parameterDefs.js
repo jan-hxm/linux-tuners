@@ -217,6 +217,7 @@ export const PARAMETER_DEFS = [
     kernelMax: 2,
     step: 1,
     unit: 'mode',
+    segmentLabels: ['0: heuristic', '1: always', '2: strict'],
   },
   {
     key: 'overcommit_ratio',
@@ -255,6 +256,11 @@ export const PARAMETER_DEFS = [
     kernelMax: 1,
     step: 1,
     unit: '',
+    toggleLabels: {
+      on: 'ENABLED: kernel will panic on OOM',
+      off: 'disabled: kernel will invoke OOM killer',
+    },
+    toggleDanger: true,
   },
 ]
 

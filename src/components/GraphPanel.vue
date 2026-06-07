@@ -1,33 +1,28 @@
 <script setup>
 import { computed } from 'vue'
-import { useTunerStore } from '@/stores/tuner.js'
-import { useSimulation } from '@/composables/useSimulation.js'
-import PressureChart from './PressureChart.vue'
-import WatermarkChart from './WatermarkChart.vue'
-import DirtyChart from './DirtyChart.vue'
+import { useActiveTuner } from '@/composables/useActiveTuner.js'
 
-const tuner = useTunerStore()
-const { impact } = useSimulation()
+/**
+ * Generic live-simulation panel. The tuner view passes in the set of tabs (each
+ * naming the chart component to render) and the reactive `impact` summary array;
+ * everything else — the tab strip, the active-tab wiring through the store, the
+ * impact cards — is shared between the swap and systemd tuners.
+ */
+const props = defineProps({
+  /** @type {{id:string,label:string,blurb:string,component:any}[]} */
+  tabs: { type: Array, required: true },
+  /** @type {{id:string,label:string,value:string,band:string}[]} */
+  impact: { type: Array, default: () => [] },
+  intro: {
+    type: String,
+    default: 'Teaching models, not exact predictions. The shape changes as you move the controls.',
+  },
+})
 
-const TABS = [
-  {
-    id: 'pressure',
-    label: 'Swap pressure',
-    blurb: 'How swap usage grows as memory fills, given current swappiness and watermarks.',
-  },
-  {
-    id: 'watermarks',
-    label: 'Watermark zones',
-    blurb: 'min → low → high → usable breakdown of the kernel zone structure.',
-  },
-  {
-    id: 'dirty',
-    label: 'Dirty writeback',
-    blurb: 'Dirty page accumulation under a synthetic constant write workload.',
-  },
-]
-
+const tuner = useActiveTuner()
 const activeTab = computed(() => tuner.activeTab)
+const activeComponent = computed(() => props.tabs.find((t) => t.id === activeTab.value)?.component)
+const activeBlurb = computed(() => props.tabs.find((t) => t.id === activeTab.value)?.blurb)
 
 function bandClass(band) {
   return {
@@ -43,14 +38,12 @@ function bandClass(band) {
   <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
     <header class="border-b border-slate-200 px-4 py-3">
       <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Live simulation</h2>
-      <p class="mt-1 text-xs text-slate-500">
-        Teaching models, not kernel-accurate predictions. The shape changes as you move sliders.
-      </p>
+      <p class="mt-1 text-xs text-slate-500">{{ intro }}</p>
     </header>
 
     <div role="tablist" aria-label="Simulation graphs" class="flex flex-wrap gap-1 border-b border-slate-100 px-4 pt-3">
       <button
-        v-for="tab in TABS"
+        v-for="tab in tabs"
         :id="`tab-${tab.id}`"
         :key="tab.id"
         type="button"
@@ -76,14 +69,12 @@ function bandClass(band) {
       :aria-labelledby="`tab-${activeTab}`"
       class="space-y-4 p-4"
     >
-      <p class="text-xs text-slate-500">{{ TABS.find((t) => t.id === activeTab)?.blurb }}</p>
+      <p class="text-xs text-slate-500">{{ activeBlurb }}</p>
 
-      <PressureChart v-if="activeTab === 'pressure'" />
-      <WatermarkChart v-else-if="activeTab === 'watermarks'" />
-      <DirtyChart v-else-if="activeTab === 'dirty'" />
+      <component :is="activeComponent" />
 
       <!-- Impact summary cards -->
-      <ul class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <ul v-if="impact.length" class="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <li
           v-for="metric in impact"
           :key="metric.id"

@@ -1,3 +1,7 @@
+// @vitest-environment happy-dom
+// (Pin the DOM environment explicitly rather than relying solely on
+// environmentMatchGlobs — with a shared module graph across node + happy-dom
+// files, glob-based env selection can race when files batch into one worker.)
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'

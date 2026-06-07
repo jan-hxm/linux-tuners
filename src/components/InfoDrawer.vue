@@ -1,72 +1,39 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, watch, nextTick, ref } from 'vue'
-import { useTunerStore } from '@/stores/tuner.js'
-import { PARAMETER_DEFS_BY_KEY, K8S_BLOG } from '@/data/parameterDefs.js'
-import { deriveDefaults, watermarkLevelsMiB } from '@/model/calculations.js'
-import { formatValue } from '@/utils/formatting.js'
+import { useActiveTuner, useTunerDomain } from '@/composables/useActiveTuner.js'
 
-const tuner = useTunerStore()
+const tuner = useActiveTuner()
+const domain = useTunerDomain()
 const closeBtn = ref(null)
 
 const def = computed(() =>
-  tuner.drawerParamKey ? PARAMETER_DEFS_BY_KEY[tuner.drawerParamKey] : null,
+  tuner.drawerParamKey ? domain.defsByKey[tuner.drawerParamKey] : null,
 )
 const isOpen = computed(() => def.value !== null)
 
-const WORKLOADS = ['k8s', 'database', 'general', 'desktop', 'embedded']
+const contextNote = computed(() => {
+  if (!def.value) return null
+  return def.value[domain.noteKey] ?? def.value.contextNote ?? null
+})
 
 const workloadComparison = computed(() => {
   if (!def.value) return []
-  return WORKLOADS.map((workload) => {
-    const hw = { ...tuner.hardware, workload }
-    const value = deriveDefaults(hw)[def.value.key]
+  return domain.workloads.map((workload) => {
+    const hw = { ...tuner.hardware, [domain.workloadField]: workload }
+    const value = domain.deriveDefaults(hw)[def.value.key]
     return {
       workload,
       value,
-      formatted: formatValue(value, def.value.unit, hw.ramGiB),
+      formatted: domain.formatValue(value, def.value, hw),
     }
   })
 })
 
-// Per-parameter formulas. Only spell one out when there's something useful to
-// show the user — otherwise we'd be padding the drawer with restatements of
-// the longDesc.
+// Per-parameter formulas come from the active domain (it knows which parameters
+// have a genuinely useful derived formula). Null when there's nothing to show.
 const formula = computed(() => {
-  if (!def.value) return null
-  if (def.value.key === 'watermark_scale_factor') {
-    const lv = watermarkLevelsMiB(
-      tuner.hardware.ramGiB,
-      tuner.params.min_free_kbytes,
-      tuner.params.watermark_scale_factor,
-    )
-    return {
-      title: 'Watermark formula (whole-system view)',
-      lines: [
-        'window_pages = total_managed_pages × watermark_scale_factor / 10000',
-        'low  = min + window',
-        'high = low + window',
-      ],
-      values: [
-        { label: 'min',  v: `${lv.minMiB} MiB` },
-        { label: 'low',  v: `${lv.lowMiB} MiB` },
-        { label: 'high', v: `${lv.highMiB} MiB` },
-        { label: 'usable above high', v: `${lv.usableMiB} MiB` },
-      ],
-    }
-  }
-  if (def.value.key === 'overcommit_ratio') {
-    const ramKb = tuner.hardware.ramGiB * 1024 * 1024
-    const swapKb = tuner.hardware.swapGiB * 1024 * 1024
-    const commitLimit = swapKb + (ramKb * tuner.params.overcommit_ratio) / 100
-    return {
-      title: 'CommitLimit formula (when overcommit_memory = 2)',
-      lines: ['CommitLimit = swap + RAM × overcommit_ratio / 100'],
-      values: [
-        { label: 'CommitLimit', v: `${Math.round(commitLimit / 1024).toLocaleString()} MiB` },
-      ],
-    }
-  }
-  return null
+  if (!def.value || !domain.formula) return null
+  return domain.formula(def.value, { hardware: tuner.hardware, params: tuner.params })
 })
 
 function close() {
@@ -128,18 +95,18 @@ watch(isOpen, async (open) => {
           </p>
           <p class="mt-2 text-xs">
             <a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="text-sky-700 underline">
-              kernel.org source ↗
+              {{ domain.docsLabel }} ↗
             </a>
           </p>
         </section>
 
-        <section v-if="def.k8sNote">
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kubernetes context</h3>
+        <section v-if="contextNote">
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ domain.context.label }} context</h3>
           <p class="mt-1 rounded bg-sky-50 p-2 text-xs leading-relaxed text-sky-900">
-            {{ def.k8sNote }}
+            {{ contextNote }}
           </p>
           <p class="mt-2 text-xs">
-            <a :href="K8S_BLOG" target="_blank" rel="noopener" class="text-sky-700 underline">
+            <a :href="domain.context.url" target="_blank" rel="noopener" class="text-sky-700 underline">
               Source ↗
             </a>
           </p>

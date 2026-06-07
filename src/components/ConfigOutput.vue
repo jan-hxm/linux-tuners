@@ -1,19 +1,17 @@
 <script setup>
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
-import { useTunerStore } from '@/stores/tuner.js'
-import { generateConfig } from '@/model/configOutput.js'
-import { encodeState } from '@/model/serialization.js'
-import { PRESETS_BY_ID } from '@/data/presets.js'
+import { useActiveTuner, useTunerDomain } from '@/composables/useActiveTuner.js'
 
-const tuner = useTunerStore()
+const tuner = useActiveTuner()
+const domain = useTunerDomain()
 
 const presetLabel = computed(() =>
-  tuner.activePreset ? PRESETS_BY_ID[tuner.activePreset]?.label ?? null : null,
+  tuner.activePreset ? domain.presetsById[tuner.activePreset]?.label ?? null : null,
 )
 
 const customised = computed(() => {
   if (!tuner.activePreset) return false
-  const preset = PRESETS_BY_ID[tuner.activePreset]
+  const preset = domain.presetsById[tuner.activePreset]
   if (!preset) return false
   return Object.entries(preset.values).some(([k, v]) => tuner.params[k] !== v)
 })
@@ -22,7 +20,7 @@ const blockingIssues = computed(() => tuner.issues.filter((i) => i.blocking))
 const blocked = computed(() => blockingIssues.value.length > 0)
 
 const output = computed(() =>
-  generateConfig({
+  domain.generateConfig({
     hardware: tuner.hardware,
     params: tuner.params,
     presetLabel: presetLabel.value,
@@ -50,7 +48,7 @@ function download() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = '99-swap-tuning.conf'
+  a.download = domain.outputFilename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
@@ -62,7 +60,7 @@ async function shareUrl() {
   // The store debounces URL writes by 200 ms; on share we want the latest state
   // in the clipboard immediately, so we re-encode ourselves rather than reading
   // location.href (which might still hold the previous hash).
-  const hash = encodeState({
+  const hash = domain.encodeState({
     hardware: tuner.hardware,
     params: tuner.params,
     activePreset: tuner.activePreset,

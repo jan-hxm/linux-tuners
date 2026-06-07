@@ -1,4 +1,5 @@
 <script setup>
+import { provide } from 'vue'
 import HardwareForm from '@/components/HardwareForm.vue'
 import PresetSelector from '@/components/PresetSelector.vue'
 import ParameterPanel from '@/components/ParameterPanel.vue'
@@ -8,6 +9,26 @@ import InfoDrawer from '@/components/InfoDrawer.vue'
 import AboutSection from '@/components/AboutSection.vue'
 import StepHeader from '@/components/StepHeader.vue'
 import AdSlot from '@/components/AdSlot.vue'
+import PressureChart from '@/components/PressureChart.vue'
+import WatermarkChart from '@/components/WatermarkChart.vue'
+import DirtyChart from '@/components/DirtyChart.vue'
+import { useTunerStore } from '@/stores/tuner.js'
+import { swapDomain } from '@/domains/swap/index.js'
+import { useSimulation } from '@/composables/useSimulation.js'
+import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/composables/useActiveTuner.js'
+
+// Provide the swap store + domain to every shared child component.
+const tuner = useTunerStore()
+provide(TUNER_STORE_KEY, tuner)
+provide(TUNER_DOMAIN_KEY, swapDomain)
+
+const { impact } = useSimulation()
+
+const GRAPH_TABS = [
+  { id: 'pressure', label: 'Swap pressure', component: PressureChart, blurb: 'How swap usage grows as memory fills, given current swappiness and watermarks.' },
+  { id: 'watermarks', label: 'Watermark zones', component: WatermarkChart, blurb: 'min → low → high → usable breakdown of the kernel zone structure.' },
+  { id: 'dirty', label: 'Dirty writeback', component: DirtyChart, blurb: 'Dirty page accumulation under a synthetic constant write workload.' },
+]
 
 const STEPS = [
   { num: 1, label: 'Hardware', href: '#hardware' },
@@ -85,7 +106,7 @@ const STEPS = [
           <ParameterPanel />
         </div>
         <div class="lg:sticky lg:top-14 lg:col-span-2 lg:self-start">
-          <GraphPanel />
+          <GraphPanel :tabs="GRAPH_TABS" :impact="impact" />
         </div>
       </div>
     </section>

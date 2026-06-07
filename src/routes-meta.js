@@ -55,11 +55,11 @@ export const ROUTES_META = [
     name: 'systemd',
     title: 'systemd & resource limits tuner | linux-tuners.dev',
     description:
-      'Coming soon: hardware-aware tuner for systemd resource accounting defaults, slice configuration, and /etc/security/limits.conf for clustered and containerised Linux workloads.',
-    ogTitle: 'systemd & resource limits tuner (coming soon)',
-    priority: 0.5,
+      'Hardware-aware tuner for systemd resource control: manager defaults (accounting, DefaultTasksMax, DefaultLimitNOFILE/MEMLOCK) and per-slice cgroup v2 controls (CPUWeight, CPUQuota, MemoryHigh/Max, IOWeight, TasksMax). Live CPU-share, memory-budget and task-cap graphs with copy-pasteable drop-ins.',
+    ogTitle: 'systemd & resource limits tuner',
+    priority: 0.9,
     changefreq: 'monthly',
-    jsonLdType: 'WebPage',
+    jsonLdType: 'SoftwareApplication',
   },
   {
     path: '/imprint',

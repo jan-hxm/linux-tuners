@@ -13,11 +13,32 @@ const TUNERS = [
   },
   {
     id: 'systemd',
-    available: false,
+    available: true,
     to: '/systemd',
     title: 'systemd & resource limits',
-    blurb: 'Coming soon: tune systemd resource accounting defaults, slice configuration, and /etc/security/limits.conf for clustered and containerised Linux workloads.',
-    keys: ['DefaultMemoryAccounting', 'DefaultCPUAccounting', 'limits.nofile', '…'],
+    blurb: 'Tune systemd manager defaults and per-slice cgroup v2 resource control: accounting, task and FD limits, and CPU/memory/IO weights and caps for clustered and containerised Linux workloads.',
+    keys: ['CPUWeight', 'MemoryMax', 'DefaultTasksMax', 'DefaultLimitNOFILE', '…'],
+  },
+  {
+    id: 'network',
+    available: false,
+    title: 'Network stack',
+    blurb: 'Coming soon: tune net.core and net.ipv4 sysctls for throughput and latency, covering socket buffer sizes, the listen backlog, congestion control, and TIME_WAIT reuse.',
+    keys: ['net.core.rmem_max', 'net.ipv4.tcp_congestion_control', 'net.core.somaxconn', '…'],
+  },
+  {
+    id: 'filesystem',
+    available: false,
+    title: 'Filesystem & file descriptors',
+    blurb: 'Coming soon: tune fs.* sysctls for file-heavy and event-driven workloads, covering the system-wide file-descriptor ceiling, inotify watch limits, and async I/O capacity.',
+    keys: ['fs.file-max', 'fs.inotify.max_user_watches', 'fs.aio-max-nr', '…'],
+  },
+  {
+    id: 'kernel',
+    available: false,
+    title: 'Kernel & scheduler',
+    blurb: 'Coming soon: tune kernel.* sysctls for CPU scheduling and system behaviour, covering scheduler latency and migration cost, the PID space, and SysRq and ptrace hardening.',
+    keys: ['kernel.sched_latency_ns', 'kernel.pid_max', 'kernel.sysrq', '…'],
   },
 ]
 </script>

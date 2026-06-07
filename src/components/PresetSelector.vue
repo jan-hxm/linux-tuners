@@ -1,9 +1,10 @@
 <script setup>
 import { computed } from 'vue'
-import { PRESETS } from '@/data/presets.js'
-import { useTunerStore } from '@/stores/tuner.js'
+import { useActiveTuner, useTunerDomain } from '@/composables/useActiveTuner.js'
 
-const tuner = useTunerStore()
+const tuner = useActiveTuner()
+const domain = useTunerDomain()
+const PRESETS = domain.presets
 
 /**
  * For each preset, compute which of the keys it defines differ from the current

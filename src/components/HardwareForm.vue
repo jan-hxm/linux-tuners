@@ -1,6 +1,8 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { useTunerStore } from '@/stores/tuner.js'
+import NumberPickField from '@/components/hardware/NumberPickField.vue'
+import { RAM_PICKS, SWAP_PICKS, RAM_MAX_GIB, SWAP_MAX_GIB, clampInt } from '@/components/hardware/fieldOptions.js'
 
 const tuner = useTunerStore()
 
@@ -12,22 +14,6 @@ const workload = ref(tuner.hardware.workload)
 const cgroupVersion = ref(tuner.hardware.cgroupVersion)
 const kernelVersion = ref(tuner.hardware.kernelVersion ?? '')
 const collapsed = ref(false)
-
-const RAM_PICKS = [2, 4, 8, 16, 32, 64, 128, 192, 256]
-const SWAP_PICKS = [0, 2, 4, 8, 16, 32, 64, 128, 192, 256, 384, 512]
-
-// Sanity ceilings: 2304 TiB, covering even very high-end server racks while
-// keeping derived values and the card layout bounded — without a cap, pasting
-// something like 1e65 produces astronomically long parameter values.
-const RAM_MAX_GIB = 2304 * 1024
-const SWAP_MAX_GIB = 2304 * 1024
-
-/** Floor to an int and clamp into [min, max]; non-numeric falls back to min. */
-function clampInt(value, min, max) {
-  const n = Math.floor(Number(value))
-  if (!Number.isFinite(n)) return min
-  return Math.max(min, Math.min(max, n))
-}
 
 const DEVICE_OPTIONS = [
   { value: 'hdd', label: 'HDD (rotational)', note: 'caps swappiness at 60' },
@@ -136,54 +122,22 @@ watch(
 
     <form v-if="!collapsed" class="space-y-5 p-4" @submit.prevent="apply">
       <!-- RAM -->
-      <div>
-        <label class="block text-sm font-medium text-slate-700">Total RAM (GiB)</label>
-        <div class="mt-2 flex flex-wrap items-center gap-2">
-          <input
-            v-model.number="ramGiB"
-            type="number"
-            min="1"
-            :max="RAM_MAX_GIB"
-            step="1"
-            class="w-24 rounded border border-slate-300 px-2 py-1 text-sm font-mono"
-          />
-          <button
-            v-for="g in RAM_PICKS"
-            :key="`ram-${g}`"
-            type="button"
-            class="rounded-full border px-3 py-0.5 text-xs"
-            :class="Number(ramGiB) === g ? 'border-slate-800 bg-slate-800 text-white' : 'border-slate-300 hover:bg-slate-50'"
-            @click="ramGiB = g"
-          >
-            {{ g }}
-          </button>
-        </div>
-      </div>
+      <NumberPickField
+        v-model="ramGiB"
+        label="Total RAM (GiB)"
+        :min="1"
+        :max="RAM_MAX_GIB"
+        :picks="RAM_PICKS"
+      />
 
       <!-- Swap size -->
-      <div>
-        <label class="block text-sm font-medium text-slate-700">Swap size (GiB)</label>
-        <div class="mt-2 flex flex-wrap items-center gap-2">
-          <input
-            v-model.number="swapGiB"
-            type="number"
-            min="0"
-            :max="SWAP_MAX_GIB"
-            step="1"
-            class="w-24 rounded border border-slate-300 px-2 py-1 text-sm font-mono"
-          />
-          <button
-            v-for="g in SWAP_PICKS"
-            :key="`swap-${g}`"
-            type="button"
-            class="rounded-full border px-3 py-0.5 text-xs"
-            :class="Number(swapGiB) === g ? 'border-slate-800 bg-slate-800 text-white' : 'border-slate-300 hover:bg-slate-50'"
-            @click="swapGiB = g"
-          >
-            {{ g === 0 ? 'No swap' : g }}
-          </button>
-        </div>
-      </div>
+      <NumberPickField
+        v-model="swapGiB"
+        label="Swap size (GiB)"
+        :min="0"
+        :max="SWAP_MAX_GIB"
+        :picks="SWAP_PICKS"
+      />
 
       <!-- Swap device -->
       <fieldset :disabled="swapDisabled">

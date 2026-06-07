@@ -1,37 +1,35 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
-import { useTunerStore } from '@/stores/tuner.js'
-import { PARAMETER_DEFS_BY_KEY, K8S_BLOG } from '@/data/parameterDefs.js'
-import { rangeFor, deriveDefaults } from '@/model/calculations.js'
-import { formatValue } from '@/utils/formatting.js'
+import { useActiveTuner, useTunerDomain } from '@/composables/useActiveTuner.js'
 
 const props = defineProps({
   paramKey: { type: String, required: true },
 })
 
-const tuner = useTunerStore()
+const tuner = useActiveTuner()
+const domain = useTunerDomain()
 
-const def = computed(() => PARAMETER_DEFS_BY_KEY[props.paramKey])
+const def = computed(() => domain.defsByKey[props.paramKey])
 const value = computed(() => tuner.params[props.paramKey])
-const range = computed(() => rangeFor(props.paramKey, tuner.hardware))
+const range = computed(() => domain.rangeFor(props.paramKey, tuner.hardware))
 const issues = computed(() => tuner.issuesByParam[props.paramKey] ?? [])
 const expanded = ref(false)
 
-const formatted = computed(() => formatValue(value.value, def.value.unit, tuner.hardware.ramGiB))
+const formatted = computed(() => domain.formatValue(value.value, def.value, tuner.hardware))
 
 // Stable id used to link the slider to the param-name button via aria-labelledby.
 const labelId = computed(() => `param-label-${props.paramKey}`)
 
 const isWorkloadTuned = computed(() => {
-  // True when the workload's hardware-derived default differs from the kernel default.
+  // True when the workload's hardware-derived default differs from the stock default.
   // Surfaces e.g. "Workload-specific" on swappiness when workload=k8s.
-  const derived = deriveDefaults(tuner.hardware)[props.paramKey]
+  const derived = domain.deriveDefaults(tuner.hardware)[props.paramKey]
   return derived !== def.value.kernelDefault
 })
 
-const SEGMENTED_LABELS = {
-  overcommit_memory: ['0: heuristic', '1: always', '2: strict'],
-}
+// Contextual ("K8s" on the swap tuner, "container host" on systemd) note + its
+// "Source" link, both supplied by the active domain so the card stays generic.
+const contextNote = computed(() => def.value[domain.noteKey] ?? def.value.contextNote ?? null)
 
 // Slider DOM ref + uncontrolled-with-external-sync pattern.
 //
@@ -156,10 +154,10 @@ function openInDrawer() {
 
         <ul class="mt-1 flex flex-wrap gap-1">
           <li
-            v-if="def.k8sNote"
+            v-if="contextNote"
             class="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-800"
-            title="Has Kubernetes-specific guidance"
-          >K8s</li>
+            :title="`Has ${domain.context.label}-specific guidance`"
+          >{{ domain.context.badge }}</li>
           <li
             v-if="isWorkloadTuned"
             class="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-violet-800"
@@ -224,7 +222,7 @@ function openInDrawer() {
     <!-- Segmented -->
     <div v-else-if="def.control === 'segmented'" class="mt-3 inline-flex overflow-hidden rounded border border-slate-300">
       <button
-        v-for="(label, i) in SEGMENTED_LABELS[paramKey]"
+        v-for="(label, i) in def.segmentLabels"
         :key="i"
         type="button"
         class="px-3 py-1 text-xs"
@@ -242,7 +240,7 @@ function openInDrawer() {
         role="switch"
         :aria-checked="value === 1"
         class="relative h-5 w-9 rounded-full transition"
-        :class="value === 1 ? 'bg-red-600' : 'bg-slate-300'"
+        :class="value === 1 ? (def.toggleDanger ? 'bg-red-600' : 'bg-emerald-600') : 'bg-slate-300'"
         @click="setValue(value === 1 ? 0 : 1)"
       >
         <span
@@ -251,7 +249,7 @@ function openInDrawer() {
         />
       </button>
       <span class="text-xs text-slate-600">
-        {{ value === 1 ? 'ENABLED: kernel will panic on OOM' : 'disabled: kernel will invoke OOM killer' }}
+        {{ value === 1 ? (def.toggleLabels?.on ?? 'enabled') : (def.toggleLabels?.off ?? 'disabled') }}
       </span>
     </div>
 
@@ -283,13 +281,13 @@ function openInDrawer() {
         <p v-if="def.tuningTip" class="rounded bg-slate-50 p-2 font-medium text-slate-800">
           <span class="font-semibold">Rule of thumb:</span> {{ def.tuningTip }}
         </p>
-        <p v-if="def.k8sNote" class="rounded bg-sky-50 p-2 text-sky-900">
-          <span class="font-semibold">Kubernetes:</span> {{ def.k8sNote }}
-          <a :href="K8S_BLOG" target="_blank" rel="noopener" class="whitespace-nowrap underline">Source ↗</a>
+        <p v-if="contextNote" class="rounded bg-sky-50 p-2 text-sky-900">
+          <span class="font-semibold">{{ domain.context.label }}:</span> {{ contextNote }}
+          <a :href="domain.context.url" target="_blank" rel="noopener" class="whitespace-nowrap underline">Source ↗</a>
         </p>
         <p>
           <a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="text-slate-600 underline">
-            kernel.org docs ↗
+            {{ domain.docsLabel }} ↗
           </a>
           ·
           <button type="button" class="text-slate-600 underline" @click="openInDrawer">

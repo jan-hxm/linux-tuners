@@ -66,6 +66,19 @@ const chartData = computed(() => {
   return { datasets }
 })
 
+// Text alternative for screen readers (the <canvas> itself is opaque to AT).
+const summary = computed(() => {
+  const p = pressure.value
+  if (p.noSwap) {
+    return 'Swap pressure chart: swap is disabled, so estimated swap usage stays at 0% across all memory fill levels.'
+  }
+  return (
+    `Swap pressure chart: estimated swap usage stays near zero until about ${p.highFillPct.toFixed(0)}% memory fill, ` +
+    `then ramps up through the kswapd band, climbing steeply past the low watermark near ${p.lowFillPct.toFixed(0)}% ` +
+    `and approaching direct reclaim and OOM around ${p.minFillPct.toFixed(0)}%.`
+  )
+})
+
 const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
@@ -106,7 +119,7 @@ const chartOptions = computed(() => ({
 
 <template>
   <div class="space-y-2">
-    <div class="h-64">
+    <div class="h-64" role="img" :aria-label="summary">
       <Line :data="chartData" :options="chartOptions" />
     </div>
     <div class="flex flex-wrap gap-3 text-xs text-slate-600">

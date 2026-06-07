@@ -20,6 +20,13 @@ const chartData = computed(() => {
   }
 })
 
+// Text alternative for screen readers.
+const summary = computed(() => {
+  const t = tasks.value
+  const parts = t.bars.map((b) => `${b.label} ${b.value.toLocaleString()} tasks (${b.pct}% of pid_max)`)
+  return `Task and FD caps chart: against kernel.pid_max of ${t.pidMax.toLocaleString()}, ${parts.join(', ')}.`
+})
+
 const chartOptions = computed(() => ({
   indexAxis: 'y',
   responsive: true,
@@ -44,7 +51,7 @@ const chartOptions = computed(() => ({
 
 <template>
   <div class="space-y-3">
-    <div class="h-32">
+    <div class="h-32" role="img" :aria-label="summary">
       <Bar :data="chartData" :options="chartOptions" />
     </div>
     <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">

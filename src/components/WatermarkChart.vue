@@ -21,6 +21,13 @@ const chartData = computed(() => {
   }
 })
 
+// Text alternative for screen readers.
+const summary = computed(() => {
+  const w = watermarks.value
+  const parts = w.segments.map((s) => `${s.label} ${(s.mib / 1024).toFixed(1)} GiB`)
+  return `Watermark zones chart: a stacked bar of the RAM zone reclaim structure, ${parts.join(', ')}.`
+})
+
 const chartOptions = computed(() => ({
   indexAxis: 'y',
   responsive: true,
@@ -49,11 +56,11 @@ const chartOptions = computed(() => ({
 
 <template>
   <div class="space-y-3">
-    <div class="h-32">
+    <div class="h-32" role="img" :aria-label="summary">
       <Bar :data="chartData" :options="chartOptions" />
     </div>
     <div>
-      <p class="text-[10px] uppercase tracking-wide text-slate-500">/proc/zoneinfo (simulated)</p>
+      <p class="text-[11px] uppercase tracking-wide text-slate-500">/proc/zoneinfo (simulated)</p>
       <pre class="mt-1 overflow-x-auto rounded bg-slate-900 p-2 text-[11px] leading-snug text-slate-100"><code>{{ watermarks.zoneInfoSnippet }}</code></pre>
     </div>
   </div>

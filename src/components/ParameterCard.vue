@@ -58,11 +58,90 @@ watch(value, (v) => {
   if (el && Number(el.value) !== v) el.value = String(v)
 })
 
+// --- Touch handling for the range slider ----------------------------------
+//
+// Native range inputs are hostile to touch scrolling: a swipe that begins on a
+// full-width slider gets captured as a value change, and the control also
+// commits a value on a plain tap. Combined with `touch-action: pan-y` (styles
+// below), the model here is: on touch, ONLY a deliberate horizontal drag may
+// change the value. A vertical swipe scrolls the page; a tap does nothing.
+//
+// Native value changes can't be reliably blocked mid-gesture (and a trailing
+// input/click fires *after* touchend), so rather than fight them live we let
+// the store track horizontal drags and then force the thumb back in sync with
+// the store after the gesture settles. `isTouching` stays true through a short
+// post-touchend window so that trailing event is handled, then clears so mouse
+// input on hybrid devices still works.
+const TOUCH_THRESHOLD = 8
+let startX = 0
+let startY = 0
+let movedX = 0
+let movedY = 0
+let valueAtTouchStart = null
+let isTouching = false
+let touchEndTimer = null
+
+const isVerticalSwipe = () => movedY > movedX && movedY > TOUCH_THRESHOLD
+const isTap = () => movedX <= TOUCH_THRESHOLD && movedY <= TOUCH_THRESHOLD
+
+function pinThumbTo(v) {
+  const el = sliderEl.value
+  if (el && Number(el.value) !== v) el.value = String(v)
+}
+
 function setValue(v) {
+  // On touch, a vertical swipe or a tap must not change the value: pin the thumb
+  // back to where the touch started and ignore the native input. Horizontal
+  // drags (and all mouse/keyboard input) fall through and commit normally.
+  if (isTouching && (isVerticalSwipe() || isTap())) {
+    pinThumbTo(valueAtTouchStart)
+    return
+  }
   const n = Number(v)
   if (!Number.isFinite(n)) return
   selfWrite = true
   tuner.setParam(props.paramKey, n)
+}
+
+function onTouchStart(e) {
+  const t = e.touches[0]
+  if (!t) return
+  if (touchEndTimer) {
+    clearTimeout(touchEndTimer)
+    touchEndTimer = null
+  }
+  startX = t.clientX
+  startY = t.clientY
+  movedX = 0
+  movedY = 0
+  valueAtTouchStart = value.value
+  isTouching = true
+}
+
+function onTouchMove(e) {
+  const t = e.touches[0]
+  if (!t) return
+  movedX = Math.abs(t.clientX - startX)
+  movedY = Math.abs(t.clientY - startY)
+  // Keep the thumb still while the user is scrolling vertically.
+  if (isVerticalSwipe()) pinThumbTo(valueAtTouchStart)
+}
+
+function onTouchEnd() {
+  // Discard anything that wasn't a deliberate horizontal drag (scroll or tap):
+  // restore the store to the value it had when the touch began.
+  if (valueAtTouchStart !== null && (isVerticalSwipe() || isTap()) && value.value !== valueAtTouchStart) {
+    selfWrite = true
+    tuner.setParam(props.paramKey, valueAtTouchStart)
+  }
+  // The native control can apply a trailing value change after touchend; keep
+  // guarding briefly, then snap the thumb to the store value and end touch mode.
+  if (touchEndTimer) clearTimeout(touchEndTimer)
+  touchEndTimer = setTimeout(() => {
+    pinThumbTo(value.value)
+    isTouching = false
+    touchEndTimer = null
+  }, 80)
 }
 
 // Filled portion of the slider track, 0–100%. Drives the gradient/progress fill
@@ -138,7 +217,7 @@ function openInDrawer() {
         <button
           :id="labelId"
           type="button"
-          class="font-mono text-sm font-semibold text-slate-900 hover:underline"
+          class="break-all text-left font-mono text-sm font-semibold text-slate-900 hover:underline"
           :aria-label="`${def.sysctlName}, open reference`"
           @click="openInDrawer"
         >
@@ -191,12 +270,13 @@ function openInDrawer() {
         <button
           v-else-if="def.control === 'slider'"
           type="button"
-          class="rounded px-1 font-mono text-sm font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 hover:bg-slate-100 hover:decoration-slate-500"
+          class="inline-flex items-center gap-1 rounded px-1 font-mono text-sm font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 hover:bg-slate-100 hover:decoration-slate-500"
+          aria-label="Edit value: type an exact number"
           title="Click to type an exact value"
           @click="startEdit"
-        >{{ formatted }}</button>
+        >{{ formatted }}<span aria-hidden="true" class="text-[11px] text-slate-400">✎</span></button>
         <div v-else class="font-mono text-sm font-semibold text-slate-900">{{ formatted }}</div>
-        <div class="text-[10px] text-slate-400">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
+        <div class="text-[11px] text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
       </div>
     </header>
 
@@ -213,6 +293,10 @@ function openInDrawer() {
         class="range-slider"
         :style="{ '--range-pct': pct + '%' }"
         @input="setValue($event.target.value)"
+        @touchstart.passive="onTouchStart"
+        @touchmove.passive="onTouchMove"
+        @touchend="onTouchEnd"
+        @touchcancel="onTouchEnd"
       />
       <ul v-if="def.zones" class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-slate-600">
         <li v-for="z in def.zones" :key="z">{{ z }}</li>
@@ -220,11 +304,18 @@ function openInDrawer() {
     </div>
 
     <!-- Segmented -->
-    <div v-else-if="def.control === 'segmented'" class="mt-3 inline-flex overflow-hidden rounded border border-slate-300">
+    <div
+      v-else-if="def.control === 'segmented'"
+      role="radiogroup"
+      :aria-labelledby="labelId"
+      class="mt-3 inline-flex overflow-hidden rounded border border-slate-300"
+    >
       <button
         v-for="(label, i) in def.segmentLabels"
         :key="i"
         type="button"
+        role="radio"
+        :aria-checked="value === i"
         class="px-3 py-1 text-xs"
         :class="value === i ? 'bg-slate-800 text-white' : 'bg-white hover:bg-slate-50'"
         @click="setValue(i)"
@@ -313,6 +404,11 @@ function openInDrawer() {
   height: 1.25rem; /* generous hit area; visual track is thinner */
   background: transparent;
   cursor: pointer;
+  /* Let the browser own vertical panning so a downward scroll that starts on a
+   * slider scrolls the page instead of being captured as a value change. Only
+   * deliberate horizontal drags adjust the value. Critical on mobile, where the
+   * full-width sliders otherwise swallow scroll gestures. */
+  touch-action: pan-y;
 }
 .range-slider:focus {
   outline: none;

@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, nextTick } from 'vue'
 import { useActiveTuner } from '@/composables/useActiveTuner.js'
 
 /**
@@ -24,6 +24,24 @@ const activeTab = computed(() => tuner.activeTab)
 const activeComponent = computed(() => props.tabs.find((t) => t.id === activeTab.value)?.component)
 const activeBlurb = computed(() => props.tabs.find((t) => t.id === activeTab.value)?.blurb)
 
+// ARIA tab pattern: Left/Right/Home/End move the selection and follow focus to
+// the newly selected tab. Without this the roving tabindex leaves non-selected
+// tabs unreachable by keyboard.
+function onTabKeydown(e) {
+  const ids = props.tabs.map((t) => t.id)
+  const current = ids.indexOf(activeTab.value)
+  if (current === -1) return
+  let next = current
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (current + 1) % ids.length
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (current - 1 + ids.length) % ids.length
+  else if (e.key === 'Home') next = 0
+  else if (e.key === 'End') next = ids.length - 1
+  else return
+  e.preventDefault()
+  tuner.setActiveTab(ids[next])
+  nextTick(() => document.getElementById(`tab-${ids[next]}`)?.focus())
+}
+
 function bandClass(band) {
   return {
     none: 'bg-slate-100 text-slate-600',
@@ -41,7 +59,7 @@ function bandClass(band) {
       <p class="mt-1 text-xs text-slate-500">{{ intro }}</p>
     </header>
 
-    <div role="tablist" aria-label="Simulation graphs" class="flex flex-wrap gap-1 border-b border-slate-100 px-4 pt-3">
+    <div role="tablist" aria-label="Simulation graphs" class="flex flex-wrap gap-1 border-b border-slate-100 px-4 pt-3" @keydown="onTabKeydown">
       <button
         v-for="tab in tabs"
         :id="`tab-${tab.id}`"
@@ -80,7 +98,7 @@ function bandClass(band) {
           :key="metric.id"
           class="rounded border border-slate-200 p-3"
         >
-          <p class="text-[10px] uppercase tracking-wide text-slate-500">{{ metric.label }}</p>
+          <p class="text-[11px] uppercase tracking-wide text-slate-500">{{ metric.label }}</p>
           <p
             class="mt-1 inline-block rounded px-2 py-0.5 text-sm font-medium"
             :class="bandClass(metric.band)"

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/composables/useActiveTuner.js'
 
 const tuner = useActiveTuner()
@@ -79,17 +79,6 @@ async function shareUrl() {
 function reset() {
   tuner.resetToHardwareDefaults()
 }
-
-function onKey(e) {
-  // Ctrl+Shift+C copies the config; matches the plan's documented shortcut.
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
-    e.preventDefault()
-    copy()
-  }
-}
-
-onMounted(() => window.addEventListener('keydown', onKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
@@ -98,7 +87,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <p class="text-xs text-slate-500">
         Generated live from your current parameter values.
       </p>
-      <span class="text-[10px] text-slate-400">Copy shortcut: Ctrl+Shift+C</span>
     </header>
 
     <!-- Blocked state: validation error replaces the output -->
@@ -127,9 +115,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <div class="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          class="rounded bg-slate-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+          class="rounded px-4 py-1.5 text-sm font-medium text-white transition"
+          :class="copyStatus === 'ok' ? 'bg-emerald-600' : 'bg-slate-800 hover:bg-slate-700'"
           @click="copy"
-        >Copy to clipboard</button>
+        >{{ copyStatus === 'ok' ? 'Copied ✓' : 'Copy to clipboard' }}</button>
         <button
           type="button"
           class="rounded border border-slate-300 px-4 py-1.5 text-sm hover:bg-slate-50"
@@ -147,14 +136,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         >Reset to hardware defaults</button>
       </div>
 
-      <p v-if="copyStatus === 'ok'" class="text-xs text-emerald-700">Copied to clipboard.</p>
-      <p v-else-if="copyStatus === 'fail'" class="text-xs text-red-700">
-        Clipboard write failed. Select the textarea and copy manually.
-      </p>
-      <p v-if="shareStatus === 'ok'" class="text-xs text-emerald-700">Share URL copied.</p>
-      <p v-else-if="shareStatus === 'fail'" class="text-xs text-red-700">
-        Clipboard write failed, but the URL bar already holds the current state.
-      </p>
+      <div aria-live="polite">
+        <p v-if="copyStatus === 'ok'" class="text-xs text-emerald-700">Copied to clipboard.</p>
+        <p v-else-if="copyStatus === 'fail'" class="text-xs text-red-700">
+          Clipboard write failed. Select the textarea and copy manually.
+        </p>
+        <p v-if="shareStatus === 'ok'" class="text-xs text-emerald-700">Share URL copied.</p>
+        <p v-else-if="shareStatus === 'fail'" class="text-xs text-red-700">
+          Clipboard write failed, but the URL bar already holds the current state.
+        </p>
+      </div>
     </div>
   </section>
 </template>

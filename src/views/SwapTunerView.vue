@@ -8,6 +8,7 @@ import ConfigOutput from '@/components/ConfigOutput.vue'
 import InfoDrawer from '@/components/InfoDrawer.vue'
 import AboutSection from '@/components/AboutSection.vue'
 import StepHeader from '@/components/StepHeader.vue'
+import MobileImpactBar from '@/components/MobileImpactBar.vue'
 import AdSlot from '@/components/AdSlot.vue'
 import PressureChart from '@/components/PressureChart.vue'
 import WatermarkChart from '@/components/WatermarkChart.vue'
@@ -60,6 +61,7 @@ const STEPS = [
 
       <!-- Step preview chain -->
       <ol class="mt-5 flex flex-wrap items-center gap-x-0.5 gap-y-1 border-t border-white/10 bg-black/10 px-5 py-3 text-xs sm:px-6">
+        <li class="mr-1 text-slate-400">Jump to:</li>
         <template v-for="(step, i) in STEPS" :key="step.label">
           <li>
             <a
@@ -124,5 +126,9 @@ const STEPS = [
 
     <AboutSection />
     <InfoDrawer />
+
+    <!-- Spacer so the mobile impact bar never covers page content. -->
+    <div class="h-16 lg:hidden" aria-hidden="true" />
+    <MobileImpactBar :impact="impact" />
   </section>
 </template>

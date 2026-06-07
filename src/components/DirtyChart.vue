@@ -49,6 +49,16 @@ const chartData = computed(() => {
   }
 })
 
+// Text alternative for screen readers.
+const summary = computed(() => {
+  const d = dirty.value
+  const peak = Math.max(...d.points.map((p) => p.dirty))
+  const stall = d.stallReached
+    ? `the synchronous stall ceiling at ${d.ratioLine}% is reached, so writes block on the flusher`
+    : `dirty pages peak at about ${peak.toFixed(1)}% of RAM, staying below the ${d.ratioLine}% stall ceiling`
+  return `Dirty writeback chart: over a 120-second constant write workload, ${stall}. Background flush threshold is ${d.bgLine}% of RAM.`
+})
+
 const chartOptions = computed(() => {
   const d = dirty.value
   // Cap Y so the stall ceiling has visible room above it.
@@ -92,7 +102,7 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-2">
-    <div class="h-64">
+    <div class="h-64" role="img" :aria-label="summary">
       <Line :data="chartData" :options="chartOptions" />
     </div>
     <div class="flex flex-wrap gap-3 text-xs text-slate-600">

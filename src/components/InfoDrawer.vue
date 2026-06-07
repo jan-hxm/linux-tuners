@@ -5,6 +5,10 @@ import { useActiveTuner, useTunerDomain } from '@/composables/useActiveTuner.js'
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
 const closeBtn = ref(null)
+const panel = ref(null)
+// Element to restore focus to when the drawer closes (the param button that
+// opened it). Captured at open time from document.activeElement.
+let lastFocused = null
 
 const def = computed(() =>
   tuner.drawerParamKey ? domain.defsByKey[tuner.drawerParamKey] : null,
@@ -44,13 +48,38 @@ function onKey(e) {
   if (e.key === 'Escape' && isOpen.value) close()
 }
 
+// Trap Tab within the dialog while it's open (aria-modal alone does not stop
+// focus escaping to the page behind the overlay).
+function onTrapKeydown(e) {
+  if (e.key !== 'Tab') return
+  const root = panel.value
+  if (!root) return
+  const focusables = root.querySelectorAll(
+    'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+  )
+  if (!focusables.length) return
+  const first = focusables[0]
+  const last = focusables[focusables.length - 1]
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault()
+    first.focus()
+  }
+}
+
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 watch(isOpen, async (open) => {
   if (open) {
+    lastFocused = document.activeElement
     await nextTick()
     closeBtn.value?.focus()
+  } else if (lastFocused && typeof lastFocused.focus === 'function') {
+    lastFocused.focus()
+    lastFocused = null
   }
 })
 </script>
@@ -65,10 +94,12 @@ watch(isOpen, async (open) => {
     />
     <aside
       v-if="isOpen && def"
+      ref="panel"
       class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col overflow-y-auto border-l border-slate-200 bg-white shadow-xl"
       role="dialog"
       aria-modal="true"
       :aria-label="`Reference for ${def.sysctlName}`"
+      @keydown="onTrapKeydown"
     >
       <header class="sticky top-0 flex items-start justify-between gap-3 border-b border-slate-200 bg-white p-4">
         <div class="min-w-0">
@@ -125,7 +156,7 @@ watch(isOpen, async (open) => {
 
         <section>
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Defaults by workload <span class="text-slate-400">(for current hardware)</span>
+            Defaults by workload <span class="text-slate-500">(for current hardware)</span>
           </h3>
           <table class="mt-1 w-full text-xs">
             <thead>

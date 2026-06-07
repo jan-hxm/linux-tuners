@@ -22,6 +22,9 @@ const targetSlice = ref(tuner.hardware.targetSlice)
 const pidMax = ref(tuner.hardware.pidMax)
 const cgroupVersion = ref(tuner.hardware.cgroupVersion)
 const collapsed = ref(false)
+// See HardwareForm: collapse to the summary only on the first apply, then stay
+// open on subsequent applies so re-tuning doesn't force a re-expand each time.
+const hasApplied = ref(false)
 
 const WORKLOADS = [
   { value: 'container-host', label: 'Container host (Docker / Podman)' },
@@ -74,7 +77,8 @@ function apply() {
     pidMax: pid,
     cgroupVersion: cgroupVersion.value,
   })
-  collapsed.value = true
+  if (!hasApplied.value) collapsed.value = true
+  hasApplied.value = true
 }
 
 function expand() {
@@ -187,12 +191,18 @@ watch(
           </template>
         </NumberPickField>
         <div>
-          <label class="block text-sm font-medium text-slate-700">cgroup version</label>
-          <div class="mt-2 inline-flex overflow-hidden rounded border border-slate-300">
+          <span id="sysd-cgroup-version-label" class="block text-sm font-medium text-slate-700">cgroup version</span>
+          <div
+            role="radiogroup"
+            aria-labelledby="sysd-cgroup-version-label"
+            class="mt-2 inline-flex overflow-hidden rounded border border-slate-300"
+          >
             <button
               v-for="v in ['v1', 'v2']"
               :key="v"
               type="button"
+              role="radio"
+              :aria-checked="cgroupVersion === v"
               class="px-3 py-1 text-sm"
               :class="cgroupVersion === v ? 'bg-slate-800 text-white' : 'bg-white hover:bg-slate-50'"
               @click="cgroupVersion = v"

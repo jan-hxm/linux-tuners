@@ -14,6 +14,10 @@ const workload = ref(tuner.hardware.workload)
 const cgroupVersion = ref(tuner.hardware.cgroupVersion)
 const kernelVersion = ref(tuner.hardware.kernelVersion ?? '')
 const collapsed = ref(false)
+// Auto-collapse to the one-line summary only on the very first apply (the
+// initial guided flow). After the user has explicitly re-opened with "Edit",
+// keep the form open on apply so they can keep tweaking without re-expanding.
+const hasApplied = ref(false)
 
 const DEVICE_OPTIONS = [
   { value: 'hdd', label: 'HDD (rotational)', note: 'caps swappiness at 60' },
@@ -74,7 +78,8 @@ function apply() {
     cgroupVersion: cgroupVersion.value,
     kernelVersion: kernelVersion.value.trim() || null,
   })
-  collapsed.value = true
+  if (!hasApplied.value) collapsed.value = true
+  hasApplied.value = true
 }
 
 function expand() {
@@ -182,12 +187,18 @@ watch(
       <!-- cgroup + kernel -->
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
-          <label class="block text-sm font-medium text-slate-700">cgroup version</label>
-          <div class="mt-2 inline-flex overflow-hidden rounded border border-slate-300">
+          <span id="cgroup-version-label" class="block text-sm font-medium text-slate-700">cgroup version</span>
+          <div
+            role="radiogroup"
+            aria-labelledby="cgroup-version-label"
+            class="mt-2 inline-flex overflow-hidden rounded border border-slate-300"
+          >
             <button
               v-for="v in ['v1', 'v2']"
               :key="v"
               type="button"
+              role="radio"
+              :aria-checked="cgroupVersion === v"
               class="px-3 py-1 text-sm"
               :class="cgroupVersion === v ? 'bg-slate-800 text-white' : 'bg-white hover:bg-slate-50'"
               @click="cgroupVersion = v"

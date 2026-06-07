@@ -21,6 +21,16 @@ const chartData = computed(() => {
   }
 })
 
+// Text alternative for screen readers.
+const summary = computed(() => {
+  const c = cpu.value
+  const parts = c.segments.map((s) => `${s.slice} ${s.pct}%`)
+  const cap = c.quotaCores !== null
+    ? ` A CPUQuota hard cap limits this slice to about ${c.quotaCores.toFixed(1)} of ${c.cores} cores regardless of weight.`
+    : ''
+  return `CPU shares chart: under contention a saturated CPU splits by CPUWeight as ${parts.join(', ')}.${cap}`
+})
+
 const chartOptions = computed(() => ({
   indexAxis: 'y',
   responsive: true,
@@ -41,7 +51,7 @@ const chartOptions = computed(() => ({
 
 <template>
   <div class="space-y-3">
-    <div class="h-32">
+    <div class="h-32" role="img" :aria-label="summary">
       <Bar :data="chartData" :options="chartOptions" />
     </div>
     <div class="flex flex-wrap gap-3 text-xs text-slate-600">

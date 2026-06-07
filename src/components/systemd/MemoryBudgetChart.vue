@@ -21,6 +21,16 @@ const chartData = computed(() => {
   }
 })
 
+// Text alternative for screen readers.
+const summary = computed(() => {
+  const m = memory.value
+  if (m.noLimits) {
+    return 'Memory budget chart: no memory limits are set, so the slice can use all of RAM.'
+  }
+  const parts = m.segments.map((s) => `${s.label} ${(s.mib / 1024).toFixed(2)} GiB`)
+  return `Memory budget chart: of total RAM, ${parts.join(', ')}. MemoryHigh throttles the slice and MemoryMax is the hard OOM cap.`
+})
+
 const chartOptions = computed(() => {
   const m = memory.value
   return {
@@ -50,7 +60,7 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-3">
-    <div class="h-32">
+    <div class="h-32" role="img" :aria-label="summary">
       <Bar :data="chartData" :options="chartOptions" />
     </div>
     <div class="flex flex-wrap gap-3 text-xs text-slate-600">

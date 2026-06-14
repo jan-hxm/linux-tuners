@@ -6,6 +6,7 @@
 
 import { PARAMETER_DEFS_BY_KEY } from '@/data/parameterDefs.js'
 import { watermarkLevelsMiB } from './calculations.js'
+import { formatSizeGiB } from '@/utils/formatting.js'
 
 const SECTIONS = [
   { id: 'memory-reclaim', title: 'Memory reclaim & swap' },
@@ -25,20 +26,44 @@ const SECTIONS = [
 export function generateConfig({ hardware, params, presetLabel, customised, now }) {
   const lines = []
   const date = (now ?? new Date()).toISOString().slice(0, 10)
+  const isK8s = hardware.workload === 'k8s'
 
-  lines.push(`# sysctl swap tuner (generated ${date})`)
+  // ── Header ────────────────────────────────────────────────────────────────
+  lines.push(rule())
+  lines.push('# Linux swap & VM sysctl tuning')
+  lines.push(`# Generated ${date} by linux-tuners.dev/swap`)
   lines.push(`# Hardware: ${describeHardware(hardware)}`)
   if (presetLabel) {
     lines.push(`# Profile: ${presetLabel}${customised ? ' (customised)' : ''}`)
   } else {
     lines.push('# Profile: custom')
   }
-  lines.push('# Apply: sudo sysctl --system')
-  lines.push('# Persist: /etc/sysctl.d/99-swap-tuning.conf')
+  lines.push(rule())
   lines.push('#')
+
+  // ── How to apply / persist the sysctl settings ──────────────────────────────
+  lines.push('# HOW TO APPLY THESE SETTINGS')
+  lines.push('#')
+  lines.push('# 1. Persist them. Save this whole file as a drop-in (sysctl ignores')
+  lines.push('#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):')
+  lines.push('#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file')
+  lines.push('#')
+  lines.push('# 2. Apply them now, without rebooting:')
+  lines.push('#      sudo sysctl --system')
+  lines.push('#')
+  lines.push('# 3. Verify a value took effect:')
+  lines.push('#      sysctl vm.swappiness')
+  lines.push('#')
+
+  // ── How to create / activate the swap device (device-aware) ─────────────────
+  lines.push(...swapSetupBlock(hardware))
+
+  // ── Sources ─────────────────────────────────────────────────────────────────
   lines.push('# Sources:')
-  lines.push('#   https://docs.kernel.org/admin-guide/sysctl/vm.html')
-  lines.push('#   https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/')
+  lines.push('#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html')
+  if (isK8s) {
+    lines.push('#   Kubernetes swap: https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/')
+  }
   lines.push('')
 
   for (const section of SECTIONS) {
@@ -60,10 +85,115 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   return lines.join('\n')
 }
 
+/**
+ * Device-aware "how do I actually get swap running" block, returned as comment
+ * lines. Swap files for disk-backed devices, zram-generator for zram, the zswap
+ * runtime + kernel-cmdline dance for zswap, and a "you have none" note when
+ * swapGiB is 0. Each block also covers persistence across reboots.
+ *
+ * @param {import('./parameters.js').HardwareSpec} hw
+ * @returns {string[]}
+ */
+function swapSetupBlock(hw) {
+  const gib = hw.swapGiB
+  const mib = Math.round(gib * 1024)
+  const size = formatSizeGiB(gib)
+  const fsize = fallocateSize(gib)
+  const out = []
+
+  if (gib === 0) {
+    out.push('# NO SWAP CONFIGURED')
+    out.push('#')
+    out.push('# You selected no swap, so vm.swappiness has no effect; the dirty-writeback')
+    out.push('# and cache settings below still apply. To add swap later, create a swap file:')
+    out.push('#   sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile')
+    out.push('#   sudo mkswap /swapfile && sudo swapon /swapfile')
+    out.push("#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab   # persist on reboot")
+    out.push('#')
+    out.push(rule())
+    out.push('#')
+    return out
+  }
+
+  if (hw.swapDevice === 'zram') {
+    out.push(`# ACTIVATING SWAP: ${size} zram (compressed RAM-backed swap)`)
+    out.push('#')
+    out.push('# zram is a compressed block device that lives in RAM. The cleanest setup is')
+    out.push("# systemd's zram-generator:")
+    out.push('#   # Debian/Ubuntu: sudo apt install systemd-zram-generator')
+    out.push('#   # Fedora: sudo dnf install zram-generator   Arch: sudo pacman -S zram-generator')
+    out.push(`#   printf '[zram0]\\nzram-size = ${mib}\\ncompression-algorithm = zstd\\n' | sudo tee /etc/systemd/zram-generator.conf`)
+    out.push('#   sudo systemctl daemon-reload')
+    out.push('#   sudo systemctl restart systemd-zram-setup@zram0.service')
+    out.push('#')
+    out.push('# Confirm it is active:  zramctl && swapon --show')
+    out.push('# Note: zram swap is cheap, so a high vm.swappiness (100-200) pays off here.')
+    out.push('#')
+    out.push(rule())
+    out.push('#')
+    return out
+  }
+
+  if (hw.swapDevice === 'zswap') {
+    out.push('# ACTIVATING SWAP: zswap (compressed cache in front of disk swap)')
+    out.push('#')
+    out.push('# zswap is not a separate device: it compresses pages in RAM before they spill')
+    out.push('# to real disk swap, which you still need. Create the backing swap first:')
+    out.push(`#   sudo fallocate -l ${fsize} /swapfile && sudo chmod 600 /swapfile`)
+    out.push('#   sudo mkswap /swapfile && sudo swapon /swapfile')
+    out.push("#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab   # persist on reboot")
+    out.push('#')
+    out.push('# Then turn zswap on at runtime:')
+    out.push('#   echo 1    | sudo tee /sys/module/zswap/parameters/enabled')
+    out.push('#   echo zstd | sudo tee /sys/module/zswap/parameters/compressor')
+    out.push('#')
+    out.push('# Persist it on the kernel command line (GRUB_CMDLINE_LINUX in /etc/default/grub):')
+    out.push('#   zswap.enabled=1 zswap.compressor=zstd')
+    out.push('#   then run: sudo update-grub   # or: sudo grub2-mkconfig -o /boot/grub2/grub.cfg')
+    out.push('#')
+    out.push(rule())
+    out.push('#')
+    return out
+  }
+
+  // Disk-backed: hdd / sata-ssd / nvme-ssd / network.
+  out.push(`# ACTIVATING SWAP: ${size} on ${describeDevice(hw.swapDevice)}`)
+  out.push('#')
+  out.push('# If you do not have swap yet, a swap file is the simplest option:')
+  out.push(`#   sudo fallocate -l ${fsize} /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=${mib}`)
+  out.push('#   sudo chmod 600 /swapfile')
+  out.push('#   sudo mkswap /swapfile')
+  out.push('#   sudo swapon /swapfile')
+  out.push('#')
+  out.push('# Persist it across reboots by adding it to /etc/fstab:')
+  out.push("#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab")
+  if (hw.swapDevice === 'network') {
+    out.push('#')
+    out.push('# Network-backed swap (NFS/iSCSI) is fragile under memory pressure; prefer a')
+    out.push('# local device and keep vm.swappiness low so the box leans on it as little as possible.')
+  }
+  out.push('#')
+  out.push('# Confirm it is active:  swapon --show && free -h')
+  out.push('#')
+  out.push(rule())
+  out.push('#')
+  return out
+}
+
 /** @param {import('./parameters.js').HardwareSpec} hw */
 function describeHardware(hw) {
-  const swap = hw.swapGiB === 0 ? 'no swap' : `${hw.swapGiB} GiB ${describeDevice(hw.swapDevice)} swap`
-  return `${hw.ramGiB} GiB RAM, ${swap}, ${describeWorkload(hw.workload)}`
+  const swap = hw.swapGiB === 0 ? 'no swap' : `${formatSizeGiB(hw.swapGiB)} ${describeDevice(hw.swapDevice)} swap`
+  return `${formatSizeGiB(hw.ramGiB)} RAM, ${swap}, ${describeWorkload(hw.workload)}`
+}
+
+/**
+ * Size argument for `fallocate -l` / `mkswap`. Whole GiB keep the "8G" form so
+ * the commands read naturally; sub-GiB sizes drop to MiB ("512M"), since
+ * fallocate's size parser is happiest with integer-suffixed values.
+ * @param {number} gib
+ */
+function fallocateSize(gib) {
+  return Number.isInteger(gib) ? `${gib}G` : `${Math.round(gib * 1024)}M`
 }
 
 function describeDevice(device) {
@@ -91,6 +221,12 @@ function describeWorkload(w) {
 }
 
 const SEP_WIDTH = 78
+
+/** Full-width comment rule used to fence the header/setup blocks. */
+function rule() {
+  return '# ' + '─'.repeat(SEP_WIDTH - 2)
+}
+
 function sectionHeader(title) {
   const lead = `# ── ${title} `
   const dashes = '─'.repeat(Math.max(2, SEP_WIDTH - lead.length))

@@ -7,7 +7,7 @@
  * @typedef {'v1' | 'v2'} CgroupVersion
  *
  * @typedef {Object} SystemdSpec
- * @property {number}          ramGiB         Total RAM in GiB (positive integer)
+ * @property {number}          ramGiB         Total RAM in GiB (fractional allowed, e.g. 0.5 = 512 MiB)
  * @property {number}          cpuCores       Logical CPUs (drives CPUQuota + share math)
  * @property {SystemdWorkload} workload       Primary workload class
  * @property {TargetSlice}     targetSlice    Slice the slice-level controls apply to

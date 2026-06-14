@@ -6,11 +6,15 @@ import {
   RAM_PICKS,
   CORE_PICKS,
   PID_PICKS,
+  RAM_MIN_GIB,
   RAM_MAX_GIB,
+  SIZE_STEP_GIB,
   CORE_MAX,
   PID_MAX_CEIL,
   clampInt,
+  clampSize,
 } from '@/components/hardware/fieldOptions.js'
+import { formatSizeGiB } from '@/utils/formatting.js'
 
 const tuner = useActiveTuner()
 
@@ -63,7 +67,7 @@ const cgroupNote = computed(() =>
 )
 
 function apply() {
-  const ram = clampInt(ramGiB.value, 1, RAM_MAX_GIB)
+  const ram = clampSize(ramGiB.value, RAM_MIN_GIB, RAM_MAX_GIB)
   const cores = clampInt(cpuCores.value, 1, CORE_MAX)
   const pid = clampInt(pidMax.value, 1024, PID_MAX_CEIL)
   ramGiB.value = ram
@@ -108,7 +112,7 @@ watch(
       <div>
         <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">System profile</h2>
         <p v-if="collapsed" class="mt-1 text-sm text-slate-700">
-          <span class="font-mono">{{ tuner.hardware.ramGiB }} GiB</span> RAM ·
+          <span class="font-mono">{{ formatSizeGiB(tuner.hardware.ramGiB) }}</span> RAM ·
           <span class="font-mono">{{ tuner.hardware.cpuCores }}</span> cores ·
           {{ workloadLabel(tuner.hardware.workload) }} ·
           <span class="font-mono">{{ tuner.hardware.targetSlice }}</span>
@@ -129,9 +133,11 @@ watch(
       <NumberPickField
         v-model="ramGiB"
         label="Total RAM (GiB)"
-        :min="1"
+        :min="RAM_MIN_GIB"
         :max="RAM_MAX_GIB"
+        :step="SIZE_STEP_GIB"
         :picks="RAM_PICKS"
+        help="Fractional values are allowed for small hosts, e.g. 0.5 = 512 MiB."
       />
 
       <!-- CPU cores -->

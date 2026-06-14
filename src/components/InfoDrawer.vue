@@ -17,6 +17,7 @@ const isOpen = computed(() => def.value !== null)
 
 const contextNote = computed(() => {
   if (!def.value) return null
+  if (domain.contextApplies && !domain.contextApplies(tuner.hardware)) return null
   return def.value[domain.noteKey] ?? def.value.contextNote ?? null
 })
 

@@ -169,3 +169,26 @@ describe('ParameterCard click-to-edit value', () => {
     expect(wrapper.find(EDIT_BTN).exists()).toBe(false)
   })
 })
+
+describe('ParameterCard K8s context badge gating', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('hides the K8s badge and note when the workload is not k8s', async () => {
+    const store = useTunerStore()
+    store.hardware.workload = 'general'
+    // swappiness has a k8sNote, so it is the badge-bearing card.
+    const wrapper = mount(ParameterCard, { props: { paramKey: 'swappiness' } })
+    await nextTick()
+    expect(wrapper.text()).not.toContain('K8s')
+  })
+
+  it('shows the K8s badge when the workload is k8s', async () => {
+    const store = useTunerStore()
+    store.hardware.workload = 'k8s'
+    const wrapper = mount(ParameterCard, { props: { paramKey: 'swappiness' } })
+    await nextTick()
+    expect(wrapper.text()).toContain('K8s')
+  })
+})

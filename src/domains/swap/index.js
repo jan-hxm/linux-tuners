@@ -110,6 +110,8 @@ export const swapDomain = {
   workloads: ['k8s', 'database', 'general', 'desktop', 'embedded'],
   workloadField: 'workload',
   context: { badge: 'K8s', label: 'Kubernetes', url: K8S_BLOG },
+  // The Kubernetes guidance only applies when the user is actually tuning a k8s node
+  contextApplies: (hw) => hw.workload === 'k8s',
   docsLabel: 'kernel.org docs',
   noteKey: 'k8sNote',
   formula,

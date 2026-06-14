@@ -9,12 +9,16 @@
  */
 
 /** Total-RAM quick picks (GiB) — shared by both tuners so they never drift. */
-export const RAM_PICKS = [2, 4, 8, 16, 32, 64, 128, 192, 256, 512]
+export const RAM_PICKS = [
+  { value: 0.5, label: '512 MiB' },
+  1, 2, 4, 8, 16, 32, 64, 128, 192, 256, 512,
+]
 
 /** Swap-size quick picks (GiB) — swap tuner only; 0 means "no swap". */
 export const SWAP_PICKS = [
   { value: 0, label: 'No swap' },
-  2, 4, 8, 16, 32, 64, 128, 192, 256, 384, 512,
+  { value: 0.5, label: '512 MiB' },
+  1, 2, 4, 8, 16, 32, 64, 128, 192, 256, 384, 512,
 ]
 
 /** Logical-CPU quick picks — systemd tuner. */
@@ -36,9 +40,31 @@ export const SWAP_MAX_GIB = 2304 * 1024
 export const CORE_MAX = 4096
 export const PID_MAX_CEIL = 4194304
 
+// Floors for the sizes, low enough to model sub-GiB hosts (a 1 GiB box might
+// only have 512 MiB free for the workload). RAM can't be 0; swap can (= none).
+export const RAM_MIN_GIB = 0.25 // 256 MiB
+export const SWAP_MIN_GIB = 0
+
+// Slider/spinner step for the size fields. 0.25 GiB (256 MiB) lets the spinner
+// reach the common sub-GiB sizes; typing any value still works, since apply()
+// clamps + rounds to MiB granularity via clampSize.
+export const SIZE_STEP_GIB = 0.25
+
 /** Floor to an int and clamp into [min, max]; non-numeric falls back to min. */
 export function clampInt(value, min, max) {
   const n = Math.floor(Number(value))
   if (!Number.isFinite(n)) return min
   return Math.max(min, Math.min(max, n))
+}
+
+/**
+ * Clamp a GiB size into [min, max], rounded to MiB granularity so sub-GiB hosts
+ * are expressible without accumulating binary-float noise (0.1 + 0.2 etc.).
+ * Whole-GiB values stay exact. Non-numeric falls back to min.
+ */
+export function clampSize(value, min, max) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return min
+  const gib = Math.round(n * 1024) / 1024
+  return Math.max(min, Math.min(max, gib))
 }

@@ -2,7 +2,17 @@
 import { ref, watch, computed } from 'vue'
 import { useTunerStore } from '@/stores/tuner.js'
 import NumberPickField from '@/components/hardware/NumberPickField.vue'
-import { RAM_PICKS, SWAP_PICKS, RAM_MAX_GIB, SWAP_MAX_GIB, clampInt } from '@/components/hardware/fieldOptions.js'
+import {
+  RAM_PICKS,
+  SWAP_PICKS,
+  RAM_MIN_GIB,
+  RAM_MAX_GIB,
+  SWAP_MIN_GIB,
+  SWAP_MAX_GIB,
+  SIZE_STEP_GIB,
+  clampSize,
+} from '@/components/hardware/fieldOptions.js'
+import { formatSizeGiB } from '@/utils/formatting.js'
 
 const tuner = useTunerStore()
 
@@ -66,8 +76,8 @@ function apply() {
   // Normalise + clamp first, and write the result back into the draft so the
   // field reflects what was actually applied (otherwise an out-of-range entry
   // would keep showing "Unsaved changes" against the clamped store value).
-  const ram = clampInt(ramGiB.value, 1, RAM_MAX_GIB)
-  const swap = clampInt(swapGiB.value, 0, SWAP_MAX_GIB)
+  const ram = clampSize(ramGiB.value, RAM_MIN_GIB, RAM_MAX_GIB)
+  const swap = clampSize(swapGiB.value, SWAP_MIN_GIB, SWAP_MAX_GIB)
   ramGiB.value = ram
   swapGiB.value = swap
   tuner.setHardware({
@@ -110,9 +120,13 @@ watch(
       <div>
         <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Hardware spec</h2>
         <p v-if="collapsed" class="mt-1 text-sm text-slate-700">
-          <span class="font-mono">{{ tuner.hardware.ramGiB }} GiB</span> RAM ·
-          <span class="font-mono">{{ tuner.hardware.swapGiB }} GiB</span>
-          {{ tuner.hardware.swapDevice }} swap · {{ workloadLabel(tuner.hardware.workload) }}
+          <span class="font-mono">{{ formatSizeGiB(tuner.hardware.ramGiB) }}</span> RAM ·
+          <template v-if="tuner.hardware.swapGiB === 0">no swap</template>
+          <template v-else>
+            <span class="font-mono">{{ formatSizeGiB(tuner.hardware.swapGiB) }}</span>
+            {{ tuner.hardware.swapDevice }} swap
+          </template>
+          · {{ workloadLabel(tuner.hardware.workload) }}
         </p>
       </div>
       <button
@@ -130,18 +144,22 @@ watch(
       <NumberPickField
         v-model="ramGiB"
         label="Total RAM (GiB)"
-        :min="1"
+        :min="RAM_MIN_GIB"
         :max="RAM_MAX_GIB"
+        :step="SIZE_STEP_GIB"
         :picks="RAM_PICKS"
+        help="Fractional values are allowed for small hosts, e.g. 0.5 = 512 MiB."
       />
 
       <!-- Swap size -->
       <NumberPickField
         v-model="swapGiB"
         label="Swap size (GiB)"
-        :min="0"
+        :min="SWAP_MIN_GIB"
         :max="SWAP_MAX_GIB"
+        :step="SIZE_STEP_GIB"
         :picks="SWAP_PICKS"
+        help="0 means no swap. Fractional values are allowed, e.g. 0.5 = 512 MiB."
       />
 
       <!-- Swap device -->

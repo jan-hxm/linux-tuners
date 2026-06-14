@@ -7,8 +7,8 @@
  * @typedef {'v1' | 'v2'} CgroupVersion
  *
  * @typedef {Object} HardwareSpec
- * @property {number}        ramGiB         Total RAM in GiB (positive integer)
- * @property {number}        swapGiB        Swap size in GiB; 0 means no swap
+ * @property {number}        ramGiB         Total RAM in GiB (fractional allowed, e.g. 0.5 = 512 MiB)
+ * @property {number}        swapGiB        Swap size in GiB (fractional allowed); 0 means no swap
  * @property {SwapDevice}    swapDevice     Backing device class for swap
  * @property {Workload}      workload       Primary workload class
  * @property {CgroupVersion} cgroupVersion  cgroup v1 / v2 — drives per-cgroup swappiness note

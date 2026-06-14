@@ -29,7 +29,12 @@ const isWorkloadTuned = computed(() => {
 
 // Contextual ("K8s" on the swap tuner, "container host" on systemd) note + its
 // "Source" link, both supplied by the active domain so the card stays generic.
-const contextNote = computed(() => def.value[domain.noteKey] ?? def.value.contextNote ?? null)
+// A domain may gate the note on hardware (contextApplies) so e.g. the K8s note
+// only surfaces when the chosen workload is actually Kubernetes.
+const contextNote = computed(() => {
+  if (domain.contextApplies && !domain.contextApplies(tuner.hardware)) return null
+  return def.value[domain.noteKey] ?? def.value.contextNote ?? null
+})
 
 // Slider DOM ref + uncontrolled-with-external-sync pattern.
 //

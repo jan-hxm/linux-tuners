@@ -44,6 +44,7 @@
  * @property {string[]} workloads        Workload values compared in the drawer
  * @property {string}   workloadField    Hardware key the workloads vary (e.g. 'workload')
  * @property {TunerContext} context
+ * @property {(hw:Object)=>boolean} [contextApplies]  Gate the contextual badge/note on hardware (e.g. only show K8s guidance when workload is k8s). Omitted = always show.
  * @property {string}   docsLabel        Label for the per-parameter docs link
  * @property {string}   noteKey          Def field holding the contextual note
  * @property {(def:Object, ctx:{hardware:Object,params:Object})=>(TunerFormula|null)} [formula]

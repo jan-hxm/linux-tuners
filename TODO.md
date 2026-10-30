@@ -56,6 +56,7 @@ Steps 1–3 come before the Security tuner, 4–6 alongside it, and 7 before Net
 6. [ ] `core/output` writers, multi-file `{ path, content }[]` output, generic `sysctlConfig`.
 7. [ ] Value types (`int`/`bool`/`enum`/`tuple`) + controls registry; split `ParameterCard`; `select` control.
 
+- [ ] Security guards from [Design.md §10](Design.md#10-security): the hostile-state and forbidden-directive tests (part of step 1's contract suite), the forbidden-sink source scan, and `npm audit --omit=dev --audit-level=high` in CI. Before the Security tuner.
 - [ ] Tests: `ConfigOutput` flow (textarea matches the generator, copy calls the clipboard API, blocked state) and a smoke test that mounts each view without console errors.
 - [ ] Automated accessibility sweep (axe-core / Lighthouse): focus visibility on the dark hero, a live-region announcement when a preset is applied or validation fires, and a full WCAG AA contrast pass.
 - [ ] Bundle: re-measure (last measured before `/systemd`), drop unused Chart.js parts (check whether `Filler` is needed), lazy-load chart components per tab.

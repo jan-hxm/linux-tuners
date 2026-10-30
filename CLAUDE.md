@@ -21,6 +21,7 @@ The repo is **public**. Anything that shouldn't be public-facing lives in `PRIVA
 
 Each links to its full rationale in Design.md.
 
+- **Security audit before every commit.** Every change except docs-only or test-only ones passes the audit in [§10](Design.md#10-security) before you commit: tests and build, `npm audit --omit=dev`, the rules checklist, and `/security-review` on the diff. Give the result in your reply. Blocking findings get fixed first; anything else goes in `PRIVATE.md`. Generated output is built from definitions, never from state, and never contains executable directives.
 - **No em dashes in displayed text** (UI strings, parameter descriptions, validation messages, generated config). Docs and comments are exempt. [§8](Design.md#8-copy-conventions)
 - **Every emitted value must be one the kernel/systemd accepts**, and sliders must not offer values systemd silently ignores. Blocking validation only for rejected or clearly broken settings. [§3](Design.md#3-product-principles)
 - **Shared-link state is untrusted input**: keep the schema checks, rounding and preset-id check in serialization / `restoreState`. [§5 Shareable URL state](Design.md#shareable-url-state)

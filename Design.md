@@ -188,6 +188,8 @@ and the CMP load from a changing set of Google domains.
    Ad networks and search engines treat "under construction" pages as thin
    content. Planned tuners appear only as "Coming soon" cards on the landing
    page.
+6. Pass the security audit in [section 10](#10-security), including the
+   hand-crafted hostile link, before the first commit of the tuner.
 
 ## 7. UI/UX and accessibility conventions
 
@@ -421,3 +423,119 @@ its math and its cross-parameter rules.
 - Treat each migration step as a refactor with no behaviour change:
   tests green, links still restore, and the generated config is byte-identical
   for the defaults and every preset. Snapshot it before the move to check.
+
+## 10. Security
+
+**Rule: no change is committed until it has passed the security audit below.**
+Every push to `main` is a release, and what we ship is a file people run as
+root. Open findings and their details go in the local `PRIVATE.md`, never in
+tracked files, commit messages, PRs or issues.
+
+### Threat model
+
+There is no backend, so the risks are on the visitor's side:
+
+1. **Config injection (highest).** A shared link is attacker-controlled. If any
+   part of it reaches the generated output other than as a validated value,
+   the attacker writes into a file the victim installs as root. In sysctl.d
+   that means arbitrary sysctls; in the planned udev rules, tuned profiles and
+   systemd drop-ins it means command execution (`RUN+=`, `[script]`, `Exec*`).
+2. **Script injection in the page.** Hash state, profile strings or
+   third-party content rendered as HTML or followed as a URL.
+3. **Supply chain.** npm dependencies, GitHub Actions (the deploy job holds the
+   Cloudflare token) and third-party scripts (AdSense and the CMP, the only
+   ones allowed).
+4. **Privacy regressions.** Principle 6 (§3): state stays in the hash. A new
+   request, cookie or storage key that carries it breaks the promise and the
+   privacy policy.
+5. **Leaks.** Secrets or `PRIVATE.md` content in the repo or the bundle.
+   `VITE_*` values are public by construction, so only public IDs go there.
+
+### Rules for code that produces output
+
+These hold for every tuner and every output writer (§9 `core/output`):
+
+- **Output is built from definitions, never from state.** Keys, section
+  names, file paths and apply commands come from the tuner's code. State only
+  supplies *values*, and only after `restoreState` has typed, clamped and
+  checked them against the def.
+- **Values are typed, not strings.** Numbers are finite integers within the
+  range, enums are members of a fixed list, and free text only matches a strict
+  pattern with no newlines, quotes, `#`, `;`, `=`, `|`, `$`, backslashes or
+  path separators. The writer formats the value itself; it never passes a raw
+  string through.
+- **No executable directives, ever.** The output never contains settings that
+  run programs: udev `RUN`/`PROGRAM`/`IMPORT{program}`, tuned `[script]` or
+  `script=`, systemd `Exec*`, or sysctls that name a program
+  (`kernel.core_pattern`, `kernel.modprobe`, `kernel.poweroff_cmd`, ...). This
+  is a non-goal, not a feature request. A tuner that seems to need one is
+  out of scope.
+- **Paths are constants.** Output file paths and download names are fixed per
+  tuner, match `^/etc/[a-z0-9._/-]+$` and contain no `..`. Apply commands are
+  fixed text with only those paths interpolated.
+- **Shared-link restore stays strict** (§5 Shareable URL state). A change that
+  relaxes a schema, a range or the preset-id check is a security change.
+
+### Rules for the page, the build and the deploy
+
+- No `v-html`, `innerHTML`, `eval`, `new Function`, or `href`/`src` bound to
+  state. External links are literals in data files.
+- No new network request, cookie, storage key or third-party origin (script,
+  style, font, frame) without a Design.md decision and a privacy policy update.
+- `public/_headers` only gets stricter. The missing `script-src` CSP is the
+  one accepted trade-off (§5 Hosting and deploy).
+- New dependencies need a reason a few lines of our own code can't cover.
+  Check maintenance, install scripts and transitive weight; `package-lock.json`
+  is committed with the change.
+- Workflows keep least-privilege `permissions`. Secrets are referenced only
+  in the step that needs them and are never echoed. Third-party actions are
+  pinned to a commit SHA.
+
+### The audit
+
+**Scope.** Every change except pure docs (`*.md`) and test-only changes.
+That includes copy in generated config, data files, `scripts/`, `public/`,
+`index.html`, `package*.json`, Vite config and `.github/`.
+
+**Steps,** run on the staged diff before committing:
+
+1. `npm test` and `npm run build` pass. The test suite includes the
+   hostile-input checks below.
+2. `npm audit --omit=dev`: no high or critical advisory in production
+   dependencies. Run plain `npm audit` too and note new dev-tool advisories.
+3. Walk the diff against the rules above. For agent sessions, also run the
+   `/security-review` skill on the diff.
+4. For a new tuner or output writer: paste a hand-crafted hostile link
+   (newlines and directives in profile strings, out-of-range and non-numeric
+   values, `__proto__` and `toString` as preset ids) and read the resulting
+   config.
+
+**Outcome.**
+
+- **Blocking**, fix before committing: anything that lets state reach the
+  output except as a validated value; an executable directive; an HTML or URL
+  sink fed by state; a secret or `PRIVATE.md` content in tracked files or the
+  bundle; a new third party or request without a decision; a weakened restore
+  check or header; a high or critical production advisory.
+- **Recorded**, commit allowed: dev-tooling advisories and hardening gaps go
+  into `PRIVATE.md` under "Open security findings" with the fix.
+- **Accepted trade-offs** are written into this file with the reason, like the
+  missing `script-src`.
+
+The commit message doesn't mention findings. An agent states the audit result
+in its reply before asking to commit.
+
+### Automated guards
+
+The audit leans on tests so the checks don't depend on memory. These belong to
+the contract suite (§9 Contract tests) and run over every tuner:
+
+- **Hostile state.** Generated and hand-written malicious hashes go through
+  `restoreState`, and the resulting config must parse with the writer's own
+  line grammar: only known keys, typed values and the fixed comment and apply
+  text. No input may add a line.
+- **Forbidden sinks.** A source scan fails on `v-html`, `innerHTML`, `eval(` and
+  `new Function`.
+- **Forbidden directives.** A scan of every tuner's output for the executable
+  directives listed above.
+- **CI.** `npm audit --omit=dev --audit-level=high` runs in the test job.

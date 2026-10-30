@@ -47,11 +47,11 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 Maintainability migration toward [Design.md §9](Design.md#9-code-organization-and-reuse).
 Each step is a refactor with no behaviour change: the config snapshots
 (`src/tuners/configSnapshots.test.js`) must stay unchanged.
-Step 6 comes alongside the Security tuner, and 7 before Network.
+Step 7 comes before Network.
 
-6. [ ] `core/output` writers, multi-file `{ path, content }[]` output, generic `sysctlConfig`.
 7. [ ] Value types (`int`/`bool`/`enum`/`tuple`) + controls registry; split `ParameterCard`; `select` control.
 
+- [ ] `ConfigOutput`: a download per file for multi-file tuners (systemd), instead of one combined `.conf`.
 - [ ] Tests: `ConfigOutput` flow (textarea matches the generator, copy calls the clipboard API, blocked state).
 - [ ] Automated accessibility sweep (axe-core / Lighthouse): focus visibility on the dark hero, a live-region announcement when a preset is applied or validation fires, and a full WCAG AA contrast pass.
 - [ ] Bundle: re-measure (last measured before `/systemd`), drop unused Chart.js parts (check whether `Filler` is needed), lazy-load chart components per tab.

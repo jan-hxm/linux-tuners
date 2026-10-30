@@ -1,15 +1,24 @@
 /**
  * Generate the systemd resource-tuning output. Unlike the swap tuner (one
  * sysctl.d file) systemd splits across two drop-ins — a [Manager] file for the
- * Default* directives and a [Slice] file for the per-slice resource controls —
- * so the output is one annotated document with both files clearly delimited.
- * Pure over (hardware, params, presetLabel).
+ * Default* directives and a [Slice] file for the per-slice resource controls.
+ * Each file opens with a banner naming its path, and the shared header sits at
+ * the top of the first. Pure over (hardware, params, presetLabel).
  */
 
 import { cpuQuotaNoLimit } from './calculations.js'
+import { configFile } from '@/core/output/files.js'
+import { commentLine, fileBanner, isoDate, presetSummary } from '@/core/output/comments.js'
+import { iniDirective, iniSection } from '@/core/output/iniDropIn.js'
 
 const SYSTEM_CONF_DOC = 'https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html'
 const RESOURCE_DOC = 'https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html'
+const MANAGER_PATH = '/etc/systemd/system.conf.d/99-resource-tuning.conf'
+
+/** Slice drop-in path. targetSlice is restored against a fixed list, so the path is one of three constants. */
+function slicePath(slice) {
+  return `/etc/systemd/system/${slice}.d/50-resources.conf`
+}
 
 /**
  * @param {Object} opts
@@ -18,88 +27,68 @@ const RESOURCE_DOC = 'https://www.freedesktop.org/software/systemd/man/latest/sy
  * @param {string|null} [opts.presetLabel]
  * @param {boolean}     [opts.customised]
  * @param {Date}        [opts.now]
- * @returns {string}
+ * @returns {import('@/core/output/files.js').ConfigFile[]}
  */
 export function generateConfig({ hardware, params, presetLabel, customised, now }) {
-  const date = (now ?? new Date()).toISOString().slice(0, 10)
-  const lines = []
-
-  lines.push(`# systemd resource tuning (generated ${date})`)
-  lines.push(`# Profile: ${describeProfile(hardware)}`)
-  if (presetLabel) {
-    lines.push(`# Preset: ${presetLabel}${customised ? ' (customised)' : ''}`)
-  } else {
-    lines.push('# Preset: custom')
-  }
-  lines.push('# Apply: sudo systemctl daemon-reload')
-  lines.push('#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)')
-  lines.push('# Sources:')
-  lines.push(`#   ${SYSTEM_CONF_DOC}`)
-  lines.push(`#   ${RESOURCE_DOC}`)
-  lines.push('')
-
-  // ── File 1: manager defaults ──────────────────────────────────────────────
-  lines.push(fileHeader('/etc/systemd/system.conf.d/99-resource-tuning.conf'))
-  lines.push('[Manager]')
-  emit(lines, 'DefaultCPUAccounting', bool(params.default_cpu_accounting), 'per-unit CPU time accounting')
-  emit(lines, 'DefaultMemoryAccounting', bool(params.default_memory_accounting), 'per-unit memory accounting (required for memory limits)')
-  emit(lines, 'DefaultIOAccounting', bool(params.default_io_accounting), 'per-unit block-I/O accounting')
-  emit(lines, 'DefaultTasksAccounting', bool(params.default_tasks_accounting), 'per-unit task counting (required for TasksMax)')
-  emit(lines, 'DefaultIPAccounting', bool(params.default_ip_accounting), 'per-unit network accounting (eBPF)')
-  emit(lines, 'DefaultTasksMax', String(params.default_tasks_max), `default per-unit task cap (~${pctOfPid(params.default_tasks_max, hardware.pidMax)} of pid_max)`)
-  emit(lines, 'DefaultLimitNOFILE', `${params.default_limit_nofile_soft}:${params.default_limit_nofile_hard}`, 'default open-file-descriptor soft:hard limit')
-  emit(lines, 'DefaultLimitMEMLOCK', systemdSize(params.default_limit_memlock), 'default locked-in-memory ceiling')
-  lines.push('')
+  // ── File 1: shared header + manager defaults ──────────────────────────────
+  const manager = []
+  manager.push(`# systemd resource tuning (generated ${isoDate(now)})`)
+  manager.push(`# Profile: ${describeProfile(hardware)}`)
+  manager.push(`# Preset: ${presetSummary(presetLabel, customised)}`)
+  manager.push('# Apply: sudo systemctl daemon-reload')
+  manager.push('#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)')
+  manager.push('# Sources:')
+  manager.push(`#   ${SYSTEM_CONF_DOC}`)
+  manager.push(`#   ${RESOURCE_DOC}`)
+  manager.push('')
+  manager.push(fileBanner(MANAGER_PATH))
+  manager.push(iniSection('Manager'))
+  manager.push(...iniDirective('DefaultCPUAccounting', bool(params.default_cpu_accounting), 'per-unit CPU time accounting'))
+  manager.push(...iniDirective('DefaultMemoryAccounting', bool(params.default_memory_accounting), 'per-unit memory accounting (required for memory limits)'))
+  manager.push(...iniDirective('DefaultIOAccounting', bool(params.default_io_accounting), 'per-unit block-I/O accounting'))
+  manager.push(...iniDirective('DefaultTasksAccounting', bool(params.default_tasks_accounting), 'per-unit task counting (required for TasksMax)'))
+  manager.push(...iniDirective('DefaultIPAccounting', bool(params.default_ip_accounting), 'per-unit network accounting (eBPF)'))
+  manager.push(...iniDirective('DefaultTasksMax', String(params.default_tasks_max), `default per-unit task cap (~${pctOfPid(params.default_tasks_max, hardware.pidMax)} of pid_max)`))
+  manager.push(...iniDirective('DefaultLimitNOFILE', `${params.default_limit_nofile_soft}:${params.default_limit_nofile_hard}`, 'default open-file-descriptor soft:hard limit'))
+  manager.push(...iniDirective('DefaultLimitMEMLOCK', systemdSize(params.default_limit_memlock), 'default locked-in-memory ceiling'))
 
   // ── File 2: slice resource control ────────────────────────────────────────
-  const sliceFile = `/etc/systemd/system/${hardware.targetSlice}.d/50-resources.conf`
-  lines.push(fileHeader(sliceFile))
-  lines.push('[Slice]')
-  emit(lines, 'CPUWeight', String(params.cpu_weight), `proportional CPU share under contention (default 100)`)
+  const path = slicePath(hardware.targetSlice)
+  const slice = []
+  slice.push(fileBanner(path))
+  slice.push(iniSection('Slice'))
+  slice.push(...iniDirective('CPUWeight', String(params.cpu_weight), `proportional CPU share under contention (default 100)`))
 
   if (params.cpu_quota < cpuQuotaNoLimit(hardware)) {
-    emit(lines, 'CPUQuota', `${params.cpu_quota}%`, `hard CPU cap ≈ ${(params.cpu_quota / 100).toFixed(1)} cores`)
+    slice.push(...iniDirective('CPUQuota', `${params.cpu_quota}%`, `hard CPU cap ≈ ${(params.cpu_quota / 100).toFixed(1)} cores`))
   } else {
-    lines.push('# CPUQuota: unset (no hard CPU limit)')
+    slice.push(commentLine('CPUQuota: unset (no hard CPU limit)'))
   }
 
-  emitMemory(lines, 'MemoryHigh', params.memory_high, hardware, 'soft throttle limit')
-  emitMemory(lines, 'MemoryMax', params.memory_max, hardware, 'hard OOM limit')
-  emitSwap(lines, params.memory_swap_max, hardware)
+  slice.push(...memoryLines('MemoryHigh', params.memory_high, hardware, 'soft throttle limit'))
+  slice.push(...memoryLines('MemoryMax', params.memory_max, hardware, 'hard OOM limit'))
+  slice.push(...swapLines(params.memory_swap_max, hardware))
 
-  emit(lines, 'IOWeight', String(params.io_weight), 'proportional block-I/O share under contention (default 100)')
-  emit(lines, 'TasksMax', String(params.tasks_max), `hard task cap for the whole slice (~${pctOfPid(params.tasks_max, hardware.pidMax)} of pid_max)`)
+  slice.push(...iniDirective('IOWeight', String(params.io_weight), 'proportional block-I/O share under contention (default 100)'))
+  slice.push(...iniDirective('TasksMax', String(params.tasks_max), `hard task cap for the whole slice (~${pctOfPid(params.tasks_max, hardware.pidMax)} of pid_max)`))
 
-  while (lines.at(-1) === '') lines.pop()
-  return lines.join('\n')
+  return [configFile(MANAGER_PATH, manager), configFile(path, slice)]
 }
 
-function emit(lines, key, value, comment) {
-  lines.push(`# ${key}: ${comment}`)
-  lines.push(`${key}=${value}`)
-}
-
-/** Memory % directive: emit `<v>%`, or note that it is unset at 100% (infinity). */
-function emitMemory(lines, key, pct, hw, comment) {
+/** Memory % directive: `<v>%`, or a note that it is unset at 100% (infinity). */
+function memoryLines(key, pct, hw, comment) {
   if (pct >= 100) {
-    lines.push(`# ${key}: unset (infinity, no ${key === 'MemoryHigh' ? 'throttle' : 'limit'})`)
-    return
+    return [commentLine(`${key}: unset (infinity, no ${key === 'MemoryHigh' ? 'throttle' : 'limit'})`)]
   }
   const gib = ((hw.ramGiB * pct) / 100).toFixed(1)
-  emit(lines, key, `${pct}%`, `${comment} ≈ ${gib} GiB of ${hw.ramGiB}`)
+  return iniDirective(key, `${pct}%`, `${comment} ≈ ${gib} GiB of ${hw.ramGiB}`)
 }
 
-function emitSwap(lines, pct, hw) {
-  if (pct >= 100) {
-    lines.push('# MemorySwapMax: unset (infinity, slice may swap freely)')
-    return
-  }
-  if (pct === 0) {
-    emit(lines, 'MemorySwapMax', '0', 'slice forbidden from using swap')
-    return
-  }
+function swapLines(pct, hw) {
+  if (pct >= 100) return [commentLine('MemorySwapMax: unset (infinity, slice may swap freely)')]
+  if (pct === 0) return iniDirective('MemorySwapMax', '0', 'slice forbidden from using swap')
   const gib = ((hw.ramGiB * pct) / 100).toFixed(1)
-  emit(lines, 'MemorySwapMax', `${pct}%`, `swap budget ≈ ${gib} GiB`)
+  return iniDirective('MemorySwapMax', `${pct}%`, `swap budget ≈ ${gib} GiB`)
 }
 
 function describeProfile(hw) {
@@ -135,11 +124,4 @@ export function systemdSize(bytes) {
   if (bytes % M === 0) return `${bytes / M}M`
   if (bytes % K === 0) return `${bytes / K}K`
   return String(bytes)
-}
-
-const SEP_WIDTH = 78
-function fileHeader(path) {
-  const lead = `# ===== ${path} `
-  const eq = '='.repeat(Math.max(2, SEP_WIDTH - lead.length))
-  return lead + eq
 }

@@ -6,6 +6,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { TUNER_DOMAINS } from './domains.js'
+import { combineFiles } from '@/core/output/files.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
 
@@ -18,12 +19,12 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('generated config: %s', (_id,
     const workload = hardware[domain.workloadField]
     it(`${workload} / defaults`, () => {
       const params = domain.deriveDefaults(hardware)
-      expect(domain.generateConfig({ hardware, params, presetLabel: null, customised: false, now: NOW })).toMatchSnapshot()
+      expect(combineFiles(domain.generateConfig({ hardware, params, presetLabel: null, customised: false, now: NOW }))).toMatchSnapshot()
     })
     for (const preset of domain.presets) {
       it(`${workload} / ${preset.id}`, () => {
         const params = { ...domain.deriveDefaults(hardware), ...preset.values }
-        expect(domain.generateConfig({ hardware, params, presetLabel: preset.label, customised: false, now: NOW })).toMatchSnapshot()
+        expect(combineFiles(domain.generateConfig({ hardware, params, presetLabel: preset.label, customised: false, now: NOW }))).toMatchSnapshot()
       })
     }
   }

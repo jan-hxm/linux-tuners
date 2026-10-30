@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { generateConfig, systemdSize } from './config.js'
+import { combineFiles } from '@/core/output/files.js'
 import { deriveDefaults } from './calculations.js'
 import { DEFAULT_SYSTEMD_SPEC } from './parameters.js'
 
@@ -8,7 +9,7 @@ const NOW = new Date('2026-06-07T00:00:00Z')
 function gen(workload = 'general', overrides = {}, hwOverrides = {}) {
   const hardware = { ...DEFAULT_SYSTEMD_SPEC, workload, ...hwOverrides }
   const params = { ...deriveDefaults(hardware), ...overrides }
-  return generateConfig({ hardware, params, now: NOW })
+  return combineFiles(generateConfig({ hardware, params, now: NOW }))
 }
 
 describe('systemd generateConfig', () => {

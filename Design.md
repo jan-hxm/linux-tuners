@@ -388,20 +388,30 @@ so that a new variant is an addition rather than an edit to shared code.
   (`import * as simulation`): the view passes its own store, charts pass
   `useActiveTuner()`. There are no per-tuner composables.
 - **Config output** (`core/output/`). `generateConfig` returns a list of files,
-  `{ path, content }[]`. `ConfigOutput` renders one or several and offers a
-  download for each; systemd already emits two files in one string. Writers:
-  - `sysctlFile`, plus a shared header block (title, date, profile, preset,
-    apply steps, sources).
-  - `iniDropIn` (systemd).
+  `{ path, content }[]`, built with the writers:
+  - `files.js`: `configFile(path, lines)` checks the path against the §10
+    rule and trims trailing blank lines; `combineFiles` joins a list for the
+    output panel.
+  - `comments.js`: `commentLine` (refuses line breaks), rules, section
+    headers, file banners, and the date and preset summary for the header
+    block.
+  - `sysctlFile.js`: `sysctlConfig` and `sysctlLine`, integer values only.
+  - `iniDropIn.js` (systemd): `iniSection` and `iniDirective`, with values
+    limited to plain tokens.
   - Later, `udevRule` and `tunedProfile` for the sysfs tuners.
 
-  Every emitted value goes through its def's value type, so the
-  "only values the kernel accepts" rule ([§3](#3-product-principles)) is
-  enforced in one place.
+  A writer throws rather than emit a malformed line, so a bad value fails the
+  contract fuzz tests instead of reaching a file. Each file of a multi-file
+  tuner opens with a `# =====` banner naming its path. `ConfigOutput` shows
+  the files combined, and copy and download take that text; a download per
+  file is not built yet. Once value types land (step 7), every emitted value
+  goes through its def's value type, so the "only values the kernel accepts"
+  rule ([§3](#3-product-principles)) is enforced in one place.
 - **sysctl tuners are mostly data.** Security, Network, FS, IPC and Kernel all
-  write `/etc/sysctl.d/`. Each def's `sysctlName` and section order drive a
-  generic `sysctlConfig(defs, sections)`, and per-value range checks are
-  generic. Such a tuner writes only `deriveDefaults`, its cross-parameter
+  write `/etc/sysctl.d/`. Each def's `sysctlName`, its `group` and the section
+  order drive the generic
+  `sysctlConfig({ defs, sections, params, comment, include })`, and per-value
+  range checks are generic. Such a tuner writes only `deriveDefaults`, its cross-parameter
   rules, and whatever comment text needs the profile.
 
 ### Registry
@@ -571,7 +581,9 @@ the contract suite (§9 Contract tests) and run over every tuner:
 - **Hostile state.** Generated and hand-written malicious hashes go through
   `restoreState`, and the resulting config must parse with the writer's own
   line grammar: only known keys, typed values and the fixed comment and apply
-  text. No input may add a line.
+  text. No input may add a line. Every file path must pass the "paths are
+  constants" pattern, and no two files may share a path. The writers in
+  `core/output/` enforce the same rules at runtime (`src/core/output/output.test.js`).
 - **Forbidden sinks.** A source scan fails on `v-html`, `innerHTML`, `eval(` and
   `new Function`.
 - **Forbidden directives.** A scan of every tuner's output for the executable

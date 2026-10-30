@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
+import { combineFiles } from '@/core/output/files.js'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
@@ -19,13 +20,15 @@ const customised = computed(() => {
 const blockingIssues = computed(() => tuner.issues.filter((i) => i.blocking))
 const blocked = computed(() => blockingIssues.value.length > 0)
 
+// Multi-file tuners show every file in one text, each under a banner naming
+// its path; copy and download take that same text.
 const output = computed(() =>
-  domain.generateConfig({
+  combineFiles(domain.generateConfig({
     hardware: tuner.hardware,
     params: tuner.params,
     presetLabel: presetLabel.value,
     customised: customised.value,
-  }),
+  })),
 )
 
 const copyStatus = ref('idle') // 'idle' | 'ok' | 'fail'

@@ -1,12 +1,17 @@
 /**
- * Generate the formatted sysctl.conf output. Pure function over (hardware,
- * params, presetLabel). The ConfigOutput component renders the returned string
- * verbatim into the textarea — what's here is what the user copies.
+ * Generate the sysctl.d drop-in. Pure function over (hardware, params,
+ * presetLabel). The ConfigOutput component renders the returned file verbatim
+ * into the textarea — what's here is what the user copies.
  */
 
 import { PARAMETER_DEFS_BY_KEY } from './defs.js'
 import { watermarkLevelsMiB } from './calculations.js'
 import { formatSizeGiB } from '@/core/formatting.js'
+import { configFile } from '@/core/output/files.js'
+import { isoDate, presetSummary, rule } from '@/core/output/comments.js'
+import { sysctlConfig } from '@/core/output/sysctlFile.js'
+
+const PATH = '/etc/sysctl.d/99-swap-tuning.conf'
 
 const SECTIONS = [
   { id: 'memory-reclaim', title: 'Memory reclaim & swap' },
@@ -21,11 +26,11 @@ const SECTIONS = [
  * @param {string|null} [opts.presetLabel]   Human-readable preset label
  * @param {boolean}     [opts.customised]    Whether any param deviates from the preset
  * @param {Date}        [opts.now]           Date stamp (overridable for tests)
- * @returns {string}
+ * @returns {import('@/core/output/files.js').ConfigFile[]}
  */
 export function generateConfig({ hardware, params, presetLabel, customised, now }) {
   const lines = []
-  const date = (now ?? new Date()).toISOString().slice(0, 10)
+  const date = isoDate(now)
   const isK8s = hardware.workload === 'k8s'
 
   // ── Header ────────────────────────────────────────────────────────────────
@@ -33,11 +38,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('# Linux swap & VM sysctl tuning')
   lines.push(`# Generated ${date} by linux-tuners.dev/swap`)
   lines.push(`# Hardware: ${describeHardware(hardware)}`)
-  if (presetLabel) {
-    lines.push(`# Profile: ${presetLabel}${customised ? ' (customised)' : ''}`)
-  } else {
-    lines.push('# Profile: custom')
-  }
+  lines.push(`# Profile: ${presetSummary(presetLabel, customised)}`)
   lines.push(rule())
   lines.push('#')
 
@@ -46,7 +47,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('#')
   lines.push('# 1. Persist them. Save this whole file as a drop-in (sysctl ignores')
   lines.push('#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):')
-  lines.push('#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file')
+  lines.push(`#      sudo nano ${PATH}   # then paste this file`)
   lines.push('#')
   lines.push('# 2. Apply them now, without rebooting:')
   lines.push('#      sudo sysctl --system')
@@ -66,23 +67,17 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   }
   lines.push('')
 
-  for (const section of SECTIONS) {
-    lines.push(sectionHeader(section.title))
-    const defs = Object.values(PARAMETER_DEFS_BY_KEY).filter((d) => d.group === section.id)
-    for (const def of defs) {
-      // overcommit_ratio is only meaningful when overcommit_memory=2. Suppress
-      // it from the output when it has no effect so the file isn't misleading.
-      if (def.key === 'overcommit_ratio' && params.overcommit_memory !== 2) continue
-      const value = params[def.key]
-      lines.push(`# ${def.key}: ${value} - ${commentFor(def, value, hardware, params)}`)
-      lines.push(`${def.sysctlName} = ${value}`)
-      lines.push('')
-    }
-  }
+  lines.push(...sysctlConfig({
+    defs: Object.values(PARAMETER_DEFS_BY_KEY),
+    sections: SECTIONS,
+    params,
+    comment: (def, value) => commentFor(def, value, hardware, params),
+    // overcommit_ratio is only meaningful when overcommit_memory=2. Suppress
+    // it from the output when it has no effect so the file isn't misleading.
+    include: (def) => def.key !== 'overcommit_ratio' || params.overcommit_memory === 2,
+  }))
 
-  // Drop the trailing blank line for a tidier copy-paste.
-  while (lines.at(-1) === '') lines.pop()
-  return lines.join('\n')
+  return [configFile(PATH, lines)]
 }
 
 /**
@@ -218,19 +213,6 @@ function describeWorkload(w) {
     case 'custom': return 'custom'
     default: return 'custom'
   }
-}
-
-const SEP_WIDTH = 78
-
-/** Full-width comment rule used to fence the header/setup blocks. */
-function rule() {
-  return '# ' + '─'.repeat(SEP_WIDTH - 2)
-}
-
-function sectionHeader(title) {
-  const lead = `# ── ${title} `
-  const dashes = '─'.repeat(Math.max(2, SEP_WIDTH - lead.length))
-  return lead + dashes
 }
 
 /**

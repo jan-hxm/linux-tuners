@@ -9,6 +9,7 @@ import { TUNER_DOMAINS } from './domains.js'
 import { assertTuner } from '@/core/defineTuner.js'
 import { restoreState } from '@/core/createTunerStore.js'
 import { parseRichText } from '@/ui/richText.js'
+import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
 const CONTROLS = ['slider', 'toggle', 'segmented']
@@ -164,10 +165,16 @@ function directiveViolations(config) {
     .filter((line) => FORBIDDEN_DIRECTIVES.some((re) => re.test(line)))
 }
 
-function expectSafeConfig(domain, config) {
-  expect(config).not.toMatch(CONTROL_CHARS)
-  expect(grammarViolations(domain, config)).toEqual([])
-  expect(directiveViolations(config)).toEqual([])
+function expectSafeConfig(domain, files) {
+  expect(files.length).toBeGreaterThan(0)
+  const paths = files.map((f) => f.path)
+  expect(paths.filter((p) => !isSafeConfigPath(p))).toEqual([])
+  expect(new Set(paths).size).toBe(paths.length)
+  for (const { content } of files) {
+    expect(content).not.toMatch(CONTROL_CHARS)
+    expect(grammarViolations(domain, content)).toEqual([])
+    expect(directiveViolations(content)).toEqual([])
+  }
 }
 
 /** Every string reachable from a value, for the copy checks. */
@@ -366,7 +373,7 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
       ]
       for (const state of legitimateStates(domain)) {
         shown.push(...domain.validate(state.hardware, state.params).map((i) => i.message))
-        shown.push(configFor(domain, state))
+        shown.push(combineFiles(configFor(domain, state)))
       }
       expect(shown.filter((s) => s.includes(EM_DASH))).toEqual([])
     })

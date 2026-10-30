@@ -38,7 +38,7 @@
  * @property {(section:TunerSection, params:Object)=>string[]} [visibleKeys]
  * @property {any[]}    presets
  * @property {Record<string, any>} presetsById
- * @property {(opts:Object)=>string} generateConfig
+ * @property {(opts:Object)=>import('./output/files.js').ConfigFile[]} generateConfig  Built with the core/output writers
  * @property {string}   outputFilename
  * @property {(state:Object)=>string} encodeState
  * @property {(s:string)=>Object|null} decodeState

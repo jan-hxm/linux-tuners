@@ -1,0 +1,96 @@
+import { describe, it, expect } from 'vitest'
+import { combineFiles, configFile, isSafeConfigPath } from './files.js'
+import { commentLine, fileBanner, presetSummary, sectionHeader } from './comments.js'
+import { sysctlConfig, sysctlLine } from './sysctlFile.js'
+import { iniDirective, iniSection } from './iniDropIn.js'
+
+const LS = String.fromCharCode(0x2028)
+
+describe('config files', () => {
+  it('accepts only plain paths under /etc', () => {
+    expect(isSafeConfigPath('/etc/sysctl.d/99-swap-tuning.conf')).toBe(true)
+    expect(isSafeConfigPath('/etc/systemd/system/user.slice.d/50-resources.conf')).toBe(true)
+    for (const bad of ['/etc/../root/.bashrc', '/usr/lib/x.conf', 'etc/x.conf', '/etc/a b.conf', '/etc/X.conf', '/etc/x\n.conf', null]) {
+      expect(isSafeConfigPath(bad), String(bad)).toBe(false)
+    }
+  })
+
+  it('builds a file from lines, trimming trailing blank lines', () => {
+    expect(configFile('/etc/a.conf', ['x', '', ''])).toEqual({ path: '/etc/a.conf', content: 'x' })
+    expect(() => configFile('/tmp/a.conf', ['x'])).toThrow(/Unsafe config path/)
+  })
+
+  it('combines files with one blank line between them', () => {
+    expect(combineFiles([{ path: '/etc/a', content: 'a' }, { path: '/etc/b', content: 'b' }])).toBe('a\n\nb')
+    expect(combineFiles([{ path: '/etc/a', content: 'a' }])).toBe('a')
+  })
+})
+
+describe('comments', () => {
+  it('refuses comment text that would start a new line', () => {
+    expect(commentLine('ok')).toBe('# ok')
+    for (const bad of ['a\nb', 'a\rb', `a${LS}b`]) expect(() => commentLine(bad)).toThrow()
+  })
+
+  it('pads headers and banners to the full width', () => {
+    expect(sectionHeader('Title')).toHaveLength(78)
+    expect(fileBanner('/etc/a.conf')).toHaveLength(78)
+  })
+
+  it('summarises the preset', () => {
+    expect(presetSummary(null, false)).toBe('custom')
+    expect(presetSummary('Database', false)).toBe('Database')
+    expect(presetSummary('Database', true)).toBe('Database (customised)')
+  })
+})
+
+describe('sysctl writer', () => {
+  it('writes integer values only', () => {
+    expect(sysctlLine('vm.swappiness', 10)).toBe('vm.swappiness = 10')
+    for (const bad of [1.5, NaN, '10', '10\nkernel.modprobe = /x', null]) {
+      expect(() => sysctlLine('vm.swappiness', bad), String(bad)).toThrow()
+    }
+  })
+
+  it('refuses a name that is not a dotted sysctl', () => {
+    for (const bad of ['swappiness', 'vm.swappiness = 1\nx', 'VM.Swappiness', 'vm.a b']) {
+      expect(() => sysctlLine(bad, 1), bad).toThrow()
+    }
+  })
+
+  it('emits each section in order with its defs and skips excluded ones', () => {
+    const defs = [
+      { key: 'a', group: 's2', sysctlName: 'vm.a' },
+      { key: 'b', group: 's1', sysctlName: 'vm.b' },
+      { key: 'c', group: 's1', sysctlName: 'vm.c' },
+    ]
+    const lines = sysctlConfig({
+      defs,
+      sections: [{ id: 's1', title: 'One' }, { id: 's2', title: 'Two' }],
+      params: { a: 1, b: 2, c: 3 },
+      comment: (def, v) => `note ${v}`,
+      include: (def) => def.key !== 'c',
+    })
+    expect(lines).toEqual([
+      sectionHeader('One'),
+      '# b: 2 - note 2', 'vm.b = 2', '',
+      sectionHeader('Two'),
+      '# a: 1 - note 1', 'vm.a = 1', '',
+    ])
+  })
+})
+
+describe('ini drop-in writer', () => {
+  it('writes a section and a commented directive', () => {
+    expect(iniSection('Slice')).toBe('[Slice]')
+    expect(iniDirective('MemoryMax', '50%', 'hard limit')).toEqual(['# MemoryMax: hard limit', 'MemoryMax=50%'])
+  })
+
+  it('refuses values, keys and sections that could add structure', () => {
+    for (const bad of ['', '1\nExecStart=/bin/sh', '1 2', '$(id)', '/bin/sh', '1;x']) {
+      expect(() => iniDirective('TasksMax', bad, 'x'), bad).toThrow()
+    }
+    for (const bad of ['Exec Start', 'x', 'A=B']) expect(() => iniDirective(bad, '1', 'x'), bad).toThrow()
+    for (const bad of ['Slice]\n[Service', 'slice']) expect(() => iniSection(bad), bad).toThrow()
+  })
+})

@@ -29,6 +29,7 @@ Each links to its full rationale in Design.md.
 - **A view can't `inject()` what it `provide()`s**: pass the store explicitly to view-level composables. [§5 Domain modules](Design.md#domain-modules-behind-a-shared-store-and-ui)
 - **UI/UX + accessibility guardrails** (mobile impact bar, real buttons with `aria-expanded`, tablist arrow keys, focus-trapping drawers, chart `aria-label`s, type and contrast floors). [§7](Design.md#7-uiux-and-accessibility-conventions)
 - **New tuners** follow the checklist, and get no route entry until they work. [§6](Design.md#6-adding-a-tuner)
+- **Reuse before writing**: data first, then configure shared code, then tuner-local, and promote when a second tuner needs it. Never copy between tuners or branch on a tuner id in shared code. [§9](Design.md#9-code-organization-and-reuse)
 - Material changes to the privacy policy bump its "Last updated" line.
 
 ## Commands

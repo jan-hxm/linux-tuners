@@ -89,4 +89,15 @@ describe('encodeState / decodeState', () => {
     )
     expect(decodeState(payload)).toBeNull()
   })
+
+  it('snaps numeric hardware fields to the step the form produces', () => {
+    const swap = decodeState(encodeState(makeState({ hardware: { ...DEFAULT_HARDWARE, ramGiB: 0.3 } })))
+    expect(swap.hardware.ramGiB * 1024).toBe(307) // whole MiB
+
+    const hw = { ...systemdDomain.defaultHardware, cpuCores: 3.7, pidMax: 32768.5 }
+    const params = systemdDomain.deriveDefaults(systemdDomain.defaultHardware)
+    const decoded = systemdDomain.decodeState(systemdDomain.encodeState({ hardware: hw, params }))
+    expect(decoded.hardware.cpuCores).toBe(4)
+    expect(Number.isInteger(decoded.hardware.pidMax)).toBe(true)
+  })
 })

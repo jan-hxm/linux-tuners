@@ -53,4 +53,9 @@ describe('systemd validate', () => {
     expect(ids(issues)).toContain('swap-disabled-for-slice')
     expect(hasBlockingIssue(issues)).toBe(false)
   })
+
+  it('warns about a starving system.slice quota down to the slider minimum', () => {
+    const { hw, params } = setup('general', { cpu_quota: 10 })
+    expect(ids(validate(hw, params))).toContain('cpuquota-starves-system')
+  })
 })

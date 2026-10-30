@@ -66,8 +66,17 @@ describe('systemd rangeFor', () => {
     expect(rangeFor('default_limit_memlock', spec({ ramGiB: 0.5 })).max).toBeLessThan(1073741824)
   })
 
+  it('keeps the memlock cap a whole byte count for odd RAM sizes', () => {
+    expect(Number.isInteger(rangeFor('default_limit_memlock', spec({ ramGiB: 0.3 })).max)).toBe(true)
+  })
+
+  it('never offers CPUQuota=0%, which systemd ignores (= no limit)', () => {
+    expect(rangeFor('cpu_quota', spec()).min).toBeGreaterThan(0)
+  })
+
   it('uses kernel min/max for percentage controls', () => {
-    expect(rangeFor('memory_max', spec())).toEqual({ min: 0, max: 100 })
+    // 0% is ignored by systemd (= no limit), so the range starts at 1.
+    expect(rangeFor('memory_max', spec())).toEqual({ min: 1, max: 100 })
     expect(rangeFor('cpu_weight', spec())).toEqual({ min: 1, max: 10000 })
   })
 })

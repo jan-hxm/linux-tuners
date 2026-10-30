@@ -125,14 +125,19 @@ export function defineTunerStore(id, domain) {
       syncUrl() {
         if (typeof window === 'undefined') return
         if (this._urlWriteTimer) clearTimeout(this._urlWriteTimer)
+        // The timer can outlive the view: if the user navigates to another route
+        // within the debounce window, don't stamp this tuner's state onto it.
+        const path = window.location.pathname
         this._urlWriteTimer = setTimeout(() => {
+          if (window.location.pathname !== path) return
           const encoded = domain.encodeState({
             hardware: this.hardware,
             params: this.params,
             activePreset: this.activePreset,
             activeTab: this.activeTab,
           })
-          history.replaceState(null, '', `#${encoded}`)
+          // Keep history.state: Vue Router stores its back/forward + scroll data there.
+          history.replaceState(history.state, '', `#${encoded}`)
         }, URL_DEBOUNCE_MS)
       },
     },
@@ -141,14 +146,30 @@ export function defineTunerStore(id, domain) {
 
 function restoreFromUrlHash(domain) {
   if (typeof window === 'undefined') return null
-  const hash = window.location.hash.slice(1)
+  return restoreState(domain, window.location.hash.slice(1))
+}
+
+/**
+ * Decode a shared-link hash and hold it to what the UI itself could produce.
+ *
+ * @param {import('@/domains/types.js').TunerDomain} domain
+ * @param {string} hash  location.hash without the leading '#'
+ */
+export function restoreState(domain, hash) {
   if (!hash) return null
   const restored = domain.decodeState(hash)
   if (!restored) return null
-  // A shared link can carry any number; hold it to the same range a slider drag would.
+  // A shared link can carry any number; hold it to the same range a slider drag
+  // would. Every parameter is an integer, and the value is written verbatim into
+  // the config, where e.g. `vm.swappiness = 60.5` is rejected by sysctl.
   for (const key of Object.keys(restored.params)) {
     const { min, max } = domain.rangeFor(key, restored.hardware)
-    restored.params[key] = Math.max(min, Math.min(max, restored.params[key]))
+    restored.params[key] = Math.max(min, Math.min(max, Math.round(restored.params[key])))
+  }
+  // Only a real preset id: presetsById is a plain object, so a name like
+  // 'toString' would otherwise resolve to an inherited function.
+  if (restored.activePreset !== null && !Object.hasOwn(domain.presetsById, restored.activePreset)) {
+    restored.activePreset = null
   }
   return restored
 }

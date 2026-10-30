@@ -96,8 +96,8 @@ export function rangeFor(key, hw) {
   if (!def) throw new Error(`Unknown systemd parameter: ${key}`)
 
   if (key === 'cpu_quota') {
-    // 0 .. one full machine (cores × 100%). The top of the range = "no limit".
-    return { min: 0, max: Math.max(100, Math.max(1, hw.cpuCores) * 100) }
+    // kernelMin .. one full machine (cores × 100%). The top of the range = "no limit".
+    return { min: def.kernelMin, max: Math.max(100, Math.max(1, hw.cpuCores) * 100) }
   }
   if (key === 'default_tasks_max' || key === 'tasks_max') {
     // Can't exceed the kernel PID space.
@@ -105,7 +105,7 @@ export function rangeFor(key, hw) {
   }
   if (key === 'default_limit_memlock') {
     // Don't offer locking more than total RAM.
-    const ramBytes = hw.ramGiB * 1024 * 1024 * 1024
+    const ramBytes = Math.floor(hw.ramGiB * 1024 * 1024 * 1024)
     return { min: def.kernelMin, max: Math.min(def.kernelMax, ramBytes) }
   }
   return { min: def.kernelMin, max: def.kernelMax }

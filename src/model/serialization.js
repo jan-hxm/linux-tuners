@@ -67,7 +67,7 @@ export function makeSerialization({ parameterKeys, defaultHardware, hardwareSche
         if (!Object.hasOwn(parsed.hardware, key)) continue
         const value = parsed.hardware[key]
         if (!matchesRule(value, rule, defaultHardware[key])) return null
-        hardware[key] = value
+        hardware[key] = snapToStep(value, rule)
       }
       return {
         hardware,
@@ -89,7 +89,7 @@ function isPlainObject(v) {
 
 /**
  * @param {*} value
- * @param {string[] | { min: number, max: number } | RegExp} rule
+ * @param {string[] | { min: number, max: number, step?: number } | RegExp} rule
  * @param {*} fallback  The field's default; a null default means null is allowed
  */
 function matchesRule(value, rule, fallback) {
@@ -97,6 +97,16 @@ function matchesRule(value, rule, fallback) {
   if (Array.isArray(rule)) return rule.includes(value)
   if (rule instanceof RegExp) return typeof value === 'string' && rule.test(value)
   return Number.isFinite(value) && value >= rule.min && value <= rule.max
+}
+
+/**
+ * Round a numeric field to its schema step, so a link can't carry values the
+ * form never produces (e.g. 0.3 GiB of RAM, which yields fractional byte
+ * counts downstream). Non-numeric and step-less rules pass through.
+ */
+function snapToStep(value, rule) {
+  if (typeof value !== 'number' || !rule.step) return value
+  return Math.max(rule.min, Math.min(rule.max, Math.round(value / rule.step) * rule.step))
 }
 
 /**

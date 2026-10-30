@@ -238,7 +238,9 @@ export const SYSTEMD_DEFS = [
     kernelDocsUrl: `${RESOURCE_CONTROL}#CPUQuota=`,
     contextNote: 'Used to reserve headroom for the host: cap user.slice or a batch slice so kubelet/system daemons always have CPU.',
     kernelDefault: 100,
-    kernelMin: 0,
+    // systemd rejects CPUQuota=0% and ignores the line (= no limit). 10 keeps
+    // every step-10 value, including each N×100%, reachable.
+    kernelMin: 10,
     kernelMax: 25600,
     step: 10,
     unit: 'pct-cores',
@@ -258,7 +260,7 @@ export const SYSTEMD_DEFS = [
     kernelDocsUrl: `${RESOURCE_CONTROL}#MemoryHigh=bytes`,
     contextNote: 'Set on system.slice to protect host daemons, or on user.slice to keep interactive sessions from swamping a node.',
     kernelDefault: 100,
-    kernelMin: 0,
+    kernelMin: 1, // systemd ignores a 0% limit (= no limit)
     kernelMax: 100,
     step: 1,
     unit: 'pct',
@@ -279,7 +281,7 @@ export const SYSTEMD_DEFS = [
     kernelDocsUrl: `${RESOURCE_CONTROL}#MemoryMax=bytes`,
     contextNote: 'On Kubernetes nodes, MemoryMax on user.slice/system.slice reserves RAM that pods can never consume.',
     kernelDefault: 100,
-    kernelMin: 0,
+    kernelMin: 1, // systemd ignores a 0% limit (= no limit)
     kernelMax: 100,
     step: 1,
     unit: 'pct',

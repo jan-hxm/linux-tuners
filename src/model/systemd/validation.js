@@ -103,7 +103,7 @@ export function validate(hw, p) {
   }
 
   // Hard CPU cap below one full core on the system slice can starve daemons.
-  if (p.cpu_quota > 0 && p.cpu_quota < 100 && hw.targetSlice === 'system.slice') {
+  if (p.cpu_quota < 100 && hw.targetSlice === 'system.slice') {
     issues.push({
       id: 'cpuquota-starves-system',
       level: 'warn',

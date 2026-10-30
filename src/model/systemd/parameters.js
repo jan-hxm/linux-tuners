@@ -66,11 +66,11 @@ export const DEFAULT_PID_MAX = 4194304
  * file path, so shared-URL state is checked against these lists.
  */
 export const SYSTEMD_SPEC_SCHEMA = {
-  ramGiB: { min: 0.25, max: 2304 * 1024 },
-  cpuCores: { min: 1, max: 4096 },
+  ramGiB: { min: 0.25, max: 2304 * 1024, step: 1 / 1024 },
+  cpuCores: { min: 1, max: 4096, step: 1 },
   workload: ['container-host', 'kubernetes', 'database', 'general', 'desktop'],
   targetSlice: ['system.slice', 'user.slice', 'machine.slice'],
-  pidMax: { min: 1024, max: 4194304 },
+  pidMax: { min: 1024, max: 4194304, step: 1 },
   cgroupVersion: ['v1', 'v2'],
 }
 

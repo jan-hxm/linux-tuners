@@ -20,7 +20,12 @@ const props = defineProps({
 })
 
 const tuner = useActiveTuner()
-const activeTab = computed(() => tuner.activeTab)
+// Fall back to the first tab when the store holds an id this panel doesn't have
+// (stale or hand-edited share link); otherwise every tab gets tabindex -1 and
+// the tablist is unreachable by keyboard.
+const activeTab = computed(() =>
+  props.tabs.some((t) => t.id === tuner.activeTab) ? tuner.activeTab : props.tabs[0]?.id,
+)
 const activeComponent = computed(() => props.tabs.find((t) => t.id === activeTab.value)?.component)
 const activeBlurb = computed(() => props.tabs.find((t) => t.id === activeTab.value)?.blurb)
 

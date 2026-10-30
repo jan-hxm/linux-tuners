@@ -3,8 +3,10 @@
  * functions that the generic store factory (createTunerStore) and the generic UI
  * components (ParameterCard, ParameterPanel, PresetSelector, ConfigOutput,
  * InfoDrawer, GraphPanel) consume. Each tuner — swap, systemd — exports one of
- * these from src/domains/<name>/index.js. This file is JSDoc-only; there is no
- * runtime export, it just documents the contract in one place.
+ * these from src/domains/<name>/index.js, built with defineTuner(), which fills
+ * in the hooks marked optional below and asserts the rest in dev and tests.
+ * This file is JSDoc-only; there is no runtime export, it just documents the
+ * contract in one place.
  *
  * @typedef {Object} TunerSection
  * @property {string}   id
@@ -44,7 +46,7 @@
  * @property {string[]} workloads        Workload values compared in the drawer
  * @property {string}   workloadField    Hardware key the workloads vary (e.g. 'workload')
  * @property {TunerContext} context
- * @property {(hw:Object)=>boolean} [contextApplies]  Gate the contextual badge/note on hardware (e.g. only show K8s guidance when workload is k8s). Omitted = always show.
+ * @property {(hw:Object)=>boolean} [contextApplies]  Gate the contextual badge/note on hardware (e.g. only show K8s guidance when workload is k8s). Omitted in the spec = always show.
  * @property {string}   docsLabel        Label for the per-parameter docs link
  * @property {string}   noteKey          Def field holding the contextual note
  * @property {(def:Object, ctx:{hardware:Object,params:Object})=>(TunerFormula|null)} [formula]

@@ -101,7 +101,10 @@ Everything specific to one tuner lives in a **domain module**
 (`src/domains/<tuner>/index.js`) implementing the `TunerDomain` contract in
 `src/domains/types.js`: parameter defs, presets, `deriveDefaults`, `rangeFor`,
 `validate`, `generateConfig`, `formatValue`, sections, drawer formulas,
-serialization and context notes.
+serialization and context notes. Each module is built with `defineTuner()`
+(`src/domains/defineTuner.js`), which fills in the optional hooks and asserts
+the required fields in dev and tests, and is listed in `src/domains/index.js`
+so the contract tests (§9) cover it.
 
 - **Store factory**: `defineTunerStore(id, domain)` in
   `src/stores/createTunerStore.js` builds a generic Pinia store (hardware,
@@ -175,8 +178,11 @@ and the CMP load from a changing set of Google domains.
 
 ## 6. Adding a tuner
 
-1. Domain module `src/domains/<name>/index.js`, with namespaced model, data and
-   components (`src/model/<name>/`, `src/data/<name>/`, `src/components/<name>/`).
+1. Domain module `src/domains/<name>/index.js` built with `defineTuner()` and
+   added to `TUNER_DOMAINS` in `src/domains/index.js`, with namespaced model,
+   data and components (`src/model/<name>/`, `src/data/<name>/`,
+   `src/components/<name>/`). The contract suite and the config snapshots then
+   run over it; review the new snapshot file.
 2. Store: `defineTunerStore('<name>', domain)` in `src/stores/<name>.js`.
 3. A view that `provide()`s the store and domain, reuses the shared components
    and the profile-form widgets, and includes `MobileImpactBar` with its
@@ -411,6 +417,13 @@ over **every** registered tuner and checks:
 A new tuner gets this coverage for free. Its own `*.test.js` files cover only
 its math and its cross-parameter rules.
 
+The suite is `src/domains/contract.test.js`, next to
+`src/domains/configSnapshots.test.js`, which snapshots the config for every
+profile's defaults and every preset so each migration step can prove
+byte-identical output. Two checks wait on later work: the type-formatter check
+needs value types (step 7), and the page-mount check is the view smoke test
+in TODO.md §4.
+
 ### Guardrails
 
 - A component over about 300 lines, or one that knows which tuner it's
@@ -539,3 +552,7 @@ the contract suite (§9 Contract tests) and run over every tuner:
 - **Forbidden directives.** A scan of every tuner's output for the executable
   directives listed above.
 - **CI.** `npm audit --omit=dev --audit-level=high` runs in the test job.
+
+The first and third are in the contract suite (`src/domains/contract.test.js`),
+which also fuzzes a few hundred mixed valid and hostile links per tuner. The
+sink scan is `src/sourceScan.test.js`.

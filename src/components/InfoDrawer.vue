@@ -17,7 +17,7 @@ const isOpen = computed(() => def.value !== null)
 
 const contextNote = computed(() => {
   if (!def.value) return null
-  if (domain.contextApplies && !domain.contextApplies(tuner.hardware)) return null
+  if (!domain.contextApplies(tuner.hardware)) return null
   return def.value[domain.noteKey] ?? def.value.contextNote ?? null
 })
 
@@ -37,7 +37,7 @@ const workloadComparison = computed(() => {
 // Per-parameter formulas come from the active domain (it knows which parameters
 // have a genuinely useful derived formula). Null when there's nothing to show.
 const formula = computed(() => {
-  if (!def.value || !domain.formula) return null
+  if (!def.value) return null
   return domain.formula(def.value, { hardware: tuner.hardware, params: tuner.params })
 })
 

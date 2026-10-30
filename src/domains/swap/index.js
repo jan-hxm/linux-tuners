@@ -7,6 +7,7 @@
  * paths.
  */
 
+import { defineTuner } from '@/domains/defineTuner.js'
 import { DEFAULT_HARDWARE, PARAMETER_KEYS } from '@/model/parameters.js'
 import { PARAMETER_DEFS_BY_KEY, K8S_BLOG } from '@/data/parameterDefs.js'
 import {
@@ -84,8 +85,7 @@ function formula(def, { hardware, params }) {
   return null
 }
 
-/** @type {import('@/domains/types.js').TunerDomain} */
-export const swapDomain = {
+export const swapDomain = defineTuner({
   id: 'swap',
   defaultHardware: DEFAULT_HARDWARE,
   parameterKeys: PARAMETER_KEYS,
@@ -115,4 +115,4 @@ export const swapDomain = {
   docsLabel: 'kernel.org docs',
   noteKey: 'k8sNote',
   formula,
-}
+})

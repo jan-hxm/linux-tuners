@@ -32,7 +32,7 @@ const isWorkloadTuned = computed(() => {
 // A domain may gate the note on hardware (contextApplies) so e.g. the K8s note
 // only surfaces when the chosen workload is actually Kubernetes.
 const contextNote = computed(() => {
-  if (domain.contextApplies && !domain.contextApplies(tuner.hardware)) return null
+  if (!domain.contextApplies(tuner.hardware)) return null
   return def.value[domain.noteKey] ?? def.value.contextNote ?? null
 })
 

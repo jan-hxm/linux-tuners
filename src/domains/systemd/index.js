@@ -4,6 +4,7 @@
  * exactly like src/domains/swap/index.js.
  */
 
+import { defineTuner } from '@/domains/defineTuner.js'
 import { DEFAULT_SYSTEMD_SPEC, SYSTEMD_KEYS, SYSTEMD_SPEC_SCHEMA } from '@/model/systemd/parameters.js'
 import { SYSTEMD_DEFS_BY_KEY, SYSTEMD_RESOURCE_DOCS } from '@/data/systemd/parameterDefs.js'
 import { deriveDefaults, rangeFor, cpuQuotaNoLimit } from '@/model/systemd/calculations.js'
@@ -98,8 +99,7 @@ function formula(def, { hardware, params }) {
   return null
 }
 
-/** @type {import('@/domains/types.js').TunerDomain} */
-export const systemdDomain = {
+export const systemdDomain = defineTuner({
   id: 'systemd',
   defaultHardware: DEFAULT_SYSTEMD_SPEC,
   parameterKeys: SYSTEMD_KEYS,
@@ -123,4 +123,4 @@ export const systemdDomain = {
   docsLabel: 'systemd docs',
   noteKey: 'contextNote',
   formula,
-}
+})

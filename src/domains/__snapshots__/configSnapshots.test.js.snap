@@ -1,0 +1,4909 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generated config: swap > database / database 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, database server
+# Profile: Database server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 1 - low swap aggressiveness, prioritise latency
+vm.swappiness = 1
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
+vm.vfs_cache_pressure = 50
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+vm.dirty_ratio = 5
+
+# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+vm.dirty_background_ratio = 2
+
+# dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
+vm.dirty_expire_centisecs = 500
+
+# dirty_writeback_centisecs: 100 - flusher wakes every 1.0 s
+vm.dirty_writeback_centisecs = 100
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > database / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, database server
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 1 - low swap aggressiveness, prioritise latency
+vm.swappiness = 1
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+vm.dirty_ratio = 5
+
+# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+vm.dirty_background_ratio = 2
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > database / desktop 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, database server
+# Profile: Desktop workstation
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 100 - swap-friendly, useful when swap is fast
+vm.swappiness = 100
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > database / k8s-node 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, database server
+# Profile: Kubernetes node
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 10 - low swap aggressiveness, prioritise latency
+vm.swappiness = 10
+
+# min_free_kbytes: 262144 - reserve ~256 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 262144
+
+# watermark_scale_factor: 2000 - kswapd reclaim window ~3277 MiB wide
+vm.watermark_scale_factor = 2000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+vm.dirty_ratio = 5
+
+# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+vm.dirty_background_ratio = 2
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > database / k8s-zram 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, database server
+# Profile: Kubernetes + zram
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 133 - aggressive, only safe with in-memory swap (zram/zswap)
+vm.swappiness = 133
+
+# min_free_kbytes: 131072 - reserve ~128 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 131072
+
+# watermark_scale_factor: 1000 - kswapd reclaim window ~1638 MiB wide
+vm.watermark_scale_factor = 1000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+vm.dirty_ratio = 5
+
+# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+vm.dirty_background_ratio = 2
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > database / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, database server
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 60 - balanced bias between page cache and swap
+vm.swappiness = 60
+
+# min_free_kbytes: 67584 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67584
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > database / memory-constrained 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, database server
+# Profile: Memory-constrained
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 30 - balanced bias between page cache and swap
+vm.swappiness = 30
+
+# min_free_kbytes: 8192 - reserve ~8 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 8192
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+vm.dirty_ratio = 30
+
+# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+vm.dirty_background_ratio = 15
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > desktop / database 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, desktop workstation
+# Profile: Database server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 1 - low swap aggressiveness, prioritise latency
+vm.swappiness = 1
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
+vm.vfs_cache_pressure = 50
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+vm.dirty_ratio = 5
+
+# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+vm.dirty_background_ratio = 2
+
+# dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
+vm.dirty_expire_centisecs = 500
+
+# dirty_writeback_centisecs: 100 - flusher wakes every 1.0 s
+vm.dirty_writeback_centisecs = 100
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > desktop / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, desktop workstation
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 100 - swap-friendly, useful when swap is fast
+vm.swappiness = 100
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > desktop / desktop 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, desktop workstation
+# Profile: Desktop workstation
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 100 - swap-friendly, useful when swap is fast
+vm.swappiness = 100
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > desktop / k8s-node 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, desktop workstation
+# Profile: Kubernetes node
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 10 - low swap aggressiveness, prioritise latency
+vm.swappiness = 10
+
+# min_free_kbytes: 262144 - reserve ~256 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 262144
+
+# watermark_scale_factor: 2000 - kswapd reclaim window ~3277 MiB wide
+vm.watermark_scale_factor = 2000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > desktop / k8s-zram 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, desktop workstation
+# Profile: Kubernetes + zram
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 133 - aggressive, only safe with in-memory swap (zram/zswap)
+vm.swappiness = 133
+
+# min_free_kbytes: 131072 - reserve ~128 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 131072
+
+# watermark_scale_factor: 1000 - kswapd reclaim window ~1638 MiB wide
+vm.watermark_scale_factor = 1000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > desktop / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, desktop workstation
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 60 - balanced bias between page cache and swap
+vm.swappiness = 60
+
+# min_free_kbytes: 67584 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67584
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > desktop / memory-constrained 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, desktop workstation
+# Profile: Memory-constrained
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 30 - balanced bias between page cache and swap
+vm.swappiness = 30
+
+# min_free_kbytes: 8192 - reserve ~8 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 8192
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+vm.dirty_ratio = 30
+
+# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+vm.dirty_background_ratio = 15
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > embedded / database 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, embedded / constrained
+# Profile: Database server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 1 - low swap aggressiveness, prioritise latency
+vm.swappiness = 1
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
+vm.vfs_cache_pressure = 50
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+vm.dirty_ratio = 5
+
+# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+vm.dirty_background_ratio = 2
+
+# dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
+vm.dirty_expire_centisecs = 500
+
+# dirty_writeback_centisecs: 100 - flusher wakes every 1.0 s
+vm.dirty_writeback_centisecs = 100
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > embedded / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, embedded / constrained
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 30 - balanced bias between page cache and swap
+vm.swappiness = 30
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+vm.dirty_ratio = 30
+
+# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+vm.dirty_background_ratio = 15
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > embedded / desktop 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, embedded / constrained
+# Profile: Desktop workstation
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 100 - swap-friendly, useful when swap is fast
+vm.swappiness = 100
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > embedded / k8s-node 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, embedded / constrained
+# Profile: Kubernetes node
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 10 - low swap aggressiveness, prioritise latency
+vm.swappiness = 10
+
+# min_free_kbytes: 262144 - reserve ~256 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 262144
+
+# watermark_scale_factor: 2000 - kswapd reclaim window ~3277 MiB wide
+vm.watermark_scale_factor = 2000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+vm.dirty_ratio = 30
+
+# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+vm.dirty_background_ratio = 15
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > embedded / k8s-zram 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, embedded / constrained
+# Profile: Kubernetes + zram
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 133 - aggressive, only safe with in-memory swap (zram/zswap)
+vm.swappiness = 133
+
+# min_free_kbytes: 131072 - reserve ~128 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 131072
+
+# watermark_scale_factor: 1000 - kswapd reclaim window ~1638 MiB wide
+vm.watermark_scale_factor = 1000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+vm.dirty_ratio = 30
+
+# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+vm.dirty_background_ratio = 15
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > embedded / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, embedded / constrained
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 60 - balanced bias between page cache and swap
+vm.swappiness = 60
+
+# min_free_kbytes: 67584 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67584
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > embedded / memory-constrained 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, embedded / constrained
+# Profile: Memory-constrained
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 30 - balanced bias between page cache and swap
+vm.swappiness = 30
+
+# min_free_kbytes: 8192 - reserve ~8 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 8192
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+vm.dirty_ratio = 30
+
+# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+vm.dirty_background_ratio = 15
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / database 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Database server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 1 - low swap aggressiveness, prioritise latency
+vm.swappiness = 1
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
+vm.vfs_cache_pressure = 50
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+vm.dirty_ratio = 5
+
+# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+vm.dirty_background_ratio = 2
+
+# dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
+vm.dirty_expire_centisecs = 500
+
+# dirty_writeback_centisecs: 100 - flusher wakes every 1.0 s
+vm.dirty_writeback_centisecs = 100
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / database 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Database server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 1 - low swap aggressiveness, prioritise latency
+vm.swappiness = 1
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
+vm.vfs_cache_pressure = 50
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+vm.dirty_ratio = 5
+
+# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+vm.dirty_background_ratio = 2
+
+# dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
+vm.dirty_expire_centisecs = 500
+
+# dirty_writeback_centisecs: 100 - flusher wakes every 1.0 s
+vm.dirty_writeback_centisecs = 100
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 60 - balanced bias between page cache and swap
+vm.swappiness = 60
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 60 - balanced bias between page cache and swap
+vm.swappiness = 60
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / desktop 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Desktop workstation
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 100 - swap-friendly, useful when swap is fast
+vm.swappiness = 100
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / desktop 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Desktop workstation
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 100 - swap-friendly, useful when swap is fast
+vm.swappiness = 100
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / k8s-node 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Kubernetes node
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 10 - low swap aggressiveness, prioritise latency
+vm.swappiness = 10
+
+# min_free_kbytes: 262144 - reserve ~256 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 262144
+
+# watermark_scale_factor: 2000 - kswapd reclaim window ~3277 MiB wide
+vm.watermark_scale_factor = 2000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / k8s-node 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Kubernetes node
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 10 - low swap aggressiveness, prioritise latency
+vm.swappiness = 10
+
+# min_free_kbytes: 262144 - reserve ~256 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 262144
+
+# watermark_scale_factor: 2000 - kswapd reclaim window ~3277 MiB wide
+vm.watermark_scale_factor = 2000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / k8s-zram 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Kubernetes + zram
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 133 - aggressive, only safe with in-memory swap (zram/zswap)
+vm.swappiness = 133
+
+# min_free_kbytes: 131072 - reserve ~128 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 131072
+
+# watermark_scale_factor: 1000 - kswapd reclaim window ~1638 MiB wide
+vm.watermark_scale_factor = 1000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / k8s-zram 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Kubernetes + zram
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 133 - aggressive, only safe with in-memory swap (zram/zswap)
+vm.swappiness = 133
+
+# min_free_kbytes: 131072 - reserve ~128 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 131072
+
+# watermark_scale_factor: 1000 - kswapd reclaim window ~1638 MiB wide
+vm.watermark_scale_factor = 1000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 60 - balanced bias between page cache and swap
+vm.swappiness = 60
+
+# min_free_kbytes: 67584 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67584
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / kernel-defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 60 - balanced bias between page cache and swap
+vm.swappiness = 60
+
+# min_free_kbytes: 67584 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67584
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / memory-constrained 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Memory-constrained
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 30 - balanced bias between page cache and swap
+vm.swappiness = 30
+
+# min_free_kbytes: 8192 - reserve ~8 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 8192
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+vm.dirty_ratio = 30
+
+# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+vm.dirty_background_ratio = 15
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > general / memory-constrained 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, general-purpose server
+# Profile: Memory-constrained
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 30 - balanced bias between page cache and swap
+vm.swappiness = 30
+
+# min_free_kbytes: 8192 - reserve ~8 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 8192
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+vm.dirty_ratio = 30
+
+# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+vm.dirty_background_ratio = 15
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > k8s / database 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, Kubernetes node
+# Profile: Database server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   Kubernetes swap: https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 1 - low swap aggressiveness, prioritise latency
+vm.swappiness = 1
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 2000 - kswapd reclaim window ~3277 MiB wide
+vm.watermark_scale_factor = 2000
+
+# vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
+vm.vfs_cache_pressure = 50
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+vm.dirty_ratio = 5
+
+# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+vm.dirty_background_ratio = 2
+
+# dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
+vm.dirty_expire_centisecs = 500
+
+# dirty_writeback_centisecs: 100 - flusher wakes every 1.0 s
+vm.dirty_writeback_centisecs = 100
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > k8s / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, Kubernetes node
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   Kubernetes swap: https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 10 - low swap aggressiveness, prioritise latency
+vm.swappiness = 10
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 2000 - kswapd reclaim window ~3277 MiB wide
+vm.watermark_scale_factor = 2000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > k8s / desktop 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, Kubernetes node
+# Profile: Desktop workstation
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   Kubernetes swap: https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 100 - swap-friendly, useful when swap is fast
+vm.swappiness = 100
+
+# min_free_kbytes: 67109 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67109
+
+# watermark_scale_factor: 2000 - kswapd reclaim window ~3277 MiB wide
+vm.watermark_scale_factor = 2000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > k8s / k8s-node 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, Kubernetes node
+# Profile: Kubernetes node
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   Kubernetes swap: https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 10 - low swap aggressiveness, prioritise latency
+vm.swappiness = 10
+
+# min_free_kbytes: 262144 - reserve ~256 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 262144
+
+# watermark_scale_factor: 2000 - kswapd reclaim window ~3277 MiB wide
+vm.watermark_scale_factor = 2000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > k8s / k8s-zram 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, Kubernetes node
+# Profile: Kubernetes + zram
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   Kubernetes swap: https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 133 - aggressive, only safe with in-memory swap (zram/zswap)
+vm.swappiness = 133
+
+# min_free_kbytes: 131072 - reserve ~128 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 131072
+
+# watermark_scale_factor: 1000 - kswapd reclaim window ~1638 MiB wide
+vm.watermark_scale_factor = 1000
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > k8s / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, Kubernetes node
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   Kubernetes swap: https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 60 - balanced bias between page cache and swap
+vm.swappiness = 60
+
+# min_free_kbytes: 67584 - reserve ~66 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 67584
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+vm.dirty_ratio = 20
+
+# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+vm.dirty_background_ratio = 10
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: swap > k8s / memory-constrained 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux swap & VM sysctl tuning
+# Generated 2026-01-01 by linux-tuners.dev/swap
+# Hardware: 16 GiB RAM, 8 GiB NVMe swap, Kubernetes node
+# Profile: Memory-constrained
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-swap-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl vm.swappiness
+#
+# ACTIVATING SWAP: 8 GiB on NVMe
+#
+# If you do not have swap yet, a swap file is the simplest option:
+#   sudo fallocate -l 8G /swapfile        # fallback: sudo dd if=/dev/zero of=/swapfile bs=1M count=8192
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#
+# Persist it across reboots by adding it to /etc/fstab:
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+#
+# Confirm it is active:  swapon --show && free -h
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel vm docs: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   Kubernetes swap: https://kubernetes.io/blog/2025/08/19/tuning-linux-swap-for-kubernetes-a-deep-dive/
+
+# ── Memory reclaim & swap ───────────────────────────────────────────────────
+# swappiness: 30 - balanced bias between page cache and swap
+vm.swappiness = 30
+
+# min_free_kbytes: 8192 - reserve ~8 MiB as the kernel free-memory floor
+vm.min_free_kbytes = 8192
+
+# watermark_scale_factor: 10 - kswapd reclaim window ~16 MiB wide
+vm.watermark_scale_factor = 10
+
+# vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
+vm.vfs_cache_pressure = 100
+
+# ── Dirty page writeback ────────────────────────────────────────────────────
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+vm.dirty_ratio = 30
+
+# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+vm.dirty_background_ratio = 15
+
+# dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
+vm.dirty_expire_centisecs = 3000
+
+# dirty_writeback_centisecs: 500 - flusher wakes every 5.0 s
+vm.dirty_writeback_centisecs = 500
+
+# ── OOM & overcommit ────────────────────────────────────────────────────────
+# overcommit_memory: 0 - heuristic, kernel default
+vm.overcommit_memory = 0
+
+# panic_on_oom: 0 - invoke OOM killer (default)
+vm.panic_on_oom = 0"
+`;
+
+exports[`generated config: systemd > container-host / container-host 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: container host, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Container host
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > container-host / database-server 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: container host, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Database server
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 13.6 GiB of 16
+MemoryHigh=85%
+# MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
+MemoryMax=95%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > container-host / defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: container host, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: custom
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > container-host / desktop 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: container host, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Desktop workstation
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 15.2 GiB of 16
+MemoryHigh=95%
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > container-host / hardened-multitenant 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: container host, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Hardened multi-tenant
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 11.2 GiB of 16
+MemoryHigh=70%
+# MemoryMax: hard OOM limit ≈ 12.8 GiB of 16
+MemoryMax=80%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > container-host / kubernetes-node 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: container host, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Kubernetes node
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=200
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > container-host / systemd-defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: container host, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: systemd defaults
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: unset (infinity, no throttle)
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > database / container-host 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: database server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Container host
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > database / database-server 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: database server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Database server
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 13.6 GiB of 16
+MemoryHigh=85%
+# MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
+MemoryMax=95%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > database / defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: database server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: custom
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 13.6 GiB of 16
+MemoryHigh=85%
+# MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
+MemoryMax=95%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > database / desktop 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: database server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Desktop workstation
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 15.2 GiB of 16
+MemoryHigh=95%
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > database / hardened-multitenant 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: database server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Hardened multi-tenant
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 11.2 GiB of 16
+MemoryHigh=70%
+# MemoryMax: hard OOM limit ≈ 12.8 GiB of 16
+MemoryMax=80%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > database / kubernetes-node 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: database server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Kubernetes node
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=200
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > database / systemd-defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: database server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: systemd defaults
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: unset (infinity, no throttle)
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > desktop / container-host 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: desktop workstation, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Container host
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~10% of pid_max)
+TasksMax=419430"
+`;
+
+exports[`generated config: systemd > desktop / database-server 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: desktop workstation, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Database server
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 13.6 GiB of 16
+MemoryHigh=85%
+# MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
+MemoryMax=95%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~10% of pid_max)
+TasksMax=419430"
+`;
+
+exports[`generated config: systemd > desktop / defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: desktop workstation, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: custom
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: unset (infinity, no throttle)
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~10% of pid_max)
+TasksMax=419430"
+`;
+
+exports[`generated config: systemd > desktop / desktop 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: desktop workstation, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Desktop workstation
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 15.2 GiB of 16
+MemoryHigh=95%
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > desktop / hardened-multitenant 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: desktop workstation, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Hardened multi-tenant
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 11.2 GiB of 16
+MemoryHigh=70%
+# MemoryMax: hard OOM limit ≈ 12.8 GiB of 16
+MemoryMax=80%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > desktop / kubernetes-node 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: desktop workstation, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Kubernetes node
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=200
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~10% of pid_max)
+TasksMax=419430"
+`;
+
+exports[`generated config: systemd > desktop / systemd-defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: desktop workstation, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: systemd defaults
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: unset (infinity, no throttle)
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / container-host 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Container host
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / container-host 2`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Container host
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / database-server 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Database server
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 13.6 GiB of 16
+MemoryHigh=85%
+# MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
+MemoryMax=95%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / database-server 2`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Database server
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 13.6 GiB of 16
+MemoryHigh=85%
+# MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
+MemoryMax=95%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: custom
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: unset (infinity, no throttle)
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / defaults 2`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: custom
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: unset (infinity, no throttle)
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / desktop 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Desktop workstation
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 15.2 GiB of 16
+MemoryHigh=95%
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > general / desktop 2`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Desktop workstation
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 15.2 GiB of 16
+MemoryHigh=95%
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > general / hardened-multitenant 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Hardened multi-tenant
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 11.2 GiB of 16
+MemoryHigh=70%
+# MemoryMax: hard OOM limit ≈ 12.8 GiB of 16
+MemoryMax=80%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > general / hardened-multitenant 2`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Hardened multi-tenant
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 11.2 GiB of 16
+MemoryHigh=70%
+# MemoryMax: hard OOM limit ≈ 12.8 GiB of 16
+MemoryMax=80%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > general / kubernetes-node 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Kubernetes node
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=200
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / kubernetes-node 2`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Kubernetes node
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=200
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / systemd-defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: systemd defaults
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: unset (infinity, no throttle)
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > general / systemd-defaults 2`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: general-purpose server, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: systemd defaults
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: unset (infinity, no throttle)
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > kubernetes / container-host 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: Kubernetes node, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Container host
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > kubernetes / database-server 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: Kubernetes node, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Database server
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=256M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 13.6 GiB of 16
+MemoryHigh=85%
+# MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
+MemoryMax=95%
+# MemorySwapMax: slice forbidden from using swap
+MemorySwapMax=0
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > kubernetes / defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: Kubernetes node, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: custom
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > kubernetes / desktop 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: Kubernetes node, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Desktop workstation
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 15.2 GiB of 16
+MemoryHigh=95%
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > kubernetes / hardened-multitenant 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: Kubernetes node, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Hardened multi-tenant
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 11.2 GiB of 16
+MemoryHigh=70%
+# MemoryMax: hard OOM limit ≈ 12.8 GiB of 16
+MemoryMax=80%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+TasksMax=262144"
+`;
+
+exports[`generated config: systemd > kubernetes / kubernetes-node 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: Kubernetes node, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: Kubernetes node
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=yes
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=yes
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~25% of pid_max)
+DefaultTasksMax=1048576
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:1048576
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=200
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: soft throttle limit ≈ 12.8 GiB of 16
+MemoryHigh=80%
+# MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
+MemoryMax=90%
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=200
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;
+
+exports[`generated config: systemd > kubernetes / systemd-defaults 1`] = `
+"# systemd resource tuning (generated 2026-01-01)
+# Profile: Kubernetes node, system.slice, 16 GiB RAM, 8 cores, cgroup v2
+# Preset: systemd defaults
+# Apply: sudo systemctl daemon-reload
+#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# Sources:
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
+#   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
+[Manager]
+# DefaultCPUAccounting: per-unit CPU time accounting
+DefaultCPUAccounting=no
+# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+DefaultMemoryAccounting=yes
+# DefaultIOAccounting: per-unit block-I/O accounting
+DefaultIOAccounting=no
+# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+DefaultTasksAccounting=yes
+# DefaultIPAccounting: per-unit network accounting (eBPF)
+DefaultIPAccounting=no
+# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
+DefaultTasksMax=629146
+# DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
+DefaultLimitNOFILE=1024:524288
+# DefaultLimitMEMLOCK: default locked-in-memory ceiling
+DefaultLimitMEMLOCK=8M
+
+# ===== /etc/systemd/system/system.slice.d/50-resources.conf =================
+[Slice]
+# CPUWeight: proportional CPU share under contention (default 100)
+CPUWeight=100
+# CPUQuota: unset (no hard CPU limit)
+# MemoryHigh: unset (infinity, no throttle)
+# MemoryMax: unset (infinity, no limit)
+# MemorySwapMax: unset (infinity, slice may swap freely)
+# IOWeight: proportional block-I/O share under contention (default 100)
+IOWeight=100
+# TasksMax: hard task cap for the whole slice (~15% of pid_max)
+TasksMax=629146"
+`;

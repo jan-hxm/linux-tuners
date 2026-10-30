@@ -45,10 +45,10 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 ## 4. Engineering
 
 Maintainability migration toward [Design.md §9](Design.md#9-code-organization-and-reuse).
-Each step is a refactor with no behaviour change: snapshot the generated configs first.
-Steps 1–3 come before the Security tuner, 4–6 alongside it, and 7 before Network.
+Each step is a refactor with no behaviour change: the config snapshots
+(`src/domains/configSnapshots.test.js`) must stay unchanged.
+Steps 2–3 come before the Security tuner, 4–6 alongside it, and 7 before Network.
 
-1. [ ] `defineTuner()` + the shared contract test suite over all tuners (no file moves; locks current behaviour).
 2. [ ] `TunerPage` shell with an `about.js` data file; shrink both views to configuration.
 3. [ ] `src/tuners/registry.js` driving router, `routes-meta.js`, landing cards, header nav and sitemap.
 4. [ ] Move to `core/`, `ui/`, `tuners/<id>/` (git mv; swap drops its unprefixed legacy paths) + the import-boundary test.
@@ -56,7 +56,6 @@ Steps 1–3 come before the Security tuner, 4–6 alongside it, and 7 before Net
 6. [ ] `core/output` writers, multi-file `{ path, content }[]` output, generic `sysctlConfig`.
 7. [ ] Value types (`int`/`bool`/`enum`/`tuple`) + controls registry; split `ParameterCard`; `select` control.
 
-- [ ] Security guards from [Design.md §10](Design.md#10-security): the hostile-state and forbidden-directive tests (part of step 1's contract suite), the forbidden-sink source scan, and `npm audit --omit=dev --audit-level=high` in CI. Before the Security tuner.
 - [ ] Tests: `ConfigOutput` flow (textarea matches the generator, copy calls the clipboard API, blocked state) and a smoke test that mounts each view without console errors.
 - [ ] Automated accessibility sweep (axe-core / Lighthouse): focus visibility on the dark hero, a live-region announcement when a preset is applied or validation fires, and a full WCAG AA contrast pass.
 - [ ] Bundle: re-measure (last measured before `/systemd`), drop unused Chart.js parts (check whether `Filler` is needed), lazy-load chart components per tab.

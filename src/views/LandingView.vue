@@ -1,89 +1,7 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import AdSlot from '@/components/AdSlot.vue'
-
-// Curated topic tuners. `available` ones are shipped routes; the rest are the
-// roadmap toward covering the whole sysctl tree plus the key sysfs runtime
-// tunables. Grouped by what an operator tunes together (so e.g. hardening keys
-// from kernel/net/fs live in one "Security hardening" tuner) rather than strictly
-// per /proc/sys root. Don't give a roadmap entry a route until it actually works.
-const TUNERS = [
-  {
-    id: 'swap',
-    available: true,
-    to: '/swap',
-    title: 'Swap & memory',
-    blurb: 'Hardware-aware tuning of vm.* sysctl parameters: swappiness, watermarks, dirty-page writeback, and OOM behaviour. Live graphs of swap pressure, watermark zones, and the dirty timeline.',
-    keys: ['vm.swappiness', 'vm.min_free_kbytes', 'vm.watermark_scale_factor', 'vm.dirty_ratio', '…'],
-  },
-  {
-    id: 'systemd',
-    available: true,
-    to: '/systemd',
-    title: 'systemd & resource limits',
-    blurb: 'Tune systemd manager defaults and per-slice cgroup v2 resource control: accounting, task and FD limits, and CPU/memory/IO weights and caps for clustered and containerised Linux workloads.',
-    keys: ['CPUWeight', 'MemoryMax', 'DefaultTasksMax', 'DefaultLimitNOFILE', '…'],
-  },
-  {
-    id: 'network',
-    available: false,
-    title: 'Network stack',
-    blurb: 'Tune net.core and net.ipv4 sysctls for throughput and latency, covering socket buffer sizes, the listen backlog, congestion control, TIME_WAIT reuse, and netfilter connection tracking.',
-    keys: ['net.core.rmem_max', 'net.ipv4.tcp_congestion_control', 'net.core.somaxconn', 'net.netfilter.nf_conntrack_max', '…'],
-  },
-  {
-    id: 'filesystem',
-    available: false,
-    title: 'Filesystem & file descriptors',
-    blurb: 'Tune fs.* sysctls for file-heavy and event-driven workloads, covering the system-wide file-descriptor ceiling, inotify watch limits, and async I/O capacity.',
-    keys: ['fs.file-max', 'fs.inotify.max_user_watches', 'fs.aio-max-nr', '…'],
-  },
-  {
-    id: 'kernel',
-    available: false,
-    title: 'Kernel & scheduler',
-    blurb: 'Tune kernel.* sysctls for scheduling and system behaviour, covering CFS scheduler tunables, the PID and thread ceilings, panic and printk behaviour, and user-namespace limits.',
-    keys: ['kernel.sched_*', 'kernel.pid_max', 'kernel.threads-max', 'user.max_user_namespaces', '…'],
-  },
-  {
-    id: 'hugepages',
-    available: false,
-    title: 'Huge pages & memory layout',
-    blurb: 'Tune the rest of vm.* plus Transparent Huge Pages for large-memory workloads, covering hugepage pools, the mmap count limit, NUMA zone reclaim, and THP and KSM policy.',
-    keys: ['vm.nr_hugepages', 'vm.max_map_count', 'vm.zone_reclaim_mode', '/sys/kernel/mm/transparent_hugepage', '…'],
-  },
-  {
-    id: 'sysv-ipc',
-    available: false,
-    title: 'System V IPC & shared memory',
-    blurb: 'Tune System V IPC limits for databases and legacy middleware, covering shared-memory segment sizes, semaphore arrays, and message-queue limits.',
-    keys: ['kernel.shmmax', 'kernel.shmall', 'kernel.sem', 'kernel.msgmni', '…'],
-  },
-  {
-    id: 'security',
-    available: false,
-    title: 'Security hardening',
-    blurb: 'A hardening profile (CIS-benchmark style) that pulls security-relevant sysctls together from kernel, net, and fs, covering pointer and dmesg restrictions, ptrace scope, reverse-path filtering, SYN cookies, and link protections.',
-    keys: ['kernel.kptr_restrict', 'kernel.yama.ptrace_scope', 'net.ipv4.tcp_syncookies', 'fs.protected_symlinks', '…'],
-  },
-  {
-    id: 'block-io',
-    available: false,
-    title: 'Block I/O & storage',
-    blurb: 'Tune the block layer through sysfs for storage-bound workloads, covering the per-device I/O scheduler, queue depth, and read-ahead.',
-    keys: ['/sys/block/<dev>/queue/scheduler', 'nr_requests', 'read_ahead_kb', '…'],
-  },
-  {
-    id: 'cpu-power',
-    available: false,
-    title: 'CPU frequency & power',
-    blurb: 'Tune CPU frequency scaling and placement through sysfs, covering the cpufreq governor, min and max frequencies, the energy-vs-performance bias, and NUMA balancing.',
-    keys: ['scaling_governor', 'scaling_max_freq', 'kernel.numa_balancing', '…'],
-  },
-]
-
-const availableTuners = TUNERS.filter((t) => t.available)
-const roadmapTuners = TUNERS.filter((t) => !t.available)
+import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
 </script>
 
 <template>
@@ -110,9 +28,9 @@ const roadmapTuners = TUNERS.filter((t) => !t.available)
     <section class="space-y-4">
       <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Tuners</h2>
       <ul class="grid gap-4 sm:grid-cols-2">
-        <li v-for="tuner in availableTuners" :key="tuner.id">
+        <li v-for="tuner in LIVE_TUNERS" :key="tuner.id">
           <RouterLink
-            :to="tuner.to"
+            :to="tuner.path"
             class="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-400 hover:shadow"
           >
             <header class="flex items-baseline justify-between gap-2">
@@ -144,7 +62,7 @@ const roadmapTuners = TUNERS.filter((t) => !t.available)
         </p>
       </div>
       <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <li v-for="tuner in roadmapTuners" :key="tuner.id">
+        <li v-for="tuner in PLANNED_TUNERS" :key="tuner.id">
           <div class="flex h-full flex-col rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5">
             <header class="flex items-baseline justify-between gap-2">
               <h3 class="text-base font-semibold text-slate-700">{{ tuner.title }}</h3>

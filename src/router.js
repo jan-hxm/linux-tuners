@@ -8,22 +8,31 @@ import {
   DEFAULT_LOCALE,
   jsonLdFor,
 } from './routes-meta.js'
+import { LIVE_TUNERS } from './tuners/registry.js'
 
-// Map declarative route meta → vue-router route records, attaching the
-// lazy-loaded view component for each path.
-const VIEW_LOADERS = {
+// Lazy-loaded view per live tuner, keyed by registry id. Kept here rather than
+// in the registry so the registry stays plain data and each tuner gets its own
+// chunk. Every live registry entry needs one (src/tuners/registry.test.js).
+export const TUNER_VIEWS = {
+  swap: () => import('@/views/SwapTunerView.vue'),
+  systemd: () => import('@/views/SystemdTunerView.vue'),
+}
+
+const PAGE_VIEWS = {
   '/': () => import('@/views/LandingView.vue'),
-  '/swap': () => import('@/views/SwapTunerView.vue'),
-  '/systemd': () => import('@/views/SystemdTunerView.vue'),
   '/imprint': () => import('@/views/ImpressumView.vue'),
   '/privacy': () => import('@/views/DatenschutzView.vue'),
 }
 
+const TUNER_VIEW_BY_PATH = Object.fromEntries(LIVE_TUNERS.map((t) => [t.path, TUNER_VIEWS[t.id]]))
+
+// Map declarative route meta → vue-router route records, attaching the
+// lazy-loaded view component for each path.
 const routes = [
   ...ROUTES_META.map((r) => ({
     path: r.path,
     name: r.name,
-    component: VIEW_LOADERS[r.path],
+    component: PAGE_VIEWS[r.path] ?? TUNER_VIEW_BY_PATH[r.path],
     meta: r,
   })),
   {

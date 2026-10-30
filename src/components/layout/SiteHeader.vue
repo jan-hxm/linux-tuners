@@ -1,5 +1,6 @@
 <script setup>
 import { RouterLink } from 'vue-router'
+import { LIVE_TUNERS } from '@/tuners/registry.js'
 </script>
 
 <template>
@@ -11,15 +12,12 @@ import { RouterLink } from 'vue-router'
       </RouterLink>
       <nav aria-label="Tuners" class="flex items-center gap-1 text-xs">
         <RouterLink
-          to="/swap"
+          v-for="tuner in LIVE_TUNERS"
+          :key="tuner.id"
+          :to="tuner.path"
           class="rounded px-2 py-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           active-class="bg-slate-900 text-white hover:bg-slate-900 hover:text-white"
-        >Swap & memory</RouterLink>
-        <RouterLink
-          to="/systemd"
-          class="rounded px-2 py-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-          active-class="bg-slate-900 text-white hover:bg-slate-900 hover:text-white"
-        >systemd</RouterLink>
+        >{{ tuner.navLabel }}</RouterLink>
         <a
           href="https://github.com/jan-hxm/linux-tuners"
           target="_blank"

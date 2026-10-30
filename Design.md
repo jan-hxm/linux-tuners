@@ -160,7 +160,9 @@ file someone may run as root, restoring it is strict:
 
 ### Routes, SEO and build
 
-Route metadata is single-sourced in `src/routes-meta.js`. The router applies
+Route metadata is single-sourced in `src/routes-meta.js`, which lists the
+landing and legal pages and takes each live tuner's route from the registry
+(`src/tuners/registry.js`, see [§9 Registry](#registry)). The router applies
 the head tags client-side, and `npm run build` runs a postbuild step
 (`scripts/generate-static-routes.mjs`) that writes `dist/<route>/index.html`
 with the route's title, OG/Twitter tags, JSON-LD and canonical URL baked in,
@@ -196,12 +198,15 @@ and the CMP load from a changing set of Google domains.
 3. `about.js` with the page copy and About content, and a view that renders
    `TunerPage` with its graph tabs, impact metrics and profile form (built
    from the shared profile-form widgets).
-4. Route wiring: a `ROUTES_META` entry, a loader in `VIEW_LOADERS`
-   (`src/router.js`), the landing card status in `LandingView.vue`, and the
-   nav order in `SiteHeader.vue` if relevant.
+4. Registry entry in `src/tuners/registry.js` (landing-card text, nav label,
+   route metadata) and a lazy loader in `TUNER_VIEWS` (`src/router.js`). The
+   route, landing card, header nav and sitemap follow from it, and
+   `src/tuners/registry.test.js` checks that the registry, domains and router
+   agree.
 5. **Don't add the route entry or an indexed page until the tuner works.**
    Ad networks and search engines treat "under construction" pages as thin
-   content. Planned tuners appear only as "Coming soon" cards on the landing
+   content. Until then the entry stays `status: 'planned'`, which renders
+   only a "Coming soon" card on the landing
    page.
 6. Pass the security audit in [section 10](#10-security), including the
    hand-crafted hostile link, before the first commit of the tuner.
@@ -291,7 +296,7 @@ src/
 
 ```
 src/tuners/<id>/
-  index.js         defineTuner({...}): domain module + registry metadata
+  index.js         defineTuner({...}): the domain module
   profile.js       profile fields, defaults and restore schema (one list)
   defs.js          parameter defs
   presets.js
@@ -391,20 +396,20 @@ so that a new variant is an addition rather than an edit to shared code.
 `src/tuners/registry.js` is the one list of tuners. Each entry holds:
 
 - `id`
-- `path`
 - `status`: `live` or `planned`
-- nav order
-- landing-card text
-- route metadata
+- landing-card text (`title`, `blurb`, `keys`)
+- for live entries: `path` (`/<id>`), `navLabel` and `route` metadata
 
-It must stay plain data with no Vue imports, because the postbuild script reads
-it. The router, `routes-meta.js`, the landing cards, the header nav and the
-sitemap all derive from it, which replaces the four manual edits in §6.
+Array order is the landing and nav order. It must stay plain data with no Vue
+or `@/` imports, because the postbuild script reads it under Node. The router,
+`routes-meta.js`, the landing cards, the header nav and the sitemap all derive
+from it. `registry.test.js` checks the shape and that the live ids match
+`TUNER_DOMAINS` and `TUNER_VIEWS`.
 
 A `planned` entry renders only a "Coming soon" card and gets no route. That
 makes the [no-thin-pages rule](#6-adding-a-tuner) mechanical rather than
 something to remember. The lazy `import()` of each live tuner's page stays in
-`router.js`, next to the registry. That keeps each tuner in its own chunk.
+`router.js` (`TUNER_VIEWS`, keyed by id), next to the registry. That keeps each tuner in its own chunk.
 
 ### Contract tests
 

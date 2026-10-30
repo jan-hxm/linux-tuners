@@ -5,8 +5,12 @@
  *                                          social-card crawlers (Twitter, Facebook, LinkedIn,
  *                                          Discord) see the right OG tags without running JS
  *
- * Keep the metadata declarative — no Vue imports here.
+ * Keep the metadata declarative — no Vue imports here. Tuner routes come from
+ * the registry (src/tuners/registry.js); only the landing and legal pages are
+ * listed here.
  */
+
+import { LIVE_TUNERS } from './tuners/registry.js'
 
 export const SITE_ORIGIN = 'https://linux-tuners.dev'
 export const SITE_NAME = 'linux-tuners.dev'
@@ -39,28 +43,7 @@ export const ROUTES_META = [
     changefreq: 'monthly',
     jsonLdType: 'WebSite',
   },
-  {
-    path: '/swap',
-    name: 'swap',
-    title: 'Swap & memory tuner | linux-tuners.dev',
-    description:
-      'Hardware-aware tuner for Linux vm.* sysctl parameters: swappiness, min_free_kbytes, watermark scaling, dirty-page writeback, OOM behaviour. Live simulation of swap pressure, watermark zones, and dirty timeline.',
-    ogTitle: 'Swap & memory tuner',
-    priority: 0.9,
-    changefreq: 'monthly',
-    jsonLdType: 'SoftwareApplication',
-  },
-  {
-    path: '/systemd',
-    name: 'systemd',
-    title: 'systemd & resource limits tuner | linux-tuners.dev',
-    description:
-      'Hardware-aware tuner for systemd resource control: manager defaults (accounting, DefaultTasksMax, DefaultLimitNOFILE/MEMLOCK) and per-slice cgroup v2 controls (CPUWeight, CPUQuota, MemoryHigh/Max, IOWeight, TasksMax). Live CPU-share, memory-budget and task-cap graphs with copy-pasteable drop-ins.',
-    ogTitle: 'systemd & resource limits tuner',
-    priority: 0.9,
-    changefreq: 'monthly',
-    jsonLdType: 'SoftwareApplication',
-  },
+  ...LIVE_TUNERS.map((t) => ({ path: t.path, name: t.id, ...t.route })),
   {
     path: '/imprint',
     name: 'imprint',

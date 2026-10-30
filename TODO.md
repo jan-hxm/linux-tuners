@@ -47,9 +47,8 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 Maintainability migration toward [Design.md §9](Design.md#9-code-organization-and-reuse).
 Each step is a refactor with no behaviour change: the config snapshots
 (`src/domains/configSnapshots.test.js`) must stay unchanged.
-Step 3 comes before the Security tuner, 4–6 alongside it, and 7 before Network.
+Steps 4–6 come alongside the Security tuner, and 7 before Network.
 
-3. [ ] `src/tuners/registry.js` driving router, `routes-meta.js`, landing cards, header nav and sitemap.
 4. [ ] Move to `core/`, `ui/`, `tuners/<id>/` (git mv; swap drops its unprefixed legacy paths) + the import-boundary test.
 5. [ ] Generic `useTunerSimulation`, `ChartFrame` and a chart palette.
 6. [ ] `core/output` writers, multi-file `{ path, content }[]` output, generic `sysctlConfig`.

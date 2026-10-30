@@ -7,7 +7,8 @@
  *      execute JS (Twitter, Facebook, LinkedIn, Discord previewers) see the
  *      right card preview; the SPA hydrates on top of that HTML when a real
  *      visitor lands.
- *   2. Emit `dist/sitemap.xml` from the route metadata so it always reflects
+ *   2. Emit `dist/sitemap.xml` from the route metadata (tuner routes come from
+ *      the registry, src/tuners/registry.js) so it always reflects
  *      reality and never drifts from the router.
  *
  * Run automatically via `npm run build` (postbuild hook in package.json).
@@ -35,6 +36,8 @@ async function main() {
 
   let wrote = 0
   for (const route of ROUTES_META) {
+    // Paths become directories under dist/; refuse anything but one plain segment.
+    if (!/^\/[a-z0-9-]*$/.test(route.path)) throw new Error(`unsafe route path: ${route.path}`)
     if (route.path === '/') continue // root index.html already exists from Vite
     const html = renderForRoute(template, route)
     const outPath = path.join(DIST_DIR, route.path.slice(1), 'index.html')

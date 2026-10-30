@@ -1,0 +1,9 @@
+# Cloudflare Pages response headers.
+#
+# No full script-src CSP: AdSense + Google's CMP load from a long, changing list
+# of Google domains. These cover clickjacking and the cheap wins without
+# risking breaking ad serving. (HSTS is implicit: .dev is on the HSTS preload list.)
+/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), usb=(), payment=()

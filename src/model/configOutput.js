@@ -204,7 +204,7 @@ function describeDevice(device) {
     case 'zram': return 'zram'
     case 'zswap': return 'zswap'
     case 'network': return 'network'
-    default: return device
+    default: return 'unknown device'
   }
 }
 
@@ -216,7 +216,7 @@ function describeWorkload(w) {
     case 'desktop': return 'desktop workstation'
     case 'embedded': return 'embedded / constrained'
     case 'custom': return 'custom'
-    default: return w
+    default: return 'custom'
   }
 }
 

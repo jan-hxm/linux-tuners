@@ -52,6 +52,21 @@ export const PARAMETER_KEYS = /** @type {(keyof ParameterValues)[]} */ ([
  */
 export const FAST_SWAP_DEVICES = /** @type {SwapDevice[]} */ (['zram', 'zswap'])
 
+/**
+ * Allowed value per hardware field: an enum list, a numeric `{ min, max }`, or
+ * a RegExp for free-text fields. decodeState rejects shared-URL state that
+ * doesn't match, since several of these fields are echoed into the generated
+ * config and a crafted link must not be able to inject lines into it.
+ */
+export const HARDWARE_SCHEMA = {
+  ramGiB: { min: 0.25, max: 2304 * 1024 },
+  swapGiB: { min: 0, max: 2304 * 1024 },
+  swapDevice: ['hdd', 'sata-ssd', 'nvme-ssd', 'zram', 'zswap', 'network'],
+  workload: ['k8s', 'database', 'general', 'desktop', 'embedded', 'custom'],
+  cgroupVersion: ['v1', 'v2'],
+  kernelVersion: /^[\w.+-]{0,32}$/,
+}
+
 /** Default hardware spec used before the user submits the form. */
 export const DEFAULT_HARDWARE = /** @type {HardwareSpec} */ ({
   ramGiB: 16,

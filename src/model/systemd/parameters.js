@@ -60,6 +60,20 @@ export const SYSTEMD_KEYS = /** @type {(keyof SystemdValues)[]} */ ([
  */
 export const DEFAULT_PID_MAX = 4194304
 
+/**
+ * Allowed value per profile field (see HARDWARE_SCHEMA in ../parameters.js).
+ * targetSlice and workload are echoed into the generated config, including a
+ * file path, so shared-URL state is checked against these lists.
+ */
+export const SYSTEMD_SPEC_SCHEMA = {
+  ramGiB: { min: 0.25, max: 2304 * 1024 },
+  cpuCores: { min: 1, max: 4096 },
+  workload: ['container-host', 'kubernetes', 'database', 'general', 'desktop'],
+  targetSlice: ['system.slice', 'user.slice', 'machine.slice'],
+  pidMax: { min: 1024, max: 4194304 },
+  cgroupVersion: ['v1', 'v2'],
+}
+
 /** Default system profile used before the user submits the form. */
 export const DEFAULT_SYSTEMD_SPEC = /** @type {SystemdSpec} */ ({
   ramGiB: 16,

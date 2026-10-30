@@ -1,5 +1,5 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
-import { PARAMETER_KEYS, DEFAULT_HARDWARE } from './parameters.js'
+import { PARAMETER_KEYS, DEFAULT_HARDWARE, HARDWARE_SCHEMA } from './parameters.js'
 
 /**
  * Versioned envelope so we can evolve the URL format later without breaking
@@ -18,9 +18,10 @@ const SCHEMA_VERSION = 1
  * @param {Object} opts
  * @param {readonly string[]} opts.parameterKeys  Every key that must be present
  * @param {Object} opts.defaultHardware           Fallback hardware shape
+ * @param {Object} opts.hardwareSchema            Allowed value per hardware field
  * @param {number} [opts.version]                 Schema version tag
  */
-export function makeSerialization({ parameterKeys, defaultHardware, version = SCHEMA_VERSION }) {
+export function makeSerialization({ parameterKeys, defaultHardware, hardwareSchema, version = SCHEMA_VERSION }) {
   /**
    * @param {Object} state
    * @param {Object} state.hardware
@@ -52,17 +53,27 @@ export function makeSerialization({ parameterKeys, defaultHardware, version = SC
       if (!parsed || typeof parsed !== 'object') return null
       if (parsed.v !== version) return null
       if (!isPlainObject(parsed.hardware) || !isPlainObject(parsed.params)) return null
-      // Make sure every known parameter is present; missing ones inherit from defaults.
-      const params = { ...parsed.params }
+      // Every known parameter must be present and finite; unknown keys are dropped.
+      const params = {}
       for (const key of parameterKeys) {
-        if (typeof params[key] !== 'number') return null
+        if (!Number.isFinite(parsed.params[key])) return null
+        params[key] = parsed.params[key]
       }
-      const hardware = { ...defaultHardware, ...parsed.hardware }
+      // Hardware fields end up in the generated config (comments, a file path),
+      // so anything outside the schema rejects the whole link. Missing fields
+      // inherit from defaults; unknown fields are dropped.
+      const hardware = { ...defaultHardware }
+      for (const [key, rule] of Object.entries(hardwareSchema)) {
+        if (!Object.hasOwn(parsed.hardware, key)) continue
+        const value = parsed.hardware[key]
+        if (!matchesRule(value, rule, defaultHardware[key])) return null
+        hardware[key] = value
+      }
       return {
         hardware,
         params,
-        activePreset: parsed.activePreset ?? null,
-        activeTab: parsed.activeTab ?? null,
+        activePreset: typeof parsed.activePreset === 'string' ? parsed.activePreset : null,
+        activeTab: typeof parsed.activeTab === 'string' ? parsed.activeTab : null,
       }
     } catch {
       return null
@@ -77,10 +88,23 @@ function isPlainObject(v) {
 }
 
 /**
+ * @param {*} value
+ * @param {string[] | { min: number, max: number } | RegExp} rule
+ * @param {*} fallback  The field's default; a null default means null is allowed
+ */
+function matchesRule(value, rule, fallback) {
+  if (value === null) return fallback === null
+  if (Array.isArray(rule)) return rule.includes(value)
+  if (rule instanceof RegExp) return typeof value === 'string' && rule.test(value)
+  return Number.isFinite(value) && value >= rule.min && value <= rule.max
+}
+
+/**
  * Swap-tuner serialization instance. Kept as the module's default export pair so
  * existing imports (and the swap serialization tests) keep working unchanged.
  */
 export const { encodeState, decodeState } = makeSerialization({
   parameterKeys: PARAMETER_KEYS,
   defaultHardware: DEFAULT_HARDWARE,
+  hardwareSchema: HARDWARE_SCHEMA,
 })

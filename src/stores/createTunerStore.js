@@ -143,5 +143,12 @@ function restoreFromUrlHash(domain) {
   if (typeof window === 'undefined') return null
   const hash = window.location.hash.slice(1)
   if (!hash) return null
-  return domain.decodeState(hash)
+  const restored = domain.decodeState(hash)
+  if (!restored) return null
+  // A shared link can carry any number; hold it to the same range a slider drag would.
+  for (const key of Object.keys(restored.params)) {
+    const { min, max } = domain.rangeFor(key, restored.hardware)
+    restored.params[key] = Math.max(min, Math.min(max, restored.params[key]))
+  }
+  return restored
 }

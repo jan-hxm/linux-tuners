@@ -113,7 +113,7 @@ function describeWorkload(w) {
     case 'database': return 'database server'
     case 'desktop': return 'desktop workstation'
     case 'general': return 'general-purpose server'
-    default: return w
+    default: return 'custom'
   }
 }
 

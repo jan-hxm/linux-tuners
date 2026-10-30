@@ -4,7 +4,7 @@
  * exactly like src/domains/swap/index.js.
  */
 
-import { DEFAULT_SYSTEMD_SPEC, SYSTEMD_KEYS } from '@/model/systemd/parameters.js'
+import { DEFAULT_SYSTEMD_SPEC, SYSTEMD_KEYS, SYSTEMD_SPEC_SCHEMA } from '@/model/systemd/parameters.js'
 import { SYSTEMD_DEFS_BY_KEY, SYSTEMD_RESOURCE_DOCS } from '@/data/systemd/parameterDefs.js'
 import { deriveDefaults, rangeFor, cpuQuotaNoLimit } from '@/model/systemd/calculations.js'
 import { validate, hasBlockingIssue } from '@/model/systemd/validation.js'
@@ -41,6 +41,7 @@ const SECTIONS = [
 const { encodeState, decodeState } = makeSerialization({
   parameterKeys: SYSTEMD_KEYS,
   defaultHardware: DEFAULT_SYSTEMD_SPEC,
+  hardwareSchema: SYSTEMD_SPEC_SCHEMA,
 })
 
 /**

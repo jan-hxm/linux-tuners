@@ -1,4 +1,5 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
+import { valueTypeOf } from './valueTypes.js'
 
 /**
  * Versioned envelope so we can evolve the URL format later without breaking
@@ -16,11 +17,12 @@ const SCHEMA_VERSION = 1
  *
  * @param {Object} opts
  * @param {readonly string[]} opts.parameterKeys  Every key that must be present
+ * @param {Record<string, Object>} opts.defsByKey  Defs, for each value's type
  * @param {Object} opts.defaultHardware           Fallback hardware shape
  * @param {Object} opts.hardwareSchema            Allowed value per hardware field
  * @param {number} [opts.version]                 Schema version tag
  */
-export function makeSerialization({ parameterKeys, defaultHardware, hardwareSchema, version = SCHEMA_VERSION }) {
+export function makeSerialization({ parameterKeys, defsByKey, defaultHardware, hardwareSchema, version = SCHEMA_VERSION }) {
   /**
    * @param {Object} state
    * @param {Object} state.hardware
@@ -52,11 +54,14 @@ export function makeSerialization({ parameterKeys, defaultHardware, hardwareSche
       if (!parsed || typeof parsed !== 'object') return null
       if (parsed.v !== version) return null
       if (!isPlainObject(parsed.hardware) || !isPlainObject(parsed.params)) return null
-      // Every known parameter must be present and finite; unknown keys are dropped.
+      // Every known parameter must be present and parse as its def's value
+      // type; unknown keys are dropped. Range clamping happens in restoreState.
       const params = {}
       for (const key of parameterKeys) {
-        if (!Number.isFinite(parsed.params[key])) return null
-        params[key] = parsed.params[key]
+        const def = defsByKey[key]
+        const value = valueTypeOf(def).restore(parsed.params[key], def)
+        if (value === undefined) return null
+        params[key] = value
       }
       // Hardware fields end up in the generated config (comments, a file path),
       // so anything outside the schema rejects the whole link. Missing fields

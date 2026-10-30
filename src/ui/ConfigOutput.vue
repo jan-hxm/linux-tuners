@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { combineFiles } from '@/core/output/files.js'
+import { differingKeys } from '@/core/valueTypes.js'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
@@ -14,7 +15,7 @@ const customised = computed(() => {
   if (!tuner.activePreset) return false
   const preset = domain.presetsById[tuner.activePreset]
   if (!preset) return false
-  return Object.entries(preset.values).some(([k, v]) => tuner.params[k] !== v)
+  return differingKeys(domain.defsByKey, preset.values, tuner.params).length > 0
 })
 
 const blockingIssues = computed(() => tuner.issues.filter((i) => i.blocking))

@@ -45,17 +45,26 @@ describe('comments', () => {
 })
 
 describe('sysctl writer', () => {
-  it('writes integer values only', () => {
-    expect(sysctlLine('vm.swappiness', 10)).toBe('vm.swappiness = 10')
-    for (const bad of [1.5, NaN, '10', '10\nkernel.modprobe = /x', null]) {
-      expect(() => sysctlLine('vm.swappiness', bad), String(bad)).toThrow()
+  it('writes plain space-separated tokens only', () => {
+    expect(sysctlLine('vm.swappiness', '10')).toBe('vm.swappiness = 10')
+    expect(sysctlLine('net.ipv4.tcp_rmem', '4096 131072 6291456')).toBe('net.ipv4.tcp_rmem = 4096 131072 6291456')
+    expect(sysctlLine('kernel.perf_event_paranoid', '-1')).toBe('kernel.perf_event_paranoid = -1')
+    for (const bad of ['', ' 1', '1 ', '1  2', '1\tx', '10\nkernel.modprobe = /x', '1 # x', '/bin/sh', 'a=b']) {
+      expect(() => sysctlLine('vm.swappiness', bad), JSON.stringify(bad)).toThrow()
     }
   })
 
   it('refuses a name that is not a dotted sysctl', () => {
     for (const bad of ['swappiness', 'vm.swappiness = 1\nx', 'VM.Swappiness', 'vm.a b']) {
-      expect(() => sysctlLine(bad, 1), bad).toThrow()
+      expect(() => sysctlLine(bad, '1'), bad).toThrow()
     }
+  })
+
+  it("prints each value through its def's type and refuses a non-integer", () => {
+    const defs = [{ key: 'a', group: 's', sysctlName: 'vm.a' }]
+    const write = (a) => sysctlConfig({ defs, sections: [{ id: 's', title: 'S' }], params: { a }, comment: () => 'x' })
+    expect(write(7)).toContain('vm.a = 7')
+    for (const bad of [1.5, NaN, '10', null]) expect(() => write(bad), String(bad)).toThrow()
   })
 
   it('emits each section in order with its defs and skips excluded ones', () => {

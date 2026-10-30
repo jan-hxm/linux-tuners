@@ -6,12 +6,13 @@
  * UI (ParameterCard) and the output generator (ConfigOutput) both read from here.
  *
  * @typedef {'memory-reclaim' | 'dirty-writeback' | 'oom-overcommit'} ParameterGroup
- * @typedef {'slider' | 'segmented' | 'toggle'} ControlKind
+ * @typedef {'slider' | 'segmented' | 'toggle' | 'select'} ControlKind  A name in ui/controls
  *
  * @typedef {Object} ParameterDef
  * @property {string}         key            Matches a key on ParameterValues
  * @property {string}         sysctlName     The dotted name as written to sysctl.conf
  * @property {ParameterGroup} group
+ * @property {'bool'}         [type]         Value type from core/valueTypes.js; int when omitted
  * @property {ControlKind}    control
  * @property {string}         shortDesc      One-line description for the card header
  * @property {string[]}       longDesc       Layered explanation as 2-3 short paragraphs
@@ -242,6 +243,7 @@ export const PARAMETER_DEFS = [
     key: 'panic_on_oom',
     sysctlName: 'vm.panic_on_oom',
     group: 'oom-overcommit',
+    type: 'bool',
     control: 'toggle',
     shortDesc: 'Reboot the whole machine on OOM instead of killing one process.',
     longDesc: [

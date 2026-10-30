@@ -158,6 +158,17 @@ describe('ParameterCard click-to-edit value', () => {
     expect(store.params.min_free_kbytes).toBeGreaterThanOrEqual(max)
   })
 
+  it('rounds a fractional typed value, which sysctl would reject', async () => {
+    const store = useTunerStore()
+    const wrapper = mountCard('swappiness')
+    await nextTick()
+    await wrapper.find(EDIT_BTN).trigger('click')
+    const input = wrapper.find('input[type="number"]')
+    await input.setValue('60.6')
+    await input.trigger('keydown.enter')
+    expect(store.params.swappiness).toBe(61)
+  })
+
   it('reverts on Escape without mutating the store', async () => {
     const store = useTunerStore()
     const original = store.params.min_free_kbytes

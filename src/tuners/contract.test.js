@@ -10,9 +10,10 @@ import { assertTuner } from '@/core/defineTuner.js'
 import { restoreState } from '@/core/createTunerStore.js'
 import { parseRichText } from '@/ui/richText.js'
 import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
+import { differingKeys, valueTypeOf } from '@/core/valueTypes.js'
+import { CONTROLS } from '@/ui/controls/index.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
-const CONTROLS = ['slider', 'toggle', 'segmented']
 const EM_DASH = '—'
 
 /**
@@ -32,6 +33,13 @@ const FORBIDDEN_DIRECTIVES = [
 const LS = String.fromCharCode(0x2028)
 const PS = String.fromCharCode(0x2029)
 const CONTROL_CHARS = new RegExp(`[\x00-\x09\x0b-\x1f\x7f${LS}${PS}]`)
+
+/** A value the UI could produce: its type parses it and clamping leaves it unchanged. */
+function isValidValue(domain, key, value, hw) {
+  const def = domain.defsByKey[key]
+  const type = valueTypeOf(def)
+  return type.restore(value, def) !== undefined && type.equals(type.clamp(value, def, domain.rangeFor(key, hw)), value)
+}
 
 // ── State builders ──────────────────────────────────────────────────────────
 
@@ -53,7 +61,7 @@ function configFor(domain, { hardware, params, activePreset = null }) {
     hardware,
     params,
     presetLabel: preset?.label ?? null,
-    customised: preset ? Object.entries(preset.values).some(([k, v]) => params[k] !== v) : false,
+    customised: preset ? differingKeys(domain.defsByKey, preset.values, params).length > 0 : false,
     now: NOW,
   })
 }
@@ -158,6 +166,23 @@ function grammarViolations(domain, config) {
   return bad
 }
 
+/**
+ * sysctl lines whose value isn't exactly what the def's value type prints for
+ * the param. ini lines are exempt: the tuner wraps typed values in ini syntax
+ * (`50%`, `yes`), and the grammar check holds those to plain tokens.
+ */
+function typeFormatterViolations(domain, config, params) {
+  const defsByName = new Map(Object.values(domain.defsByKey).map((d) => [d.sysctlName, d]))
+  const bad = []
+  for (const line of config.split('\n')) {
+    const m = /^([a-z][\w.]*) = (.*)$/.exec(line)
+    if (!m) continue
+    const def = defsByName.get(m[1])
+    if (!def || m[2] !== valueTypeOf(def).format(params[def.key], def)) bad.push(line)
+  }
+  return bad
+}
+
 function directiveViolations(config) {
   return config
     .split('\n')
@@ -165,7 +190,7 @@ function directiveViolations(config) {
     .filter((line) => FORBIDDEN_DIRECTIVES.some((re) => re.test(line)))
 }
 
-function expectSafeConfig(domain, files) {
+function expectSafeConfig(domain, files, params) {
   expect(files.length).toBeGreaterThan(0)
   const paths = files.map((f) => f.path)
   expect(paths.filter((p) => !isSafeConfigPath(p))).toEqual([])
@@ -174,6 +199,7 @@ function expectSafeConfig(domain, files) {
     expect(content).not.toMatch(CONTROL_CHARS)
     expect(grammarViolations(domain, content)).toEqual([])
     expect(directiveViolations(content)).toEqual([])
+    expect(typeFormatterViolations(domain, content, params)).toEqual([])
   }
 }
 
@@ -193,14 +219,18 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
       expect(() => assertTuner(domain)).not.toThrow()
     })
 
-    it('has a def with docs, descriptions and a known control for every key', () => {
+    it('has a def with docs, descriptions, a known type and a control for that type', () => {
       for (const key of domain.parameterKeys) {
         const def = domain.defsByKey[key]
         expect(def.key, key).toBe(key)
         expect(def.kernelDocsUrl, key).toMatch(/^https:\/\//)
         expect(def.shortDesc, key).toBeTruthy()
         expect(def.longDesc?.length, key).toBeGreaterThan(0)
-        expect(CONTROLS, key).toContain(def.control)
+        expect(Object.hasOwn(CONTROLS, def.control), `${key}: control ${def.control}`).toBe(true)
+        expect(() => valueTypeOf(def), key).not.toThrow()
+        expect(CONTROLS[def.control].types, `${key}: ${def.control} edits ${def.type ?? 'int'}`).toContain(def.type ?? 'int')
+        // Enum values are emitted verbatim by every writer, so they must be plain tokens.
+        for (const opt of def.options ?? []) expect(opt.value, key).toMatch(/^[A-Za-z0-9_.-]+$/)
         expect(def.sysctlName, key).toMatch(/^[A-Za-z][\w.]*( \(\w+\))?$/)
         expect(Number.isInteger(def.kernelMin) && Number.isInteger(def.kernelMax), key).toBe(true)
         expect(def.kernelMin, key).toBeLessThanOrEqual(def.kernelMax)
@@ -210,29 +240,23 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
 
   describe('defaults and presets', () => {
     it.each(profilesFor(domain).map((hw) => [hw[domain.workloadField], hw]))(
-      'derives in-range integer defaults for the %s profile',
+      'derives valid, in-range defaults for the %s profile',
       (_w, hw) => {
         const params = domain.deriveDefaults(hw)
         expect(Object.keys(params).sort()).toEqual([...domain.parameterKeys].sort())
         for (const key of domain.parameterKeys) {
-          const { min, max } = domain.rangeFor(key, hw)
-          expect(Number.isInteger(params[key]), key).toBe(true)
-          expect(params[key], key).toBeGreaterThanOrEqual(min)
-          expect(params[key], key).toBeLessThanOrEqual(max)
+          expect(isValidValue(domain, key, params[key], hw), `${key} = ${params[key]}`).toBe(true)
         }
       },
     )
 
-    it('has presets that name only known keys with in-range integer values', () => {
+    it('has presets that name only known keys with valid, in-range values', () => {
       const hw = domain.defaultHardware
       for (const preset of domain.presets) {
         expect(preset.label && preset.description && preset.source, preset.id).toBeTruthy()
         for (const [key, value] of Object.entries(preset.values)) {
           expect(domain.parameterKeys, `${preset.id}.${key}`).toContain(key)
-          const { min, max } = domain.rangeFor(key, hw)
-          expect(Number.isInteger(value), `${preset.id}.${key}`).toBe(true)
-          expect(value, `${preset.id}.${key}`).toBeGreaterThanOrEqual(min)
-          expect(value, `${preset.id}.${key}`).toBeLessThanOrEqual(max)
+          expect(isValidValue(domain, key, value, hw), `${preset.id}.${key} = ${value}`).toBe(true)
         }
       }
     })
@@ -242,7 +266,7 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         const label = `${state.hardware[domain.workloadField]} / ${state.activePreset ?? 'defaults'}`
         const blocking = domain.validate(state.hardware, state.params).filter((i) => i.blocking)
         expect(blocking.map((i) => i.id), label).toEqual([])
-        expectSafeConfig(domain, configFor(domain, state))
+        expectSafeConfig(domain, configFor(domain, state), state.params)
       }
     })
   })
@@ -323,12 +347,9 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         if (!restored) continue
         survived++
         for (const key of domain.parameterKeys) {
-          const { min, max } = domain.rangeFor(key, restored.hardware)
-          expect(Number.isInteger(restored.params[key])).toBe(true)
-          expect(restored.params[key]).toBeGreaterThanOrEqual(min)
-          expect(restored.params[key]).toBeLessThanOrEqual(max)
+          expect(isValidValue(domain, key, restored.params[key], restored.hardware), key).toBe(true)
         }
-        expectSafeConfig(domain, configFor(domain, restored))
+        expectSafeConfig(domain, configFor(domain, restored), restored.params)
       }
       // The fuzz is only meaningful if some links get through to the generator.
       expect(survived).toBeGreaterThan(20)

@@ -1,6 +1,8 @@
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
+import { controlFor } from '@/ui/controls/index.js'
+import { valueTypeOf } from '@/core/valueTypes.js'
 
 const props = defineProps({
   paramKey: { type: String, required: true },
@@ -10,6 +12,7 @@ const tuner = useActiveTuner()
 const domain = useTunerDomain()
 
 const def = computed(() => domain.defsByKey[props.paramKey])
+const control = computed(() => controlFor(def.value))
 const value = computed(() => tuner.params[props.paramKey])
 const range = computed(() => domain.rangeFor(props.paramKey, tuner.hardware))
 const issues = computed(() => tuner.issuesByParam[props.paramKey] ?? [])
@@ -17,14 +20,14 @@ const expanded = ref(false)
 
 const formatted = computed(() => domain.formatValue(value.value, def.value, tuner.hardware))
 
-// Stable id used to link the slider to the param-name button via aria-labelledby.
+// Stable id used to link the control to the param-name button via aria-labelledby.
 const labelId = computed(() => `param-label-${props.paramKey}`)
 
 const isWorkloadTuned = computed(() => {
   // True when the workload's hardware-derived default differs from the stock default.
   // Surfaces e.g. "Workload-specific" on swappiness when workload=k8s.
   const derived = domain.deriveDefaults(tuner.hardware)[props.paramKey]
-  return derived !== def.value.kernelDefault
+  return !valueTypeOf(def.value).equals(derived, def.value.kernelDefault)
 })
 
 // Contextual ("K8s" on the swap tuner, "container host" on systemd) note + its
@@ -36,132 +39,12 @@ const contextNote = computed(() => {
   return def.value[domain.noteKey] ?? def.value.contextNote ?? null
 })
 
-// Slider DOM ref + uncontrolled-with-external-sync pattern.
-//
-// We intentionally do NOT use `:value="value"` on the range input. When Vue
-// patches the value attribute mid-drag (and the store updates one full reactive
-// cycle per `input` event, including validation re-runs), Chromium cancels the
-// active drag — symptom: "thumb jumps once, then drag stops". The fix: only
-// touch the DOM value when the store value diverges from an *external* source
-// (preset apply, hardware change, URL hash restore), not from the user's own
-// drag. We mark our own commits with `selfWrite` so the watcher skips them.
-const sliderEl = ref(null)
-let selfWrite = false
-
-onMounted(() => {
-  if (sliderEl.value && def.value.control === 'slider') {
-    sliderEl.value.value = String(value.value)
-  }
-})
-
-watch(value, (v) => {
-  if (selfWrite) {
-    selfWrite = false
-    return
-  }
-  const el = sliderEl.value
-  if (el && Number(el.value) !== v) el.value = String(v)
-})
-
-// --- Touch handling for the range slider ----------------------------------
-//
-// Native range inputs are hostile to touch scrolling: a swipe that begins on a
-// full-width slider gets captured as a value change, and the control also
-// commits a value on a plain tap. Combined with `touch-action: pan-y` (styles
-// below), the model here is: on touch, ONLY a deliberate horizontal drag may
-// change the value. A vertical swipe scrolls the page; a tap does nothing.
-//
-// Native value changes can't be reliably blocked mid-gesture (and a trailing
-// input/click fires *after* touchend), so rather than fight them live we let
-// the store track horizontal drags and then force the thumb back in sync with
-// the store after the gesture settles. `isTouching` stays true through a short
-// post-touchend window so that trailing event is handled, then clears so mouse
-// input on hybrid devices still works.
-const TOUCH_THRESHOLD = 8
-let startX = 0
-let startY = 0
-let movedX = 0
-let movedY = 0
-let valueAtTouchStart = null
-let isTouching = false
-let touchEndTimer = null
-
-const isVerticalSwipe = () => movedY > movedX && movedY > TOUCH_THRESHOLD
-const isTap = () => movedX <= TOUCH_THRESHOLD && movedY <= TOUCH_THRESHOLD
-
-function pinThumbTo(v) {
-  const el = sliderEl.value
-  if (el && Number(el.value) !== v) el.value = String(v)
-}
-
+/** A control's `update`; the store clamps it by the def's value type. */
 function setValue(v) {
-  // On touch, a vertical swipe or a tap must not change the value: pin the thumb
-  // back to where the touch started and ignore the native input. Horizontal
-  // drags (and all mouse/keyboard input) fall through and commit normally.
-  if (isTouching && (isVerticalSwipe() || isTap())) {
-    pinThumbTo(valueAtTouchStart)
-    return
-  }
-  const n = Number(v)
-  if (!Number.isFinite(n)) return
-  selfWrite = true
-  tuner.setParam(props.paramKey, n)
+  tuner.setParam(props.paramKey, v)
 }
 
-function onTouchStart(e) {
-  const t = e.touches[0]
-  if (!t) return
-  if (touchEndTimer) {
-    clearTimeout(touchEndTimer)
-    touchEndTimer = null
-  }
-  startX = t.clientX
-  startY = t.clientY
-  movedX = 0
-  movedY = 0
-  valueAtTouchStart = value.value
-  isTouching = true
-}
-
-function onTouchMove(e) {
-  const t = e.touches[0]
-  if (!t) return
-  movedX = Math.abs(t.clientX - startX)
-  movedY = Math.abs(t.clientY - startY)
-  // Keep the thumb still while the user is scrolling vertically.
-  if (isVerticalSwipe()) pinThumbTo(valueAtTouchStart)
-}
-
-function onTouchEnd() {
-  // Discard anything that wasn't a deliberate horizontal drag (scroll or tap):
-  // restore the store to the value it had when the touch began.
-  if (valueAtTouchStart !== null && (isVerticalSwipe() || isTap()) && value.value !== valueAtTouchStart) {
-    selfWrite = true
-    tuner.setParam(props.paramKey, valueAtTouchStart)
-  }
-  // The native control can apply a trailing value change after touchend; keep
-  // guarding briefly, then snap the thumb to the store value and end touch mode.
-  if (touchEndTimer) clearTimeout(touchEndTimer)
-  touchEndTimer = setTimeout(() => {
-    pinThumbTo(value.value)
-    isTouching = false
-    touchEndTimer = null
-  }, 80)
-}
-
-// Filled portion of the slider track, 0–100%. Drives the gradient/progress fill
-// in the scoped styles below. Reactive on the store value, so it follows drags,
-// preset applies, and inline edits alike. Updating this (a style custom property)
-// mid-drag is safe — unlike rewriting the input's `value`, it doesn't cancel the
-// drag (see the selfWrite note above).
-const pct = computed(() => {
-  const { min, max } = range.value
-  if (max <= min) return 0
-  const clamped = Math.max(min, Math.min(max, value.value))
-  return ((clamped - min) / (max - min)) * 100
-})
-
-// Click-to-edit the current value (slider params only).
+// Click-to-edit the current value (controls marked `editable`, i.e. sliders).
 //
 // Wide-range sliders (min_free_kbytes, dirty_expire_centisecs,
 // watermark_scale_factor) map many value units per pixel, so landing on an
@@ -174,7 +57,7 @@ const editValue = ref('')
 const numberEl = ref(null)
 
 function startEdit() {
-  if (def.value.control !== 'slider') return
+  if (!control.value.editable) return
   editValue.value = String(value.value)
   editing.value = true
   nextTick(() => {
@@ -189,10 +72,9 @@ function commitEdit() {
   if (String(editValue.value).trim() === '') return
   const n = Number(editValue.value)
   if (!Number.isFinite(n)) return
-  // Commit directly via setParam (NOT setValue): the edit came from the number
-  // field, not a slider drag, so we deliberately leave selfWrite false. That
-  // lets the `value` watcher push the new (clamped) value to the slider DOM so
-  // the thumb moves to match what was typed.
+  // This is an external change as far as the slider is concerned, so its
+  // watcher pushes the new (clamped) value to the DOM and the thumb moves to
+  // match what was typed.
   tuner.setParam(props.paramKey, n)
 }
 
@@ -273,7 +155,7 @@ function openInDrawer() {
           @blur="commitEdit"
         />
         <button
-          v-else-if="def.control === 'slider'"
+          v-else-if="control.editable"
           type="button"
           class="inline-flex items-center gap-1 rounded px-1 font-mono text-sm font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 hover:bg-slate-100 hover:decoration-slate-500"
           aria-label="Edit value: type an exact number"
@@ -281,73 +163,19 @@ function openInDrawer() {
           @click="startEdit"
         >{{ formatted }}<span aria-hidden="true" class="text-[11px] text-slate-400">✎</span></button>
         <div v-else class="font-mono text-sm font-semibold text-slate-900">{{ formatted }}</div>
-        <div class="text-[11px] text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
+        <div v-if="control.showsRange" class="text-[11px] text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
       </div>
     </header>
 
-    <!-- Slider -->
-    <div v-if="def.control === 'slider'" class="mt-3">
-      <input
-        ref="sliderEl"
-        type="range"
-        :min="range.min"
-        :max="range.max"
-        :step="def.step"
-        :aria-labelledby="labelId"
-        :aria-valuetext="formatted"
-        class="range-slider"
-        :style="{ '--range-pct': pct + '%' }"
-        @input="setValue($event.target.value)"
-        @touchstart.passive="onTouchStart"
-        @touchmove.passive="onTouchMove"
-        @touchend="onTouchEnd"
-        @touchcancel="onTouchEnd"
-      />
-      <ul v-if="def.zones" class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-slate-600">
-        <li v-for="z in def.zones" :key="z">{{ z }}</li>
-      </ul>
-    </div>
-
-    <!-- Segmented -->
-    <div
-      v-else-if="def.control === 'segmented'"
-      role="radiogroup"
-      :aria-labelledby="labelId"
-      class="mt-3 inline-flex overflow-hidden rounded border border-slate-300"
-    >
-      <button
-        v-for="(label, i) in def.segmentLabels"
-        :key="i"
-        type="button"
-        role="radio"
-        :aria-checked="value === i"
-        class="px-3 py-1 text-xs"
-        :class="value === i ? 'bg-slate-800 text-white' : 'bg-white hover:bg-slate-50'"
-        @click="setValue(i)"
-      >
-        {{ label }}
-      </button>
-    </div>
-
-    <!-- Toggle -->
-    <div v-else-if="def.control === 'toggle'" class="mt-3 flex items-center gap-3">
-      <button
-        type="button"
-        role="switch"
-        :aria-checked="value === 1"
-        class="relative h-5 w-9 rounded-full transition"
-        :class="value === 1 ? (def.toggleDanger ? 'bg-red-600' : 'bg-emerald-600') : 'bg-slate-300'"
-        @click="setValue(value === 1 ? 0 : 1)"
-      >
-        <span
-          class="absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all"
-          :class="value === 1 ? 'left-[18px]' : 'left-0.5'"
-        />
-      </button>
-      <span class="text-xs text-slate-600">
-        {{ value === 1 ? (def.toggleLabels?.on ?? 'enabled') : (def.toggleLabels?.off ?? 'disabled') }}
-      </span>
-    </div>
+    <component
+      :is="control.component"
+      :def="def"
+      :value="value"
+      :range="range"
+      :label-id="labelId"
+      :value-text="formatted"
+      @update="setValue"
+    />
 
     <!-- Validation issues for this parameter -->
     <ul v-if="issues.length" class="mt-3 space-y-1">
@@ -394,96 +222,3 @@ function openInDrawer() {
     </div>
   </article>
 </template>
-
-<style scoped>
-/* Custom range slider in the page's slate palette. Native `accent-color` only
- * tints the control; here we shape the track and thumb and draw a filled
- * progress portion up to --range-pct (set inline from the reactive `pct`).
- * Colours are literal slate hexes so they don't depend on theme() resolution:
- *   slate-200 #e2e8f0 · slate-300 #cbd5e1 · slate-700 #334155 · slate-900 #0f172a
- */
-.range-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 1.25rem; /* generous hit area; visual track is thinner */
-  background: transparent;
-  cursor: pointer;
-  /* Let the browser own vertical panning so a downward scroll that starts on a
-   * slider scrolls the page instead of being captured as a value change. Only
-   * deliberate horizontal drags adjust the value. Critical on mobile, where the
-   * full-width sliders otherwise swallow scroll gestures. */
-  touch-action: pan-y;
-}
-.range-slider:focus {
-  outline: none;
-}
-
-/* Track — WebKit/Blink. Gradient gives the filled-then-empty look. */
-.range-slider::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 9999px;
-  background: linear-gradient(
-    to right,
-    #0f172a 0%,
-    #0f172a var(--range-pct, 0%),
-    #e2e8f0 var(--range-pct, 0%),
-    #e2e8f0 100%
-  );
-}
-/* Track + progress — Firefox draws the fill for us via ::-moz-range-progress. */
-.range-slider::-moz-range-track {
-  height: 6px;
-  border-radius: 9999px;
-  background: #e2e8f0;
-}
-.range-slider::-moz-range-progress {
-  height: 6px;
-  border-radius: 9999px;
-  background: #0f172a;
-}
-
-/* Thumb */
-.range-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 16px;
-  width: 16px;
-  margin-top: -5px; /* centre the 16px thumb on the 6px track */
-  border-radius: 9999px;
-  background: #0f172a;
-  border: 2px solid #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px #cbd5e1;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-.range-slider::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: 9999px;
-  background: #0f172a;
-  border: 2px solid #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px #cbd5e1;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-
-.range-slider:hover::-webkit-slider-thumb {
-  transform: scale(1.15);
-}
-.range-slider:hover::-moz-range-thumb {
-  transform: scale(1.15);
-}
-.range-slider:active::-webkit-slider-thumb,
-.range-slider:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 4px rgba(15, 23, 42, 0.2);
-}
-.range-slider:active::-moz-range-thumb,
-.range-slider:focus-visible::-moz-range-thumb {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 4px rgba(15, 23, 42, 0.2);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .range-slider::-webkit-slider-thumb,
-  .range-slider::-moz-range-thumb {
-    transition: none;
-  }
-}
-</style>

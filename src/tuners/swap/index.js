@@ -21,6 +21,7 @@ import { PAGE, ABOUT } from './about.js'
 
 const { encodeState, decodeState } = makeSerialization({
   parameterKeys: PARAMETER_KEYS,
+  defsByKey: PARAMETER_DEFS_BY_KEY,
   defaultHardware: DEFAULT_HARDWARE,
   hardwareSchema: HARDWARE_SCHEMA,
 })

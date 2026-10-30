@@ -25,6 +25,7 @@ export const SYSTEMD_DEFS = [
     key: 'default_cpu_accounting',
     sysctlName: 'DefaultCPUAccounting',
     group: 'manager-defaults',
+    type: 'bool',
     control: 'toggle',
     shortDesc: 'Track per-unit CPU time for every service by default.',
     longDesc: [
@@ -45,6 +46,7 @@ export const SYSTEMD_DEFS = [
     key: 'default_memory_accounting',
     sysctlName: 'DefaultMemoryAccounting',
     group: 'manager-defaults',
+    type: 'bool',
     control: 'toggle',
     shortDesc: 'Track per-unit memory usage for every service by default.',
     longDesc: [
@@ -65,6 +67,7 @@ export const SYSTEMD_DEFS = [
     key: 'default_io_accounting',
     sysctlName: 'DefaultIOAccounting',
     group: 'manager-defaults',
+    type: 'bool',
     control: 'toggle',
     shortDesc: 'Track per-unit block-I/O bytes for every service by default.',
     longDesc: [
@@ -85,6 +88,7 @@ export const SYSTEMD_DEFS = [
     key: 'default_tasks_accounting',
     sysctlName: 'DefaultTasksAccounting',
     group: 'manager-defaults',
+    type: 'bool',
     control: 'toggle',
     shortDesc: 'Count tasks (processes + threads) per unit, enabling TasksMax.',
     longDesc: [
@@ -105,6 +109,7 @@ export const SYSTEMD_DEFS = [
     key: 'default_ip_accounting',
     sysctlName: 'DefaultIPAccounting',
     group: 'manager-defaults',
+    type: 'bool',
     control: 'toggle',
     shortDesc: 'Track per-unit network traffic (requires eBPF) by default.',
     longDesc: [

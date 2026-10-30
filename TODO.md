@@ -37,20 +37,14 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 - [ ] Add an "Undo" toast after a reset or a preset snap, so an accidental one is recoverable.
 - [ ] Make the "Jump to" step chain highlight the active section (scroll-spy).
 - [ ] Add a way to jump from the mobile impact bar to the full `GraphPanel`.
-- [ ] Dark mode. The range-slider colours are hardcoded hex in `ParameterCard.vue` scoped styles and need theming first.
+- [ ] Dark mode. The range-slider colours are hardcoded hex in `ui/controls/SliderControl.vue` scoped styles and need theming first.
 - [ ] Use one restrained accent colour (sky-500, already used for links and charts) for primary CTAs and active states.
 - [ ] Use one grid for the landing page's available and coming-soon cards (currently 2 vs 3 columns).
 - [ ] Give the top nav an active state on the landing page.
 
 ## 4. Engineering
 
-Maintainability migration toward [Design.md §9](Design.md#9-code-organization-and-reuse).
-Each step is a refactor with no behaviour change: the config snapshots
-(`src/tuners/configSnapshots.test.js`) must stay unchanged.
-Step 7 comes before Network.
-
-7. [ ] Value types (`int`/`bool`/`enum`/`tuple`) + controls registry; split `ParameterCard`; `select` control.
-
+- [ ] Profile per [Design.md §9](Design.md#9-code-organization-and-reuse): one `profile.js` field list driving a generic `ProfileForm` and the restore schema, then drop each tuner's own `store.js` and `View.vue` where the shell covers them. A refactor with no behaviour change: the config snapshots (`src/tuners/configSnapshots.test.js`) must stay unchanged.
 - [ ] `ConfigOutput`: a download per file for multi-file tuners (systemd), instead of one combined `.conf`.
 - [ ] Tests: `ConfigOutput` flow (textarea matches the generator, copy calls the clipboard API, blocked state).
 - [ ] Automated accessibility sweep (axe-core / Lighthouse): focus visibility on the dark hero, a live-region announcement when a preset is applied or validation fires, and a full WCAG AA contrast pass.

@@ -42,6 +42,7 @@ const SECTIONS = [
 
 const { encodeState, decodeState } = makeSerialization({
   parameterKeys: SYSTEMD_KEYS,
+  defsByKey: SYSTEMD_DEFS_BY_KEY,
   defaultHardware: DEFAULT_SYSTEMD_SPEC,
   hardwareSchema: SYSTEMD_SPEC_SCHEMA,
 })

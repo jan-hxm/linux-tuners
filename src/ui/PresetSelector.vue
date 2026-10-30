@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
+import { differingKeys, valueTypeOf } from '@/core/valueTypes.js'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
@@ -15,13 +16,11 @@ const diffsByPreset = computed(() => {
   /** @type {Record<string, string[]>} */
   const result = {}
   for (const preset of PRESETS) {
-    const diffs = []
-    for (const [key, expected] of Object.entries(preset.values)) {
-      if (tuner.params[key] !== expected) {
-        diffs.push(`${key}: current ${tuner.params[key]} ↔ preset ${expected}`)
-      }
-    }
-    result[preset.id] = diffs
+    result[preset.id] = differingKeys(domain.defsByKey, preset.values, tuner.params).map((key) => {
+      const def = domain.defsByKey[key]
+      const { format } = valueTypeOf(def)
+      return `${key}: current ${format(tuner.params[key], def)} ↔ preset ${format(preset.values[key], def)}`
+    })
   }
   return result
 })

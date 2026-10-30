@@ -1,22 +1,25 @@
 /**
- * Writer for /etc/sysctl.d/ files. Keys come from defs and values must be
- * integers, so a value can never add structure to the file (Design.md §10).
+ * Writer for /etc/sysctl.d/ files. Keys come from defs and each value is
+ * printed by its def's value type, then held to plain space-separated tokens,
+ * so a value can never add structure to the file (Design.md §10).
  */
 
 import { commentLine, sectionHeader } from './comments.js'
+import { valueTypeOf } from '../valueTypes.js'
 
 const SYSCTL_NAME = /^[a-z][a-z0-9_]*(\.[a-z0-9_-]+)+$/
+const SYSCTL_VALUE = /^[A-Za-z0-9_.-]+( [A-Za-z0-9_.-]+)*$/
 
 /**
  * One `name = value` line.
  *
  * @param {string} name   Dotted sysctl name from a def
- * @param {number} value
+ * @param {string} text   The value as its type formats it
  */
-export function sysctlLine(name, value) {
+export function sysctlLine(name, text) {
   if (!SYSCTL_NAME.test(name)) throw new Error(`Invalid sysctl name "${name}"`)
-  if (!Number.isSafeInteger(value)) throw new Error(`Non-integer value for ${name}`)
-  return `${name} = ${value}`
+  if (!SYSCTL_VALUE.test(text)) throw new Error(`Invalid value for ${name}`)
+  return `${name} = ${text}`
 }
 
 /**
@@ -27,7 +30,7 @@ export function sysctlLine(name, value) {
  * @param {Object[]} opts.defs       Defs with `key`, `group` and `sysctlName`
  * @param {{id:string, title:string}[]} opts.sections  Output order
  * @param {Object}   opts.params
- * @param {(def:Object, value:number)=>string} opts.comment  Text after `# key: value - `
+ * @param {(def:Object, value:*)=>string} opts.comment  Text after `# key: value - `
  * @param {(def:Object)=>boolean} [opts.include]  Leave a def out when it has no effect
  * @returns {string[]}
  */
@@ -38,8 +41,9 @@ export function sysctlConfig({ defs, sections, params, comment, include = () => 
     for (const def of defs) {
       if (def.group !== section.id || !include(def)) continue
       const value = params[def.key]
-      lines.push(commentLine(`${def.key}: ${value} - ${comment(def, value)}`))
-      lines.push(sysctlLine(def.sysctlName, value))
+      const text = valueTypeOf(def).format(value, def)
+      lines.push(commentLine(`${def.key}: ${text} - ${comment(def, value)}`))
+      lines.push(sysctlLine(def.sysctlName, text))
       lines.push('')
     }
   }

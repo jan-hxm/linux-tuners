@@ -133,11 +133,11 @@ so the contract tests (§9) cover it.
 
 ### Range slider: uncontrolled with external sync
 
-`ParameterCard` deliberately does **not** bind `:value` on its
+`ui/controls/SliderControl.vue` deliberately does **not** bind `:value` on its
 `<input type="range">`. A reactive `:value` cancels a Chromium drag mid-stroke
 when the same input event triggers a re-render. Instead a `selfWrite` flag plus
 a watcher push store changes to the DOM only when they come from outside the
-slider (preset, profile change, URL restore).
+slider (preset, profile change, URL restore, the card's click-to-type edit).
 
 ### Shareable URL state
 
@@ -145,11 +145,14 @@ State is lz-string-compressed JSON in `location.hash`, written with a 200 ms
 debounce. Because a shared link is untrusted input that ends up in a config
 file someone may run as root, restoring it is strict:
 
-- Envelope version must match; every parameter key must be present and finite.
+- Envelope version must match; every parameter key must be present and parse
+  strictly as its def's value type (`core/valueTypes.js` `restore`).
 - Profile fields are checked against a per-domain schema (enum lists, numeric
   ranges with a step, or a strict pattern), so a link can't inject lines into
   the generated config. Numeric fields snap to the step the form produces.
-- Parameters are rounded to integers and clamped to the slider range.
+- Parameters are clamped by their value type: integers are rounded and held
+  to the slider range, enums to their listed options. `setParam` uses the same
+  clamp, so a typed `60.5` becomes `61`.
 - Unknown preset ids are dropped (preset maps are plain objects, so inherited
   names like `toString` must not resolve). An unknown tab falls back to the
   first tab.
@@ -258,10 +261,10 @@ must follow them, and existing UI must not regress.
 
 ## 9. Code organization and reuse
 
-> **Status: partly migrated.** The folder layout and import boundaries below
-> are in place. The extension points are still the target; the remaining
-> migration steps are in [TODO.md](TODO.md) §4. Until a step lands, the
-> current structure in §5 and §6 stays authoritative for that area.
+> **Status: migrated**, apart from the gaps listed under "Tuner folder" (the
+> generic profile form, per-tuner stores and views), which are open in
+> [TODO.md](TODO.md) §4. Until those land, the current structure in §5 and §6
+> stays authoritative for them.
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
@@ -341,27 +344,33 @@ difference as a def field or an optional domain hook with a default.
 These are the seams where tuners differ. Each one is a registry or a contract,
 so that a new variant is an addition rather than an edit to shared code.
 
-- **Value types** (`core/valueTypes.js`). Params are integers today
-  (`restoreState` rounds everything), but planned tuners need more: enums of
-  strings (`tcp_congestion_control`, the I/O `scheduler`) and tuples
-  (`tcp_rmem`, `kernel.sem`). A def declares `type` (`int` is the default,
-  then `bool`, `enum`, `tuple`). The type owns four operations:
+- **Value types** (`core/valueTypes.js`). A def declares `type`: `int` (the
+  default), `bool` (stored as 0/1), `enum` (one of `def.options[].value`, for
+  `tcp_congestion_control` or the I/O `scheduler`) or `tuple` (`def.length`
+  integers, for `tcp_rmem` or `kernel.sem`). Today's defs are `int` and
+  `bool`. The type owns four operations:
   - `restore`: strict parsing of untrusted URL input; enums accept only listed
-    values.
-  - `clamp`
-  - `format`: the display text and the emitted text.
-  - `equals`: used for the preset diff and the "customised" flag.
+    values. `decodeState` rejects the link when it returns `undefined`.
+  - `clamp`: used by `restoreState` and `setParam`.
+  - `format`: the emitted text, which throws on a value of the wrong shape.
+    The card's display text stays the tuner's `formatValue`.
+  - `equals`: used by `differingKeys` for the preset diff, the "customised"
+    flag and the card's "workload" badge.
 
-  `restoreState`, the preset logic and the config writers call the type and
-  never assume a number. This keeps the
+  Serialization, the store, the preset logic and the config writers call the
+  type and never assume a number. This keeps the
   [untrusted-input rule](#shareable-url-state) in one place as types are added.
-- **Controls** (`ui/controls/`). `def.control` names a control component
-  (`slider`, `toggle`, `segmented`, and later `select` and `tuple`) through a
-  registry. `ParameterCard` keeps the frame: header, badges, issues and the
-  expandable text. Only the input is swapped. The slider keeps its
+- **Controls** (`ui/controls/`). `def.control` names an entry of the
+  registry in `ui/controls/index.js`: `slider`, `toggle`, `segmented` and
+  `select`, with `tuple` to come with the first tuple def. Each entry lists the
+  value types it can edit (the contract suite checks every def against it) and
+  whether the card offers click-to-type and prints the range. `ParameterCard`
+  keeps the frame: header, badges, the value, issues and the expandable text.
+  Only the input is swapped. Every control takes `def`, `value`, `range`,
+  `labelId` and `valueText` and emits `update`; the store clamps the value by
+  type. The slider keeps its
   [uncontrolled pattern](#range-slider-uncontrolled-with-external-sync) inside
-  its own component. Extracting the controls also splits `ParameterCard`
-  (about 490 lines today).
+  `SliderControl.vue`.
 - **Profile** (`profile.js`). One declarative field list (type, label, quick
   picks, min/max/step or enum) drives the generic `ProfileForm` *and* the
   restore schema, so the form and the URL validation can't drift apart.
@@ -395,7 +404,8 @@ so that a new variant is an addition rather than an edit to shared code.
   - `comments.js`: `commentLine` (refuses line breaks), rules, section
     headers, file banners, and the date and preset summary for the header
     block.
-  - `sysctlFile.js`: `sysctlConfig` and `sysctlLine`, integer values only.
+  - `sysctlFile.js`: `sysctlConfig` prints each value with its def's type,
+    and `sysctlLine` holds it to plain space-separated tokens.
   - `iniDropIn.js` (systemd): `iniSection` and `iniDirective`, with values
     limited to plain tokens.
   - Later, `udevRule` and `tunedProfile` for the sysfs tuners.
@@ -404,9 +414,11 @@ so that a new variant is an addition rather than an edit to shared code.
   contract fuzz tests instead of reaching a file. Each file of a multi-file
   tuner opens with a `# =====` banner naming its path. `ConfigOutput` shows
   the files combined, and copy and download take that text; a download per
-  file is not built yet. Once value types land (step 7), every emitted value
-  goes through its def's value type, so the "only values the kernel accepts"
-  rule ([§3](#3-product-principles)) is enforced in one place.
+  file is not built yet. Every emitted value goes through its def's value
+  type, so the "only values the kernel accepts" rule
+  ([§3](#3-product-principles)) is enforced in one place. A writer that adds
+  its own syntax around a value (systemd's `50%`, `yes`) starts from
+  `formatParams`.
 - **sysctl tuners are mostly data.** Security, Network, FS, IPC and Kernel all
   write `/etc/sysctl.d/`. Each def's `sysctlName`, its `group` and the section
   order drive the generic
@@ -458,7 +470,10 @@ The suite is `src/tuners/contract.test.js`, next to
 `src/tuners/configSnapshots.test.js`, which snapshots the config for every
 profile's defaults and every preset so each migration step can prove
 byte-identical output. The page-mount check is `src/tuners/views.test.js`.
-The type-formatter check waits on value types (step 7).
+The type-formatter check covers sysctl lines; ini values are composed by the
+tuner from typed values and held to plain tokens by the grammar check.
+`src/ui/ParameterCard.enum.test.js` covers the enum path (select, clamp,
+restore) with a fixture domain until a tuner ships an enum.
 
 ### Guardrails
 

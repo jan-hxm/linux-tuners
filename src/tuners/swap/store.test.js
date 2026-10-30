@@ -44,6 +44,15 @@ describe('tuner store — applyPreset', () => {
     expect(second).toEqual(first)
   })
 
+  it('ignores a non-finite value and rounds a fractional one', () => {
+    const store = useTunerStore()
+    const before = store.params.swappiness
+    for (const bad of [NaN, Infinity, '60', null]) store.setParam('swappiness', bad)
+    expect(store.params.swappiness).toBe(before)
+    store.setParam('swappiness', 42.6)
+    expect(store.params.swappiness).toBe(43)
+  })
+
   it('records the active preset id', () => {
     const store = useTunerStore()
     store.applyPreset('database', { swappiness: 1 })

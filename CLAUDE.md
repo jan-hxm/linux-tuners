@@ -25,7 +25,7 @@ Each links to its full rationale in Design.md.
 - **No em dashes in displayed text** (UI strings, parameter descriptions, validation messages, generated config). Docs and comments are exempt. [§8](Design.md#8-copy-conventions)
 - **Every emitted value must be one the kernel/systemd accepts**, and sliders must not offer values systemd silently ignores. Blocking validation only for rejected or clearly broken settings. [§3](Design.md#3-product-principles)
 - **Shared-link state is untrusted input**: keep the schema checks, rounding and preset-id check in serialization / `restoreState`. [§5 Shareable URL state](Design.md#shareable-url-state)
-- **Don't bind `:value` on the range input** in `ParameterCard`; it cancels Chromium drags. [§5 Range slider](Design.md#range-slider-uncontrolled-with-external-sync)
+- **Don't bind `:value` on the range input** in `ui/controls/SliderControl.vue`; it cancels Chromium drags. [§5 Range slider](Design.md#range-slider-uncontrolled-with-external-sync)
 - **Don't reintroduce a custom consent banner**; Google's CMP handles consent. [§5 Ads and consent](Design.md#ads-and-consent)
 - **A view can't `inject()` what it `provide()`s**: pass the store explicitly to view-level composables. [§5 Domain modules](Design.md#domain-modules-behind-a-shared-store-and-ui)
 - **UI/UX + accessibility guardrails** (mobile impact bar, real buttons with `aria-expanded`, tablist arrow keys, focus-trapping drawers, chart `aria-label`s, type and contrast floors). [§7](Design.md#7-uiux-and-accessibility-conventions)

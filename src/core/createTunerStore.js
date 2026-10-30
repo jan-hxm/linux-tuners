@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { valueTypeOf } from './valueTypes.js'
 
 const URL_DEBOUNCE_MS = 200
 
@@ -72,14 +73,18 @@ export function defineTunerStore(id, domain) {
       },
 
       /**
-       * Set a single parameter value, clamped to the hardware-aware range.
+       * Set a single parameter value. It is parsed as strictly as a shared
+       * link (an int is rounded, e.g. a typed 60.5; NaN or an unlisted enum
+       * option is ignored), then clamped to the hardware-aware range.
        * @param {string} key
-       * @param {number} value
+       * @param {*} value
        */
       setParam(key, value) {
-        const { min, max } = domain.rangeFor(key, this.hardware)
-        const clamped = Math.max(min, Math.min(max, value))
-        this.params[key] = clamped
+        const def = domain.defsByKey[key]
+        const type = valueTypeOf(def)
+        const parsed = type.restore(value, def)
+        if (parsed === undefined) return
+        this.params[key] = type.clamp(parsed, def, domain.rangeFor(key, this.hardware))
         this.activePreset = null
         this.syncUrl()
       },
@@ -159,12 +164,12 @@ export function restoreState(domain, hash) {
   if (!hash) return null
   const restored = domain.decodeState(hash)
   if (!restored) return null
-  // A shared link can carry any number; hold it to the same range a slider drag
-  // would. Every parameter is an integer, and the value is written verbatim into
-  // the config, where e.g. `vm.swappiness = 60.5` is rejected by sysctl.
+  // decodeState already parsed each value strictly by its type (an int is
+  // rounded: `vm.swappiness = 60.5` is rejected by sysctl). Hold it to the
+  // same range a slider drag would.
   for (const key of Object.keys(restored.params)) {
-    const { min, max } = domain.rangeFor(key, restored.hardware)
-    restored.params[key] = Math.max(min, Math.min(max, Math.round(restored.params[key])))
+    const def = domain.defsByKey[key]
+    restored.params[key] = valueTypeOf(def).clamp(restored.params[key], def, domain.rangeFor(key, restored.hardware))
   }
   // Only a real preset id: presetsById is a plain object, so a name like
   // 'toString' would otherwise resolve to an inherited function.

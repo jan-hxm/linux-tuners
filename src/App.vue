@@ -1,7 +1,7 @@
 <script setup>
 import { RouterView } from 'vue-router'
-import SiteHeader from '@/components/layout/SiteHeader.vue'
-import SiteFooter from '@/components/layout/SiteFooter.vue'
+import SiteHeader from '@/ui/layout/SiteHeader.vue'
+import SiteFooter from '@/ui/layout/SiteFooter.vue'
 </script>
 
 <template>

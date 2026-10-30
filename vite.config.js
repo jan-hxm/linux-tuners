@@ -10,8 +10,8 @@ export default defineConfig({
   },
   test: {
     environmentMatchGlobs: [
-      ['src/components/**', 'happy-dom'],
-      ['src/composables/**', 'happy-dom'],
+      ['src/ui/**', 'happy-dom'],
+      ['src/tuners/*/components/**', 'happy-dom'],
     ],
     environment: 'node',
     include: ['src/**/*.test.js'],

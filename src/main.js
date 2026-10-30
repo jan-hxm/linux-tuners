@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import { router } from './router.js'
-import './charts/chartSetup.js'
+import './ui/charts/chartSetup.js'
 import './assets/main.css'
 
 const app = createApp(App)

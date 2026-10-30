@@ -14,8 +14,8 @@ import { LIVE_TUNERS } from './tuners/registry.js'
 // in the registry so the registry stays plain data and each tuner gets its own
 // chunk. Every live registry entry needs one (src/tuners/registry.test.js).
 export const TUNER_VIEWS = {
-  swap: () => import('@/views/SwapTunerView.vue'),
-  systemd: () => import('@/views/SystemdTunerView.vue'),
+  swap: () => import('@/tuners/swap/View.vue'),
+  systemd: () => import('@/tuners/systemd/View.vue'),
 }
 
 const PAGE_VIEWS = {

@@ -91,47 +91,45 @@ Every tuner follows the same flow:
 
 Vue 3 + **plain JavaScript** (no TypeScript; shapes are JSDoc `@typedef`s),
 `<script setup>`, Pinia, vue-router, Tailwind CSS, Chart.js via vue-chartjs
-(registered once in `src/charts/chartSetup.js`), lz-string for URL state.
-Tests use Vitest + @vue/test-utils. Component and composable tests run in
-happy-dom; model code runs in node.
+(registered once in `src/ui/charts/chartSetup.js`), lz-string for URL state.
+Tests use Vitest + @vue/test-utils. Tests under `src/ui/` and
+`src/tuners/*/components/` run in happy-dom, as does any test that pins it with
+a `// @vitest-environment happy-dom` comment; model code runs in node.
 
 ### Domain modules behind a shared store and UI
 
-Everything specific to one tuner lives in a **domain module**
-(`src/domains/<tuner>/index.js`) implementing the `TunerDomain` contract in
-`src/domains/types.js`: parameter defs, presets, `deriveDefaults`, `rangeFor`,
+Everything specific to one tuner lives in its folder `src/tuners/<id>/`
+(layout in §9), whose **domain module** `index.js` implements the
+`TunerDomain` contract in `src/core/types.js`: parameter defs, presets, `deriveDefaults`, `rangeFor`,
 `validate`, `generateConfig`, `formatValue`, sections, drawer formulas,
 serialization and context notes. Each module is built with `defineTuner()`
-(`src/domains/defineTuner.js`), which fills in the optional hooks and asserts
-the required fields in dev and tests, and is listed in `src/domains/index.js`
+(`src/core/defineTuner.js`), which fills in the optional hooks and asserts
+the required fields in dev and tests, and is listed in `src/tuners/domains.js`
 so the contract tests (§9) cover it.
 
 - **Store factory**: `defineTunerStore(id, domain)` in
-  `src/stores/createTunerStore.js` builds a generic Pinia store (hardware,
+  `src/core/createTunerStore.js` builds a generic Pinia store (hardware,
   params, preset, tab, drawer) and delegates the domain-specific work to the
   domain module.
 - **Shared components** (`ParameterCard`, `ParameterPanel`, `PresetSelector`,
   `ConfigOutput`, `InfoDrawer`, `GraphPanel`) get the store and domain through
   `useActiveTuner()` / `useTunerDomain()`. The page shell **`TunerPage`**
-  `provide()`s both. The inject falls back to the swap tuner, so isolated
-  component tests need no wrapper. The view sits above `TunerPage`, so it
+  `provide()`s both. There is no fallback, so a component test passes both
+  keys through `global.provide`. The view sits above `TunerPage`, so it
   can't `inject()` them; view-level composables take the store as an argument.
 - **Page shell:** a tuner view only passes configuration to
-  `src/components/TunerPage.vue`: store, domain, graph tabs, impact metrics,
+  `src/ui/TunerPage.vue`: store, domain, graph tabs, impact metrics,
   and its profile form in the `profile` slot. The shell renders the hero, step
   chain, the four steps, ad slot, `AboutSection`, `InfoDrawer` and the mobile
   impact bar. All page copy and the About content are data in
-  `src/domains/<tuner>/about.js` (`PAGE`, `ABOUT`), with a small inline markup
+  `src/tuners/<id>/about.js` (`PAGE`, `ABOUT`), with a small inline markup
   (`` `code` ``, `**bold**`, `[label](https://…)`) rendered by `RichText.vue`
   from parsed segments, never as HTML. The About section is always visible
   (no collapse), since it's real content and counts toward page quality.
 - **Profile forms** are per-tuner (their fields differ), but they share the
-  number-plus-quick-pick widget `src/components/hardware/NumberPickField.vue`
+  number-plus-quick-pick widget `src/ui/profile/NumberPickField.vue`
   and the pick lists, ceilings and clamping in `fieldOptions.js`. RAM uses one
   shared `RAM_PICKS` list so the tuners never drift apart.
-- **Naming:** the swap tuner predates the abstraction and keeps unprefixed
-  names (`src/model/*.js`, `HardwareForm.vue`). Newer tuners are namespaced
-  (`src/model/systemd/`, `src/data/systemd/`, `src/components/systemd/`).
 
 ### Range slider: uncontrolled with external sync
 
@@ -189,15 +187,14 @@ and the CMP load from a changing set of Google domains.
 
 ## 6. Adding a tuner
 
-1. Domain module `src/domains/<name>/index.js` built with `defineTuner()` and
-   added to `TUNER_DOMAINS` in `src/domains/index.js`, with namespaced model,
-   data and components (`src/model/<name>/`, `src/data/<name>/`,
-   `src/components/<name>/`). The contract suite and the config snapshots then
+1. A folder `src/tuners/<name>/` laid out as in §9, with the domain module
+   `index.js` built with `defineTuner()` and added to `TUNER_DOMAINS` in
+   `src/tuners/domains.js`. The contract suite and the config snapshots then
    run over it; review the new snapshot file.
-2. Store: `defineTunerStore('<name>', domain)` in `src/stores/<name>.js`.
-3. `about.js` with the page copy and About content, and a view that renders
-   `TunerPage` with its graph tabs, impact metrics and profile form (built
-   from the shared profile-form widgets).
+2. Store: `defineTunerStore('<name>', domain)` in `src/tuners/<name>/store.js`.
+3. `about.js` with the page copy and About content, and a `View.vue` that
+   renders `TunerPage` with its graph tabs, impact metrics and profile form
+   (built from the shared profile-form widgets).
 4. Registry entry in `src/tuners/registry.js` (landing-card text, nav label,
    route metadata) and a lazy loader in `TUNER_VIEWS` (`src/router.js`). The
    route, landing card, header nav and sitemap follow from it, and
@@ -260,10 +257,10 @@ must follow them, and existing UI must not regress.
 
 ## 9. Code organization and reuse
 
-> **Status: draft guideline.** It describes the target structure. Today's code
-> partly follows it; the migration steps are in [TODO.md](TODO.md) §4. Until a
-> step lands, the current structure in §5 and §6 stays authoritative for that
-> area.
+> **Status: partly migrated.** The folder layout and import boundaries below
+> are in place. The extension points are still the target; the remaining
+> migration steps are in [TODO.md](TODO.md) §4. Until a step lands, the
+> current structure in §5 and §6 stays authoritative for that area.
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
@@ -286,11 +283,14 @@ src/
 
 - `tuners/<id>` may import `core` and `ui`.
 - `ui` may import `core`.
-- `core` and `ui` never import a tuner.
+- `core` and `ui` never import a tuner. The one exception is
+  `tuners/registry.js`, which is plain data (the header nav reads it).
+- `core` is plain JS: no `vue` import and no `.vue` files.
 - Tuners never import each other. When two tuners need the same thing,
   promote it to `core`/`ui`.
-- Enforced by a Vitest test that scans import statements, since the project
-  has no ESLint.
+- Enforced by `src/importBoundaries.test.js`, which scans import statements,
+  since the project has no ESLint. Test files are exempt: shared-code tests
+  mount real tuners as fixtures.
 
 ### Tuner folder
 
@@ -311,6 +311,14 @@ src/tuners/<id>/
 
 The view is generated from the shared `TunerPage` shell. A tuner gets its own
 `View.vue` only if the shell's slots genuinely can't express the page.
+
+Where today's tuners still differ from this target: the profile lives in
+`parameters.js` (keys, defaults and restore schema) until the generic
+`ProfileForm` exists; each has its own `store.js`, `View.vue` and simulation
+composable (`useSimulation.js`, `useSystemdSimulation.js`) until steps 5 and
+later; systemd keeps a `formatting.js`. Shared tests that need more than one
+tuner (`contract.test.js`, `configSnapshots.test.js`, `views.test.js`) sit in
+`src/tuners/`.
 
 ### The reuse ladder
 
@@ -431,10 +439,10 @@ over **every** registered tuner and checks:
 A new tuner gets this coverage for free. Its own `*.test.js` files cover only
 its math and its cross-parameter rules.
 
-The suite is `src/domains/contract.test.js`, next to
-`src/domains/configSnapshots.test.js`, which snapshots the config for every
+The suite is `src/tuners/contract.test.js`, next to
+`src/tuners/configSnapshots.test.js`, which snapshots the config for every
 profile's defaults and every preset so each migration step can prove
-byte-identical output. The page-mount check is `src/views/tunerViews.test.js`.
+byte-identical output. The page-mount check is `src/tuners/views.test.js`.
 The type-formatter check waits on value types (step 7).
 
 ### Guardrails
@@ -565,6 +573,6 @@ the contract suite (§9 Contract tests) and run over every tuner:
   directives listed above.
 - **CI.** `npm audit --omit=dev --audit-level=high` runs in the test job.
 
-The first and third are in the contract suite (`src/domains/contract.test.js`),
+The first and third are in the contract suite (`src/tuners/contract.test.js`),
 which also fuzzes a few hundred mixed valid and hostile links per tuner. The
 sink scan is `src/sourceScan.test.js`.

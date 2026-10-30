@@ -1,0 +1,80 @@
+/**
+ * Import boundaries between the layers (Design.md §9 "Layers and dependency
+ * direction"). The project has no ESLint, so this scans import statements.
+ * Test files are exempt: shared-code tests mount real tuners as fixtures.
+ */
+import { describe, it, expect } from 'vitest'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { dirname, join, relative, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const SRC = fileURLToPath(new URL('.', import.meta.url))
+const REGISTRY = 'tuners/registry.js'
+
+// Static imports, re-exports, side-effect imports, dynamic import() and JSDoc
+// import() types alike.
+const SPECIFIER = /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)['"]([^'"]+)['"]/g
+
+function files(path) {
+  if (statSync(path).isFile()) return [path]
+  return readdirSync(path).flatMap((name) => files(join(path, name)))
+}
+
+const posix = (p) => p.split(sep).join('/')
+
+/** Every import of a source file, resolved to a src-relative path ('vue' etc. kept bare). */
+function importsOf(file) {
+  const out = []
+  for (const [, spec] of readFileSync(file, 'utf8').matchAll(SPECIFIER)) {
+    if (spec.startsWith('@/')) out.push(spec.slice(2))
+    else if (spec.startsWith('.')) out.push(posix(relative(SRC, resolve(dirname(file), spec))))
+    else out.push(spec)
+  }
+  return out
+}
+
+const tunerOf = (path) => path.match(/^tuners\/([^/]+)\//)?.[1]
+
+/** Why `from` may not import `to`, or null if it may. */
+function violation(from, to) {
+  const layer = from.split('/')[0]
+  if (layer === 'core') {
+    if (to === 'vue' || to.endsWith('.vue')) return 'core is plain JS, no Vue'
+    if (/^(ui|tuners|views)\//.test(to)) return 'core imports only core'
+  }
+  if (layer === 'ui' && /^(tuners|views)\//.test(to) && to !== REGISTRY) return 'ui never imports a tuner'
+  const own = tunerOf(from)
+  const other = tunerOf(to)
+  if (own && other && own !== other) return 'tuners never import each other'
+  if (own && to.startsWith('views/')) return 'tuners never import views'
+  return null
+}
+
+const sources = files(SRC)
+  .filter((f) => /\.(js|vue)$/.test(f) && !f.endsWith('.test.js'))
+  .map((f) => posix(relative(SRC, f)))
+
+describe('import boundaries', () => {
+  it('scans every layer', () => {
+    for (const layer of ['core/', 'ui/', 'tuners/swap/', 'tuners/systemd/']) {
+      expect(sources.some((f) => f.startsWith(layer)), layer).toBe(true)
+    }
+  })
+
+  it('flags a broken rule', () => {
+    expect(violation('ui/X.vue', 'tuners/swap/index.js')).toBeTruthy()
+    expect(violation('core/x.js', 'vue')).toBeTruthy()
+    expect(violation('tuners/swap/x.js', 'tuners/systemd/x.js')).toBeTruthy()
+    expect(violation('ui/layout/SiteHeader.vue', REGISTRY)).toBeNull()
+  })
+
+  it('keeps every import inside the allowed direction', () => {
+    const hits = sources.flatMap((from) =>
+      importsOf(join(SRC, from))
+        .map((to) => [to, violation(from, to)])
+        .filter(([, why]) => why)
+        .map(([to, why]) => `${from} -> ${to}: ${why}`),
+    )
+    expect(hits).toEqual([])
+  })
+})

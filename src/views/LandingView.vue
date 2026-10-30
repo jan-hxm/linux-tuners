@@ -1,6 +1,6 @@
 <script setup>
 import { RouterLink } from 'vue-router'
-import AdSlot from '@/components/AdSlot.vue'
+import AdSlot from '@/ui/AdSlot.vue'
 import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
 </script>
 

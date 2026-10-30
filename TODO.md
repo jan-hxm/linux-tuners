@@ -25,15 +25,15 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 
 ## 2. Correctness
 
-- [ ] Swap: make `dirty_writeback_centisecs > dirty_expire_centisecs` a warning instead of a blocking error (per [Design.md §3](Design.md#3-product-principles) principle 4). `src/model/validation.js`
+- [ ] Swap: make `dirty_writeback_centisecs > dirty_expire_centisecs` a warning instead of a blocking error (per [Design.md §3](Design.md#3-product-principles) principle 4). `src/tuners/swap/validation.js`
 - [ ] Swap: gate the `watermark_scale_factor` max by kernel version, like swappiness. Older kernels cap it at 1000, so the Kubernetes default of 2000 fails there. Verify the exact version that raised the cap to 3000 first.
-- [ ] Swap: the config comments say `dirty_ratio` is a percentage "of RAM"; the kernel actually uses dirtyable (free + reclaimable) memory. Reword in `src/model/configOutput.js`.
-- [ ] `AdSlot` labels ads "Werbung"; use "Advertisement" to match the English site. `src/components/AdSlot.vue`
+- [ ] Swap: the config comments say `dirty_ratio` is a percentage "of RAM"; the kernel actually uses dirtyable (free + reclaimable) memory. Reword in `src/tuners/swap/config.js`.
+- [ ] `AdSlot` labels ads "Werbung"; use "Advertisement" to match the English site. `src/ui/AdSlot.vue`
 - [ ] Remove the stale comments in `.github/workflows/ci.yml` (the removed consent banner, and a "skip deploy when the secret is missing" condition that doesn't exist).
 
 ## 3. UX
 
-- [ ] Show the preset "what would change" diff somewhere other than a native `title` tooltip, which is invisible on touch and unreachable by keyboard. `src/components/PresetSelector.vue`
+- [ ] Show the preset "what would change" diff somewhere other than a native `title` tooltip, which is invisible on touch and unreachable by keyboard. `src/ui/PresetSelector.vue`
 - [ ] Add an "Undo" toast after a reset or a preset snap, so an accidental one is recoverable.
 - [ ] Make the "Jump to" step chain highlight the active section (scroll-spy).
 - [ ] Add a way to jump from the mobile impact bar to the full `GraphPanel`.
@@ -46,10 +46,9 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 
 Maintainability migration toward [Design.md §9](Design.md#9-code-organization-and-reuse).
 Each step is a refactor with no behaviour change: the config snapshots
-(`src/domains/configSnapshots.test.js`) must stay unchanged.
-Steps 4–6 come alongside the Security tuner, and 7 before Network.
+(`src/tuners/configSnapshots.test.js`) must stay unchanged.
+Steps 5 and 6 come alongside the Security tuner, and 7 before Network.
 
-4. [ ] Move to `core/`, `ui/`, `tuners/<id>/` (git mv; swap drops its unprefixed legacy paths) + the import-boundary test.
 5. [ ] Generic `useTunerSimulation`, `ChartFrame` and a chart palette.
 6. [ ] `core/output` writers, multi-file `{ path, content }[]` output, generic `sysctlConfig`.
 7. [ ] Value types (`int`/`bool`/`enum`/`tuple`) + controls registry; split `ParameterCard`; `select` control.

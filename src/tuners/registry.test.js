@@ -3,7 +3,7 @@
 // consumer (domains, router, routes-meta) agrees with it.
 import { describe, it, expect } from 'vitest'
 import { TUNERS, LIVE_TUNERS, PLANNED_TUNERS } from './registry.js'
-import { TUNER_DOMAINS } from '@/domains/index.js'
+import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { TUNER_VIEWS, router } from '@/router.js'
 import { ROUTES_META } from '@/routes-meta.js'
 

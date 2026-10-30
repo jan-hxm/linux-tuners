@@ -13,6 +13,7 @@ import { generateConfig } from '@/model/systemd/configOutput.js'
 import { SYSTEMD_PRESETS, SYSTEMD_PRESETS_BY_ID } from '@/data/systemd/presets.js'
 import { formatValue } from '@/model/systemd/formatting.js'
 import { makeSerialization } from '@/model/serialization.js'
+import { PAGE, ABOUT } from './about.js'
 
 const SECTIONS = [
   {
@@ -123,4 +124,6 @@ export const systemdDomain = defineTuner({
   docsLabel: 'systemd docs',
   noteKey: 'contextNote',
   formula,
+  page: PAGE,
+  about: ABOUT,
 })

@@ -50,6 +50,8 @@
  * @property {string}   docsLabel        Label for the per-parameter docs link
  * @property {string}   noteKey          Def field holding the contextual note
  * @property {(def:Object, ctx:{hardware:Object,params:Object})=>(TunerFormula|null)} [formula]
+ * @property {Object}   page    Page copy for TunerPage (hero, step titles, ad slot), from about.js
+ * @property {Object}   about   About/methodology content for AboutSection, from about.js
  */
 
 export {}

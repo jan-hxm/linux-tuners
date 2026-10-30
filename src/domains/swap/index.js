@@ -20,6 +20,7 @@ import { generateConfig } from '@/model/configOutput.js'
 import { PRESETS, PRESETS_BY_ID } from '@/data/presets.js'
 import { encodeState, decodeState } from '@/model/serialization.js'
 import { formatValue } from '@/utils/formatting.js'
+import { PAGE, ABOUT } from './about.js'
 
 /** Card groupings (was hardcoded inside ParameterPanel). */
 const SECTIONS = [
@@ -115,4 +116,6 @@ export const swapDomain = defineTuner({
   docsLabel: 'kernel.org docs',
   noteKey: 'k8sNote',
   formula,
+  page: PAGE,
+  about: ABOUT,
 })

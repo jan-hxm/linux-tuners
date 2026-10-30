@@ -28,6 +28,8 @@ const REQUIRED = [
   'context',
   'docsLabel',
   'noteKey',
+  'page',
+  'about',
 ]
 
 const DEFAULTS = {

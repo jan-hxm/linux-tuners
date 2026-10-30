@@ -8,6 +8,7 @@ import { compressToEncodedURIComponent } from 'lz-string'
 import { TUNER_DOMAINS } from './index.js'
 import { assertTuner } from './defineTuner.js'
 import { restoreState } from '@/stores/createTunerStore.js'
+import { parseRichText } from '@/components/richText.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
 const CONTROLS = ['slider', 'toggle', 'segmented']
@@ -327,6 +328,30 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
     })
   })
 
+  describe('page copy', () => {
+    it('has the fields TunerPage and AboutSection render', () => {
+      const { page, about } = domain
+      expect(page.title && page.intro && page.adSlot).toBeTruthy()
+      expect(page.profileStep.id).toMatch(/^[a-z]+$/)
+      expect(page.profileStep.label && page.profileStep.title && page.tuneSubtitle).toBeTruthy()
+      expect(page.exportStep.title && page.exportStep.subtitle).toBeTruthy()
+      expect(about.heading).toBeTruthy()
+      for (const section of about.sections) {
+        expect(section.title).toBeTruthy()
+        for (const block of section.blocks) expect(Boolean(block.p) !== Array.isArray(block.ul)).toBe(true)
+      }
+    })
+
+    it('links only to https URLs and leaves no stray markup', () => {
+      for (const text of [domain.page.intro, ...strings(domain.about)]) {
+        for (const seg of parseRichText(text)) {
+          if (seg.type === 'link') expect(seg.href).toMatch(/^https:\/\/[^\s"'<>]+$/)
+          if (seg.type === 'text') expect(seg.text, text).not.toMatch(/`|\*\*|\]\(/)
+        }
+      }
+    })
+  })
+
   describe('copy (Design.md §8)', () => {
     it('has no em dash in any displayed string or generated config', () => {
       const shown = [
@@ -336,6 +361,8 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         domain.context.label,
         domain.context.badge,
         domain.docsLabel,
+        ...strings(domain.page),
+        ...strings(domain.about),
       ]
       for (const state of legitimateStates(domain)) {
         shown.push(...domain.validate(state.hardware, state.params).map((i) => i.message))

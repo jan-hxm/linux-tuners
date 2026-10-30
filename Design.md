@@ -112,10 +112,19 @@ so the contract tests (§9) cover it.
   domain module.
 - **Shared components** (`ParameterCard`, `ParameterPanel`, `PresetSelector`,
   `ConfigOutput`, `InfoDrawer`, `GraphPanel`) get the store and domain through
-  `useActiveTuner()` / `useTunerDomain()`. A tuner **view** `provide()`s both.
-  The inject falls back to the swap tuner, so isolated component tests need no
-  wrapper. A view can't `inject()` what it `provide()`s itself, so view-level
-  composables take the store as an argument.
+  `useActiveTuner()` / `useTunerDomain()`. The page shell **`TunerPage`**
+  `provide()`s both. The inject falls back to the swap tuner, so isolated
+  component tests need no wrapper. The view sits above `TunerPage`, so it
+  can't `inject()` them; view-level composables take the store as an argument.
+- **Page shell:** a tuner view only passes configuration to
+  `src/components/TunerPage.vue`: store, domain, graph tabs, impact metrics,
+  and its profile form in the `profile` slot. The shell renders the hero, step
+  chain, the four steps, ad slot, `AboutSection`, `InfoDrawer` and the mobile
+  impact bar. All page copy and the About content are data in
+  `src/domains/<tuner>/about.js` (`PAGE`, `ABOUT`), with a small inline markup
+  (`` `code` ``, `**bold**`, `[label](https://…)`) rendered by `RichText.vue`
+  from parsed segments, never as HTML. The About section is always visible
+  (no collapse), since it's real content and counts toward page quality.
 - **Profile forms** are per-tuner (their fields differ), but they share the
   number-plus-quick-pick widget `src/components/hardware/NumberPickField.vue`
   and the pick lists, ceilings and clamping in `fieldOptions.js`. RAM uses one
@@ -184,9 +193,9 @@ and the CMP load from a changing set of Google domains.
    `src/components/<name>/`). The contract suite and the config snapshots then
    run over it; review the new snapshot file.
 2. Store: `defineTunerStore('<name>', domain)` in `src/stores/<name>.js`.
-3. A view that `provide()`s the store and domain, reuses the shared components
-   and the profile-form widgets, and includes `MobileImpactBar` with its
-   spacer (see section 7).
+3. `about.js` with the page copy and About content, and a view that renders
+   `TunerPage` with its graph tabs, impact metrics and profile form (built
+   from the shared profile-form widgets).
 4. Route wiring: a `ROUTES_META` entry, a loader in `VIEW_LOADERS`
    (`src/router.js`), the landing card status in `LandingView.vue`, and the
    nav order in `SiteHeader.vue` if relevant.
@@ -420,16 +429,14 @@ its math and its cross-parameter rules.
 The suite is `src/domains/contract.test.js`, next to
 `src/domains/configSnapshots.test.js`, which snapshots the config for every
 profile's defaults and every preset so each migration step can prove
-byte-identical output. Two checks wait on later work: the type-formatter check
-needs value types (step 7), and the page-mount check is the view smoke test
-in TODO.md §4.
+byte-identical output. The page-mount check is `src/views/tunerViews.test.js`.
+The type-formatter check waits on value types (step 7).
 
 ### Guardrails
 
 - A component over about 300 lines, or one that knows which tuner it's
   rendering, is due for a split.
-- Long prose lives in data (`defs.js`, `about.js`), not in templates. Today the
-  systemd About section is inlined in its view; that's the pattern to remove.
+- Long prose lives in data (`defs.js`, `about.js`), not in templates.
 - Tuner ids are kebab-case and **permanent**: they key the Pinia store and the
   shared URL hash. The swap tuner keeps the store id `tuner` so existing links
   keep working.

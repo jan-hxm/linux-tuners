@@ -47,9 +47,8 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 Maintainability migration toward [Design.md §9](Design.md#9-code-organization-and-reuse).
 Each step is a refactor with no behaviour change: the config snapshots
 (`src/tuners/configSnapshots.test.js`) must stay unchanged.
-Steps 5 and 6 come alongside the Security tuner, and 7 before Network.
+Step 6 comes alongside the Security tuner, and 7 before Network.
 
-5. [ ] Generic `useTunerSimulation`, `ChartFrame` and a chart palette.
 6. [ ] `core/output` writers, multi-file `{ path, content }[]` output, generic `sysctlConfig`.
 7. [ ] Value types (`int`/`bool`/`enum`/`tuple`) + controls registry; split `ParameterCard`; `select` control.
 

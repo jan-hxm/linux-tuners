@@ -1,9 +1,13 @@
 <script setup>
 import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
-import { useSystemdSimulation } from '../useSystemdSimulation.js'
+import ChartFrame from '@/ui/charts/ChartFrame.vue'
+import { tone } from '@/ui/charts/palette.js'
+import { useActiveTuner } from '@/ui/useActiveTuner.js'
+import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
+import * as simulation from '../simulation.js'
 
-const { cpu } = useSystemdSimulation()
+const { cpuShares: cpu } = useTunerSimulation(useActiveTuner(), simulation)
 
 const chartData = computed(() => {
   const c = cpu.value
@@ -14,7 +18,7 @@ const chartData = computed(() => {
     datasets: c.segments.map((s) => ({
       label: s.slice,
       data: [s.pct],
-      backgroundColor: s.color,
+      backgroundColor: tone(s.tone),
       borderWidth: 0,
       stack: 'cpu',
     })),
@@ -51,9 +55,9 @@ const chartOptions = computed(() => ({
 
 <template>
   <div class="space-y-3">
-    <div class="h-32" role="img" :aria-label="summary">
+    <ChartFrame :aria-label="summary" height="8rem">
       <Bar :data="chartData" :options="chartOptions" />
-    </div>
+    </ChartFrame>
     <div class="flex flex-wrap gap-3 text-xs text-slate-600">
       <span>
         When the CPU is saturated, sibling slices split it in proportion to their

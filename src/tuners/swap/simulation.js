@@ -5,8 +5,8 @@
  * The goal is for the user to see the SHAPE of how each vm.* parameter affects
  * system behaviour, so they understand the tradeoffs they're making with the
  * sliders. Every function here is a pure mapping from (hardware, params) →
- * chart data with no side effects, so the `useSimulation` composable can wrap
- * them in `computed` for cheap reactivity.
+ * chart data with no side effects, so `useTunerSimulation` can wrap them in
+ * `computed` for cheap reactivity. Colours are palette tones (ui/charts/palette.js).
  */
 
 import { watermarkLevelsMiB } from './calculations.js'
@@ -106,12 +106,12 @@ export function watermarkBars(hw, params) {
     highMiB: lv.highMiB,
     usableMiB: lv.usableMiB,
     totalMiB,
-    // Segment widths for the stacked bar.
+    // Segment widths and palette tones for the stacked bar.
     segments: [
-      { label: 'reserved (≤ min)', mib: lv.minMiB, color: '#dc2626' },
-      { label: 'direct-reclaim (min → low)', mib: lv.lowMiB - lv.minMiB, color: '#d97706' },
-      { label: 'kswapd (low → high)', mib: lv.highMiB - lv.lowMiB, color: '#0ea5e9' },
-      { label: 'usable (> high)', mib: lv.usableMiB, color: '#16a34a' },
+      { label: 'reserved (≤ min)', mib: lv.minMiB, tone: 'danger' },
+      { label: 'direct-reclaim (min → low)', mib: lv.lowMiB - lv.minMiB, tone: 'warn' },
+      { label: 'kswapd (low → high)', mib: lv.highMiB - lv.lowMiB, tone: 'info' },
+      { label: 'usable (> high)', mib: lv.usableMiB, tone: 'ok' },
     ],
     zoneInfoSnippet: renderZoneInfo(lv, totalMiB),
   }

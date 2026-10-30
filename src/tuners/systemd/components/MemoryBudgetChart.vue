@@ -1,9 +1,13 @@
 <script setup>
 import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
-import { useSystemdSimulation } from '../useSystemdSimulation.js'
+import ChartFrame from '@/ui/charts/ChartFrame.vue'
+import { tone } from '@/ui/charts/palette.js'
+import { useActiveTuner } from '@/ui/useActiveTuner.js'
+import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
+import * as simulation from '../simulation.js'
 
-const { memory } = useSystemdSimulation()
+const { memoryBudget: memory } = useTunerSimulation(useActiveTuner(), simulation)
 
 const chartData = computed(() => {
   const m = memory.value
@@ -14,7 +18,7 @@ const chartData = computed(() => {
     datasets: m.segments.map((s) => ({
       label: s.label,
       data: [s.mib],
-      backgroundColor: s.color,
+      backgroundColor: tone(s.tone),
       borderWidth: 0,
       stack: 'mem',
     })),
@@ -60,9 +64,9 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-3">
-    <div class="h-32" role="img" :aria-label="summary">
+    <ChartFrame :aria-label="summary" height="8rem">
       <Bar :data="chartData" :options="chartOptions" />
-    </div>
+    </ChartFrame>
     <div class="flex flex-wrap gap-3 text-xs text-slate-600">
       <span>
         <code class="font-mono">MemoryHigh</code> throttles the slice; <code class="font-mono">MemoryMax</code> is the hard OOM cap.

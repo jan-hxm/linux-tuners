@@ -1,9 +1,13 @@
 <script setup>
 import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
-import { useSimulation } from '../useSimulation.js'
+import ChartFrame from '@/ui/charts/ChartFrame.vue'
+import { tone } from '@/ui/charts/palette.js'
+import { useActiveTuner } from '@/ui/useActiveTuner.js'
+import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
+import * as simulation from '../simulation.js'
 
-const { watermarks } = useSimulation()
+const { watermarkBars: watermarks } = useTunerSimulation(useActiveTuner(), simulation)
 
 const chartData = computed(() => {
   const w = watermarks.value
@@ -14,7 +18,7 @@ const chartData = computed(() => {
     datasets: w.segments.map((s) => ({
       label: s.label,
       data: [s.mib],
-      backgroundColor: s.color,
+      backgroundColor: tone(s.tone),
       borderWidth: 0,
       stack: 'ram',
     })),
@@ -56,9 +60,9 @@ const chartOptions = computed(() => ({
 
 <template>
   <div class="space-y-3">
-    <div class="h-32" role="img" :aria-label="summary">
+    <ChartFrame :aria-label="summary" height="8rem">
       <Bar :data="chartData" :options="chartOptions" />
-    </div>
+    </ChartFrame>
     <div>
       <p class="text-[11px] uppercase tracking-wide text-slate-500">/proc/zoneinfo (simulated)</p>
       <pre class="mt-1 overflow-x-auto rounded bg-slate-900 p-2 text-[11px] leading-snug text-slate-100"><code>{{ watermarks.zoneInfoSnippet }}</code></pre>

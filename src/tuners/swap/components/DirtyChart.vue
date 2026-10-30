@@ -1,9 +1,13 @@
 <script setup>
 import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
-import { useSimulation } from '../useSimulation.js'
+import ChartFrame from '@/ui/charts/ChartFrame.vue'
+import { PALETTE } from '@/ui/charts/palette.js'
+import { useActiveTuner } from '@/ui/useActiveTuner.js'
+import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
+import * as simulation from '../simulation.js'
 
-const { dirty } = useSimulation()
+const { dirtyTimeline: dirty } = useTunerSimulation(useActiveTuner(), simulation)
 
 const chartData = computed(() => {
   const d = dirty.value
@@ -12,8 +16,8 @@ const chartData = computed(() => {
       {
         label: 'Dirty pages (% RAM)',
         data: d.points.map((p) => ({ x: p.t, y: p.dirty })),
-        borderColor: '#0f172a',
-        backgroundColor: 'rgba(15, 23, 42, 0.08)',
+        borderColor: PALETTE.ink,
+        backgroundColor: PALETTE.inkFill,
         borderWidth: 2,
         pointRadius: 0,
         fill: true,
@@ -25,7 +29,7 @@ const chartData = computed(() => {
           { x: 0, y: d.bgLine },
           { x: d.points.at(-1).t, y: d.bgLine },
         ],
-        borderColor: '#16a34a',
+        borderColor: PALETTE.ok,
         borderDash: [4, 3],
         borderWidth: 1.5,
         pointRadius: 0,
@@ -38,7 +42,7 @@ const chartData = computed(() => {
           { x: 0, y: d.ratioLine },
           { x: d.points.at(-1).t, y: d.ratioLine },
         ],
-        borderColor: '#dc2626',
+        borderColor: PALETTE.danger,
         borderDash: [4, 3],
         borderWidth: 1.5,
         pointRadius: 0,
@@ -102,9 +106,9 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-2">
-    <div class="h-64" role="img" :aria-label="summary">
+    <ChartFrame :aria-label="summary">
       <Line :data="chartData" :options="chartOptions" />
-    </div>
+    </ChartFrame>
     <div class="flex flex-wrap gap-3 text-xs text-slate-600">
       <span class="inline-flex items-center gap-1">
         <span class="inline-block h-0.5 w-4 bg-slate-900"></span> dirty pages

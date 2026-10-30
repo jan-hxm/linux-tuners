@@ -1,17 +1,18 @@
 <script setup>
 import TunerPage from '@/ui/TunerPage.vue'
+import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import SystemProfileForm from './components/SystemProfileForm.vue'
 import CpuShareChart from './components/CpuShareChart.vue'
 import MemoryBudgetChart from './components/MemoryBudgetChart.vue'
 import TasksChart from './components/TasksChart.vue'
 import { useSystemdStore } from './store.js'
 import { systemdDomain } from './index.js'
-import { useSystemdSimulation } from './useSystemdSimulation.js'
+import * as simulation from './simulation.js'
 
 const tuner = useSystemdStore()
 // Pass the store explicitly: TunerPage provides it below this view, so it
 // can't be injected here.
-const { impact } = useSystemdSimulation(tuner)
+const { impactSummary: impact } = useTunerSimulation(tuner, simulation)
 
 const GRAPH_TABS = [
   { id: 'cpu', label: 'CPU shares', component: CpuShareChart, blurb: 'How CPUWeight splits a saturated CPU between this slice and its siblings.' },

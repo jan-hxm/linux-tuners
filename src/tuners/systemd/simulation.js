@@ -2,13 +2,11 @@
  * Teaching-model simulations for the systemd tuner, mirroring the swap tuner's
  * simulation.js (pure functions over hardware + params, consumed reactively by
  * the chart components). Each is a simplified but faithful illustration of a
- * real cgroup v2 mechanism, not an exact predictor.
+ * real cgroup v2 mechanism, not an exact predictor. Colours are palette tones
+ * (ui/charts/palette.js).
  */
 
 import { cpuQuotaNoLimit } from './calculations.js'
-
-const TARGET_COLOR = '#0f172a' // slate-900
-const SIBLING_COLOR = '#cbd5e1' // slate-300
 
 const TOP_LEVEL_SLICES = ['system.slice', 'user.slice', 'machine.slice']
 
@@ -30,7 +28,7 @@ export function cpuShares(hw, p) {
   const segments = weights.map((w) => ({
     ...w,
     pct: Math.round((w.weight / total) * 1000) / 10,
-    color: w.isTarget ? TARGET_COLOR : SIBLING_COLOR,
+    tone: w.isTarget ? 'ink' : 'faint',
   }))
   const targetPct = segments.find((s) => s.isTarget)?.pct ?? 0
 
@@ -55,23 +53,23 @@ export function memoryBudget(hw, p) {
   const throttleStart = p.memory_high < 100 ? p.memory_high : null
   const hardCap = p.memory_max < 100 ? p.memory_max : null
 
-  /** @type {{label:string, mib:number, color:string}[]} */
+  /** @type {{label:string, mib:number, tone:string}[]} */
   const segments = []
   // Normal-use zone: up to the first limit we encounter.
   const normalEndPct = throttleStart ?? hardCap ?? 100
-  segments.push({ label: 'normal use', mib: pctToMiB(normalEndPct), color: '#10b981' }) // emerald-500
+  segments.push({ label: 'normal use', mib: pctToMiB(normalEndPct), tone: 'ok' })
 
   // Throttle band between MemoryHigh and MemoryMax (or RAM top).
   if (throttleStart !== null) {
     const bandEndPct = hardCap ?? 100
     if (bandEndPct > throttleStart) {
-      segments.push({ label: 'throttle (MemoryHigh→Max)', mib: pctToMiB(bandEndPct - throttleStart), color: '#f59e0b' }) // amber-500
+      segments.push({ label: 'throttle (MemoryHigh→Max)', mib: pctToMiB(bandEndPct - throttleStart), tone: 'warn' })
     }
   }
 
   // Above the hard cap: unavailable to the slice (OOM territory).
   if (hardCap !== null && hardCap < 100) {
-    segments.push({ label: 'above MemoryMax (OOM)', mib: pctToMiB(100 - hardCap), color: '#dc2626' }) // red-600
+    segments.push({ label: 'above MemoryMax (OOM)', mib: pctToMiB(100 - hardCap), tone: 'danger' })
   }
 
   return {

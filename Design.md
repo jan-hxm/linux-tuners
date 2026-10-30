@@ -226,7 +226,8 @@ must follow them, and existing UI must not regress.
   element that opened them** (`InfoDrawer`). `aria-modal` alone doesn't trap
   focus.
 - **Canvas charts get `role="img"`** and a reactive plain-language
-  `aria-label` summary. The visible legend isn't an alternative for assistive
+  `aria-label` summary: render them inside `ui/charts/ChartFrame.vue`, which
+  requires the label. The visible legend isn't an alternative for assistive
   technology.
 - **No global keyboard shortcuts that clash with the browser.** For example,
   the old `Ctrl+Shift+C` copy binding overrode devtools.
@@ -314,9 +315,8 @@ The view is generated from the shared `TunerPage` shell. A tuner gets its own
 
 Where today's tuners still differ from this target: the profile lives in
 `parameters.js` (keys, defaults and restore schema) until the generic
-`ProfileForm` exists; each has its own `store.js`, `View.vue` and simulation
-composable (`useSimulation.js`, `useSystemdSimulation.js`) until steps 5 and
-later; systemd keeps a `formatting.js`. Shared tests that need more than one
+`ProfileForm` exists; each has its own `store.js` and `View.vue`; systemd
+keeps a `formatting.js`. Shared tests that need more than one
 tuner (`contract.test.js`, `configSnapshots.test.js`, `views.test.js`) sit in
 `src/tuners/`.
 
@@ -377,11 +377,16 @@ so that a new variant is an addition rather than an edit to shared code.
   graph tabs. Security hardening is mostly a checklist, for example. The tune
   step then uses the full width and the impact bar is hidden. Charts render
   inside `ui/charts/ChartFrame.vue`, which takes a required `ariaLabel` and the
-  height, and they take colours from `ui/charts/palette.js`. The palette also
-  prepares for dark mode, since no hex values are scattered across chart files.
+  height, and they take colours from `ui/charts/palette.js`. Simulations name
+  a palette `tone` (such as `'danger'`) rather than a colour. The palette also
+  prepares for dark mode, since no hex values are scattered across chart files;
+  `palette.test.js` fails on a colour literal in a tuner's charts or
+  `simulation.js`.
 - **Simulation** binding. A tuner exports pure functions from
-  `simulation.js`, and one generic `useTunerSimulation(store, simulation)`
-  turns them into computeds. There are no per-tuner composables.
+  `simulation.js`, and one generic `ui/useTunerSimulation(store, simulation)`
+  turns them into computeds keyed by function name. Callers pass the module
+  (`import * as simulation`): the view passes its own store, charts pass
+  `useActiveTuner()`. There are no per-tuner composables.
 - **Config output** (`core/output/`). `generateConfig` returns a list of files,
   `{ path, content }[]`. `ConfigOutput` renders one or several and offers a
   download for each; systemd already emits two files in one string. Writers:

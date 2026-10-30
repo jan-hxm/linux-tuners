@@ -1,9 +1,13 @@
 <script setup>
 import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
-import { useSystemdSimulation } from '../useSystemdSimulation.js'
+import ChartFrame from '@/ui/charts/ChartFrame.vue'
+import { PALETTE } from '@/ui/charts/palette.js'
+import { useActiveTuner } from '@/ui/useActiveTuner.js'
+import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
+import * as simulation from '../simulation.js'
 
-const { tasks } = useSystemdSimulation()
+const { tasksUsage: tasks } = useTunerSimulation(useActiveTuner(), simulation)
 
 const chartData = computed(() => {
   const t = tasks.value
@@ -13,7 +17,7 @@ const chartData = computed(() => {
       {
         label: '% of kernel.pid_max',
         data: t.bars.map((b) => b.pct),
-        backgroundColor: ['#0f172a', '#64748b'],
+        backgroundColor: [PALETTE.ink, PALETTE.muted],
         borderWidth: 0,
       },
     ],
@@ -51,9 +55,9 @@ const chartOptions = computed(() => ({
 
 <template>
   <div class="space-y-3">
-    <div class="h-32" role="img" :aria-label="summary">
+    <ChartFrame :aria-label="summary" height="8rem">
       <Bar :data="chartData" :options="chartOptions" />
-    </div>
+    </ChartFrame>
     <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">
       <dt>kernel.pid_max</dt>
       <dd class="font-mono text-slate-900">{{ tasks.pidMax.toLocaleString() }}</dd>

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { pressureCurve, watermarkBars, dirtyTimeline, impactSummary } from './simulation.js'
 import { deriveDefaults } from './calculations.js'
 import { DEFAULT_HARDWARE } from './parameters.js'
+import { PALETTE } from '@/ui/charts/palette.js'
 
 const baseHw = { ...DEFAULT_HARDWARE }
 const baseParams = deriveDefaults(baseHw)
@@ -47,6 +48,10 @@ describe('watermarkBars', () => {
     const b = watermarkBars(baseHw, baseParams)
     const sum = b.segments.reduce((acc, s) => acc + s.mib, 0)
     expect(sum).toBeCloseTo(b.totalMiB, 0)
+  })
+
+  it('colours every segment with a palette tone', () => {
+    for (const s of watermarkBars(baseHw, baseParams).segments) expect(PALETTE).toHaveProperty(s.tone)
   })
 
   it('renders a /proc/zoneinfo-style snippet with min/low/high/free fields', () => {

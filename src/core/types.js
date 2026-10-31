@@ -55,8 +55,8 @@
  * @property {string}   outputFilename
  * @property {(state:Object)=>string} encodeState     Derived by defineTuner (core/serialization.js)
  * @property {(s:string)=>Object|null} decodeState    Derived by defineTuner, schema from the profile
- * @property {string}   defaultTab       Id of one of graphTabs
- * @property {TunerGraphTab[]} graphTabs
+ * @property {string|null} defaultTab    Id of one of graphTabs; defaults to the first, null without tabs
+ * @property {TunerGraphTab[]} [graphTabs]  Omitted in the spec = no graphs (full-width tune step, no impact bar)
  * @property {Record<string, unknown>} [simulation]  Pure (hardware, params) functions; `impactSummary` feeds the impact metrics
  * @property {string[]} workloads        Workload values compared in the drawer
  * @property {string}   workloadField    Hardware key the workloads vary (e.g. 'workload')

@@ -402,10 +402,11 @@ so that a new variant is an addition rather than an edit to shared code.
   place.
 - **Graphs are optional.** A tuner with no meaningful simulation passes no
   graph tabs. Security hardening is mostly a checklist, for example. The tune
-  step then uses the full width and the impact bar is hidden. (Not built yet:
-  `defineTuner` still requires graph tabs, and `defaultTab` must name one.)
-  The domain lists its tabs as `graphTabs` (`{ id, label, component, blurb }`)
-  and its `simulation` module. Charts render
+  step then uses the full width, and the impact bar and its spacer are
+  hidden (even if the simulation has an `impactSummary`). The domain lists its
+  tabs as `graphTabs` (`{ id, label, component, blurb }`) and its `simulation`
+  module. `defaultTab` defaults to the first tab and is `null` without tabs;
+  `defineTuner` rejects a `defaultTab` that names no tab. Charts render
   inside `ui/charts/ChartFrame.vue`, which takes a required `ariaLabel` and the
   height, and they take colours from `ui/charts/palette.js`. Simulations name
   a palette `tone` (such as `'danger'`) rather than a colour. The palette also

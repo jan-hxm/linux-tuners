@@ -8,7 +8,8 @@
  *
  * Everything comes from the domain: the profile field list (rendered by
  * ProfileForm unless the `profile` slot replaces it), graph tabs, the
- * simulation behind the impact metrics, and the copy from about.js. The
+ * simulation behind the impact metrics, and the copy from about.js. A domain
+ * without graph tabs gets a full-width tune step and no impact bar. The
  * router renders this directly for each live tuner.
  */
 import { provide, computed } from 'vue'
@@ -37,9 +38,10 @@ provide(TUNER_STORE_KEY, store)
 provide(TUNER_DOMAIN_KEY, props.domain)
 
 const graphTabs = props.domain.graphTabs
+const hasGraphs = graphTabs.length > 0
 const simulation = useTunerSimulation(store, props.domain.simulation)
-/** Impact metrics for GraphPanel and the mobile impact bar. */
-const impact = computed(() => simulation.impactSummary?.value ?? [])
+/** Impact metrics for GraphPanel and the mobile impact bar; none without graphs. */
+const impact = computed(() => (hasGraphs ? simulation.impactSummary?.value ?? [] : []))
 
 const page = props.domain.page
 
@@ -96,7 +98,7 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
 
     <section id="tune" class="space-y-3 scroll-mt-16">
       <StepHeader :num="3" title="Tune and preview" :subtitle="page.tuneSubtitle" />
-      <div class="grid gap-4 lg:grid-cols-5 lg:items-start">
+      <div v-if="hasGraphs" class="grid gap-4 lg:grid-cols-5 lg:items-start">
         <div class="lg:col-span-3">
           <ParameterPanel />
         </div>
@@ -104,6 +106,7 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
           <GraphPanel :tabs="graphTabs" :impact="impact" />
         </div>
       </div>
+      <ParameterPanel v-else />
     </section>
 
     <section id="export" class="space-y-3 scroll-mt-16">
@@ -117,7 +120,7 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
     <InfoDrawer />
 
     <!-- Spacer so the mobile impact bar never covers page content. -->
-    <div class="h-16 lg:hidden" aria-hidden="true" />
+    <div v-if="impact.length" class="h-16 lg:hidden" aria-hidden="true" />
     <MobileImpactBar :impact="impact" />
   </section>
 </template>

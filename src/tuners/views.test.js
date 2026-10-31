@@ -7,6 +7,8 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { TUNER_VIEWS } from '@/router.js'
 import { TUNER_DOMAINS } from './domains.js'
+import { defineTuner, assertTuner } from '@/core/defineTuner.js'
+import TunerPage from '@/ui/TunerPage.vue'
 
 // Chart.js needs a real canvas; the charts have their own tests.
 const CHARTS = ['PressureChart', 'WatermarkChart', 'DirtyChart', 'CpuShareChart', 'MemoryBudgetChart', 'TasksChart']
@@ -63,6 +65,40 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('%s view', (id, domain) => {
     const wrapper = mount(View, { global: { stubs } })
     expect(wrapper.find('#about button').exists()).toBe(false)
     expect(wrapper.find('#about h3').text()).toBe(domain.about.sections[0].title)
+    wrapper.unmount()
+  })
+})
+
+describe('a tuner without graphs', () => {
+  // The swap domain with its graphs and simulation left out of the spec.
+  const { graphTabs, defaultTab, simulation, ...spec } = TUNER_DOMAINS.find((d) => d.id === 'swap')
+  const domain = defineTuner(spec)
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    history.replaceState(null, '', '/')
+  })
+
+  it('defaults to no tabs and no default tab', () => {
+    expect(domain.graphTabs).toEqual([])
+    expect(domain.defaultTab).toBeNull()
+    expect(() => assertTuner(domain)).not.toThrow()
+  })
+
+  it('rejects a default tab with no tabs, or one that names no tab', () => {
+    expect(() => defineTuner({ ...spec, defaultTab: 'pressure' })).toThrow(/no graph tabs/)
+    expect(() => defineTuner({ ...spec, graphTabs, defaultTab: 'nope' })).toThrow(/not a graph tab/)
+    expect(defineTuner({ ...spec, graphTabs }).defaultTab).toBe(graphTabs[0].id)
+  })
+
+  it('renders a full-width tune step with no graph panel or impact bar', () => {
+    const wrapper = mount(TunerPage, { props: { domain }, global: { stubs } })
+    const tune = wrapper.find('#tune')
+    expect(tune.find('[role="tablist"]').exists()).toBe(false)
+    expect(tune.find('.lg\:col-span-3').exists()).toBe(false)
+    expect(tune.text()).toContain(domain.sections[0].title)
+    expect(wrapper.find('[aria-label="Live impact summary"]').exists()).toBe(false)
+    expect(wrapper.find('.h-16.lg\:hidden').exists()).toBe(false)
     wrapper.unmount()
   })
 })

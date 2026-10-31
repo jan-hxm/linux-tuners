@@ -27,7 +27,6 @@ const REQUIRED = [
   'outputFilename',
   'encodeState',
   'decodeState',
-  'defaultTab',
   'workloads',
   'workloadField',
   'context',
@@ -35,7 +34,6 @@ const REQUIRED = [
   'noteKey',
   'page',
   'about',
-  'graphTabs',
 ]
 
 const DEFAULTS = {
@@ -47,6 +45,8 @@ const DEFAULTS = {
   formula: () => null,
   /** No simulation module, so no impact metrics. */
   simulation: {},
+  /** No graphs: the tune step goes full width and the impact bar hides. */
+  graphTabs: [],
 }
 
 /**
@@ -54,7 +54,9 @@ const DEFAULTS = {
  * @returns {import('./types.js').TunerDomain}
  */
 export function defineTuner(spec) {
-  const domain = { ...DEFAULTS, ...spec, ...fromProfile(spec) }
+  const merged = { ...DEFAULTS, ...spec, ...fromProfile(spec) }
+  // The first tab opens unless the spec names another; no tabs, no tab.
+  const domain = { defaultTab: merged.graphTabs?.[0]?.id ?? null, ...merged }
   if (import.meta.env?.DEV) assertTuner(domain)
   return Object.freeze(domain)
 }
@@ -115,8 +117,13 @@ export function assertTuner(domain) {
   if (!profile.title || !profile.applyLabel || typeof profile.summary !== 'function') fail('profile needs a title, an applyLabel and a summary')
   for (const problem of profileProblems(profile.fields)) fail(problem)
 
+  if (!Array.isArray(domain.graphTabs)) fail('graphTabs must be an array')
   for (const tab of domain.graphTabs) {
     if (!tab.id || !tab.label || !tab.component || !tab.blurb) fail(`graph tab "${tab.id ?? '?'}" needs an id, label, component and blurb`)
   }
-  if (!domain.graphTabs.some((t) => t.id === domain.defaultTab)) fail('defaultTab is not a graph tab')
+  if (domain.graphTabs.length === 0) {
+    if (domain.defaultTab != null) fail('defaultTab is set but there are no graph tabs')
+  } else if (!domain.graphTabs.some((t) => t.id === domain.defaultTab)) {
+    fail('defaultTab is not a graph tab')
+  }
 }

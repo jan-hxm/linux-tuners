@@ -44,7 +44,6 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 
 ## 4. Engineering
 
-- [ ] Optional graphs per [Design.md §9](Design.md#extension-points): let a domain omit `graphTabs` (the tune step goes full width, the impact bar hides). `defineTuner` requires them today. Needed before Security hardening.
 - [ ] `ConfigOutput`: a download per file for multi-file tuners (systemd), instead of one combined `.conf`.
 - [ ] Tests: `ConfigOutput` flow (textarea matches the generator, copy calls the clipboard API, blocked state).
 - [ ] Automated accessibility sweep (axe-core / Lighthouse): focus visibility on the dark hero, a live-region announcement when a preset is applied or validation fires, and a full WCAG AA contrast pass.

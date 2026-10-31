@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { generateConfig, systemdSize } from './config.js'
 import { combineFiles } from '@/core/output/files.js'
 import { deriveDefaults } from './calculations.js'
-import { DEFAULT_SYSTEMD_SPEC } from './parameters.js'
+import { DEFAULT_SYSTEMD_SPEC } from './profile.js'
 
 const NOW = new Date('2026-06-07T00:00:00Z')
 

@@ -24,9 +24,22 @@
  * @property {string[]} lines
  * @property {{label:string, v:string}[]} values
  *
+ * @typedef {Object} TunerProfile
+ * @property {string} title        Heading of the profile card
+ * @property {string} applyLabel   Text of the apply button
+ * @property {import('./profile.js').ProfileField[]} fields  See core/profile.js
+ * @property {(hw:Object, label:(key:string, value:string)=>string)=>string[]} summary  Rich-text parts of the collapsed summary
+ *
+ * @typedef {Object} TunerGraphTab
+ * @property {string} id
+ * @property {string} label
+ * @property {Object} component  A chart component (reads the store via useActiveTuner)
+ * @property {string} blurb
+ *
  * @typedef {Object} TunerDomain
  * @property {string}   id
- * @property {Object}   defaultHardware
+ * @property {TunerProfile} profile
+ * @property {Object}   defaultHardware  Derived by defineTuner from the profile defaults
  * @property {readonly string[]} parameterKeys
  * @property {Record<string, Object>} defsByKey
  * @property {(hw:Object)=>Object} deriveDefaults
@@ -40,9 +53,11 @@
  * @property {Record<string, any>} presetsById
  * @property {(opts:Object)=>import('./output/files.js').ConfigFile[]} generateConfig  Built with the core/output writers
  * @property {string}   outputFilename
- * @property {(state:Object)=>string} encodeState
- * @property {(s:string)=>Object|null} decodeState
- * @property {string}   defaultTab
+ * @property {(state:Object)=>string} encodeState     Derived by defineTuner (core/serialization.js)
+ * @property {(s:string)=>Object|null} decodeState    Derived by defineTuner, schema from the profile
+ * @property {string}   defaultTab       Id of one of graphTabs
+ * @property {TunerGraphTab[]} graphTabs
+ * @property {Record<string, unknown>} [simulation]  Pure (hardware, params) functions; `impactSummary` feeds the impact metrics
  * @property {string[]} workloads        Workload values compared in the drawer
  * @property {string}   workloadField    Hardware key the workloads vary (e.g. 'workload')
  * @property {TunerContext} context

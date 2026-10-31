@@ -100,36 +100,46 @@ a `// @vitest-environment happy-dom` comment; model code runs in node.
 
 Everything specific to one tuner lives in its folder `src/tuners/<id>/`
 (layout in §9), whose **domain module** `index.js` implements the
-`TunerDomain` contract in `src/core/types.js`: parameter defs, presets, `deriveDefaults`, `rangeFor`,
-`validate`, `generateConfig`, `formatValue`, sections, drawer formulas,
-serialization and context notes. Each module is built with `defineTuner()`
-(`src/core/defineTuner.js`), which fills in the optional hooks and asserts
-the required fields in dev and tests, and is listed in `src/tuners/domains.js`
-so the contract tests (§9) cover it.
+`TunerDomain` contract in `src/core/types.js`: the profile field list,
+parameter defs, presets, `deriveDefaults`, `rangeFor`, `validate`,
+`generateConfig`, `formatValue`, sections, graph tabs and simulation, drawer
+formulas and context notes. Each module is built with `defineTuner()`
+(`src/core/defineTuner.js`), which fills in the optional hooks, derives the
+default profile and the shared-link codec from the profile field list, and
+asserts the required fields in dev and tests. It is listed in
+`src/tuners/domains.js` so the contract tests (§9) cover it.
 
 - **Store factory**: `defineTunerStore(id, domain)` in
   `src/core/createTunerStore.js` builds a generic Pinia store (hardware,
   params, preset, tab, drawer) and delegates the domain-specific work to the
-  domain module.
+  domain module. `useTunerStoreFor(domain)` returns the one store per domain
+  (Pinia id = the domain id); tuners have no `store.js` of their own.
 - **Shared components** (`ParameterCard`, `ParameterPanel`, `PresetSelector`,
-  `ConfigOutput`, `InfoDrawer`, `GraphPanel`) get the store and domain through
-  `useActiveTuner()` / `useTunerDomain()`. The page shell **`TunerPage`**
-  `provide()`s both. There is no fallback, so a component test passes both
-  keys through `global.provide`. The view sits above `TunerPage`, so it
-  can't `inject()` them; view-level composables take the store as an argument.
-- **Page shell:** a tuner view only passes configuration to
-  `src/ui/TunerPage.vue`: store, domain, graph tabs, impact metrics,
-  and its profile form in the `profile` slot. The shell renders the hero, step
-  chain, the four steps, ad slot, `AboutSection`, `InfoDrawer` and the mobile
-  impact bar. All page copy and the About content are data in
+  `ConfigOutput`, `InfoDrawer`, `GraphPanel`, `ProfileForm`) get the store and
+  domain through `useActiveTuner()` / `useTunerDomain()`. The page shell
+  **`TunerPage`** `provide()`s both. There is no fallback, so a component test
+  passes both keys through `global.provide`. A component can't `inject()` what
+  it `provide()`s itself, so `TunerPage`'s own composables (the impact
+  metrics) take the store as an argument.
+- **Page shell:** `src/ui/TunerPage.vue` takes only the domain; the router
+  renders it for each live tuner, so tuners have no `View.vue`. It renders the
+  profile form, the hero, step chain, the four steps, the graph tabs, ad slot,
+  `AboutSection`, `InfoDrawer` and the mobile impact bar, whose metrics come
+  from the simulation's `impactSummary`. All page copy and the About content are data in
   `src/tuners/<id>/about.js` (`PAGE`, `ABOUT`), with a small inline markup
   (`` `code` ``, `**bold**`, `[label](https://…)`) rendered by `RichText.vue`
   from parsed segments, never as HTML. The About section is always visible
   (no collapse), since it's real content and counts toward page quality.
-- **Profile forms** are per-tuner (their fields differ), but they share the
-  number-plus-quick-pick widget `src/ui/profile/NumberPickField.vue`
-  and the pick lists, ceilings and clamping in `fieldOptions.js`. RAM uses one
-  shared `RAM_PICKS` list so the tuners never drift apart.
+- **Profile form:** one generic `src/ui/profile/ProfileForm.vue` renders each
+  tuner's `profile.js` field list (§9 "Profile"): number fields with
+  quick picks (`NumberPickField.vue`), selects, radio cards, segmented
+  choices and pattern-checked text. The user edits a draft and applies it at
+  once. On apply, numbers snap and clamp with the same `core/profile.js`
+  helpers a restored link uses, and text that fails its pattern is refused
+  with an inline message, so the form can't produce a profile the link schema
+  rejects. The form collapses to a one-line summary only after the first
+  apply. Shared pick lists, ceilings and the RAM field live in
+  `fieldOptions.js`, so the tuners never drift apart.
 
 ### Range slider: uncontrolled with external sync
 
@@ -147,9 +157,10 @@ file someone may run as root, restoring it is strict:
 
 - Envelope version must match; every parameter key must be present and parse
   strictly as its def's value type (`core/valueTypes.js` `restore`).
-- Profile fields are checked against a per-domain schema (enum lists, numeric
-  ranges with a step, or a strict pattern), so a link can't inject lines into
-  the generated config. Numeric fields snap to the step the form produces.
+- Profile fields are checked against the schema derived from the profile
+  field list (enum lists, numeric ranges with a step, or a strict pattern),
+  so a link can't inject lines into the generated config. Numeric fields snap
+  to their step, exactly as the form does on apply.
 - Parameters are clamped by their value type: integers are rounded and held
   to the slider range, enums to their listed options. `setParam` uses the same
   clamp, so a typed `60.5` becomes `61`.
@@ -194,21 +205,21 @@ and the CMP load from a changing set of Google domains.
    `index.js` built with `defineTuner()` and added to `TUNER_DOMAINS` in
    `src/tuners/domains.js`. The contract suite and the config snapshots then
    run over it; review the new snapshot file.
-2. Store: `defineTunerStore('<name>', domain)` in `src/tuners/<name>/store.js`.
-3. `about.js` with the page copy and About content, and a `View.vue` that
-   renders `TunerPage` with its graph tabs, impact metrics and profile form
-   (built from the shared profile-form widgets).
-4. Registry entry in `src/tuners/registry.js` (landing-card text, nav label,
-   route metadata) and a lazy loader in `TUNER_VIEWS` (`src/router.js`). The
+2. `profile.js` with the profile field list, `about.js` with the page copy and
+   About content, and the graph tabs and simulation in the domain module. The
+   store, page and profile form come from the shared code.
+3. Registry entry in `src/tuners/registry.js` (landing-card text, nav label,
+   route metadata) and a lazy domain loader in `TUNER_DOMAIN_LOADERS`
+   (`src/router.js`). The
    route, landing card, header nav and sitemap follow from it, and
    `src/tuners/registry.test.js` checks that the registry, domains and router
    agree.
-5. **Don't add the route entry or an indexed page until the tuner works.**
+4. **Don't add the route entry or an indexed page until the tuner works.**
    Ad networks and search engines treat "under construction" pages as thin
    content. Until then the entry stays `status: 'planned'`, which renders
    only a "Coming soon" card on the landing
    page.
-6. Pass the security audit in [section 10](#10-security), including the
+5. Pass the security audit in [section 10](#10-security), including the
    hand-crafted hostile link, before the first commit of the tuner.
 
 ## 7. UI/UX and accessibility conventions
@@ -261,10 +272,7 @@ must follow them, and existing UI must not regress.
 
 ## 9. Code organization and reuse
 
-> **Status: migrated**, apart from the gaps listed under "Tuner folder" (the
-> generic profile form, per-tuner stores and views), which are open in
-> [TODO.md](TODO.md) §4. Until those land, the current structure in §5 and §6
-> stays authoritative for them.
+> **Status: migrated.** The one remaining gap is listed under "Tuner folder".
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
@@ -313,13 +321,13 @@ src/tuners/<id>/
   *.test.js        tests for this tuner's own math only (see "Contract tests")
 ```
 
-The view is generated from the shared `TunerPage` shell. A tuner gets its own
-`View.vue` only if the shell's slots genuinely can't express the page.
+There is no `store.js` or `View.vue`: the router renders the shared
+`TunerPage` for the domain, and the store comes from `useTunerStoreFor`. A
+tuner would get its own view only if the shell's slots genuinely can't
+express the page.
 
-Where today's tuners still differ from this target: the profile lives in
-`parameters.js` (keys, defaults and restore schema) until the generic
-`ProfileForm` exists; each has its own `store.js` and `View.vue`; systemd
-keeps a `formatting.js`. Shared tests that need more than one
+Where today's tuners still differ from this target: swap and systemd keep a
+`formatting.js` for the card's display text. Shared tests that need more than one
 tuner (`contract.test.js`, `configSnapshots.test.js`, `views.test.js`) sit in
 `src/tuners/`.
 
@@ -371,20 +379,33 @@ so that a new variant is an addition rather than an edit to shared code.
   type. The slider keeps its
   [uncontrolled pattern](#range-slider-uncontrolled-with-external-sync) inside
   `SliderControl.vue`.
-- **Profile** (`profile.js`). One declarative field list (type, label, quick
-  picks, min/max/step or enum) drives the generic `ProfileForm` *and* the
-  restore schema, so the form and the URL validation can't drift apart.
-  Shared pick lists such as `RAM_PICKS` stay in `ui/profile/fieldOptions.js`.
-  A profile the field list can't express (e.g. Block I/O's per-device list)
-  uses the `profile` slot of `TunerPage`.
-- **Page shell** (`ui/TunerPage.vue`). Renders the hero, step chain, the four
-  steps, ad slot, about section, info drawer, and the mobile impact bar with
-  its spacer, from the tuner's metadata. It has slots for `profile`, `about`
-  and extra steps. This removes about 100 duplicated lines per view and keeps
-  the [§7](#7-uiux-and-accessibility-conventions) guardrails in one place.
+- **Profile** (`profile.js`). One declarative field list drives the generic
+  `ProfileForm`, the default profile *and* the restore schema, so the form and
+  the URL validation can't drift apart. Field types (`core/profile.js`):
+  `number` (min, max, the `step` values snap to, an optional spinner
+  `inputStep`, quick picks), `choice` (options with optional notes, shown as a
+  `select`, radio `cards` or `segmented` control) and `text` (a RegExp
+  `pattern`; a `null` default makes it optional). Layout and behaviour are data
+  too: `half` pairs fields in a row, and `disabledWhen` greys one out. The
+  profile also names the card title, apply label and a `summary(hw, label)`
+  for the collapsed line, as rich-text parts. `defineTuner` checks the list
+  (unique keys, known shapes, a default the field's own rule accepts) and the
+  contract suite checks the picks and the summary. Shared pick lists, ceilings
+  and the RAM field stay in `ui/profile/fieldOptions.js`. A profile the field
+  list can't express (e.g. Block I/O's per-device list) uses the `profile`
+  slot of `TunerPage`.
+- **Page shell** (`ui/TunerPage.vue`). Renders the whole page from the
+  domain alone: profile form, hero, step chain, the four steps, graph tabs, ad
+  slot, about section, info drawer, and the mobile impact bar with its spacer.
+  It has a `profile` slot for a profile the field list can't express. This
+  keeps the [§7](#7-uiux-and-accessibility-conventions) guardrails in one
+  place.
 - **Graphs are optional.** A tuner with no meaningful simulation passes no
   graph tabs. Security hardening is mostly a checklist, for example. The tune
-  step then uses the full width and the impact bar is hidden. Charts render
+  step then uses the full width and the impact bar is hidden. (Not built yet:
+  `defineTuner` still requires graph tabs, and `defaultTab` must name one.)
+  The domain lists its tabs as `graphTabs` (`{ id, label, component, blurb }`)
+  and its `simulation` module. Charts render
   inside `ui/charts/ChartFrame.vue`, which takes a required `ariaLabel` and the
   height, and they take colours from `ui/charts/palette.js`. Simulations name
   a palette `tone` (such as `'danger'`) rather than a colour. The palette also
@@ -394,8 +415,9 @@ so that a new variant is an addition rather than an edit to shared code.
 - **Simulation** binding. A tuner exports pure functions from
   `simulation.js`, and one generic `ui/useTunerSimulation(store, simulation)`
   turns them into computeds keyed by function name. Callers pass the module
-  (`import * as simulation`): the view passes its own store, charts pass
-  `useActiveTuner()`. There are no per-tuner composables.
+  (`import * as simulation`): `TunerPage` passes the domain's module with its
+  store for `impactSummary`, and charts pass `useActiveTuner()`. There are no
+  per-tuner composables.
 - **Config output** (`core/output/`). `generateConfig` returns a list of files,
   `{ path, content }[]`, built with the writers:
   - `files.js`: `configFile(path, lines)` checks the path against the §10
@@ -443,8 +465,10 @@ from it. `registry.test.js` checks the shape and that the live ids match
 
 A `planned` entry renders only a "Coming soon" card and gets no route. That
 makes the [no-thin-pages rule](#6-adding-a-tuner) mechanical rather than
-something to remember. The lazy `import()` of each live tuner's page stays in
-`router.js` (`TUNER_VIEWS`, keyed by id), next to the registry. That keeps each tuner in its own chunk.
+something to remember. The lazy `import()` of each live tuner's domain module
+stays in `router.js` (`TUNER_DOMAIN_LOADERS`, keyed by id), next to the
+registry; `TUNER_VIEWS` wraps each one in a route component that renders
+`TunerPage`. That keeps each tuner in its own chunk.
 
 ### Contract tests
 

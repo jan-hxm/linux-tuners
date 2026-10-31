@@ -1,26 +1,24 @@
 // @vitest-environment happy-dom
-// Smoke test: each tuner view mounts through TunerPage with no Vue warnings
-// or console errors, and renders its page copy and About content from data.
+// Smoke test: each tuner's route component (the shared TunerPage, rendered for
+// its domain) mounts with no Vue warnings or console errors, and renders its
+// page copy, About content and profile form from data.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import SwapTunerView from './swap/View.vue'
-import SystemdTunerView from './systemd/View.vue'
-import { swapDomain } from '@/tuners/swap/index.js'
-import { systemdDomain } from '@/tuners/systemd/index.js'
+import { TUNER_VIEWS } from '@/router.js'
+import { TUNER_DOMAINS } from './domains.js'
 
 // Chart.js needs a real canvas; the charts have their own tests.
 const CHARTS = ['PressureChart', 'WatermarkChart', 'DirtyChart', 'CpuShareChart', 'MemoryBudgetChart', 'TasksChart']
 const stubs = Object.fromEntries(CHARTS.map((name) => [name, { template: `<div class="chart-stub" data-chart="${name}" />` }]))
 
-describe.each([
-  ['swap', SwapTunerView, swapDomain],
-  ['systemd', SystemdTunerView, systemdDomain],
-])('%s view', (_id, View, domain) => {
+describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('%s view', (id, domain) => {
   let warn
   let error
+  let View
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    View = await TUNER_VIEWS[id]()
     setActivePinia(createPinia())
     history.replaceState(null, '', '/')
     warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -49,6 +47,15 @@ describe.each([
     // Inline markup renders as elements, never as literal markup characters.
     expect(wrapper.find('header code').exists()).toBe(true)
     expect(wrapper.text()).not.toMatch(/`|\*\*/)
+    wrapper.unmount()
+  })
+
+  it('renders the profile form from the field list', () => {
+    const wrapper = mount(View, { global: { stubs } })
+    const step = wrapper.find(`#${domain.page.profileStep.id}`)
+    expect(step.findAll('h2').map((h) => h.text())).toContain(domain.profile.title)
+    expect(step.find('button[type="submit"]').text()).toBe(domain.profile.applyLabel)
+    for (const field of domain.profile.fields) expect(step.text(), field.key).toContain(field.label)
     wrapper.unmount()
   })
 

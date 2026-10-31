@@ -1,8 +1,16 @@
-import { FAST_SWAP_DEVICES } from './parameters.js'
 import { PARAMETER_DEFS_BY_KEY } from './defs.js'
 
 const KIB_PER_GIB = 1024 * 1024
 const KIB_PER_MIB = 1024
+
+/**
+ * Fast (in-memory / compressed) swap devices for which swappiness > 100 is
+ * *advisable*. Note this is about what makes sense, not what the kernel allows:
+ * kernel 5.8+ accepts 0–200 on any device — the 200 cap is a kernel-version
+ * limit, not a device limit (see swappinessKernelMax). These devices just make
+ * high values pay off, so deriveDefaults biases them upward.
+ */
+export const FAST_SWAP_DEVICES = /** @type {import('./profile.js').SwapDevice[]} */ (['zram', 'zswap'])
 
 /**
  * Compute hardware-aware defaults for every vm.* parameter.
@@ -12,8 +20,8 @@ const KIB_PER_MIB = 1024
  *  - per-workload overrides (k8s, database, …)
  *  - per-device caps (e.g. swappiness capped at 100 on rotational disks)
  *
- * @param {import('./parameters.js').HardwareSpec} hw
- * @returns {import('./parameters.js').ParameterValues}
+ * @param {import('./profile.js').HardwareSpec} hw
+ * @returns {import('./defs.js').ParameterValues}
  */
 export function deriveDefaults(hw) {
   const ramKib = hw.ramGiB * KIB_PER_GIB
@@ -102,7 +110,7 @@ export function deriveDefaults(hw) {
  *  - Network swap: cap at 30 — swapping over the network is already slow.
  *
  * @param {number} value
- * @param {import('./parameters.js').SwapDevice} device
+ * @param {import('./profile.js').SwapDevice} device
  * @returns {number}
  */
 export function clampSwappinessForDevice(value, device) {
@@ -145,7 +153,7 @@ export function swappinessKernelMax(kernelVersion) {
  * the "exceeds recommended cap" validation warning. It is deliberately NOT the
  * slider's hard max; see swappinessKernelMax for that.
  *
- * @param {import('./parameters.js').SwapDevice} device
+ * @param {import('./profile.js').SwapDevice} device
  */
 export function swappinessMaxForDevice(device) {
   switch (device) {
@@ -200,7 +208,7 @@ export function watermarkLevelsMiB(ramGiB, minFreeKb, watermarkScaleFactor) {
  * to the kernel range from defs.js when there's no hardware-derived bound.
  *
  * @param {string} key
- * @param {import('./parameters.js').HardwareSpec} hw
+ * @param {import('./profile.js').HardwareSpec} hw
  * @returns {{ min: number, max: number }}
  */
 export function rangeFor(key, hw) {

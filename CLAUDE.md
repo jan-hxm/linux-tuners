@@ -27,7 +27,7 @@ Each links to its full rationale in Design.md.
 - **Shared-link state is untrusted input**: keep the schema checks, rounding and preset-id check in serialization / `restoreState`. [§5 Shareable URL state](Design.md#shareable-url-state)
 - **Don't bind `:value` on the range input** in `ui/controls/SliderControl.vue`; it cancels Chromium drags. [§5 Range slider](Design.md#range-slider-uncontrolled-with-external-sync)
 - **Don't reintroduce a custom consent banner**; Google's CMP handles consent. [§5 Ads and consent](Design.md#ads-and-consent)
-- **A view can't `inject()` what it `provide()`s**: pass the store explicitly to view-level composables. [§5 Domain modules](Design.md#domain-modules-behind-a-shared-store-and-ui)
+- **A component can't `inject()` what it `provide()`s**: `TunerPage` passes its store explicitly to its own composables. [§5 Domain modules](Design.md#domain-modules-behind-a-shared-store-and-ui)
 - **UI/UX + accessibility guardrails** (mobile impact bar, real buttons with `aria-expanded`, tablist arrow keys, focus-trapping drawers, chart `aria-label`s, type and contrast floors). [§7](Design.md#7-uiux-and-accessibility-conventions)
 - **New tuners** follow the checklist, and get no route entry until they work. [§6](Design.md#6-adding-a-tuner)
 - **Reuse before writing**: data first, then configure shared code, then tuner-local, and promote when a second tuner needs it. Never copy between tuners or branch on a tuner id in shared code. [§9](Design.md#9-code-organization-and-reuse)

@@ -2,10 +2,10 @@
 import { computed } from 'vue'
 
 /**
- * A labelled integer input paired with a row of quick-pick chips — the shared
- * building block for hardware/system-profile fields (Total RAM, swap size, CPU
- * cores, kernel.pid_max). Both forms use this so the inputs look and behave
- * identically. Two-way bound via v-model; the parent owns clamping on apply.
+ * A labelled number input paired with a row of quick-pick chips, used by
+ * ProfileForm for every `number` profile field (Total RAM, swap size, CPU
+ * cores, kernel.pid_max). Two-way bound via v-model; the form snaps and clamps
+ * on apply.
  *
  * Picks may be bare numbers or `{ value, label }` objects (see fieldOptions.js).
  * Rich help text can be passed through the `#help` slot; plain text via `help`.

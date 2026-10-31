@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { deriveDefaults, rangeFor, cpuQuotaNoLimit } from './calculations.js'
-import { DEFAULT_SYSTEMD_SPEC } from './parameters.js'
+import { DEFAULT_SYSTEMD_SPEC } from './profile.js'
 
 function spec(overrides = {}) {
   return { ...DEFAULT_SYSTEMD_SPEC, ...overrides }

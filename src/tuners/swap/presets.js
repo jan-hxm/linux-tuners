@@ -10,7 +10,7 @@ import { PARAMETER_DEFS_BY_KEY } from './defs.js'
  * @property {string}   label          Short label for the chip
  * @property {string}   description    One-line summary shown under the chip
  * @property {string}   source         Citation for where the values come from
- * @property {Partial<import('./parameters.js').ParameterValues>} values
+ * @property {Partial<import('./defs.js').ParameterValues>} values
  */
 
 /** @type {Preset[]} */

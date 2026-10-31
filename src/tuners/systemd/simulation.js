@@ -15,8 +15,8 @@ const TOP_LEVEL_SLICES = ['system.slice', 'user.slice', 'machine.slice']
  * saturated CPU between sibling slices in proportion to cpu.weight. Every
  * top-level slice defaults to weight 100; the tuned slice uses cpu_weight.
  *
- * @param {import('./parameters.js').SystemdSpec} hw
- * @param {import('./parameters.js').SystemdValues} p
+ * @param {import('./profile.js').SystemdSpec} hw
+ * @param {import('./defs.js').SystemdValues} p
  */
 export function cpuShares(hw, p) {
   const weights = TOP_LEVEL_SLICES.map((slice) => ({
@@ -43,8 +43,8 @@ export function cpuShares(hw, p) {
  * is the soft throttle line, MemoryMax the hard OOM cap; both are percentages of
  * RAM here (100 = infinity / unset).
  *
- * @param {import('./parameters.js').SystemdSpec} hw
- * @param {import('./parameters.js').SystemdValues} p
+ * @param {import('./profile.js').SystemdSpec} hw
+ * @param {import('./defs.js').SystemdValues} p
  */
 export function memoryBudget(hw, p) {
   const totalMiB = hw.ramGiB * 1024
@@ -85,8 +85,8 @@ export function memoryBudget(hw, p) {
  * Task-cap headroom: the slice TasksMax and the per-unit DefaultTasksMax as a
  * fraction of the kernel PID space (kernel.pid_max).
  *
- * @param {import('./parameters.js').SystemdSpec} hw
- * @param {import('./parameters.js').SystemdValues} p
+ * @param {import('./profile.js').SystemdSpec} hw
+ * @param {import('./defs.js').SystemdValues} p
  */
 export function tasksUsage(hw, p) {
   const bars = [
@@ -99,8 +99,8 @@ export function tasksUsage(hw, p) {
 /**
  * Three at-a-glance impact metrics for the cards under the chart.
  *
- * @param {import('./parameters.js').SystemdSpec} hw
- * @param {import('./parameters.js').SystemdValues} p
+ * @param {import('./profile.js').SystemdSpec} hw
+ * @param {import('./defs.js').SystemdValues} p
  * @returns {{id:string,label:string,value:string,band:string}[]}
  */
 export function impactSummary(hw, p) {

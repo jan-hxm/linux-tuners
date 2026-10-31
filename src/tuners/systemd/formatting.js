@@ -27,7 +27,7 @@ export function formatBytes(bytes) {
 /**
  * @param {number} value
  * @param {Object} def   The parameter def (uses def.unit)
- * @param {import('./parameters.js').SystemdSpec} hw
+ * @param {import('./profile.js').SystemdSpec} hw
  */
 export function formatValue(value, def, hw) {
   switch (def.unit) {

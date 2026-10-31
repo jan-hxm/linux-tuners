@@ -10,8 +10,8 @@ import { SYSTEMD_DEFS_BY_KEY } from './defs.js'
  * DefaultTasksMax rule, the 1024:524288 / 8M limit defaults) come straight from
  * the man pages — see defs.js sources.
  *
- * @param {import('./parameters.js').SystemdSpec} hw
- * @returns {import('./parameters.js').SystemdValues}
+ * @param {import('./profile.js').SystemdSpec} hw
+ * @returns {import('./defs.js').SystemdValues}
  */
 export function deriveDefaults(hw) {
   // DefaultTasksMax = 15% of kernel.pid_max (systemd-system.conf(5)).
@@ -88,7 +88,7 @@ export function deriveDefaults(hw) {
  * Suggested min/max for each slider, taking the system profile into account.
  *
  * @param {string} key
- * @param {import('./parameters.js').SystemdSpec} hw
+ * @param {import('./profile.js').SystemdSpec} hw
  * @returns {{ min: number, max: number }}
  */
 export function rangeFor(key, hw) {

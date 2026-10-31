@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useTunerStore } from '@/tuners/swap/store.js'
+import { useTunerStoreFor } from '@/core/createTunerStore.js'
+import { swapDomain } from '@/tuners/swap/index.js'
 
 describe('tuner store — syncUrl', () => {
   beforeEach(() => {
@@ -15,7 +16,7 @@ describe('tuner store — syncUrl', () => {
   })
 
   it('writes the hash without discarding the router history state', () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     store.setParam('swappiness', 42)
     vi.advanceTimersByTime(500)
     expect(window.location.hash.length).toBeGreaterThan(1)
@@ -23,7 +24,7 @@ describe('tuner store — syncUrl', () => {
   })
 
   it('does not write onto another route if the user navigated away within the debounce', () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     store.setParam('swappiness', 42)
     history.pushState(null, '', '/systemd')
     vi.advanceTimersByTime(500)

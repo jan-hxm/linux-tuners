@@ -3,8 +3,8 @@ import { computed, nextTick } from 'vue'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 
 /**
- * Generic live-simulation panel. The tuner view passes in the set of tabs (each
- * naming the chart component to render) and the reactive `impact` summary array;
+ * Generic live-simulation panel. TunerPage passes in the domain's graph tabs
+ * (each naming the chart component to render) and the reactive `impact` summary array;
  * everything else — the tab strip, the active-tab wiring through the store, the
  * impact cards — is shared between the swap and systemd tuners.
  */

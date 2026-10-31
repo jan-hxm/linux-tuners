@@ -5,15 +5,18 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
-import { DEFAULT_SYSTEMD_SPEC, SYSTEMD_KEYS, SYSTEMD_SPEC_SCHEMA } from './parameters.js'
-import { SYSTEMD_DEFS_BY_KEY, SYSTEMD_RESOURCE_DOCS } from './defs.js'
+import { PROFILE } from './profile.js'
+import { SYSTEMD_KEYS, SYSTEMD_DEFS_BY_KEY, SYSTEMD_RESOURCE_DOCS } from './defs.js'
 import { deriveDefaults, rangeFor, cpuQuotaNoLimit } from './calculations.js'
 import { validate, hasBlockingIssue } from './validation.js'
 import { generateConfig } from './config.js'
 import { SYSTEMD_PRESETS, SYSTEMD_PRESETS_BY_ID } from './presets.js'
 import { formatValue } from './formatting.js'
-import { makeSerialization } from '@/core/serialization.js'
 import { PAGE, ABOUT } from './about.js'
+import * as simulation from './simulation.js'
+import CpuShareChart from './components/CpuShareChart.vue'
+import MemoryBudgetChart from './components/MemoryBudgetChart.vue'
+import TasksChart from './components/TasksChart.vue'
 
 const SECTIONS = [
   {
@@ -40,12 +43,11 @@ const SECTIONS = [
   },
 ]
 
-const { encodeState, decodeState } = makeSerialization({
-  parameterKeys: SYSTEMD_KEYS,
-  defsByKey: SYSTEMD_DEFS_BY_KEY,
-  defaultHardware: DEFAULT_SYSTEMD_SPEC,
-  hardwareSchema: SYSTEMD_SPEC_SCHEMA,
-})
+const GRAPH_TABS = [
+  { id: 'cpu', label: 'CPU shares', component: CpuShareChart, blurb: 'How CPUWeight splits a saturated CPU between this slice and its siblings.' },
+  { id: 'memory', label: 'Memory budget', component: MemoryBudgetChart, blurb: 'MemoryHigh throttle band and the MemoryMax hard cap, against total RAM.' },
+  { id: 'tasks', label: 'Task & FD caps', component: TasksChart, blurb: 'TasksMax and DefaultTasksMax as a share of the kernel PID space.' },
+]
 
 /**
  * Reference-drawer formulas for the parameters where a derived number genuinely
@@ -103,7 +105,7 @@ function formula(def, { hardware, params }) {
 
 export const systemdDomain = defineTuner({
   id: 'systemd',
-  defaultHardware: DEFAULT_SYSTEMD_SPEC,
+  profile: PROFILE,
   parameterKeys: SYSTEMD_KEYS,
   defsByKey: SYSTEMD_DEFS_BY_KEY,
   deriveDefaults,
@@ -116,9 +118,9 @@ export const systemdDomain = defineTuner({
   presetsById: SYSTEMD_PRESETS_BY_ID,
   generateConfig,
   outputFilename: 'systemd-resource-tuning.conf',
-  encodeState,
-  decodeState,
   defaultTab: 'cpu',
+  graphTabs: GRAPH_TABS,
+  simulation,
   workloads: ['container-host', 'kubernetes', 'database', 'general', 'desktop'],
   workloadField: 'workload',
   context: { badge: 'host', label: 'Container host', url: SYSTEMD_RESOURCE_DOCS },

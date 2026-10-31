@@ -7,7 +7,7 @@
  *
  * A `planned` entry gets only a "Coming soon" card: no path, no route, no
  * sitemap entry. Flip it to `live` only once the tuner works (Design.md §6),
- * and add its lazy view loader to TUNER_VIEWS in src/router.js.
+ * and add its lazy domain loader to TUNER_DOMAIN_LOADERS in src/router.js.
  */
 
 /**

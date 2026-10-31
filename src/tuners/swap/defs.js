@@ -8,6 +8,19 @@
  * @typedef {'memory-reclaim' | 'dirty-writeback' | 'oom-overcommit'} ParameterGroup
  * @typedef {'slider' | 'segmented' | 'toggle' | 'select'} ControlKind  A name in ui/controls
  *
+ * @typedef {Object} ParameterValues
+ * @property {number} swappiness                 0–200 on kernel ≥5.8, else 0–100
+ * @property {number} min_free_kbytes            In kB
+ * @property {number} watermark_scale_factor     Tenths of a per-cent (kernel raw units)
+ * @property {number} vfs_cache_pressure         0–500
+ * @property {number} dirty_ratio                Percent of available memory
+ * @property {number} dirty_background_ratio     Percent of available memory
+ * @property {number} dirty_expire_centisecs     1/100 s
+ * @property {number} dirty_writeback_centisecs  1/100 s
+ * @property {0|1|2}  overcommit_memory          Kernel mode
+ * @property {number} overcommit_ratio           Only meaningful when overcommit_memory = 2
+ * @property {0|1}    panic_on_oom               Reboot-on-OOM toggle
+ *
  * @typedef {Object} ParameterDef
  * @property {string}         key            Matches a key on ParameterValues
  * @property {string}         sysctlName     The dotted name as written to sysctl.conf
@@ -270,3 +283,6 @@ export const PARAMETER_DEFS = [
 export const PARAMETER_DEFS_BY_KEY = Object.fromEntries(
   PARAMETER_DEFS.map((p) => [p.key, p]),
 )
+
+/** All parameter keys, in display order. */
+export const PARAMETER_KEYS = /** @type {(keyof ParameterValues)[]} */ (PARAMETER_DEFS.map((p) => p.key))

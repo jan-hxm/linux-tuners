@@ -24,8 +24,8 @@ function slicePath(slice) {
 
 /**
  * @param {Object} opts
- * @param {import('./parameters.js').SystemdSpec} opts.hardware
- * @param {import('./parameters.js').SystemdValues} opts.params
+ * @param {import('./profile.js').SystemdSpec} opts.hardware
+ * @param {import('./defs.js').SystemdValues} opts.params
  * @param {string|null} [opts.presetLabel]
  * @param {boolean}     [opts.customised]
  * @param {Date}        [opts.now]

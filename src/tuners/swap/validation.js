@@ -18,8 +18,8 @@ import { swappinessMaxForDevice } from './calculations.js'
 const KIB_PER_GIB = 1024 * 1024
 
 /**
- * @param {import('./parameters.js').HardwareSpec} hw
- * @param {import('./parameters.js').ParameterValues} p
+ * @param {import('./profile.js').HardwareSpec} hw
+ * @param {import('./defs.js').ParameterValues} p
  * @returns {ValidationIssue[]}
  */
 export function validate(hw, p) {
@@ -150,7 +150,7 @@ export function validate(hw, p) {
   return issues
 }
 
-/** @param {import('./parameters.js').SwapDevice} device */
+/** @param {import('./profile.js').SwapDevice} device */
 function describeDevice(device) {
   switch (device) {
     case 'hdd':

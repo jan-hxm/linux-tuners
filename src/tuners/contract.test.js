@@ -12,6 +12,7 @@ import { parseRichText } from '@/ui/richText.js'
 import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
 import { differingKeys, valueTypeOf } from '@/core/valueTypes.js'
 import { CONTROLS } from '@/ui/controls/index.js'
+import { normalizeField } from '@/core/profile.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
 const EM_DASH = '—'
@@ -219,6 +220,29 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
       expect(() => assertTuner(domain)).not.toThrow()
     })
 
+    it('has profile picks and options the field itself accepts', () => {
+      for (const field of domain.profile.fields) {
+        for (const pick of field.picks ?? []) {
+          const value = typeof pick === 'object' ? pick.value : pick
+          expect(normalizeField(field, value), `${field.key} pick ${value}`).toBe(value)
+        }
+        if (field.type === 'choice') {
+          const values = field.options.map((o) => o.value)
+          expect(new Set(values).size, field.key).toBe(values.length)
+        }
+      }
+    })
+
+    it('summarises every profile as rich text with no stray markup', () => {
+      const label = (key, value) => domain.profile.fields.find((f) => f.key === key).options.find((o) => o.value === value).label
+      for (const hw of profilesFor(domain)) {
+        const text = domain.profile.summary(hw, label).join(' · ')
+        for (const seg of parseRichText(text)) {
+          if (seg.type === 'text') expect(seg.text, text).not.toMatch(/`|\*\*|\]\(/)
+        }
+      }
+    })
+
     it('has a def with docs, descriptions, a known type and a control for that type', () => {
       for (const key of domain.parameterKeys) {
         const def = domain.defsByKey[key]
@@ -391,6 +415,8 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         domain.docsLabel,
         ...strings(domain.page),
         ...strings(domain.about),
+        ...strings(domain.profile),
+        ...strings(domain.graphTabs.map(({ label, blurb }) => ({ label, blurb }))),
       ]
       for (const state of legitimateStates(domain)) {
         shown.push(...domain.validate(state.hardware, state.params).map((i) => i.message))

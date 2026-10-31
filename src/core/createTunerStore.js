@@ -8,10 +8,10 @@ const URL_DEBOUNCE_MS = 200
  * shape (hardware + params + preset + tab + drawer) and all of its actions are
  * generic; everything domain-specific (how defaults are derived, how a value is
  * clamped, what counts as a validation issue, how state is (de)serialised) is
- * delegated to the `domain` object. Swap and systemd each instantiate this with
- * their own domain — see src/tuners/<id>/index.js.
+ * delegated to the `domain` object. Tuners don't call this themselves: the
+ * page shell gets each tuner's store through `useTunerStoreFor(domain)`.
  *
- * @param {string} id  Unique Pinia store id (e.g. 'tuner', 'systemd')
+ * @param {string} id  Unique Pinia store id (the domain id)
  * @param {import('@/core/types.js').TunerDomain} domain
  */
 export function defineTunerStore(id, domain) {
@@ -147,6 +147,24 @@ export function defineTunerStore(id, domain) {
       },
     },
   })
+}
+
+/** One store definition per domain object, so every caller shares its state. */
+const STORE_DEFINITIONS = new WeakMap()
+
+/**
+ * The tuner's store, keyed by its domain id. Used by the page shell and by
+ * tests that need a real tuner's store.
+ *
+ * @param {import('@/core/types.js').TunerDomain} domain
+ */
+export function useTunerStoreFor(domain) {
+  let useStore = STORE_DEFINITIONS.get(domain)
+  if (!useStore) {
+    useStore = defineTunerStore(domain.id, domain)
+    STORE_DEFINITIONS.set(domain, useStore)
+  }
+  return useStore()
 }
 
 function restoreFromUrlHash(domain) {

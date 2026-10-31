@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { cpuShares, memoryBudget } from './simulation.js'
 import { deriveDefaults } from './calculations.js'
-import { DEFAULT_SYSTEMD_SPEC } from './parameters.js'
+import { DEFAULT_SYSTEMD_SPEC } from './profile.js'
 import { PALETTE } from '@/ui/charts/palette.js'
 
 const hw = { ...DEFAULT_SYSTEMD_SPEC }

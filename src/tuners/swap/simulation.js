@@ -34,8 +34,8 @@ const DIRTY_BG_FLUSH_EFFICIENCY = 0.6 // bg flusher absorbs 60% of incoming rate
  * The watermark_scale_factor widens the kswapd band — visible as a wider shaded
  * region in the chart and a gentler swap-onset slope.
  *
- * @param {import('./parameters.js').HardwareSpec} hw
- * @param {import('./parameters.js').ParameterValues} params
+ * @param {import('./profile.js').HardwareSpec} hw
+ * @param {import('./defs.js').ParameterValues} params
  */
 export function pressureCurve(hw, params) {
   const totalMiB = hw.ramGiB * 1024
@@ -94,8 +94,8 @@ export function pressureCurve(hw, params) {
  * Also produces a /proc/zoneinfo-style code block for users who recognise the
  * format from the K8s blog illustration.
  *
- * @param {import('./parameters.js').HardwareSpec} hw
- * @param {import('./parameters.js').ParameterValues} params
+ * @param {import('./profile.js').HardwareSpec} hw
+ * @param {import('./defs.js').ParameterValues} params
  */
 export function watermarkBars(hw, params) {
   const lv = watermarkLevelsMiB(hw.ramGiB, params.min_free_kbytes, params.watermark_scale_factor)
@@ -137,8 +137,8 @@ function renderZoneInfo(lv, totalMiB) {
  * dirty crosses dirty_background_ratio; writes synchronously stall at
  * dirty_ratio.
  *
- * @param {import('./parameters.js').HardwareSpec} hw
- * @param {import('./parameters.js').ParameterValues} params
+ * @param {import('./profile.js').HardwareSpec} hw
+ * @param {import('./defs.js').ParameterValues} params
  */
 export function dirtyTimeline(hw, params) {
   const bg = params.dirty_background_ratio
@@ -200,8 +200,8 @@ export function dirtyTimeline(hw, params) {
  * chart. Each metric is a value plus a qualitative band ('low'/'med'/'high')
  * for colour-coding.
  *
- * @param {import('./parameters.js').HardwareSpec} hw
- * @param {import('./parameters.js').ParameterValues} params
+ * @param {import('./profile.js').HardwareSpec} hw
+ * @param {import('./defs.js').ParameterValues} params
  */
 export function impactSummary(hw, params) {
   const lv = watermarkLevelsMiB(hw.ramGiB, params.min_free_kbytes, params.watermark_scale_factor)

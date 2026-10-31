@@ -1,3 +1,4 @@
+import { h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import {
   ROUTES_META,
@@ -10,13 +11,27 @@ import {
 } from './routes-meta.js'
 import { LIVE_TUNERS } from './tuners/registry.js'
 
-// Lazy-loaded view per live tuner, keyed by registry id. Kept here rather than
-// in the registry so the registry stays plain data and each tuner gets its own
-// chunk. Every live registry entry needs one (src/tuners/registry.test.js).
-export const TUNER_VIEWS = {
-  swap: () => import('@/tuners/swap/View.vue'),
-  systemd: () => import('@/tuners/systemd/View.vue'),
+// Lazy-loaded domain module per live tuner, keyed by registry id. Kept here
+// rather than in the registry so the registry stays plain data and each tuner
+// gets its own chunk. Every live registry entry needs one
+// (src/tuners/registry.test.js).
+const TUNER_DOMAIN_LOADERS = {
+  swap: () => import('@/tuners/swap/index.js').then((m) => m.swapDomain),
+  systemd: () => import('@/tuners/systemd/index.js').then((m) => m.systemdDomain),
 }
+
+/** A lazy route component that renders the shared TunerPage for one domain. */
+function tunerView(loadDomain) {
+  return () =>
+    Promise.all([loadDomain(), import('@/ui/TunerPage.vue')]).then(([domain, { default: TunerPage }]) => ({
+      name: `TunerView-${domain.id}`,
+      render: () => h(TunerPage, { domain }),
+    }))
+}
+
+export const TUNER_VIEWS = Object.fromEntries(
+  Object.entries(TUNER_DOMAIN_LOADERS).map(([id, load]) => [id, tunerView(load)]),
+)
 
 const PAGE_VIEWS = {
   '/': () => import('@/views/LandingView.vue'),

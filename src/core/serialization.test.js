@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { compressToEncodedURIComponent } from 'lz-string'
-import { DEFAULT_HARDWARE } from '@/tuners/swap/parameters.js'
+import { DEFAULT_HARDWARE } from '@/tuners/swap/profile.js'
 import { deriveDefaults } from '@/tuners/swap/calculations.js'
 import { swapDomain } from '@/tuners/swap/index.js'
 import { systemdDomain } from '@/tuners/systemd/index.js'

@@ -4,7 +4,7 @@ import { markRaw } from 'vue'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import GraphPanel from './GraphPanel.vue'
-import { useTunerStore } from '@/tuners/swap/store.js'
+import { useTunerStoreFor } from '@/core/createTunerStore.js'
 import { swapDomain } from '@/tuners/swap/index.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
 
@@ -29,7 +29,7 @@ describe('GraphPanel', () => {
   })
 
   it('falls back to the first tab when the store holds an unknown tab id', () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     store.activeTab = 'no-such-tab' // e.g. from a stale share link
     const wrapper = mountPanel(store)
 
@@ -40,7 +40,7 @@ describe('GraphPanel', () => {
   })
 
   it('arrow keys still move the selection after the fallback', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     store.activeTab = 'no-such-tab'
     const wrapper = mountPanel(store)
 

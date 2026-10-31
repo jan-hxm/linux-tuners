@@ -13,8 +13,8 @@
  */
 
 /**
- * @param {import('./parameters.js').SystemdSpec} hw
- * @param {import('./parameters.js').SystemdValues} p
+ * @param {import('./profile.js').SystemdSpec} hw
+ * @param {import('./defs.js').SystemdValues} p
  * @returns {ValidationIssue[]}
  */
 export function validate(hw, p) {

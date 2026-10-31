@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { generateConfig as generateFiles } from './config.js'
 import { combineFiles } from '@/core/output/files.js'
-import { DEFAULT_HARDWARE } from './parameters.js'
+import { DEFAULT_HARDWARE } from './profile.js'
 import { deriveDefaults } from './calculations.js'
 
 const fixedDate = new Date('2026-05-28T00:00:00Z')

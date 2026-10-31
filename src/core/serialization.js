@@ -1,5 +1,6 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
 import { valueTypeOf } from './valueTypes.js'
+import { matchesRule, snapToStep } from './profile.js'
 
 /**
  * Versioned envelope so we can evolve the URL format later without breaking
@@ -19,7 +20,7 @@ const SCHEMA_VERSION = 1
  * @param {readonly string[]} opts.parameterKeys  Every key that must be present
  * @param {Record<string, Object>} opts.defsByKey  Defs, for each value's type
  * @param {Object} opts.defaultHardware           Fallback hardware shape
- * @param {Object} opts.hardwareSchema            Allowed value per hardware field
+ * @param {Object} opts.hardwareSchema            Allowed value per hardware field (core/profile.js profileSchema)
  * @param {number} [opts.version]                 Schema version tag
  */
 export function makeSerialization({ parameterKeys, defsByKey, defaultHardware, hardwareSchema, version = SCHEMA_VERSION }) {
@@ -91,24 +92,3 @@ function isPlainObject(v) {
   return v !== null && typeof v === 'object' && !Array.isArray(v)
 }
 
-/**
- * @param {*} value
- * @param {string[] | { min: number, max: number, step?: number } | RegExp} rule
- * @param {*} fallback  The field's default; a null default means null is allowed
- */
-function matchesRule(value, rule, fallback) {
-  if (value === null) return fallback === null
-  if (Array.isArray(rule)) return rule.includes(value)
-  if (rule instanceof RegExp) return typeof value === 'string' && rule.test(value)
-  return Number.isFinite(value) && value >= rule.min && value <= rule.max
-}
-
-/**
- * Round a numeric field to its schema step, so a link can't carry values the
- * form never produces (e.g. 0.3 GiB of RAM, which yields fractional byte
- * counts downstream). Non-numeric and step-less rules pass through.
- */
-function snapToStep(value, rule) {
-  if (typeof value !== 'number' || !rule.step) return value
-  return Math.max(rule.min, Math.min(rule.max, Math.round(value / rule.step) * rule.step))
-}

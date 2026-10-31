@@ -4,12 +4,17 @@
  * four steps (profile, preset, tune, export), ad slot, About section, info
  * drawer, and the mobile impact bar with its spacer (Design.md §7). It
  * provides the store and domain to the shared components below it, including
- * whatever the view passes into the `profile` slot.
+ * whatever goes into the `profile` slot.
  *
- * A view only supplies configuration: store, domain, graph tabs, impact
- * metrics and its profile form. All copy comes from the domain's about.js.
+ * Everything comes from the domain: the profile field list (rendered by
+ * ProfileForm unless the `profile` slot replaces it), graph tabs, the
+ * simulation behind the impact metrics, and the copy from about.js. The
+ * router renders this directly for each live tuner.
  */
-import { provide } from 'vue'
+import { provide, computed } from 'vue'
+import { useTunerStoreFor } from '@/core/createTunerStore.js'
+import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
+import ProfileForm from '@/ui/profile/ProfileForm.vue'
 import PresetSelector from '@/ui/PresetSelector.vue'
 import ParameterPanel from '@/ui/ParameterPanel.vue'
 import GraphPanel from '@/ui/GraphPanel.vue'
@@ -23,17 +28,18 @@ import RichText from '@/ui/RichText.vue'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
 
 const props = defineProps({
-  store: { type: Object, required: true },
   /** @type {import('@/core/types.js').TunerDomain} */
   domain: { type: Object, required: true },
-  /** GraphPanel tabs: { id, label, component, blurb }[] */
-  graphTabs: { type: Array, required: true },
-  /** Impact metrics for GraphPanel and the mobile impact bar. */
-  impact: { type: Array, default: () => [] },
 })
 
-provide(TUNER_STORE_KEY, props.store)
+const store = useTunerStoreFor(props.domain)
+provide(TUNER_STORE_KEY, store)
 provide(TUNER_DOMAIN_KEY, props.domain)
+
+const graphTabs = props.domain.graphTabs
+const simulation = useTunerSimulation(store, props.domain.simulation)
+/** Impact metrics for GraphPanel and the mobile impact bar. */
+const impact = computed(() => simulation.impactSummary?.value ?? [])
 
 const page = props.domain.page
 
@@ -80,7 +86,7 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
 
     <section :id="page.profileStep.id" class="space-y-3 scroll-mt-16">
       <StepHeader :num="1" :title="page.profileStep.title" :subtitle="page.profileStep.subtitle" />
-      <slot name="profile" />
+      <slot name="profile"><ProfileForm /></slot>
     </section>
 
     <section id="preset" class="space-y-3 scroll-mt-16">

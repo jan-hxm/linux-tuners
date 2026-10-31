@@ -1,8 +1,8 @@
 /**
- * Shared option lists and helpers for the hardware/system-profile forms, so the
- * swap tuner (HardwareForm) and systemd tuner (SystemProfileForm) present the
- * *same* quick-pick chips and clamping for the fields they have in common (RAM
- * above all). Consumed together with NumberPickField.vue.
+ * Shared pick lists, ceilings and field fragments for the tuners' profile
+ * field lists (src/tuners/<id>/profile.js), so the tuners present the *same*
+ * quick-pick chips and limits for the fields they have in common (RAM above
+ * all). Rendered by ProfileForm.vue through NumberPickField.vue.
  *
  * Pick lists are arrays of either a bare number (label = the number) or a
  * `{ value, label }` object when the chip needs custom text.
@@ -45,26 +45,40 @@ export const PID_MAX_CEIL = 4194304
 export const RAM_MIN_GIB = 0.25 // 256 MiB
 export const SWAP_MIN_GIB = 0
 
-// Slider/spinner step for the size fields. 0.25 GiB (256 MiB) lets the spinner
-// reach the common sub-GiB sizes; typing any value still works, since apply()
-// clamps + rounds to MiB granularity via clampSize.
+// Sizes snap to MiB, so sub-GiB hosts are expressible without accumulating
+// binary-float noise (0.1 + 0.2 etc.); whole-GiB values stay exact.
+export const SIZE_SNAP_GIB = 1 / 1024
+
+// Spinner step for the size fields. 0.25 GiB (256 MiB) lets the spinner reach
+// the common sub-GiB sizes; any typed value still works, since apply snaps it
+// to SIZE_SNAP_GIB.
 export const SIZE_STEP_GIB = 0.25
 
-/** Floor to an int and clamp into [min, max]; non-numeric falls back to min. */
-export function clampInt(value, min, max) {
-  const n = Math.floor(Number(value))
-  if (!Number.isFinite(n)) return min
-  return Math.max(min, Math.min(max, n))
-}
+/** The Total RAM field; a tuner spreads it and adds its `default`. */
+export const RAM_FIELD = Object.freeze({
+  key: 'ramGiB',
+  type: 'number',
+  label: 'Total RAM (GiB)',
+  min: RAM_MIN_GIB,
+  max: RAM_MAX_GIB,
+  step: SIZE_SNAP_GIB,
+  inputStep: SIZE_STEP_GIB,
+  picks: RAM_PICKS,
+  help: ['Fractional values are allowed for small hosts, e.g. 0.5 = 512 MiB.'],
+})
 
-/**
- * Clamp a GiB size into [min, max], rounded to MiB granularity so sub-GiB hosts
- * are expressible without accumulating binary-float noise (0.1 + 0.2 etc.).
- * Whole-GiB values stay exact. Non-numeric falls back to min.
- */
-export function clampSize(value, min, max) {
-  const n = Number(value)
-  if (!Number.isFinite(n)) return min
-  const gib = Math.round(n * 1024) / 1024
-  return Math.max(min, Math.min(max, gib))
+/** cgroup v1/v2 options; each tuner supplies the note shown for the selection. */
+export function cgroupField({ v1, v2 }) {
+  return {
+    key: 'cgroupVersion',
+    type: 'choice',
+    control: 'segmented',
+    label: 'cgroup version',
+    options: [
+      { value: 'v1', label: 'v1', note: v1 },
+      { value: 'v2', label: 'v2', note: v2 },
+    ],
+    default: 'v2',
+    half: true,
+  }
 }

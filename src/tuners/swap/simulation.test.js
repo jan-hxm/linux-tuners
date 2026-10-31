@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { pressureCurve, watermarkBars, dirtyTimeline, impactSummary } from './simulation.js'
 import { deriveDefaults } from './calculations.js'
-import { DEFAULT_HARDWARE } from './parameters.js'
+import { DEFAULT_HARDWARE } from './profile.js'
 import { PALETTE } from '@/ui/charts/palette.js'
 
 const baseHw = { ...DEFAULT_HARDWARE }

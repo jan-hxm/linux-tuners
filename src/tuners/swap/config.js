@@ -21,8 +21,8 @@ const SECTIONS = [
 
 /**
  * @param {Object} opts
- * @param {import('./parameters.js').HardwareSpec} opts.hardware
- * @param {import('./parameters.js').ParameterValues} opts.params
+ * @param {import('./profile.js').HardwareSpec} opts.hardware
+ * @param {import('./defs.js').ParameterValues} opts.params
  * @param {string|null} [opts.presetLabel]   Human-readable preset label
  * @param {boolean}     [opts.customised]    Whether any param deviates from the preset
  * @param {Date}        [opts.now]           Date stamp (overridable for tests)
@@ -86,7 +86,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
  * runtime + kernel-cmdline dance for zswap, and a "you have none" note when
  * swapGiB is 0. Each block also covers persistence across reboots.
  *
- * @param {import('./parameters.js').HardwareSpec} hw
+ * @param {import('./profile.js').HardwareSpec} hw
  * @returns {string[]}
  */
 function swapSetupBlock(hw) {
@@ -175,7 +175,7 @@ function swapSetupBlock(hw) {
   return out
 }
 
-/** @param {import('./parameters.js').HardwareSpec} hw */
+/** @param {import('./profile.js').HardwareSpec} hw */
 function describeHardware(hw) {
   const swap = hw.swapGiB === 0 ? 'no swap' : `${formatSizeGiB(hw.swapGiB)} ${describeDevice(hw.swapDevice)} swap`
   return `${formatSizeGiB(hw.ramGiB)} RAM, ${swap}, ${describeWorkload(hw.workload)}`
@@ -221,8 +221,8 @@ function describeWorkload(w) {
  *
  * @param {*} def
  * @param {number} value
- * @param {import('./parameters.js').HardwareSpec} hw
- * @param {import('./parameters.js').ParameterValues} params
+ * @param {import('./profile.js').HardwareSpec} hw
+ * @param {import('./defs.js').ParameterValues} params
  */
 function commentFor(def, value, hw, params) {
   switch (def.key) {

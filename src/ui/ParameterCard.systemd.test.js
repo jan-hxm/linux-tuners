@@ -7,12 +7,12 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import ParameterCard from '@/ui/ParameterCard.vue'
-import { useSystemdStore } from '@/tuners/systemd/store.js'
+import { useTunerStoreFor } from '@/core/createTunerStore.js'
 import { systemdDomain } from '@/tuners/systemd/index.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
 
 function mountCard(paramKey) {
-  const store = useSystemdStore()
+  const store = useTunerStoreFor(systemdDomain)
   const wrapper = mount(ParameterCard, {
     props: { paramKey },
     global: { provide: { [TUNER_STORE_KEY]: store, [TUNER_DOMAIN_KEY]: systemdDomain } },

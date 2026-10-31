@@ -5,8 +5,8 @@ import { computed } from 'vue'
  * one computed per function, keyed by the function's name. Each re-runs only
  * when the store's hardware or params change.
  *
- * Views pass their own store (they sit above TunerPage, so can't inject it);
- * chart components pass `useActiveTuner()`.
+ * TunerPage passes the store it provides (a component can't inject what it
+ * provides itself); chart components pass `useActiveTuner()`.
  *
  * @param {{ hardware: object, params: object }} store
  * @param {Record<string, unknown>} simulation  e.g. `import * as simulation from './simulation.js'`

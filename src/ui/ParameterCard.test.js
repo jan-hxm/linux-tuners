@@ -7,14 +7,14 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import ParameterCard from './ParameterCard.vue'
-import { useTunerStore } from '@/tuners/swap/store.js'
+import { useTunerStoreFor } from '@/core/createTunerStore.js'
 import { swapDomain } from '@/tuners/swap/index.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
 
 function mountCard(paramKey) {
   return mount(ParameterCard, {
     props: { paramKey },
-    global: { provide: { [TUNER_STORE_KEY]: useTunerStore(), [TUNER_DOMAIN_KEY]: swapDomain } },
+    global: { provide: { [TUNER_STORE_KEY]: useTunerStoreFor(swapDomain), [TUNER_DOMAIN_KEY]: swapDomain } },
   })
 }
 
@@ -36,7 +36,7 @@ describe('ParameterCard slider rendering', () => {
   })
 
   it.each(SLIDER_KEYS)('renders a single working <input type="range"> for %s', async (key) => {
-    useTunerStore() // initialise defaults
+    useTunerStoreFor(swapDomain) // initialise defaults
     const wrapper = mountCard(key)
     await nextTick() // onMounted sets the initial DOM value
     const inputs = wrapper.findAll('input[type="range"]')
@@ -51,7 +51,7 @@ describe('ParameterCard slider rendering', () => {
   })
 
   it('@input on the slider commits to the Pinia store', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const wrapper = mountCard('vfs_cache_pressure')
     await nextTick()
     const input = wrapper.find('input[type="range"]')
@@ -64,7 +64,7 @@ describe('ParameterCard slider rendering', () => {
     // every input event would rewrite the DOM value attribute mid-drag and cancel
     // the active pointer capture. Our uncontrolled pattern must leave the DOM
     // alone for user-originated input.
-    useTunerStore()
+    useTunerStoreFor(swapDomain)
     const wrapper = mountCard('vfs_cache_pressure')
     await nextTick()
     const input = wrapper.find('input[type="range"]')
@@ -78,7 +78,7 @@ describe('ParameterCard slider rendering', () => {
   })
 
   it('writes external store changes to the slider DOM (e.g. preset apply)', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const wrapper = mountCard('vfs_cache_pressure')
     await nextTick()
     const el = wrapper.find('input[type="range"]').element
@@ -98,7 +98,7 @@ describe('ParameterCard click-to-edit value', () => {
   })
 
   it('swaps the value display for a number input on click', async () => {
-    useTunerStore()
+    useTunerStoreFor(swapDomain)
     const wrapper = mountCard('min_free_kbytes')
     await nextTick()
     expect(wrapper.find('input[type="number"]').exists()).toBe(false)
@@ -107,7 +107,7 @@ describe('ParameterCard click-to-edit value', () => {
   })
 
   it('pre-fills the input with the raw value, not the formatted string', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const wrapper = mountCard('min_free_kbytes')
     await nextTick()
     await wrapper.find(EDIT_BTN).trigger('click')
@@ -116,7 +116,7 @@ describe('ParameterCard click-to-edit value', () => {
   })
 
   it('commits an exact typed value to the store on Enter', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const wrapper = mountCard('min_free_kbytes')
     await nextTick()
     await wrapper.find(EDIT_BTN).trigger('click')
@@ -132,7 +132,7 @@ describe('ParameterCard click-to-edit value', () => {
     // Regression: committing an edit set selfWrite, which made the value watcher
     // skip syncing the slider DOM — so the thumb stayed put. The edit must drive
     // the slider to the new value.
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const wrapper = mountCard('vfs_cache_pressure')
     await nextTick()
     await wrapper.find(EDIT_BTN).trigger('click')
@@ -145,7 +145,7 @@ describe('ParameterCard click-to-edit value', () => {
   })
 
   it('clamps an out-of-range typed value to the slider max', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const wrapper = mountCard('min_free_kbytes')
     await nextTick()
     const max = store.params.min_free_kbytes // grab any baseline, real max below
@@ -159,7 +159,7 @@ describe('ParameterCard click-to-edit value', () => {
   })
 
   it('rounds a fractional typed value, which sysctl would reject', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const wrapper = mountCard('swappiness')
     await nextTick()
     await wrapper.find(EDIT_BTN).trigger('click')
@@ -170,7 +170,7 @@ describe('ParameterCard click-to-edit value', () => {
   })
 
   it('reverts on Escape without mutating the store', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const original = store.params.min_free_kbytes
     const wrapper = mountCard('min_free_kbytes')
     await nextTick()
@@ -183,7 +183,7 @@ describe('ParameterCard click-to-edit value', () => {
   })
 
   it('does not offer inline editing for non-slider controls', async () => {
-    useTunerStore()
+    useTunerStoreFor(swapDomain)
     const wrapper = mountCard('overcommit_memory')
     await nextTick()
     expect(wrapper.find(EDIT_BTN).exists()).toBe(false)
@@ -196,7 +196,7 @@ describe('ParameterCard K8s context badge gating', () => {
   })
 
   it('hides the K8s badge and note when the workload is not k8s', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     store.hardware.workload = 'general'
     // swappiness has a k8sNote, so it is the badge-bearing card.
     const wrapper = mountCard('swappiness')
@@ -205,7 +205,7 @@ describe('ParameterCard K8s context badge gating', () => {
   })
 
   it('shows the K8s badge when the workload is k8s', async () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     store.hardware.workload = 'k8s'
     const wrapper = mountCard('swappiness')
     await nextTick()

@@ -44,7 +44,7 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 
 ## 4. Engineering
 
-- [ ] Profile per [Design.md §9](Design.md#9-code-organization-and-reuse): one `profile.js` field list driving a generic `ProfileForm` and the restore schema, then drop each tuner's own `store.js` and `View.vue` where the shell covers them. A refactor with no behaviour change: the config snapshots (`src/tuners/configSnapshots.test.js`) must stay unchanged.
+- [ ] Optional graphs per [Design.md §9](Design.md#extension-points): let a domain omit `graphTabs` (the tune step goes full width, the impact bar hides). `defineTuner` requires them today. Needed before Security hardening.
 - [ ] `ConfigOutput`: a download per file for multi-file tuners (systemd), instead of one combined `.conf`.
 - [ ] Tests: `ConfigOutput` flow (textarea matches the generator, copy calls the clipboard API, blocked state).
 - [ ] Automated accessibility sweep (axe-core / Lighthouse): focus visibility on the dark hero, a live-region announcement when a preset is applied or validation fires, and a full WCAG AA contrast pass.

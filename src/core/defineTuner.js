@@ -1,12 +1,17 @@
 /**
  * Build a TunerDomain from a tuner's spec: fill in the optional hooks with
  * their defaults, so shared code never has to check whether a hook exists,
- * and (in dev and tests) fail fast when a required field is missing or
+ * derive the default profile and the shared-link codec from the profile field
+ * list, and (in dev and tests) fail fast when a required field is missing or
  * inconsistent. See Design.md §9 "Contract tests".
  */
 
+import { makeSerialization } from './serialization.js'
+import { profileDefaults, profileSchema, profileProblems } from './profile.js'
+
 const REQUIRED = [
   'id',
+  'profile',
   'defaultHardware',
   'parameterKeys',
   'defsByKey',
@@ -30,6 +35,7 @@ const REQUIRED = [
   'noteKey',
   'page',
   'about',
+  'graphTabs',
 ]
 
 const DEFAULTS = {
@@ -39,6 +45,8 @@ const DEFAULTS = {
   contextApplies: () => true,
   /** No reference-drawer formula. */
   formula: () => null,
+  /** No simulation module, so no impact metrics. */
+  simulation: {},
 }
 
 /**
@@ -46,9 +54,21 @@ const DEFAULTS = {
  * @returns {import('./types.js').TunerDomain}
  */
 export function defineTuner(spec) {
-  const domain = { ...DEFAULTS, ...spec }
+  const domain = { ...DEFAULTS, ...spec, ...fromProfile(spec) }
   if (import.meta.env?.DEV) assertTuner(domain)
   return Object.freeze(domain)
+}
+
+/** The default profile and the link codec, both from the profile field list. */
+function fromProfile({ profile, parameterKeys, defsByKey }) {
+  // Without a field list there is no schema, so no link restores: the spec
+  // can't supply a looser decodeState of its own.
+  if (!profile?.fields) return { decodeState: () => null }
+  const defaultHardware = profileDefaults(profile.fields)
+  return {
+    defaultHardware,
+    ...makeSerialization({ parameterKeys, defsByKey, defaultHardware, hardwareSchema: profileSchema(profile.fields) }),
+  }
 }
 
 /**
@@ -90,4 +110,13 @@ export function assertTuner(domain) {
   if (Object.keys(domain.presetsById).length !== domain.presets.length) fail('presetsById has extra entries')
 
   if (!Object.hasOwn(domain.defaultHardware, domain.workloadField)) fail('workloadField is not a profile field')
+
+  const { profile } = domain
+  if (!profile.title || !profile.applyLabel || typeof profile.summary !== 'function') fail('profile needs a title, an applyLabel and a summary')
+  for (const problem of profileProblems(profile.fields)) fail(problem)
+
+  for (const tab of domain.graphTabs) {
+    if (!tab.id || !tab.label || !tab.component || !tab.blurb) fail(`graph tab "${tab.id ?? '?'}" needs an id, label, component and blurb`)
+  }
+  if (!domain.graphTabs.some((t) => t.id === domain.defaultTab)) fail('defaultTab is not a graph tab')
 }

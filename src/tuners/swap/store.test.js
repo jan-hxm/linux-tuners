@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useTunerStore } from './store.js'
+import { useTunerStoreFor } from '@/core/createTunerStore.js'
+import { swapDomain } from './index.js'
 import { deriveDefaults } from './calculations.js'
 
 describe('tuner store — applyPreset', () => {
@@ -9,7 +10,7 @@ describe('tuner store — applyPreset', () => {
   })
 
   it('resets parameters the preset does not mention to hardware defaults', () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const defaults = deriveDefaults(store.hardware)
 
     // Customise every parameter to something distinct from its default.
@@ -30,7 +31,7 @@ describe('tuner store — applyPreset', () => {
   })
 
   it('is idempotent — applying the same preset twice yields identical state', () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
 
     const values = { swappiness: 10, min_free_kbytes: 262144, watermark_scale_factor: 2000 }
     store.applyPreset('k8s', values)
@@ -45,7 +46,7 @@ describe('tuner store — applyPreset', () => {
   })
 
   it('ignores a non-finite value and rounds a fractional one', () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     const before = store.params.swappiness
     for (const bad of [NaN, Infinity, '60', null]) store.setParam('swappiness', bad)
     expect(store.params.swappiness).toBe(before)
@@ -54,7 +55,7 @@ describe('tuner store — applyPreset', () => {
   })
 
   it('records the active preset id', () => {
-    const store = useTunerStore()
+    const store = useTunerStoreFor(swapDomain)
     store.applyPreset('database', { swappiness: 1 })
     expect(store.activePreset).toBe('database')
   })

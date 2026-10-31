@@ -5,8 +5,8 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
-import { DEFAULT_HARDWARE, PARAMETER_KEYS, HARDWARE_SCHEMA } from './parameters.js'
-import { PARAMETER_DEFS_BY_KEY, K8S_BLOG } from './defs.js'
+import { PROFILE } from './profile.js'
+import { PARAMETER_KEYS, PARAMETER_DEFS_BY_KEY, K8S_BLOG } from './defs.js'
 import {
   deriveDefaults,
   rangeFor,
@@ -15,16 +15,18 @@ import {
 import { validate, hasBlockingIssue } from './validation.js'
 import { generateConfig } from './config.js'
 import { PRESETS, PRESETS_BY_ID } from './presets.js'
-import { makeSerialization } from '@/core/serialization.js'
 import { formatValue } from './formatting.js'
 import { PAGE, ABOUT } from './about.js'
+import * as simulation from './simulation.js'
+import PressureChart from './components/PressureChart.vue'
+import WatermarkChart from './components/WatermarkChart.vue'
+import DirtyChart from './components/DirtyChart.vue'
 
-const { encodeState, decodeState } = makeSerialization({
-  parameterKeys: PARAMETER_KEYS,
-  defsByKey: PARAMETER_DEFS_BY_KEY,
-  defaultHardware: DEFAULT_HARDWARE,
-  hardwareSchema: HARDWARE_SCHEMA,
-})
+const GRAPH_TABS = [
+  { id: 'pressure', label: 'Swap pressure', component: PressureChart, blurb: 'How swap usage grows as memory fills, given current swappiness and watermarks.' },
+  { id: 'watermarks', label: 'Watermark zones', component: WatermarkChart, blurb: 'min → low → high → usable breakdown of the kernel zone structure.' },
+  { id: 'dirty', label: 'Dirty writeback', component: DirtyChart, blurb: 'Dirty page accumulation under a synthetic constant write workload.' },
+]
 
 /** Card groupings (was hardcoded inside ParameterPanel). */
 const SECTIONS = [
@@ -92,7 +94,7 @@ function formula(def, { hardware, params }) {
 
 export const swapDomain = defineTuner({
   id: 'swap',
-  defaultHardware: DEFAULT_HARDWARE,
+  profile: PROFILE,
   parameterKeys: PARAMETER_KEYS,
   defsByKey: PARAMETER_DEFS_BY_KEY,
   deriveDefaults,
@@ -109,9 +111,9 @@ export const swapDomain = defineTuner({
   presetsById: PRESETS_BY_ID,
   generateConfig,
   outputFilename: '99-swap-tuning.conf',
-  encodeState,
-  decodeState,
   defaultTab: 'pressure',
+  graphTabs: GRAPH_TABS,
+  simulation,
   workloads: ['k8s', 'database', 'general', 'desktop', 'embedded'],
   workloadField: 'workload',
   context: { badge: 'K8s', label: 'Kubernetes', url: K8S_BLOG },

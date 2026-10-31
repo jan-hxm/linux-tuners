@@ -10,6 +10,24 @@
  *   - systemd.exec(5)             LimitNOFILE / LimitMEMLOCK semantics
  *
  * @typedef {'manager-defaults' | 'slice-resources'} SystemdGroup
+ *
+ * @typedef {Object} SystemdValues
+ * @property {0|1}    default_cpu_accounting       DefaultCPUAccounting
+ * @property {0|1}    default_memory_accounting    DefaultMemoryAccounting
+ * @property {0|1}    default_io_accounting        DefaultIOAccounting
+ * @property {0|1}    default_tasks_accounting     DefaultTasksAccounting
+ * @property {0|1}    default_ip_accounting        DefaultIPAccounting
+ * @property {number} default_tasks_max            DefaultTasksMax (absolute count)
+ * @property {number} default_limit_nofile_soft    DefaultLimitNOFILE soft
+ * @property {number} default_limit_nofile_hard    DefaultLimitNOFILE hard
+ * @property {number} default_limit_memlock        DefaultLimitMEMLOCK (bytes)
+ * @property {number} cpu_weight                   CPUWeight (1–10000)
+ * @property {number} cpu_quota                    CPUQuota (% across cores; max = no limit)
+ * @property {number} memory_high                  MemoryHigh (% of RAM; 100 = infinity)
+ * @property {number} memory_max                   MemoryMax (% of RAM; 100 = infinity)
+ * @property {number} memory_swap_max              MemorySwapMax (% of RAM; 100 = infinity, 0 = no swap)
+ * @property {number} io_weight                    IOWeight (1–10000)
+ * @property {number} tasks_max                    TasksMax (absolute count)
  */
 
 const SYSTEM_CONF = 'https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html'
@@ -356,3 +374,6 @@ export const SYSTEMD_DEFS = [
 
 /** Quick lookup by key. */
 export const SYSTEMD_DEFS_BY_KEY = Object.fromEntries(SYSTEMD_DEFS.map((d) => [d.key, d]))
+
+/** All parameter keys, in display order. */
+export const SYSTEMD_KEYS = /** @type {(keyof SystemdValues)[]} */ (SYSTEMD_DEFS.map((d) => d.key))

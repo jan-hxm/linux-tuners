@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { validate, hasBlockingIssue } from './validation.js'
 import { deriveDefaults } from './calculations.js'
-import { DEFAULT_SYSTEMD_SPEC } from './parameters.js'
+import { DEFAULT_SYSTEMD_SPEC } from './profile.js'
 
 function setup(workload = 'general', overrides = {}) {
   const hw = { ...DEFAULT_SYSTEMD_SPEC, workload }

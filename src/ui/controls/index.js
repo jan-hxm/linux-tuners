@@ -13,12 +13,14 @@ import SliderControl from './SliderControl.vue'
 import ToggleControl from './ToggleControl.vue'
 import SegmentedControl from './SegmentedControl.vue'
 import SelectControl from './SelectControl.vue'
+import TupleControl from './TupleControl.vue'
 
 export const CONTROLS = Object.freeze({
   slider: { component: SliderControl, types: ['int'], editable: true, showsRange: true },
   toggle: { component: ToggleControl, types: ['bool'], editable: false, showsRange: true },
   segmented: { component: SegmentedControl, types: ['int'], editable: false, showsRange: true },
   select: { component: SelectControl, types: ['enum'], editable: false, showsRange: false },
+  tuple: { component: TupleControl, types: ['tuple'], editable: false, showsRange: true },
 })
 
 /** The registry entry for a def; throws on an unknown or inherited name. */

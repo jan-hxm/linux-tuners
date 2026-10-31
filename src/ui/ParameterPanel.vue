@@ -18,6 +18,10 @@ function visibleKeys(section) {
   return domain.visibleKeys(section, tuner.params, tuner.hardware)
 }
 
+// A section with no key for this system (e.g. conntrack keys without
+// nf_conntrack) isn't shown at all.
+const shownSections = computed(() => SECTIONS.filter((s) => visibleKeys(s).length > 0))
+
 const issueCountsBySection = computed(() => {
   /** @type {Record<string, number>} */
   const counts = {}
@@ -43,7 +47,7 @@ const issueCountsBySection = computed(() => {
       </button>
     </div>
     <article
-      v-for="section in SECTIONS"
+      v-for="section in shownSections"
       :key="section.id"
       class="rounded-lg border border-slate-200 bg-white shadow-sm"
     >

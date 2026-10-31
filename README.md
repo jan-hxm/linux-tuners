@@ -13,8 +13,9 @@ ready-to-apply config file with citations to the source documentation.
 | [Swap & memory](https://linux-tuners.dev/swap) | `vm.*` sysctl: swappiness, watermarks, dirty-page writeback, overcommit |
 | [systemd & resource limits](https://linux-tuners.dev/systemd) | systemd manager defaults and cgroup v2 slice controls |
 | [Security hardening](https://linux-tuners.dev/security) | hardening sysctls from `kernel.*`, `net.*` and `fs.*`, with KSPP and CIS-style presets |
+| [Network stack](https://linux-tuners.dev/network) | `net.*` sysctl: socket buffers sized to your link and path, listen queues, congestion control, local ports, conntrack |
 
-More are planned (network, filesystem, …). Everything runs in
+More are planned (filesystem, huge pages, …). Everything runs in
 your browser; your settings are only stored in the URL you choose to share.
 
 ## Develop

@@ -34,6 +34,7 @@ They are not one tuner per `/proc/sys` root. For example, hardening keys from
 | `/swap` | 11 `vm.*` parameters: swappiness, `min_free_kbytes`, watermark scaling, `vfs_cache_pressure`, dirty-page writeback, overcommit, `panic_on_oom`. Graphs: swap pressure, watermark zones, dirty writeback. | `/etc/sysctl.d/99-swap-tuning.conf`, plus device-aware swap setup instructions (swap file, zram-generator, zswap) |
 | `/systemd` | Manager defaults (accounting, `DefaultTasksMax`, `DefaultLimitNOFILE`, `DefaultLimitMEMLOCK`) and per-slice controls (`CPUWeight`, `CPUQuota`, `MemoryHigh`, `MemoryMax`, `MemorySwapMax`, `IOWeight`, `TasksMax`) for `system.slice`, `user.slice` or `machine.slice`. Graphs: CPU shares, memory budget, task and FD caps. | Two drop-ins in one document: `/etc/systemd/system.conf.d/99-resource-tuning.conf` and `/etc/systemd/system/<slice>.d/50-resources.conf` |
 | `/security` | 17 hardening sysctls: `kptr_restrict`, `dmesg_restrict`, `perf_event_paranoid`, `yama.ptrace_scope`, `randomize_va_space`, `unprivileged_bpf_disabled`; `rp_filter`, `tcp_syncookies`, IPv4/IPv6 `accept_redirects`, `send_redirects`, `accept_source_route`; `fs.protected_*`, `suid_dumpable`. The profile's kernel generation and IPv6 switch decide which keys and values exist. No graphs. | `/etc/sysctl.d/99-security-hardening.conf`, with notes on one-way values and on existing network interfaces |
+| `/network` | 17 `net.*` sysctls: `rmem_max`, `wmem_max`, `tcp_rmem`, `tcp_wmem`; `somaxconn`, `tcp_max_syn_backlog`, `netdev_max_backlog`; `tcp_congestion_control`, `default_qdisc`, `tcp_slow_start_after_idle`, `tcp_mtu_probing`; `ip_local_port_range`, `tcp_tw_reuse`, `tcp_fin_timeout`; `nf_conntrack_max`, `nf_conntrack_buckets`, `nf_conntrack_tcp_timeout_established`. Buffers are sized from the bandwidth-delay product of the profile's link speed and longest path; the conntrack keys exist only when the profile says `nf_conntrack` is loaded. Targets kernel 4.19+. Graph: per-connection throughput ceiling against RTT. | `/etc/sysctl.d/99-network-tuning.conf`, with notes on the qdisc reaching only new interfaces, congestion-control modules, and loading `nf_conntrack` before `systemd-sysctl` runs |
 
 The planned tuners and their order are listed in [TODO.md](TODO.md).
 
@@ -277,7 +278,7 @@ must follow them, and existing UI must not regress.
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
-not plumbing. Three tuners are shipped and about seven are planned, so anything
+not plumbing. Four tuners are shipped and about six are planned, so anything
 written twice gets written ten times. Duplication is the main risk.
 
 ### Layers and dependency direction
@@ -356,8 +357,8 @@ so that a new variant is an addition rather than an edit to shared code.
 - **Value types** (`core/valueTypes.js`). A def declares `type`: `int` (the
   default), `bool` (stored as 0/1), `enum` (one of `def.options[].value`, for
   `tcp_congestion_control` or the I/O `scheduler`) or `tuple` (`def.length`
-  integers, for `tcp_rmem` or `kernel.sem`). Today's defs are `int` and
-  `bool`. The type owns four operations:
+  integers, for `tcp_rmem` or `kernel.sem`). The network tuner is the first
+  with enum and tuple defs. The type owns four operations:
   - `restore`: strict parsing of untrusted URL input; enums accept only listed
     values. `decodeState` rejects the link when it returns `undefined`.
   - `clamp`: used by `restoreState` and `setParam`.
@@ -371,7 +372,8 @@ so that a new variant is an addition rather than an edit to shared code.
   [untrusted-input rule](#shareable-url-state) in one place as types are added.
 - **Controls** (`ui/controls/`). `def.control` names an entry of the
   registry in `ui/controls/index.js`: `slider`, `toggle`, `segmented` and
-  `select`, with `tuple` to come with the first tuple def. Each entry lists the
+  `select` and `tuple` (one labelled number input per element, from
+  `def.tupleLabels`; the range holds each element). Each entry lists the
   value types it can edit (the contract suite checks every def against it) and
   whether the card offers click-to-type and prints the range. `ParameterCard`
   keeps the frame: header, badges, the value, issues and the expandable text.
@@ -506,7 +508,12 @@ byte-identical output. The page-mount check is `src/tuners/views.test.js`.
 The type-formatter check covers sysctl lines; ini values are composed by the
 tuner from typed values and held to plain tokens by the grammar check.
 `src/ui/ParameterCard.enum.test.js` covers the enum path (select, clamp,
-restore) with a fixture domain until a tuner ships an enum.
+restore) with a fixture domain. The suite is type-aware: the grammar check
+accepts space-separated tuple values, the clamp check runs per tuple element,
+an unlisted enum option or a tuple of the wrong length rejects the link, and
+the fuzz builds edge values of each def's own shape so they reach the clamp.
+The page-mount check stubs every graph tab's component, by its SFC name.
+A section with no visible key for the profile is not rendered.
 
 ### Guardrails
 

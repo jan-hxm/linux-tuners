@@ -10,8 +10,9 @@ import { TUNER_DOMAINS } from './domains.js'
 import { defineTuner, assertTuner } from '@/core/defineTuner.js'
 import TunerPage from '@/ui/TunerPage.vue'
 
-// Chart.js needs a real canvas; the charts have their own tests.
-const CHARTS = ['PressureChart', 'WatermarkChart', 'DirtyChart', 'CpuShareChart', 'MemoryBudgetChart', 'TasksChart']
+// Chart.js needs a real canvas; the charts have their own tests. Every graph
+// tab's component is stubbed by its SFC name.
+const CHARTS = TUNER_DOMAINS.flatMap((d) => d.graphTabs.map((t) => t.component.__name))
 const stubs = Object.fromEntries(CHARTS.map((name) => [name, { template: `<div class="chart-stub" data-chart="${name}" />` }]))
 
 describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('%s view', (id, domain) => {

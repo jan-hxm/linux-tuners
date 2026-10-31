@@ -133,6 +133,22 @@ function mulberry32(seed) {
   }
 }
 
+const EDGE_NUMBERS = [-1, 0, 1, 0.5, 1e9, -1e9, 2 ** 53, 1e308]
+
+/**
+ * An out-of-range value of the def's own shape, so it survives parsing and
+ * reaches the clamp: an edge number, a tuple of them (sometimes the wrong
+ * length), or an enum option (sometimes an unlisted one).
+ */
+function edgeValue(def, pick, rand) {
+  if (def.type === 'tuple') {
+    const length = rand() < 0.9 ? def.length : def.length + 1
+    return Array.from({ length }, () => pick(EDGE_NUMBERS))
+  }
+  if (def.type === 'enum') return rand() < 0.8 ? pick(def.options).value : 'not-an-option'
+  return pick(EDGE_NUMBERS)
+}
+
 /**
  * Random envelopes that mix valid and hostile values field by field, so some
  * survive restore and exercise the generator with edge values.
@@ -151,8 +167,9 @@ function fuzzEnvelopes(domain, count, seed = 1) {
     const defaults = domain.deriveDefaults(base)
     const params = {}
     for (const key of domain.parameterKeys) {
+      const def = domain.defsByKey[key]
       const r = rand()
-      params[key] = r < 0.6 ? defaults[key] : r < 0.9 ? pick([-1, 0, 1, 0.5, 1e9, -1e9, 2 ** 53, 1e308]) : pick(HOSTILE_VALUES)
+      params[key] = r < 0.6 ? defaults[key] : r < 0.9 ? edgeValue(def, pick, rand) : pick(HOSTILE_VALUES)
     }
     const activePreset = rand() < 0.5 ? pick(domain.presets).id : pick(HOSTILE_VALUES)
     out.push({ v: rand() < 0.95 ? 1 : pick([0, 2, '1', null]), hardware, params, activePreset, activeTab: pick(['x', null, 1, domain.defaultTab]) })
@@ -176,7 +193,7 @@ function grammarViolations(domain, config) {
   for (const line of config.split('\n')) {
     if (line === '' || line.startsWith('#')) continue
     if (/^\[[A-Z][A-Za-z]*\]$/.test(line)) continue
-    const m = /^([A-Za-z][\w.]*)(?: = |=)([A-Za-z0-9:%]+)$/.exec(line)
+    const m = /^([A-Za-z][\w.]*)(?: = |=)([A-Za-z0-9:%_]+(?: [A-Za-z0-9:%_]+)*)$/.exec(line)
     if (m && names.has(m[1])) continue
     bad.push(line)
   }
@@ -350,13 +367,32 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
 
     it('clamps out-of-range and fractional parameters into the slider range', () => {
       for (const key of domain.parameterKeys) {
-        for (const value of [-1e308, -1, 0.5, 1e308]) {
+        const def = domain.defsByKey[key]
+        if (def.type === 'enum') continue
+        for (const n of [-1e308, -1, 0.5, 1e308]) {
+          // A tuple gets the edge number in every element.
+          const value = def.type === 'tuple' ? Array(def.length).fill(n) : n
           const params = { ...domain.deriveDefaults(domain.defaultHardware), [key]: value }
           const restored = restoreState(domain, rawHash(envelope(domain, { params })))
           const { min, max } = domain.rangeFor(key, restored.hardware)
-          expect(Number.isInteger(restored.params[key]), `${key} = ${value}`).toBe(true)
-          expect(restored.params[key]).toBeGreaterThanOrEqual(min)
-          expect(restored.params[key]).toBeLessThanOrEqual(max)
+          for (const element of [restored.params[key]].flat()) {
+            expect(Number.isInteger(element), `${key} = ${n}`).toBe(true)
+            expect(element).toBeGreaterThanOrEqual(min)
+            expect(element).toBeLessThanOrEqual(max)
+          }
+        }
+      }
+    })
+
+    it('rejects an unlisted enum option and a tuple of the wrong length', () => {
+      for (const key of domain.parameterKeys) {
+        const def = domain.defsByKey[key]
+        const bad = def.type === 'enum' ? ['not-an-option', 'toString', def.options[0].value.toUpperCase()]
+          : def.type === 'tuple' ? [Array(def.length - 1).fill(4096), Array(def.length + 1).fill(4096), Array(def.length).fill('1')]
+          : []
+        for (const value of bad) {
+          const params = { ...domain.deriveDefaults(domain.defaultHardware), [key]: value }
+          expect(restoreState(domain, rawHash(envelope(domain, { params }))), `${key} = ${JSON.stringify(value)}`).toBeNull()
         }
       }
     })

@@ -11,16 +11,15 @@ Each one is a new domain module following [Design.md §6](Design.md#6-adding-a-t
 
 sysctl-based (output: `/etc/sysctl.d/`):
 
-1. [ ] **Network stack** (`net.*`): socket buffers (`rmem_max`/`wmem_max`/`tcp_rmem`/`tcp_wmem`), listen backlog (`somaxconn`, `tcp_max_syn_backlog`), `tcp_congestion_control`, TIME_WAIT reuse, conntrack (`nf_conntrack_max`, buckets, timeouts).
-2. [ ] **Filesystem & file descriptors** (`fs.*`): `file-max`, `nr_open`, `inotify.max_user_watches`/`max_user_instances`, `aio-max-nr`.
-3. [ ] **Huge pages & memory layout** (the rest of `vm.*` + THP/KSM sysfs): `nr_hugepages`, `nr_overcommit_hugepages`, `max_map_count`, `mmap_min_addr`, `zone_reclaim_mode`, `page-cluster`; THP and KSM via `/sys/kernel/mm/`. Mixed output (sysctl.d + sysfs/tuned).
-4. [ ] **System V IPC & shared memory**: `kernel.shmmax`, `shmall`, `shmmni`, `sem`, `msgmni`/`msgmnb`/`msgmax`.
-5. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
+1. [ ] **Filesystem & file descriptors** (`fs.*`): `file-max`, `nr_open`, `inotify.max_user_watches`/`max_user_instances`, `aio-max-nr`.
+2. [ ] **Huge pages & memory layout** (the rest of `vm.*` + THP/KSM sysfs): `nr_hugepages`, `nr_overcommit_hugepages`, `max_map_count`, `mmap_min_addr`, `zone_reclaim_mode`, `page-cluster`; THP and KSM via `/sys/kernel/mm/`. Mixed output (sysctl.d + sysfs/tuned).
+3. [ ] **System V IPC & shared memory**: `kernel.shmmax`, `shmall`, `shmmni`, `sem`, `msgmni`/`msgmnb`/`msgmax`.
+4. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
 
 sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profile):
 
-6. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
-7. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`.
+5. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
+6. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`.
 
 ## 2. Correctness
 

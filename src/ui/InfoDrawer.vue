@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, watch, nextTick, ref } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
+import { valueTypeOf } from '@/core/valueTypes.js'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
@@ -32,6 +33,18 @@ const workloadComparison = computed(() => {
       formatted: domain.formatValue(value, def.value, hw),
     }
   })
+})
+
+// The accepted values and the kernel default, worded for the def's type: an
+// enum lists its options, a tuple holds each element to the range.
+const rangeText = computed(() => {
+  const d = def.value
+  if (!d) return null
+  const accepts = d.type === 'enum'
+    ? `Offered: ${d.options.map((o) => o.value).join(', ')}.`
+    : `Kernel accepts ${d.kernelMin.toLocaleString()} – ${d.kernelMax.toLocaleString()}${d.type === 'tuple' ? ' for each value' : ''}.`
+  const kernelDefault = typeof d.kernelDefault === 'number' ? d.kernelDefault.toLocaleString() : valueTypeOf(d).format(d.kernelDefault, d)
+  return { accepts, kernelDefault }
 })
 
 // Per-parameter formulas come from the active domain (it knows which parameters
@@ -186,8 +199,8 @@ watch(isOpen, async (open) => {
         <section>
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Range</h3>
           <p class="mt-1 text-xs text-slate-700">
-            Kernel accepts {{ def.kernelMin.toLocaleString() }} – {{ def.kernelMax.toLocaleString() }}.
-            Kernel default: <span class="font-mono">{{ def.kernelDefault.toLocaleString() }}</span>.
+            {{ rangeText.accepts }}
+            Kernel default: <span class="font-mono">{{ rangeText.kernelDefault }}</span>.
           </p>
         </section>
       </div>

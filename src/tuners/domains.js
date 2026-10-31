@@ -8,5 +8,6 @@
 import { swapDomain } from './swap/index.js'
 import { systemdDomain } from './systemd/index.js'
 import { securityDomain } from './security/index.js'
+import { networkDomain } from './network/index.js'
 
-export const TUNER_DOMAINS = [swapDomain, systemdDomain, securityDomain]
+export const TUNER_DOMAINS = [swapDomain, systemdDomain, securityDomain, networkDomain]

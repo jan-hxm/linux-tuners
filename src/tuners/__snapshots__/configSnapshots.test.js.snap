@@ -1,5 +1,2389 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`generated config: network > bulk / bbr 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: File, storage or streaming server, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: BBR with fq
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq
+#
+# bbr is a module. Check that the kernel has it:
+#   sysctl net.ipv4.tcp_available_congestion_control
+#   sudo modprobe tcp_bbr   # if it is missing from the list
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 4096 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: bbr - congestion control for new connections
+net.ipv4.tcp_congestion_control = bbr
+
+# default_qdisc: fq - qdisc for interfaces created from now on
+net.core.default_qdisc = fq
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 1 - probe the MTU once a black hole is detected
+net.ipv4.tcp_mtu_probing = 1
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > bulk / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: File, storage or streaming server, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq
+#
+# bbr is a module. Check that the kernel has it:
+#   sysctl net.ipv4.tcp_available_congestion_control
+#   sudo modprobe tcp_bbr   # if it is missing from the list
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 4096 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: bbr - congestion control for new connections
+net.ipv4.tcp_congestion_control = bbr
+
+# default_qdisc: fq - qdisc for interfaces created from now on
+net.core.default_qdisc = fq
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > bulk / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: File, storage or streaming server, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root pfifo_fast
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 4096 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# netdev_max_backlog: 1000 - received packets queued per CPU
+net.core.netdev_max_backlog = 1000
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: pfifo_fast - qdisc for interfaces created from now on
+net.core.default_qdisc = pfifo_fast
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > bulk / proxy 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: File, storage or streaming server, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Busy proxy
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq
+#
+# bbr is a module. Check that the kernel has it:
+#   sysctl net.ipv4.tcp_available_congestion_control
+#   sudo modprobe tcp_bbr   # if it is missing from the list
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 65535 - accept queue ceiling per listener
+net.core.somaxconn = 65535
+
+# tcp_max_syn_backlog: 65535 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 65535
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: bbr - congestion control for new connections
+net.ipv4.tcp_congestion_control = bbr
+
+# default_qdisc: fq - qdisc for interfaces created from now on
+net.core.default_qdisc = fq
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 1 - reuse TIME_WAIT ports for outgoing connections
+net.ipv4.tcp_tw_reuse = 1
+
+# tcp_fin_timeout: 15 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 15
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > container / bbr 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Container host or Kubernetes node, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: BBR with fq
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq
+#
+# bbr is a module. Check that the kernel has it:
+#   sysctl net.ipv4.tcp_available_congestion_control
+#   sudo modprobe tcp_bbr   # if it is missing from the list
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 16384 - accept queue ceiling per listener
+net.core.somaxconn = 16384
+
+# tcp_max_syn_backlog: 16384 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 16384
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: bbr - congestion control for new connections
+net.ipv4.tcp_congestion_control = bbr
+
+# default_qdisc: fq - qdisc for interfaces created from now on
+net.core.default_qdisc = fq
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 1 - probe the MTU once a black hole is detected
+net.ipv4.tcp_mtu_probing = 1
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 86400 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 86400"
+`;
+
+exports[`generated config: network > container / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Container host or Kubernetes node, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 16384 - accept queue ceiling per listener
+net.core.somaxconn = 16384
+
+# tcp_max_syn_backlog: 16384 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 16384
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 1 - probe the MTU once a black hole is detected
+net.ipv4.tcp_mtu_probing = 1
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 86400 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 86400"
+`;
+
+exports[`generated config: network > container / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Container host or Kubernetes node, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root pfifo_fast
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 16384 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 16384
+
+# netdev_max_backlog: 1000 - received packets queued per CPU
+net.core.netdev_max_backlog = 1000
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: pfifo_fast - qdisc for interfaces created from now on
+net.core.default_qdisc = pfifo_fast
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > container / proxy 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Container host or Kubernetes node, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Busy proxy
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 65535 - accept queue ceiling per listener
+net.core.somaxconn = 65535
+
+# tcp_max_syn_backlog: 65535 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 65535
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 1 - probe the MTU once a black hole is detected
+net.ipv4.tcp_mtu_probing = 1
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 1 - reuse TIME_WAIT ports for outgoing connections
+net.ipv4.tcp_tw_reuse = 1
+
+# tcp_fin_timeout: 15 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 15
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 86400 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 86400"
+`;
+
+exports[`generated config: network > desktop / bbr 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Desktop or developer workstation, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: BBR with fq
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq
+#
+# bbr is a module. Check that the kernel has it:
+#   sysctl net.ipv4.tcp_available_congestion_control
+#   sudo modprobe tcp_bbr   # if it is missing from the list
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 4096 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# netdev_max_backlog: 1000 - received packets queued per CPU
+net.core.netdev_max_backlog = 1000
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: bbr - congestion control for new connections
+net.ipv4.tcp_congestion_control = bbr
+
+# default_qdisc: fq - qdisc for interfaces created from now on
+net.core.default_qdisc = fq
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 1 - probe the MTU once a black hole is detected
+net.ipv4.tcp_mtu_probing = 1
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > desktop / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Desktop or developer workstation, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 4096 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# netdev_max_backlog: 1000 - received packets queued per CPU
+net.core.netdev_max_backlog = 1000
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > desktop / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Desktop or developer workstation, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root pfifo_fast
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 4096 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# netdev_max_backlog: 1000 - received packets queued per CPU
+net.core.netdev_max_backlog = 1000
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: pfifo_fast - qdisc for interfaces created from now on
+net.core.default_qdisc = pfifo_fast
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > desktop / proxy 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Desktop or developer workstation, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Busy proxy
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 65535 - accept queue ceiling per listener
+net.core.somaxconn = 65535
+
+# tcp_max_syn_backlog: 65535 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 65535
+
+# netdev_max_backlog: 1000 - received packets queued per CPU
+net.core.netdev_max_backlog = 1000
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 1 - reuse TIME_WAIT ports for outgoing connections
+net.ipv4.tcp_tw_reuse = 1
+
+# tcp_fin_timeout: 15 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 15
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > router / bbr 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Router, NAT gateway or firewall, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: BBR with fq
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq
+#
+# bbr is a module. Check that the kernel has it:
+#   sysctl net.ipv4.tcp_available_congestion_control
+#   sudo modprobe tcp_bbr   # if it is missing from the list
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 4096 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: bbr - congestion control for new connections
+net.ipv4.tcp_congestion_control = bbr
+
+# default_qdisc: fq - qdisc for interfaces created from now on
+net.core.default_qdisc = fq
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 1 - probe the MTU once a black hole is detected
+net.ipv4.tcp_mtu_probing = 1
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 86400 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 86400"
+`;
+
+exports[`generated config: network > router / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Router, NAT gateway or firewall, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 4096 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 86400 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 86400"
+`;
+
+exports[`generated config: network > router / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Router, NAT gateway or firewall, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root pfifo_fast
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 4096 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 4096
+
+# netdev_max_backlog: 1000 - received packets queued per CPU
+net.core.netdev_max_backlog = 1000
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: pfifo_fast - qdisc for interfaces created from now on
+net.core.default_qdisc = pfifo_fast
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > router / proxy 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Router, NAT gateway or firewall, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Busy proxy
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 65535 - accept queue ceiling per listener
+net.core.somaxconn = 65535
+
+# tcp_max_syn_backlog: 65535 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 65535
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 1 - reuse TIME_WAIT ports for outgoing connections
+net.ipv4.tcp_tw_reuse = 1
+
+# tcp_fin_timeout: 15 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 15
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 86400 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 86400"
+`;
+
+exports[`generated config: network > web / bbr 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Web or API server, reverse proxy, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: BBR with fq
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq
+#
+# bbr is a module. Check that the kernel has it:
+#   sysctl net.ipv4.tcp_available_congestion_control
+#   sudo modprobe tcp_bbr   # if it is missing from the list
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 16384 - accept queue ceiling per listener
+net.core.somaxconn = 16384
+
+# tcp_max_syn_backlog: 16384 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 16384
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: bbr - congestion control for new connections
+net.ipv4.tcp_congestion_control = bbr
+
+# default_qdisc: fq - qdisc for interfaces created from now on
+net.core.default_qdisc = fq
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 1 - probe the MTU once a black hole is detected
+net.ipv4.tcp_mtu_probing = 1
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 30 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 30
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > web / bbr 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Web or API server, reverse proxy, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: BBR with fq
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq
+#
+# bbr is a module. Check that the kernel has it:
+#   sysctl net.ipv4.tcp_available_congestion_control
+#   sudo modprobe tcp_bbr   # if it is missing from the list
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 16384 - accept queue ceiling per listener
+net.core.somaxconn = 16384
+
+# tcp_max_syn_backlog: 16384 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 16384
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: bbr - congestion control for new connections
+net.ipv4.tcp_congestion_control = bbr
+
+# default_qdisc: fq - qdisc for interfaces created from now on
+net.core.default_qdisc = fq
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 1 - probe the MTU once a black hole is detected
+net.ipv4.tcp_mtu_probing = 1
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 30 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 30
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > web / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Web or API server, reverse proxy, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 16384 - accept queue ceiling per listener
+net.core.somaxconn = 16384
+
+# tcp_max_syn_backlog: 16384 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 16384
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 30 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 30
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > web / defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Web or API server, reverse proxy, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 16384 - accept queue ceiling per listener
+net.core.somaxconn = 16384
+
+# tcp_max_syn_backlog: 16384 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 16384
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 30 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 30
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > web / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Web or API server, reverse proxy, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root pfifo_fast
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 16384 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 16384
+
+# netdev_max_backlog: 1000 - received packets queued per CPU
+net.core.netdev_max_backlog = 1000
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: pfifo_fast - qdisc for interfaces created from now on
+net.core.default_qdisc = pfifo_fast
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > web / kernel-defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Web or API server, reverse proxy, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root pfifo_fast
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 4096 - accept queue ceiling per listener
+net.core.somaxconn = 4096
+
+# tcp_max_syn_backlog: 16384 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 16384
+
+# netdev_max_backlog: 1000 - received packets queued per CPU
+net.core.netdev_max_backlog = 1000
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: pfifo_fast - qdisc for interfaces created from now on
+net.core.default_qdisc = pfifo_fast
+
+# tcp_slow_start_after_idle: 1 - slow start again after idle (RFC 2861)
+net.ipv4.tcp_slow_start_after_idle = 1
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 2 - reuse TIME_WAIT ports for loopback only
+net.ipv4.tcp_tw_reuse = 2
+
+# tcp_fin_timeout: 60 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 60
+
+# ip_local_port_range: 32768 60999 - 28232 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 32768 60999
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > web / proxy 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Web or API server, reverse proxy, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Busy proxy
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 65535 - accept queue ceiling per listener
+net.core.somaxconn = 65535
+
+# tcp_max_syn_backlog: 65535 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 65535
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 1 - reuse TIME_WAIT ports for outgoing connections
+net.ipv4.tcp_tw_reuse = 1
+
+# tcp_fin_timeout: 15 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 15
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
+exports[`generated config: network > web / proxy 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux network stack sysctls
+# Generated 2026-01-01 by linux-tuners.dev/network
+# System: Web or API server, reverse proxy, 10 Gbit/s, paths up to 20 ms, 16 GiB RAM, conntrack on
+# Profile: Busy proxy
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-network-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify a value took effect:
+#      sysctl net.ipv4.tcp_rmem
+#
+# NOTES
+#
+# default_qdisc reaches interfaces created after it is set. Existing
+# ones keep theirs until a reboot, or apply it now per interface
+# (replace eth0 with each interface name from ip link):
+#   sudo tc qdisc replace dev eth0 root fq_codel
+#
+# The net.netfilter keys exist only once nf_conntrack is loaded. At boot
+# that can happen after this file is applied, and the keys are then
+# skipped. Load the module first:
+#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# nf_conntrack_buckets can only be written from the host, not from
+# inside a container.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   net.core sysctls: https://docs.kernel.org/admin-guide/sysctl/net.html
+#   Conntrack sysctls: https://docs.kernel.org/networking/nf_conntrack-sysctl.html
+
+# ── Socket buffers ──────────────────────────────────────────────────────────
+# rmem_max: 67108864 - SO_RCVBUF requests capped at 64 MiB
+net.core.rmem_max = 67108864
+
+# wmem_max: 67108864 - SO_SNDBUF requests capped at 64 MiB
+net.core.wmem_max = 67108864
+
+# tcp_rmem: 4096 131072 67108864 - TCP receive buffer 4 KiB / 128 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_rmem = 4096 131072 67108864
+
+# tcp_wmem: 4096 16384 67108864 - TCP send buffer 4 KiB / 16 KiB / 64 MiB (min / start / autotune max)
+net.ipv4.tcp_wmem = 4096 16384 67108864
+
+# ── Connection queues ───────────────────────────────────────────────────────
+# somaxconn: 65535 - accept queue ceiling per listener
+net.core.somaxconn = 65535
+
+# tcp_max_syn_backlog: 65535 - half-open connections per listener
+net.ipv4.tcp_max_syn_backlog = 65535
+
+# netdev_max_backlog: 8192 - received packets queued per CPU
+net.core.netdev_max_backlog = 8192
+
+# ── TCP behaviour and queueing ──────────────────────────────────────────────
+# tcp_congestion_control: cubic - congestion control for new connections
+net.ipv4.tcp_congestion_control = cubic
+
+# default_qdisc: fq_codel - qdisc for interfaces created from now on
+net.core.default_qdisc = fq_codel
+
+# tcp_slow_start_after_idle: 0 - keep the congestion window across idle pauses
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# tcp_mtu_probing: 0 - no packetization-layer MTU probing
+net.ipv4.tcp_mtu_probing = 0
+
+# ── Connections and local ports ─────────────────────────────────────────────
+# tcp_tw_reuse: 1 - reuse TIME_WAIT ports for outgoing connections
+net.ipv4.tcp_tw_reuse = 1
+
+# tcp_fin_timeout: 15 - seconds an orphaned socket waits in FIN_WAIT_2
+net.ipv4.tcp_fin_timeout = 15
+
+# ip_local_port_range: 16384 65535 - 49152 local ports for outgoing connections
+net.ipv4.ip_local_port_range = 16384 65535
+
+# ── Connection tracking (netfilter) ─────────────────────────────────────────
+# nf_conntrack_max: 262144 - tracked connections, about 80 MiB when full
+net.netfilter.nf_conntrack_max = 262144
+
+# nf_conntrack_buckets: 262144 - conntrack hash table size
+net.netfilter.nf_conntrack_buckets = 262144
+
+# nf_conntrack_tcp_timeout_established: 432000 - seconds an idle established connection stays tracked
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000"
+`;
+
 exports[`generated config: security > container / cis 1`] = `
 "# ────────────────────────────────────────────────────────────────────────────
 # Linux security hardening sysctls

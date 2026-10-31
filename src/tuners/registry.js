@@ -79,16 +79,27 @@ export const TUNERS = [
       jsonLdType: 'SoftwareApplication',
     },
   },
+  {
+    id: 'network',
+    status: 'live',
+    path: '/network',
+    navLabel: 'Network',
+    title: 'Network stack',
+    blurb: 'Tune net.core and net.ipv4 sysctls for throughput and latency, covering socket buffer sizes, the listen backlog, congestion control, TIME_WAIT reuse, and netfilter connection tracking.',
+    keys: ['net.ipv4.tcp_rmem', 'net.ipv4.tcp_congestion_control', 'net.core.somaxconn', 'net.netfilter.nf_conntrack_max', '…'],
+    route: {
+      title: 'Network stack tuner | linux-tuners.dev',
+      description:
+        'Link- and path-aware tuner for Linux network sysctls: tcp_rmem/tcp_wmem sized from the bandwidth-delay product, rmem_max, somaxconn, SYN and device backlogs, BBR or CUBIC with fq/fq_codel, TIME_WAIT reuse, local port range and nf_conntrack limits. Live per-connection throughput chart and a commented sysctl.d file.',
+      ogTitle: 'Network stack tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+  },
   // Roadmap toward the whole sysctl tree plus the key sysfs runtime tunables,
   // grouped by what an operator tunes together (e.g. hardening keys from
   // kernel/net/fs live in one "Security hardening" tuner).
-  {
-    id: 'network',
-    status: 'planned',
-    title: 'Network stack',
-    blurb: 'Tune net.core and net.ipv4 sysctls for throughput and latency, covering socket buffer sizes, the listen backlog, congestion control, TIME_WAIT reuse, and netfilter connection tracking.',
-    keys: ['net.core.rmem_max', 'net.ipv4.tcp_congestion_control', 'net.core.somaxconn', 'net.netfilter.nf_conntrack_max', '…'],
-  },
   {
     id: 'filesystem',
     status: 'planned',

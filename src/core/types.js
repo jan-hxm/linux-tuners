@@ -48,7 +48,7 @@
  * @property {(issues:any[])=>boolean} hasBlockingIssue
  * @property {(value:number, def:Object, hw:Object)=>string} formatValue
  * @property {TunerSection[]} sections
- * @property {(section:TunerSection, params:Object)=>string[]} [visibleKeys]
+ * @property {(section:TunerSection, params:Object, hw:Object)=>string[]} [visibleKeys]
  * @property {any[]}    presets
  * @property {Record<string, any>} presetsById
  * @property {(opts:Object)=>import('./output/files.js').ConfigFile[]} generateConfig  Built with the core/output writers

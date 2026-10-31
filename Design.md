@@ -33,6 +33,7 @@ They are not one tuner per `/proc/sys` root. For example, hardening keys from
 |---|---|---|
 | `/swap` | 11 `vm.*` parameters: swappiness, `min_free_kbytes`, watermark scaling, `vfs_cache_pressure`, dirty-page writeback, overcommit, `panic_on_oom`. Graphs: swap pressure, watermark zones, dirty writeback. | `/etc/sysctl.d/99-swap-tuning.conf`, plus device-aware swap setup instructions (swap file, zram-generator, zswap) |
 | `/systemd` | Manager defaults (accounting, `DefaultTasksMax`, `DefaultLimitNOFILE`, `DefaultLimitMEMLOCK`) and per-slice controls (`CPUWeight`, `CPUQuota`, `MemoryHigh`, `MemoryMax`, `MemorySwapMax`, `IOWeight`, `TasksMax`) for `system.slice`, `user.slice` or `machine.slice`. Graphs: CPU shares, memory budget, task and FD caps. | Two drop-ins in one document: `/etc/systemd/system.conf.d/99-resource-tuning.conf` and `/etc/systemd/system/<slice>.d/50-resources.conf` |
+| `/security` | 17 hardening sysctls: `kptr_restrict`, `dmesg_restrict`, `perf_event_paranoid`, `yama.ptrace_scope`, `randomize_va_space`, `unprivileged_bpf_disabled`; `rp_filter`, `tcp_syncookies`, IPv4/IPv6 `accept_redirects`, `send_redirects`, `accept_source_route`; `fs.protected_*`, `suid_dumpable`. The profile's kernel generation and IPv6 switch decide which keys and values exist. No graphs. | `/etc/sysctl.d/99-security-hardening.conf`, with notes on one-way values and on existing network interfaces |
 
 The planned tuners and their order are listed in [TODO.md](TODO.md).
 
@@ -276,7 +277,7 @@ must follow them, and existing UI must not regress.
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
-not plumbing. Two tuners are shipped and about eight are planned, so anything
+not plumbing. Three tuners are shipped and about seven are planned, so anything
 written twice gets written ten times. Duplication is the main risk.
 
 ### Layers and dependency direction
@@ -376,7 +377,10 @@ so that a new variant is an addition rather than an edit to shared code.
   keeps the frame: header, badges, the value, issues and the expandable text.
   Only the input is swapped. Every control takes `def`, `value`, `range`,
   `labelId` and `valueText` and emits `update`; the store clamps the value by
-  type. The slider keeps its
+  type. `segmented` stands for the values `0..n-1` of `def.segmentLabels` and
+  offers only those inside `range`, so a profile can narrow the choice (the
+  security tuner drops `unprivileged_bpf_disabled = 2` on kernels before
+  5.13). The slider keeps its
   [uncontrolled pattern](#range-slider-uncontrolled-with-external-sync) inside
   `SliderControl.vue`.
 - **Profile** (`profile.js`). One declarative field list drives the generic
@@ -428,7 +432,10 @@ so that a new variant is an addition rather than an edit to shared code.
     headers, file banners, and the date and preset summary for the header
     block.
   - `sysctlFile.js`: `sysctlConfig` prints each value with its def's type,
-    and `sysctlLine` holds it to plain space-separated tokens.
+    and `sysctlLine` holds it to plain space-separated tokens. A def's
+    `alsoSets` names more keys written with the same value, such as the
+    `conf.default` twin of a `conf.all` key; they are constants in the def,
+    like `sysctlName`.
   - `iniDropIn.js` (systemd): `iniSection` and `iniDirective`, with values
     limited to plain tokens.
   - Later, `udevRule` and `tunedProfile` for the sysfs tuners.
@@ -478,8 +485,9 @@ asserts that the required fields exist. One shared test suite then iterates
 over **every** registered tuner and checks:
 
 - Every key has a def with a docs URL, a description and a valid control/type.
-- The derived defaults lie within `rangeFor` for the default profile and for
-  each workload. Every preset names only known keys and in-range values.
+- The derived defaults lie within `rangeFor` for the default profile, for
+  each workload and for each option of every other choice field. Every preset
+  names only known keys, with values in range on all those profiles.
 - `encodeState` → `restoreState` round-trips. A tampered hash (out-of-range
   value, unknown preset, injected profile string) is rejected or clamped.
 - The defaults and every preset generate a config with no blocking issues,

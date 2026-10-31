@@ -44,11 +44,27 @@ function isValidValue(domain, key, value, hw) {
 
 // ── State builders ──────────────────────────────────────────────────────────
 
+/** The default profile, each workload, and each option of every other choice field. */
 function profilesFor(domain) {
+  const variants = domain.profile.fields
+    .filter((f) => f.type === 'choice' && f.key !== domain.workloadField)
+    .flatMap((f) => f.options.filter((o) => o.value !== f.default).map((o) => ({ ...domain.defaultHardware, [f.key]: o.value })))
   return [
     domain.defaultHardware,
     ...domain.workloads.map((w) => ({ ...domain.defaultHardware, [domain.workloadField]: w })),
+    ...variants,
   ]
+}
+
+/** "workload=k8s" for a profile that differs from the default in one field. */
+function profileLabel(domain, hw) {
+  const diff = Object.keys(hw).filter((k) => hw[k] !== domain.defaultHardware[k])
+  return diff.map((k) => `${k}=${hw[k]}`).join(', ') || 'default'
+}
+
+/** Every name a def writes: its sysctlName and any `alsoSets` twins. */
+function emittedNames(def) {
+  return [def.sysctlName.split(' ')[0], ...(def.alsoSets ?? [])]
 }
 
 /** The same merge the store's applyPreset does. */
@@ -155,7 +171,7 @@ function fuzzEnvelopes(domain, count, seed = 1) {
 function grammarViolations(domain, config) {
   // sysctlName may carry a display suffix ("DefaultLimitNOFILE (soft)"); the
   // emitted name is the part before it.
-  const names = new Set(Object.values(domain.defsByKey).map((d) => d.sysctlName.split(' ')[0]))
+  const names = new Set(Object.values(domain.defsByKey).flatMap(emittedNames))
   const bad = []
   for (const line of config.split('\n')) {
     if (line === '' || line.startsWith('#')) continue
@@ -173,7 +189,7 @@ function grammarViolations(domain, config) {
  * (`50%`, `yes`), and the grammar check holds those to plain tokens.
  */
 function typeFormatterViolations(domain, config, params) {
-  const defsByName = new Map(Object.values(domain.defsByKey).map((d) => [d.sysctlName, d]))
+  const defsByName = new Map(Object.values(domain.defsByKey).flatMap((d) => emittedNames(d).map((name) => [name, d])))
   const bad = []
   for (const line of config.split('\n')) {
     const m = /^([a-z][\w.]*) = (.*)$/.exec(line)
@@ -263,7 +279,7 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
   })
 
   describe('defaults and presets', () => {
-    it.each(profilesFor(domain).map((hw) => [hw[domain.workloadField], hw]))(
+    it.each(profilesFor(domain).map((hw) => [profileLabel(domain, hw), hw]))(
       'derives valid, in-range defaults for the %s profile',
       (_w, hw) => {
         const params = domain.deriveDefaults(hw)
@@ -274,20 +290,21 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
       },
     )
 
-    it('has presets that name only known keys with valid, in-range values', () => {
-      const hw = domain.defaultHardware
+    it('has presets that name only known keys with values valid on every profile', () => {
       for (const preset of domain.presets) {
         expect(preset.label && preset.description && preset.source, preset.id).toBeTruthy()
         for (const [key, value] of Object.entries(preset.values)) {
           expect(domain.parameterKeys, `${preset.id}.${key}`).toContain(key)
-          expect(isValidValue(domain, key, value, hw), `${preset.id}.${key} = ${value}`).toBe(true)
+          for (const hw of profilesFor(domain)) {
+            expect(isValidValue(domain, key, value, hw), `${preset.id}.${key} = ${value} on ${JSON.stringify(hw)}`).toBe(true)
+          }
         }
       }
     })
 
     it('generates a non-blocked config for every profile default and every preset', () => {
       for (const state of legitimateStates(domain)) {
-        const label = `${state.hardware[domain.workloadField]} / ${state.activePreset ?? 'defaults'}`
+        const label = `${profileLabel(domain, state.hardware)} / ${state.activePreset ?? 'defaults'}`
         const blocking = domain.validate(state.hardware, state.params).filter((i) => i.blocking)
         expect(blocking.map((i) => i.id), label).toEqual([])
         expectSafeConfig(domain, configFor(domain, state), state.params)

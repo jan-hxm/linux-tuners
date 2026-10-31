@@ -136,6 +136,7 @@ function openInDrawer() {
           >danger at 0</li>
         </ul>
 
+        <p v-if="def.alsoSets" class="mt-1 break-all font-mono text-xs text-slate-500">also sets {{ def.alsoSets.join(', ') }}</p>
         <p class="mt-1.5 text-xs text-slate-600">{{ def.shortDesc }}</p>
       </div>
 

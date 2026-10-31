@@ -18,6 +18,7 @@ import { LIVE_TUNERS } from './tuners/registry.js'
 const TUNER_DOMAIN_LOADERS = {
   swap: () => import('@/tuners/swap/index.js').then((m) => m.swapDomain),
   systemd: () => import('@/tuners/systemd/index.js').then((m) => m.systemdDomain),
+  security: () => import('@/tuners/security/index.js').then((m) => m.securityDomain),
 }
 
 /** A lazy route component that renders the shared TunerPage for one domain. */

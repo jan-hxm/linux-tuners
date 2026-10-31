@@ -12,9 +12,10 @@ const SECTIONS = domain.sections
 const open = ref(Object.fromEntries(SECTIONS.map((s) => [s.id, true])))
 
 // The domain may hide context-dependent keys (e.g. swap hides overcommit_ratio
-// unless strict overcommit is selected); defineTuner defaults to all keys.
+// unless strict overcommit is selected, security hides keys the chosen kernel
+// lacks); defineTuner defaults to all keys.
 function visibleKeys(section) {
-  return domain.visibleKeys(section, tuner.params)
+  return domain.visibleKeys(section, tuner.params, tuner.hardware)
 }
 
 const issueCountsBySection = computed(() => {

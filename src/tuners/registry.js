@@ -61,6 +61,24 @@ export const TUNERS = [
       jsonLdType: 'SoftwareApplication',
     },
   },
+  {
+    id: 'security',
+    status: 'live',
+    path: '/security',
+    navLabel: 'Security',
+    title: 'Security hardening',
+    blurb: 'A hardening profile (CIS-benchmark style) that pulls security-relevant sysctls together from kernel, net, and fs, covering pointer and dmesg restrictions, ptrace scope, reverse-path filtering, SYN cookies, and link protections.',
+    keys: ['kernel.kptr_restrict', 'kernel.yama.ptrace_scope', 'net.ipv4.tcp_syncookies', 'fs.protected_symlinks', '…'],
+    route: {
+      title: 'Security hardening tuner | linux-tuners.dev',
+      description:
+        'Workload-aware Linux hardening sysctls: kptr_restrict, dmesg_restrict, ptrace_scope, ASLR, unprivileged BPF, reverse-path filtering, SYN cookies, ICMP redirects, protected links and suid core dumps. KSPP and CIS-style presets, kernel-version aware, with a commented sysctl.d file.',
+      ogTitle: 'Security hardening tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+  },
   // Roadmap toward the whole sysctl tree plus the key sysfs runtime tunables,
   // grouped by what an operator tunes together (e.g. hardening keys from
   // kernel/net/fs live in one "Security hardening" tuner).
@@ -98,13 +116,6 @@ export const TUNERS = [
     title: 'System V IPC & shared memory',
     blurb: 'Tune System V IPC limits for databases and legacy middleware, covering shared-memory segment sizes, semaphore arrays, and message-queue limits.',
     keys: ['kernel.shmmax', 'kernel.shmall', 'kernel.sem', 'kernel.msgmni', '…'],
-  },
-  {
-    id: 'security',
-    status: 'planned',
-    title: 'Security hardening',
-    blurb: 'A hardening profile (CIS-benchmark style) that pulls security-relevant sysctls together from kernel, net, and fs, covering pointer and dmesg restrictions, ptrace scope, reverse-path filtering, SYN cookies, and link protections.',
-    keys: ['kernel.kptr_restrict', 'kernel.yama.ptrace_scope', 'net.ipv4.tcp_syncookies', 'fs.protected_symlinks', '…'],
   },
   {
     id: 'block-io',

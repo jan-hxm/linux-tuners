@@ -1,13 +1,23 @@
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   def: { type: Object, required: true },
   value: { type: Number, required: true },
   labelId: { type: String, required: true },
-  // Part of the shared control contract; unused here.
   range: { type: Object, default: null },
+  // Part of the shared control contract; unused here.
   valueText: { type: String, default: '' },
 })
 const emit = defineEmits(['update'])
+
+// Segment i stands for value i. Only the values in range are offered, so a
+// profile can narrow the choice (e.g. an older kernel that lacks one mode).
+const segments = computed(() =>
+  props.def.segmentLabels
+    .map((label, value) => ({ label, value }))
+    .filter(({ value }) => !props.range || (value >= props.range.min && value <= props.range.max)),
+)
 </script>
 
 <template>
@@ -17,16 +27,16 @@ const emit = defineEmits(['update'])
     class="mt-3 inline-flex overflow-hidden rounded border border-slate-300"
   >
     <button
-      v-for="(label, i) in def.segmentLabels"
-      :key="i"
+      v-for="seg in segments"
+      :key="seg.value"
       type="button"
       role="radio"
-      :aria-checked="value === i"
+      :aria-checked="value === seg.value"
       class="px-3 py-1 text-xs"
-      :class="value === i ? 'bg-slate-800 text-white' : 'bg-white hover:bg-slate-50'"
-      @click="emit('update', i)"
+      :class="value === seg.value ? 'bg-slate-800 text-white' : 'bg-white hover:bg-slate-50'"
+      @click="emit('update', seg.value)"
     >
-      {{ label }}
+      {{ seg.label }}
     </button>
   </div>
 </template>

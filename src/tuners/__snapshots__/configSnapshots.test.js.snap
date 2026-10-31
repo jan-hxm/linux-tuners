@@ -1,5 +1,2033 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`generated config: security > container / cis 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Container host or Kubernetes node, kernel 5.13 or newer, IPv6 on
+# Profile: CIS-style server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# Strict rp_filter: the kernel uses the higher of conf.all and the
+# interface value, and systemd sets every interface to 2 (loose). To make
+# strict mode stick, add this line to the end of this file. systemd-sysctl
+# accepts the glob and applies it to interfaces as they appear; if
+# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl
+#   net.ipv4.conf.*.rp_filter = 1
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 1 - kernel pointers hidden without CAP_SYSLOG
+kernel.kptr_restrict = 1
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 2 - users may profile the user space of their own processes
+kernel.perf_event_paranoid = 2
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 1 - strict reverse-path filtering (RFC 3704)
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > container / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Container host or Kubernetes node, kernel 5.13 or newer, IPv6 on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 1 - kernel pointers hidden without CAP_SYSLOG
+kernel.kptr_restrict = 1
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 2 - users may profile the user space of their own processes
+kernel.perf_event_paranoid = 2
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 2 - loose reverse-path filtering
+net.ipv4.conf.all.rp_filter = 2
+net.ipv4.conf.default.rp_filter = 2
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > container / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Container host or Kubernetes node, kernel 5.13 or newer, IPv6 on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 0 - kernel pointers hashed
+kernel.kptr_restrict = 0
+
+# dmesg_restrict: 0 - kernel log readable by every user
+kernel.dmesg_restrict = 0
+
+# perf_event_paranoid: 2 - users may profile the user space of their own processes
+kernel.perf_event_paranoid = 2
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 0 - unprivileged bpf() allowed
+kernel.unprivileged_bpf_disabled = 0
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 0 - no reverse-path filtering
+net.ipv4.conf.all.rp_filter = 0
+net.ipv4.conf.default.rp_filter = 0
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 1 - accept ICMP redirects
+net.ipv4.conf.all.accept_redirects = 1
+net.ipv4.conf.default.accept_redirects = 1
+
+# accept_redirects_v6: 1 - accept ICMP redirects
+net.ipv6.conf.all.accept_redirects = 1
+net.ipv6.conf.default.accept_redirects = 1
+
+# send_redirects: 1 - send ICMP redirects (routers only)
+net.ipv4.conf.all.send_redirects = 1
+net.ipv4.conf.default.send_redirects = 1
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 0 - symlinks unrestricted
+fs.protected_symlinks = 0
+
+# protected_hardlinks: 0 - hard links unrestricted
+fs.protected_hardlinks = 0
+
+# protected_fifos: 0 - FIFOs unrestricted
+fs.protected_fifos = 0
+
+# protected_regular: 0 - regular files unrestricted
+fs.protected_regular = 0
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > container / kspp 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Container host or Kubernetes node, kernel 5.13 or newer, IPv6 on
+# Profile: Maximum (KSPP)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# ONE-WAY SETTINGS
+#
+# These can't be changed again until the next reboot once applied:
+#   kernel.yama.ptrace_scope = 3
+#   kernel.unprivileged_bpf_disabled = 1
+# To undo them, remove the lines from this file and reboot.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 2 - kernel pointers hidden from everyone
+kernel.kptr_restrict = 2
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 3 - ptrace disabled, locked until reboot
+kernel.yama.ptrace_scope = 3
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 1 - unprivileged bpf() off, locked until reboot
+kernel.unprivileged_bpf_disabled = 1
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 2 - loose reverse-path filtering
+net.ipv4.conf.all.rp_filter = 2
+net.ipv4.conf.default.rp_filter = 2
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 2 - protect FIFOs in group-writable sticky dirs too
+fs.protected_fifos = 2
+
+# protected_regular: 2 - protect files in group-writable sticky dirs too
+fs.protected_regular = 2
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > desktop / cis 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Desktop or developer workstation, kernel 5.13 or newer, IPv6 on
+# Profile: CIS-style server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# Strict rp_filter: the kernel uses the higher of conf.all and the
+# interface value, and systemd sets every interface to 2 (loose). To make
+# strict mode stick, add this line to the end of this file. systemd-sysctl
+# accepts the glob and applies it to interfaces as they appear; if
+# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl
+#   net.ipv4.conf.*.rp_filter = 1
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 1 - kernel pointers hidden without CAP_SYSLOG
+kernel.kptr_restrict = 1
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 2 - users may profile the user space of their own processes
+kernel.perf_event_paranoid = 2
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 1 - strict reverse-path filtering (RFC 3704)
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > desktop / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Desktop or developer workstation, kernel 5.13 or newer, IPv6 on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 1 - kernel pointers hidden without CAP_SYSLOG
+kernel.kptr_restrict = 1
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 2 - users may profile the user space of their own processes
+kernel.perf_event_paranoid = 2
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 2 - loose reverse-path filtering
+net.ipv4.conf.all.rp_filter = 2
+net.ipv4.conf.default.rp_filter = 2
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > desktop / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Desktop or developer workstation, kernel 5.13 or newer, IPv6 on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 0 - kernel pointers hashed
+kernel.kptr_restrict = 0
+
+# dmesg_restrict: 0 - kernel log readable by every user
+kernel.dmesg_restrict = 0
+
+# perf_event_paranoid: 2 - users may profile the user space of their own processes
+kernel.perf_event_paranoid = 2
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 0 - unprivileged bpf() allowed
+kernel.unprivileged_bpf_disabled = 0
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 0 - no reverse-path filtering
+net.ipv4.conf.all.rp_filter = 0
+net.ipv4.conf.default.rp_filter = 0
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 1 - accept ICMP redirects
+net.ipv4.conf.all.accept_redirects = 1
+net.ipv4.conf.default.accept_redirects = 1
+
+# accept_redirects_v6: 1 - accept ICMP redirects
+net.ipv6.conf.all.accept_redirects = 1
+net.ipv6.conf.default.accept_redirects = 1
+
+# send_redirects: 1 - send ICMP redirects (routers only)
+net.ipv4.conf.all.send_redirects = 1
+net.ipv4.conf.default.send_redirects = 1
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 0 - symlinks unrestricted
+fs.protected_symlinks = 0
+
+# protected_hardlinks: 0 - hard links unrestricted
+fs.protected_hardlinks = 0
+
+# protected_fifos: 0 - FIFOs unrestricted
+fs.protected_fifos = 0
+
+# protected_regular: 0 - regular files unrestricted
+fs.protected_regular = 0
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > desktop / kspp 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Desktop or developer workstation, kernel 5.13 or newer, IPv6 on
+# Profile: Maximum (KSPP)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# ONE-WAY SETTINGS
+#
+# These can't be changed again until the next reboot once applied:
+#   kernel.yama.ptrace_scope = 3
+#   kernel.unprivileged_bpf_disabled = 1
+# To undo them, remove the lines from this file and reboot.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 2 - kernel pointers hidden from everyone
+kernel.kptr_restrict = 2
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 3 - ptrace disabled, locked until reboot
+kernel.yama.ptrace_scope = 3
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 1 - unprivileged bpf() off, locked until reboot
+kernel.unprivileged_bpf_disabled = 1
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 2 - loose reverse-path filtering
+net.ipv4.conf.all.rp_filter = 2
+net.ipv4.conf.default.rp_filter = 2
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 2 - protect FIFOs in group-writable sticky dirs too
+fs.protected_fifos = 2
+
+# protected_regular: 2 - protect files in group-writable sticky dirs too
+fs.protected_regular = 2
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > router / cis 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Router, firewall or VPN gateway, kernel 5.13 or newer, IPv6 on
+# Profile: CIS-style server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# Strict rp_filter: the kernel uses the higher of conf.all and the
+# interface value, and systemd sets every interface to 2 (loose). To make
+# strict mode stick, add this line to the end of this file. systemd-sysctl
+# accepts the glob and applies it to interfaces as they appear; if
+# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl
+#   net.ipv4.conf.*.rp_filter = 1
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 2 - kernel pointers hidden from everyone
+kernel.kptr_restrict = 2
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 1 - strict reverse-path filtering (RFC 3704)
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > router / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Router, firewall or VPN gateway, kernel 5.13 or newer, IPv6 on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 2 - kernel pointers hidden from everyone
+kernel.kptr_restrict = 2
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 2 - ptrace needs CAP_SYS_PTRACE
+kernel.yama.ptrace_scope = 2
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 2 - loose reverse-path filtering
+net.ipv4.conf.all.rp_filter = 2
+net.ipv4.conf.default.rp_filter = 2
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 1 - send ICMP redirects (routers only)
+net.ipv4.conf.all.send_redirects = 1
+net.ipv4.conf.default.send_redirects = 1
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > router / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Router, firewall or VPN gateway, kernel 5.13 or newer, IPv6 on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 0 - kernel pointers hashed
+kernel.kptr_restrict = 0
+
+# dmesg_restrict: 0 - kernel log readable by every user
+kernel.dmesg_restrict = 0
+
+# perf_event_paranoid: 2 - users may profile the user space of their own processes
+kernel.perf_event_paranoid = 2
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 0 - unprivileged bpf() allowed
+kernel.unprivileged_bpf_disabled = 0
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 0 - no reverse-path filtering
+net.ipv4.conf.all.rp_filter = 0
+net.ipv4.conf.default.rp_filter = 0
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 1 - accept ICMP redirects
+net.ipv4.conf.all.accept_redirects = 1
+net.ipv4.conf.default.accept_redirects = 1
+
+# accept_redirects_v6: 1 - accept ICMP redirects
+net.ipv6.conf.all.accept_redirects = 1
+net.ipv6.conf.default.accept_redirects = 1
+
+# send_redirects: 1 - send ICMP redirects (routers only)
+net.ipv4.conf.all.send_redirects = 1
+net.ipv4.conf.default.send_redirects = 1
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 0 - symlinks unrestricted
+fs.protected_symlinks = 0
+
+# protected_hardlinks: 0 - hard links unrestricted
+fs.protected_hardlinks = 0
+
+# protected_fifos: 0 - FIFOs unrestricted
+fs.protected_fifos = 0
+
+# protected_regular: 0 - regular files unrestricted
+fs.protected_regular = 0
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > router / kspp 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Router, firewall or VPN gateway, kernel 5.13 or newer, IPv6 on
+# Profile: Maximum (KSPP)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# ONE-WAY SETTINGS
+#
+# These can't be changed again until the next reboot once applied:
+#   kernel.yama.ptrace_scope = 3
+#   kernel.unprivileged_bpf_disabled = 1
+# To undo them, remove the lines from this file and reboot.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 2 - kernel pointers hidden from everyone
+kernel.kptr_restrict = 2
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 3 - ptrace disabled, locked until reboot
+kernel.yama.ptrace_scope = 3
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 1 - unprivileged bpf() off, locked until reboot
+kernel.unprivileged_bpf_disabled = 1
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 2 - loose reverse-path filtering
+net.ipv4.conf.all.rp_filter = 2
+net.ipv4.conf.default.rp_filter = 2
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 1 - send ICMP redirects (routers only)
+net.ipv4.conf.all.send_redirects = 1
+net.ipv4.conf.default.send_redirects = 1
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 2 - protect FIFOs in group-writable sticky dirs too
+fs.protected_fifos = 2
+
+# protected_regular: 2 - protect files in group-writable sticky dirs too
+fs.protected_regular = 2
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > server / cis 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Server (single network, no forwarding), kernel 5.13 or newer, IPv6 on
+# Profile: CIS-style server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# Strict rp_filter: the kernel uses the higher of conf.all and the
+# interface value, and systemd sets every interface to 2 (loose). To make
+# strict mode stick, add this line to the end of this file. systemd-sysctl
+# accepts the glob and applies it to interfaces as they appear; if
+# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl
+#   net.ipv4.conf.*.rp_filter = 1
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 1 - kernel pointers hidden without CAP_SYSLOG
+kernel.kptr_restrict = 1
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 1 - strict reverse-path filtering (RFC 3704)
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > server / cis 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Server (single network, no forwarding), kernel 5.13 or newer, IPv6 on
+# Profile: CIS-style server
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# Strict rp_filter: the kernel uses the higher of conf.all and the
+# interface value, and systemd sets every interface to 2 (loose). To make
+# strict mode stick, add this line to the end of this file. systemd-sysctl
+# accepts the glob and applies it to interfaces as they appear; if
+# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl
+#   net.ipv4.conf.*.rp_filter = 1
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 1 - kernel pointers hidden without CAP_SYSLOG
+kernel.kptr_restrict = 1
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 1 - strict reverse-path filtering (RFC 3704)
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > server / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Server (single network, no forwarding), kernel 5.13 or newer, IPv6 on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# Strict rp_filter: the kernel uses the higher of conf.all and the
+# interface value, and systemd sets every interface to 2 (loose). To make
+# strict mode stick, add this line to the end of this file. systemd-sysctl
+# accepts the glob and applies it to interfaces as they appear; if
+# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl
+#   net.ipv4.conf.*.rp_filter = 1
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 1 - kernel pointers hidden without CAP_SYSLOG
+kernel.kptr_restrict = 1
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 2 - ptrace needs CAP_SYS_PTRACE
+kernel.yama.ptrace_scope = 2
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 1 - strict reverse-path filtering (RFC 3704)
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > server / defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Server (single network, no forwarding), kernel 5.13 or newer, IPv6 on
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# Strict rp_filter: the kernel uses the higher of conf.all and the
+# interface value, and systemd sets every interface to 2 (loose). To make
+# strict mode stick, add this line to the end of this file. systemd-sysctl
+# accepts the glob and applies it to interfaces as they appear; if
+# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl
+#   net.ipv4.conf.*.rp_filter = 1
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 1 - kernel pointers hidden without CAP_SYSLOG
+kernel.kptr_restrict = 1
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 2 - ptrace needs CAP_SYS_PTRACE
+kernel.yama.ptrace_scope = 2
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 2 - unprivileged bpf() off
+kernel.unprivileged_bpf_disabled = 2
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 1 - strict reverse-path filtering (RFC 3704)
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 1 - protect FIFOs in world-writable sticky dirs
+fs.protected_fifos = 1
+
+# protected_regular: 1 - protect files in world-writable sticky dirs
+fs.protected_regular = 1
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > server / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Server (single network, no forwarding), kernel 5.13 or newer, IPv6 on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 0 - kernel pointers hashed
+kernel.kptr_restrict = 0
+
+# dmesg_restrict: 0 - kernel log readable by every user
+kernel.dmesg_restrict = 0
+
+# perf_event_paranoid: 2 - users may profile the user space of their own processes
+kernel.perf_event_paranoid = 2
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 0 - unprivileged bpf() allowed
+kernel.unprivileged_bpf_disabled = 0
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 0 - no reverse-path filtering
+net.ipv4.conf.all.rp_filter = 0
+net.ipv4.conf.default.rp_filter = 0
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 1 - accept ICMP redirects
+net.ipv4.conf.all.accept_redirects = 1
+net.ipv4.conf.default.accept_redirects = 1
+
+# accept_redirects_v6: 1 - accept ICMP redirects
+net.ipv6.conf.all.accept_redirects = 1
+net.ipv6.conf.default.accept_redirects = 1
+
+# send_redirects: 1 - send ICMP redirects (routers only)
+net.ipv4.conf.all.send_redirects = 1
+net.ipv4.conf.default.send_redirects = 1
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 0 - symlinks unrestricted
+fs.protected_symlinks = 0
+
+# protected_hardlinks: 0 - hard links unrestricted
+fs.protected_hardlinks = 0
+
+# protected_fifos: 0 - FIFOs unrestricted
+fs.protected_fifos = 0
+
+# protected_regular: 0 - regular files unrestricted
+fs.protected_regular = 0
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > server / kernel-defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Server (single network, no forwarding), kernel 5.13 or newer, IPv6 on
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 0 - kernel pointers hashed
+kernel.kptr_restrict = 0
+
+# dmesg_restrict: 0 - kernel log readable by every user
+kernel.dmesg_restrict = 0
+
+# perf_event_paranoid: 2 - users may profile the user space of their own processes
+kernel.perf_event_paranoid = 2
+
+# ptrace_scope: 1 - ptrace only of descendants
+kernel.yama.ptrace_scope = 1
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 0 - unprivileged bpf() allowed
+kernel.unprivileged_bpf_disabled = 0
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 0 - no reverse-path filtering
+net.ipv4.conf.all.rp_filter = 0
+net.ipv4.conf.default.rp_filter = 0
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 1 - accept ICMP redirects
+net.ipv4.conf.all.accept_redirects = 1
+net.ipv4.conf.default.accept_redirects = 1
+
+# accept_redirects_v6: 1 - accept ICMP redirects
+net.ipv6.conf.all.accept_redirects = 1
+net.ipv6.conf.default.accept_redirects = 1
+
+# send_redirects: 1 - send ICMP redirects (routers only)
+net.ipv4.conf.all.send_redirects = 1
+net.ipv4.conf.default.send_redirects = 1
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 0 - symlinks unrestricted
+fs.protected_symlinks = 0
+
+# protected_hardlinks: 0 - hard links unrestricted
+fs.protected_hardlinks = 0
+
+# protected_fifos: 0 - FIFOs unrestricted
+fs.protected_fifos = 0
+
+# protected_regular: 0 - regular files unrestricted
+fs.protected_regular = 0
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > server / kspp 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Server (single network, no forwarding), kernel 5.13 or newer, IPv6 on
+# Profile: Maximum (KSPP)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# ONE-WAY SETTINGS
+#
+# These can't be changed again until the next reboot once applied:
+#   kernel.yama.ptrace_scope = 3
+#   kernel.unprivileged_bpf_disabled = 1
+# To undo them, remove the lines from this file and reboot.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# Strict rp_filter: the kernel uses the higher of conf.all and the
+# interface value, and systemd sets every interface to 2 (loose). To make
+# strict mode stick, add this line to the end of this file. systemd-sysctl
+# accepts the glob and applies it to interfaces as they appear; if
+# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl
+#   net.ipv4.conf.*.rp_filter = 1
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 2 - kernel pointers hidden from everyone
+kernel.kptr_restrict = 2
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 3 - ptrace disabled, locked until reboot
+kernel.yama.ptrace_scope = 3
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 1 - unprivileged bpf() off, locked until reboot
+kernel.unprivileged_bpf_disabled = 1
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 1 - strict reverse-path filtering (RFC 3704)
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 2 - protect FIFOs in group-writable sticky dirs too
+fs.protected_fifos = 2
+
+# protected_regular: 2 - protect files in group-writable sticky dirs too
+fs.protected_regular = 2
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
+exports[`generated config: security > server / kspp 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux security hardening sysctls
+# Generated 2026-01-01 by linux-tuners.dev/security
+# System: Server (single network, no forwarding), kernel 5.13 or newer, IPv6 on
+# Profile: Maximum (KSPP)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-security-hardening.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#    Test on one machine first: some values can break debuggers,
+#    profilers, VPNs or container networking (see the notes per key).
+#
+# 3. Verify a value took effect:
+#      sysctl kernel.kptr_restrict
+#
+# ONE-WAY SETTINGS
+#
+# These can't be changed again until the next reboot once applied:
+#   kernel.yama.ptrace_scope = 3
+#   kernel.unprivileged_bpf_disabled = 1
+# To undo them, remove the lines from this file and reboot.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# NETWORK INTERFACES
+#
+# The conf.all and conf.default keys below don't reset interfaces that
+# already exist when this file is applied, and for redirects the kernel
+# honours either value. Check the interface values after applying:
+#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'
+#
+# Strict rp_filter: the kernel uses the higher of conf.all and the
+# interface value, and systemd sets every interface to 2 (loose). To make
+# strict mode stick, add this line to the end of this file. systemd-sysctl
+# accepts the glob and applies it to interfaces as they appear; if
+# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl
+#   net.ipv4.conf.*.rp_filter = 1
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/
+#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html
+#   KSPP recommended settings: https://kspp.github.io/Recommended_Settings
+
+# ── Kernel information and attack surface ───────────────────────────────────
+# kptr_restrict: 2 - kernel pointers hidden from everyone
+kernel.kptr_restrict = 2
+
+# dmesg_restrict: 1 - kernel log needs CAP_SYSLOG
+kernel.dmesg_restrict = 1
+
+# perf_event_paranoid: 3 - no unprivileged perf on patched kernels, otherwise same as 2
+kernel.perf_event_paranoid = 3
+
+# ptrace_scope: 3 - ptrace disabled, locked until reboot
+kernel.yama.ptrace_scope = 3
+
+# randomize_va_space: 2 - full ASLR
+kernel.randomize_va_space = 2
+
+# unprivileged_bpf_disabled: 1 - unprivileged bpf() off, locked until reboot
+kernel.unprivileged_bpf_disabled = 1
+
+# ── Network ─────────────────────────────────────────────────────────────────
+# rp_filter: 1 - strict reverse-path filtering (RFC 3704)
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# tcp_syncookies: 1 - SYN cookies when the listen queue overflows
+net.ipv4.tcp_syncookies = 1
+
+# accept_redirects: 0 - ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+
+# accept_redirects_v6: 0 - ignore ICMP redirects
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# send_redirects: 0 - never send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# accept_source_route: 0 - drop source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+
+# ── Filesystem links and core dumps ─────────────────────────────────────────
+# protected_symlinks: 1 - restrict following symlinks in sticky dirs
+fs.protected_symlinks = 1
+
+# protected_hardlinks: 1 - restrict hard links to others' files
+fs.protected_hardlinks = 1
+
+# protected_fifos: 2 - protect FIFOs in group-writable sticky dirs too
+fs.protected_fifos = 2
+
+# protected_regular: 2 - protect files in group-writable sticky dirs too
+fs.protected_regular = 2
+
+# suid_dumpable: 0 - no core dumps of privileged processes
+fs.suid_dumpable = 0"
+`;
+
 exports[`generated config: swap > database / database 1`] = `
 "# ────────────────────────────────────────────────────────────────────────────
 # Linux swap & VM sysctl tuning

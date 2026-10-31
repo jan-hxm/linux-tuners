@@ -11,22 +11,22 @@ Each one is a new domain module following [Design.md §6](Design.md#6-adding-a-t
 
 sysctl-based (output: `/etc/sysctl.d/`):
 
-1. [ ] **Security hardening** (cross-cutting, CIS-style): `kernel.kptr_restrict`, `dmesg_restrict`, `yama.ptrace_scope`, `randomize_va_space`, `unprivileged_bpf_disabled`, `perf_event_paranoid`; `net.ipv4.conf.*.rp_filter`, `tcp_syncookies`, `accept_redirects`; `fs.protected_*`, `suid_dumpable`.
-2. [ ] **Network stack** (`net.*`): socket buffers (`rmem_max`/`wmem_max`/`tcp_rmem`/`tcp_wmem`), listen backlog (`somaxconn`, `tcp_max_syn_backlog`), `tcp_congestion_control`, TIME_WAIT reuse, conntrack (`nf_conntrack_max`, buckets, timeouts).
-3. [ ] **Filesystem & file descriptors** (`fs.*`): `file-max`, `nr_open`, `inotify.max_user_watches`/`max_user_instances`, `aio-max-nr`.
-4. [ ] **Huge pages & memory layout** (the rest of `vm.*` + THP/KSM sysfs): `nr_hugepages`, `nr_overcommit_hugepages`, `max_map_count`, `mmap_min_addr`, `zone_reclaim_mode`, `page-cluster`; THP and KSM via `/sys/kernel/mm/`. Mixed output (sysctl.d + sysfs/tuned).
-5. [ ] **System V IPC & shared memory**: `kernel.shmmax`, `shmall`, `shmmni`, `sem`, `msgmni`/`msgmnb`/`msgmax`.
-6. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
+1. [ ] **Network stack** (`net.*`): socket buffers (`rmem_max`/`wmem_max`/`tcp_rmem`/`tcp_wmem`), listen backlog (`somaxconn`, `tcp_max_syn_backlog`), `tcp_congestion_control`, TIME_WAIT reuse, conntrack (`nf_conntrack_max`, buckets, timeouts).
+2. [ ] **Filesystem & file descriptors** (`fs.*`): `file-max`, `nr_open`, `inotify.max_user_watches`/`max_user_instances`, `aio-max-nr`.
+3. [ ] **Huge pages & memory layout** (the rest of `vm.*` + THP/KSM sysfs): `nr_hugepages`, `nr_overcommit_hugepages`, `max_map_count`, `mmap_min_addr`, `zone_reclaim_mode`, `page-cluster`; THP and KSM via `/sys/kernel/mm/`. Mixed output (sysctl.d + sysfs/tuned).
+4. [ ] **System V IPC & shared memory**: `kernel.shmmax`, `shmall`, `shmmni`, `sem`, `msgmni`/`msgmnb`/`msgmax`.
+5. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
 
 sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profile):
 
-7. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
-8. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`.
+6. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
+7. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`.
 
 ## 2. Correctness
 
 - [ ] Swap: make `dirty_writeback_centisecs > dirty_expire_centisecs` a warning instead of a blocking error (per [Design.md §3](Design.md#3-product-principles) principle 4). `src/tuners/swap/validation.js`
 - [ ] Swap: gate the `watermark_scale_factor` max by kernel version, like swappiness. Older kernels cap it at 1000, so the Kubernetes default of 2000 fails there. Verify the exact version that raised the cap to 3000 first.
+- [ ] Swap: `applyPreset` doesn't clamp preset values to `rangeFor`, so the "Kubernetes + zram" preset (swappiness 133) emits a value kernels before 5.8 reject when the profile names such a kernel. Clamp in the store's `applyPreset` (or hold presets to every kernel), then the PresetSelector shows the preset as customised. `src/core/createTunerStore.js`
 - [ ] Swap: the config comments say `dirty_ratio` is a percentage "of RAM"; the kernel actually uses dirtyable (free + reclaimable) memory. Reword in `src/tuners/swap/config.js`.
 - [ ] `AdSlot` labels ads "Werbung"; use "Advertisement" to match the English site. `src/ui/AdSlot.vue`
 - [ ] Remove the stale comments in `.github/workflows/ci.yml` (the removed consent banner, and a "skip deploy when the secret is missing" condition that doesn't exist).

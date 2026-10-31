@@ -82,7 +82,12 @@ Every tuner follows the same flow:
    mention return to their default.
 4. **Parameter cards**: a slider or toggle, click-to-edit exact value,
    layered descriptions (short, long, tuning tip, zones) and a reference drawer
-   with a formula where one helps
+   with a formula where one helps. The drawer prints the def's
+   `kernelDefault`, plus its `kernelDefaultNote` when the default depends on
+   the kernel version or the distribution build. A "kernel defaults" preset
+   only makes sense where one fixed set is right on every kernel offered: the
+   security tuner has none, because there it would turn unprivileged BPF back
+   on and loosen Ubuntu's perf restriction.
 5. **Validation**: issues shown inline on the affected cards
 6. **Live simulation**: a tabbed `GraphPanel` plus impact cards
 7. **Config output**: copy, download, share URL, reset

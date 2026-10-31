@@ -5,14 +5,15 @@
  *
  * Segmented controls stand for the values 0..n-1, one label each; toggles are
  * 0/1. `alsoSets` names the keys written with the same value (the
- * `conf.default` twin of a `conf.all` key).
+ * `conf.default` twin of a `conf.all` key). `kernelDefaultNote` qualifies a
+ * kernel default that depends on the kernel version or the distribution build.
  *
  * @typedef {'kernel' | 'network' | 'filesystem'} SecurityGroup
  *
  * @typedef {Object} SecurityValues
- * @property {0|1|2}   kptr_restrict
+ * @property {0|1|2}   kptr_restrict              0 hashes only on 5.2+
  * @property {0|1}     dmesg_restrict
- * @property {0|1|2|3} perf_event_paranoid        -1 (open to all) is not offered
+ * @property {0|1|2|3|4} perf_event_paranoid      -1 (open to all) is not offered; 3 and 4 need a distro patch
  * @property {0|1|2|3} ptrace_scope               3 can't be lowered until reboot
  * @property {0|1|2}   randomize_va_space
  * @property {0|1|2}   unprivileged_bpf_disabled  1 can't be lowered until reboot; 2 needs 5.13+
@@ -46,11 +47,11 @@ export const PARAMETER_DEFS = [
     sysctlName: 'kernel.kptr_restrict',
     group: 'kernel',
     control: 'segmented',
-    segmentLabels: ['0: hashed', '1: hide from users', '2: hide from all'],
+    segmentLabels: ['0: unrestricted', '1: hide from users', '2: hide from all'],
     shortDesc: 'Whether kernel addresses in /proc files are shown, hashed or hidden.',
     longDesc: [
       'Kernel code prints some pointers with the %pK format, for example in /proc/modules and in many driver files. Knowing where the kernel sits in memory is the first step of most kernel exploits, because it defeats the address randomisation (KASLR) that would otherwise make them guess.',
-      'At 0 those addresses are hashed, so they are unique but useless to an attacker. At 1 they print as zeros unless the reader has CAP_SYSLOG, and at 2 they print as zeros for everyone, root included.',
+      'At 0 kernel 5.2 and newer hash those addresses, so they are unique but useless to an attacker; older kernels print them in full. At 1 they print as zeros unless the reader has CAP_SYSLOG, and at 2 they print as zeros for everyone, root included.',
       'The same setting decides who sees real addresses in /proc/kallsyms. At 0, every user does when perf_event_paranoid is 1 or lower; at 1 only CAP_SYSLOG holders do. Use 1 on most systems; 2 also blinds root tools such as perf and crash analysers.',
     ],
     tuningTip: 'Use 1 so only privileged tools see addresses; 2 if root never needs them.',
@@ -88,19 +89,20 @@ export const PARAMETER_DEFS = [
     sysctlName: 'kernel.perf_event_paranoid',
     group: 'kernel',
     control: 'segmented',
-    segmentLabels: ['0: system-wide', '1: own processes', '2: own, user space', '3: none (patched)'],
+    segmentLabels: ['0: system-wide', '1: own processes', '2: own, user space', '3: none (Debian)', '4: none (patched)'],
     shortDesc: 'How much of the perf profiling interface unprivileged users get.',
     longDesc: [
       'perf_event_open() gives programs access to CPU performance counters, tracepoints and kernel profiling. It is a large, complex interface, and it has been the source of several kernel vulnerabilities, so it is restricted for users without CAP_PERFMON (or CAP_SYS_ADMIN on kernels before 5.8).',
-      'At 0 users may also collect CPU-wide events; at 1 they may profile their own processes including kernel code; at 2 (the default) only the user-space part of their own processes. The value -1, open to everyone, is not offered here.',
-      'Debian, Ubuntu and Android kernels carry a patch that makes 3 block unprivileged perf entirely. On other kernels 3 is accepted but behaves like 2.',
+      'At 0 users may also collect CPU-wide events; at 1 they may profile their own processes including kernel code; at 2 (the upstream default) only the user-space part of their own processes. The value -1, open to everyone, is not offered here.',
+      'Debian and Android kernels carry a patch that blocks unprivileged perf entirely from 3 up. Ubuntu\'s version of the patch blocks it only from 4, starts at 4, and treats 3 like 2. Upstream kernels accept 3 and 4 and treat both like 2, so 4 is the value that blocks perf wherever a patch exists.',
     ],
-    tuningTip: 'Keep 2 for developers who profile their own code; use 3 on servers with a patched kernel.',
+    tuningTip: 'Keep 2 for developers who profile their own code; use 4 on servers.',
     kernelDocsUrl: `${KERNEL_DOCS}#perf-event-paranoid`,
     cisNote: null,
     kernelDefault: 2,
+    kernelDefaultNote: 'Debian kernels start at 3 and Ubuntu kernels at 4.',
     kernelMin: 0,
-    kernelMax: 3,
+    kernelMax: 4,
     step: 1,
     unit: 'segment',
   },
@@ -155,12 +157,13 @@ export const PARAMETER_DEFS = [
     longDesc: [
       'The bpf() system call loads small programs into the kernel, checked first by the BPF verifier. When unprivileged users may call it, every user can reach the verifier, and verifier bugs have led to several local privilege escalations.',
       'At 1 unprivileged bpf() is off and can\'t be turned back on until the next reboot. At 2 it is off but an admin can change it again. Value 2 needs kernel 5.13 or newer; on older kernels 1 is the only way to turn it off, and they reject writing 0, so this tuner leaves the key out of the file at 0.',
-      'Kernels built with CONFIG_BPF_UNPRIV_DEFAULT_OFF, which most current distributions use, already start at 2. Tools such as bpftrace and most BPF-based monitoring run as root and are not affected.',
+      'Kernels built with CONFIG_BPF_UNPRIV_DEFAULT_OFF start at 2. That option is on by default from kernel 5.16 and in the major distributions\' kernels, so writing 0 on a current kernel turns unprivileged BPF back on. Tools such as bpftrace and most BPF-based monitoring run as root and are not affected.',
     ],
     tuningTip: 'Use 2 on 5.13+, 1 on older kernels, unless something really needs unprivileged BPF.',
     kernelDocsUrl: `${KERNEL_DOCS}#unprivileged-bpf-disabled`,
     cisNote: null,
-    kernelDefault: 0,
+    kernelDefault: 2,
+    kernelDefaultNote: 'From 5.16, and in most distribution kernels; older kernels, or ones built without CONFIG_BPF_UNPRIV_DEFAULT_OFF, start at 0.',
     kernelMin: 0,
     kernelMax: 2,
     step: 1,
@@ -222,7 +225,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'Whether IPv4 ICMP redirects may change this host\'s routes.',
     longDesc: [
       'An ICMP redirect tells a host to send traffic for some destination through a different gateway. Anyone on the local network can forge one, so accepting them lets an attacker reroute traffic through a machine they control.',
-      'Hosts with a correct routing table never need them. On a host that doesn\'t forward, the kernel accepts redirects on an interface if either conf.all or the interface itself allows them, so interfaces that already exist when the file is applied must be switched off as well.',
+      'Hosts with a correct routing table never need them. On a host that doesn\'t forward, the kernel accepts redirects on an interface if either conf.all or the interface itself allows them. Writing conf.default also updates existing interfaces whose own value was never set, but an interface whose value something else set keeps it, so check the interfaces after applying.',
     ],
     tuningTip: 'Turn it off everywhere.',
     kernelDocsUrl: NET_DOCS,
@@ -245,6 +248,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'Whether IPv6 ICMP redirects may change this host\'s routes.',
     longDesc: [
       'The IPv6 version of the same attack: a forged ICMPv6 redirect from the local network points traffic at the wrong next hop. Hosts with a correct routing table don\'t need redirects.',
+      'IPv6 works differently from IPv4 here: the kernel only looks at each interface\'s own value. conf.all has no effect, and conf.default only reaches interfaces created later, so interfaces that already exist, often including the main one at boot, keep accepting redirects. The generated file shows how to switch them off too.',
       'These keys only exist while IPv6 is enabled, so they are left out of the file when the profile says IPv6 is off.',
     ],
     tuningTip: 'Turn it off everywhere.',

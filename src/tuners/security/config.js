@@ -53,7 +53,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('#      sysctl kernel.kptr_restrict')
   lines.push('#')
   lines.push(...oneWayBlock(hardware, params))
-  lines.push(...interfaceBlock(params))
+  lines.push(...interfaceBlock(hardware, params))
   lines.push('# Sources:')
   lines.push('#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/')
   lines.push('#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html')
@@ -64,7 +64,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
     defs: PARAMETER_DEFS,
     sections: SECTIONS,
     params,
-    comment: (def, value) => commentFor(def, value),
+    comment: (def, value) => commentFor(def, value, hardware),
     include: (def) => isEmitted(def.key, hardware, params),
   }))
 
@@ -90,27 +90,51 @@ function oneWayBlock(hw, params) {
 }
 
 /**
- * The all/default caveat for the per-interface network keys: interfaces that
- * exist when the file is applied keep their own value.
+ * The all/default caveat for the per-interface network keys. IPv4 copies a
+ * conf.default write to existing interfaces whose own value was never set;
+ * one that systemd or another tool set keeps it. IPv6 never copies, and for
+ * accept_redirects it reads only the interface's own value.
  */
-function interfaceBlock(params) {
+function interfaceBlock(hw, params) {
+  const strictRp = params.rp_filter === 1
+  const v6Redirects = isEmitted('accept_redirects_v6', hw, params) && params.accept_redirects_v6 === 0
+  const globs = []
+  if (strictRp) globs.push('net.ipv4.conf.*.rp_filter = 1')
+  if (v6Redirects) globs.push('net.ipv6.conf.*.accept_redirects = 0')
   const out = [
     '# NETWORK INTERFACES',
     '#',
-    '# The conf.all and conf.default keys below don\'t reset interfaces that',
-    '# already exist when this file is applied, and for redirects the kernel',
-    '# honours either value. Check the interface values after applying:',
+    '# The conf.all and conf.default keys below don\'t reach every interface',
+    '# that exists when this file is applied: an IPv4 interface whose own',
+    '# value was set (systemd sets rp_filter on each one) keeps it, and IPv6',
+    '# interfaces always keep theirs. For IPv4 redirects the kernel honours',
+    '# either the conf.all or the interface value. Check the interfaces after',
+    '# applying:',
     "#   sysctl -a 2>/dev/null | grep -E '\\.(rp_filter|accept_redirects|send_redirects)'",
   ]
-  if (params.rp_filter === 1) {
+  if (strictRp) {
     out.push(
       '#',
       '# Strict rp_filter: the kernel uses the higher of conf.all and the',
-      '# interface value, and systemd sets every interface to 2 (loose). To make',
-      '# strict mode stick, add this line to the end of this file. systemd-sysctl',
-      '# accepts the glob and applies it to interfaces as they appear; if',
-      '# sysctl --system rejects it, apply with: sudo systemctl restart systemd-sysctl',
-      '#   net.ipv4.conf.*.rp_filter = 1',
+      '# interface value, and systemd sets every interface to 2 (loose).',
+    )
+  }
+  if (v6Redirects) {
+    out.push(
+      '#',
+      '# IPv6 redirects: the kernel only reads each interface\'s own value, so',
+      '# interfaces that exist before this file is applied (often the main one',
+      '# at boot) keep accepting redirects.',
+    )
+  }
+  if (globs.length) {
+    out.push(
+      '#',
+      `# To cover every interface, add ${globs.length > 1 ? 'these lines' : 'this line'} to the end of this file.`,
+      '# systemd-sysctl, which applies the file at boot, expands globs and',
+      '# applies them to interfaces as they appear. sysctl from procps before 4.0',
+      '# rejects globs; apply with: sudo systemctl restart systemd-sysctl',
+      ...globs.map((g) => `#   ${g}`),
     )
   }
   out.push('#', rule(), '#')
@@ -128,11 +152,16 @@ function describeSystem(hw) {
  *
  * @param {Object} def
  * @param {number} value
+ * @param {import('./profile.js').SecuritySpec} hw
  */
-function commentFor(def, value) {
+function commentFor(def, value, hw) {
   switch (def.key) {
     case 'kptr_restrict':
-      return ['kernel pointers hashed', 'kernel pointers hidden without CAP_SYSLOG', 'kernel pointers hidden from everyone'][value]
+      return [
+        hw.kernel === 'current' ? 'kernel pointers hashed' : 'kernel pointers hashed on 5.2+, shown in full before',
+        'kernel pointers hidden without CAP_SYSLOG',
+        'kernel pointers hidden from everyone',
+      ][value]
     case 'dmesg_restrict':
       return value ? 'kernel log needs CAP_SYSLOG' : 'kernel log readable by every user'
     case 'perf_event_paranoid':
@@ -140,7 +169,8 @@ function commentFor(def, value) {
         'users may collect CPU-wide perf events',
         'users may profile their own processes, kernel included',
         'users may profile the user space of their own processes',
-        'no unprivileged perf on patched kernels, otherwise same as 2',
+        'no unprivileged perf on Debian and Android kernels, otherwise same as 2',
+        'no unprivileged perf on Debian, Ubuntu and Android kernels, otherwise same as 2',
       ][value]
     case 'ptrace_scope':
       return [

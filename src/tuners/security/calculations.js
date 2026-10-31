@@ -16,7 +16,8 @@ export function deriveDefaults(hw) {
   return {
     kptr_restrict: w === 'router' ? 2 : 1,
     dmesg_restrict: 1,
-    perf_event_paranoid: debugs ? 2 : 3,
+    // 4, not KSPP's 3: Ubuntu's patch blocks perf only from 4 and starts there.
+    perf_event_paranoid: debugs ? 2 : 4,
     ptrace_scope: debugs ? 1 : 2,
     randomize_va_space: 2,
     // 2 is reversible but needs 5.13; older kernels only have the one-way 1.

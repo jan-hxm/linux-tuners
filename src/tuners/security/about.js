@@ -33,7 +33,8 @@ export const ABOUT = {
           ul: [
             'Kernel defaults and accepted values come from the kernel\'s sysctl documentation. Only values the kernel accepts are offered, and keys your kernel or network setup lacks are left out of the file.',
             'Two values can\'t be undone without a reboot: `kernel.yama.ptrace_scope = 3` and `kernel.unprivileged_bpf_disabled = 1`. The file lists them in a warning block when they are set.',
-            'The `conf.all` and `conf.default` network keys don\'t reset interfaces that already exist when the file is applied. The generated file shows how to check them.',
+            'The `conf.all` and `conf.default` network keys don\'t reach every interface that already exists when the file is applied, and IPv6 redirects only follow each interface\'s own value. The generated file shows how to check the interfaces and cover them with a glob line.',
+            'Some defaults depend on the kernel version and the distribution build: unprivileged BPF is off from 5.16, and Debian and Ubuntu start perf at 3 and 4. Each card\'s drawer says so, and there is no "kernel defaults" preset because one fixed set would loosen a modern system.',
             'Some hardening needs more than sysctls: a firewall, kernel boot parameters, and keeping the kernel updated. This tuner covers the sysctl part only.',
           ],
         },

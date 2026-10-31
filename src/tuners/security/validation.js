@@ -28,9 +28,17 @@ export function validate(hw, p) {
     warn('kallsyms-exposed', ['kptr_restrict', 'perf_event_paranoid'],
       'With kptr_restrict 0 and perf_event_paranoid 1 or lower, /proc/kallsyms shows real kernel addresses to every user, which defeats KASLR.')
   }
+  if (p.kptr_restrict === 0 && hw.kernel !== 'current') {
+    warn('kptr-raw', ['kptr_restrict'],
+      'Kernels before 5.2 print %pK addresses in full at 0, so every user can read them. Use 1.')
+  }
   if (p.perf_event_paranoid === 3) {
-    info('perf-3-patched', ['perf_event_paranoid'],
-      '3 needs the Debian, Ubuntu or Android kernel patch; other kernels accept it but treat it as 2.')
+    warn('perf-3-ubuntu', ['perf_event_paranoid'],
+      'Only Debian and Android kernels block perf at 3. Ubuntu kernels start at 4 and treat 3 like 2, so 3 loosens them. Use 4, which blocks perf on all three.')
+  }
+  if (p.perf_event_paranoid === 4) {
+    info('perf-4-patched', ['perf_event_paranoid'],
+      '4 blocks unprivileged perf on Debian, Ubuntu and Android kernels; other kernels accept it but treat it as 2.')
   }
 
   if (p.ptrace_scope === 0) {
@@ -51,7 +59,7 @@ export function validate(hw, p) {
   const bpf = p.unprivileged_bpf_disabled
   if (bpf === 0 && hasReversibleBpfOff(hw)) {
     warn('bpf-unprivileged', ['unprivileged_bpf_disabled'],
-      'Every user can load BPF programs, which exposes the BPF verifier, the source of several local privilege escalations.')
+      'Every user can load BPF programs, which exposes the BPF verifier, the source of several local privilege escalations. Kernels from 5.16 and most distributions start at 2, so 0 turns this back on.')
   }
   if (bpf === 0 && !hasReversibleBpfOff(hw)) {
     info('bpf-left-out', ['unprivileged_bpf_disabled'],
@@ -89,6 +97,10 @@ export function validate(hw, p) {
   if (redirects.length) {
     warn('redirects-accepted', redirects,
       'Accepting ICMP redirects lets anyone on the local network change this host\'s routes and put themselves in the middle.')
+  }
+  if (p.accept_redirects_v6 === 0 && isApplicable('accept_redirects_v6', hw)) {
+    info('redirects-v6-interfaces', ['accept_redirects_v6'],
+      'For IPv6 only each interface\'s own value counts, and interfaces that exist when the file is applied keep theirs. Add the glob line the generated file explains, or they keep accepting redirects.')
   }
   if (p.send_redirects === 1 && hw.workload !== 'router') {
     info('redirects-sent', ['send_redirects'], 'Only a router needs to send ICMP redirects.')

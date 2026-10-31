@@ -1,9 +1,12 @@
-import { PARAMETER_DEFS } from './defs.js'
-
 /**
  * Built-in presets. Each is a partial SecurityValues: keys it doesn't name
  * keep the workload's starting value (store.applyPreset). Every value must
  * work on every kernel the profile offers; the contract suite checks that.
+ *
+ * There is no "kernel defaults" preset: the defaults of several keys depend
+ * on the kernel version and the distribution build (unprivileged BPF is off
+ * from 5.16, Ubuntu starts perf at 4), so one fixed set would loosen a modern
+ * system. Each card's drawer shows its key's default instead.
  *
  * @typedef {Object} Preset
  * @property {string} id
@@ -15,13 +18,6 @@ import { PARAMETER_DEFS } from './defs.js'
 
 /** @type {Preset[]} */
 export const PRESETS = [
-  {
-    id: 'kernel-defaults',
-    label: 'Kernel defaults',
-    description: 'Every key at the upstream kernel default, before distribution or systemd changes. A baseline to compare against.',
-    source: 'docs.kernel.org admin-guide/sysctl and networking/ip-sysctl',
-    values: Object.fromEntries(PARAMETER_DEFS.map((d) => [d.key, d.kernelDefault])),
-  },
   {
     id: 'cis',
     label: 'CIS-style server',
@@ -42,12 +38,12 @@ export const PRESETS = [
   {
     id: 'kspp',
     label: 'Maximum (KSPP)',
-    description: 'The Kernel Self Protection Project\'s strictest values. ptrace and unprivileged BPF stay locked off until the next reboot.',
+    description: 'The Kernel Self Protection Project\'s strictest values. ptrace and unprivileged BPF stay locked off until the next reboot. perf_event_paranoid is 4 where KSPP lists 3, because Ubuntu kernels only block perf from 4.',
     source: 'kspp.github.io Recommended Settings (sysctls)',
     values: {
       kptr_restrict: 2,
       dmesg_restrict: 1,
-      perf_event_paranoid: 3,
+      perf_event_paranoid: 4,
       ptrace_scope: 3,
       randomize_va_space: 2,
       unprivileged_bpf_disabled: 1,

@@ -247,9 +247,9 @@ function commentFor(def, value, hw, params) {
       if (value === 100) return 'balanced dentry/inode vs page-cache reclaim'
       return 'aggressively reclaim filesystem metadata'
     case 'dirty_ratio':
-      return `synchronous stall ceiling at ${value}% of RAM dirtied`
+      return `synchronous stall ceiling at ${value}% of available memory dirtied`
     case 'dirty_background_ratio':
-      return `background flusher wakes at ${value}% of RAM dirtied`
+      return `background flusher wakes at ${value}% of available memory dirtied`
     case 'dirty_expire_centisecs':
       return `dirty pages eligible for flush after ${(value / 100).toFixed(1)} s`
     case 'dirty_writeback_centisecs':

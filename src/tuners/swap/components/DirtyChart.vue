@@ -59,8 +59,8 @@ const summary = computed(() => {
   const peak = Math.max(...d.points.map((p) => p.dirty))
   const stall = d.stallReached
     ? `the synchronous stall ceiling at ${d.ratioLine}% is reached, so writes block on the flusher`
-    : `dirty pages peak at about ${peak.toFixed(1)}% of RAM, staying below the ${d.ratioLine}% stall ceiling`
-  return `Dirty writeback chart: over a 120-second constant write workload, ${stall}. Background flush threshold is ${d.bgLine}% of RAM.`
+    : `dirty pages peak at about ${peak.toFixed(1)}% of available memory, staying below the ${d.ratioLine}% stall ceiling`
+  return `Dirty writeback chart: over a 120-second constant write workload, ${stall}. Background flush threshold is ${d.bgLine}% of available memory.`
 })
 
 const chartOptions = computed(() => {

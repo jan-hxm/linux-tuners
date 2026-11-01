@@ -28,9 +28,10 @@ describe('validate', () => {
     expect(hasBlockingIssue(issues)).toBe(true)
   })
 
-  it('flags writeback > expire as a blocking error', () => {
+  it('warns on writeback > expire without blocking the output', () => {
     const issues = validate(baseHw, paramsFor({ dirty_writeback_centisecs: 4000, dirty_expire_centisecs: 3000 }))
-    expect(issues.find((i) => i.id === 'writeback-gt-expire')).toMatchObject({ blocking: true })
+    expect(issues.find((i) => i.id === 'writeback-gt-expire')).toMatchObject({ blocking: false, level: 'warn' })
+    expect(hasBlockingIssue(issues)).toBe(false)
   })
 
   it('does not flag writeback=0 (periodic disabled) against expire', () => {

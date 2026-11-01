@@ -36,16 +36,17 @@ export function validate(hw, p) {
     })
   }
 
-  // writeback interval longer than expire → pages may never be flushed.
+  // writeback interval longer than expire: expired pages wait for the next
+  // flusher wake-up. The kernel accepts it, so it's a warning, not a block.
   // (writeback = 0 disables periodic writeback, which is a separate case.)
   if (p.dirty_writeback_centisecs > 0 && p.dirty_writeback_centisecs > p.dirty_expire_centisecs) {
     issues.push({
       id: 'writeback-gt-expire',
-      level: 'error',
-      blocking: true,
+      level: 'warn',
+      blocking: false,
       params: ['dirty_writeback_centisecs', 'dirty_expire_centisecs'],
       message:
-        'dirty_writeback_centisecs is longer than dirty_expire_centisecs: pages can outlive expiry without being flushed.',
+        'dirty_writeback_centisecs is longer than dirty_expire_centisecs, so expired pages can wait up to a full writeback interval before they are flushed.',
     })
   }
 

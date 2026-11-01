@@ -4338,10 +4338,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 50
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
 
-# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+# dirty_background_ratio: 2 - background flusher wakes at 2% of available memory dirtied
 vm.dirty_background_ratio = 2
 
 # dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
@@ -4410,10 +4410,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
 
-# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+# dirty_background_ratio: 2 - background flusher wakes at 2% of available memory dirtied
 vm.dirty_background_ratio = 2
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -4482,10 +4482,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -4554,10 +4554,10 @@ vm.watermark_scale_factor = 2000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
 
-# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+# dirty_background_ratio: 2 - background flusher wakes at 2% of available memory dirtied
 vm.dirty_background_ratio = 2
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -4626,10 +4626,10 @@ vm.watermark_scale_factor = 1000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
 
-# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+# dirty_background_ratio: 2 - background flusher wakes at 2% of available memory dirtied
 vm.dirty_background_ratio = 2
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -4698,10 +4698,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -4770,10 +4770,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
 
-# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+# dirty_background_ratio: 15 - background flusher wakes at 15% of available memory dirtied
 vm.dirty_background_ratio = 15
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -4842,10 +4842,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 50
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
 
-# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+# dirty_background_ratio: 2 - background flusher wakes at 2% of available memory dirtied
 vm.dirty_background_ratio = 2
 
 # dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
@@ -4914,10 +4914,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -4986,10 +4986,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5058,10 +5058,10 @@ vm.watermark_scale_factor = 2000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5130,10 +5130,10 @@ vm.watermark_scale_factor = 1000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5202,10 +5202,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5274,10 +5274,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
 
-# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+# dirty_background_ratio: 15 - background flusher wakes at 15% of available memory dirtied
 vm.dirty_background_ratio = 15
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5346,10 +5346,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 50
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
 
-# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+# dirty_background_ratio: 2 - background flusher wakes at 2% of available memory dirtied
 vm.dirty_background_ratio = 2
 
 # dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
@@ -5418,10 +5418,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
 
-# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+# dirty_background_ratio: 15 - background flusher wakes at 15% of available memory dirtied
 vm.dirty_background_ratio = 15
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5490,10 +5490,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5562,10 +5562,10 @@ vm.watermark_scale_factor = 2000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
 
-# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+# dirty_background_ratio: 15 - background flusher wakes at 15% of available memory dirtied
 vm.dirty_background_ratio = 15
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5634,10 +5634,10 @@ vm.watermark_scale_factor = 1000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
 
-# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+# dirty_background_ratio: 15 - background flusher wakes at 15% of available memory dirtied
 vm.dirty_background_ratio = 15
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5706,10 +5706,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5778,10 +5778,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
 
-# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+# dirty_background_ratio: 15 - background flusher wakes at 15% of available memory dirtied
 vm.dirty_background_ratio = 15
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -5850,10 +5850,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 50
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
 
-# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+# dirty_background_ratio: 2 - background flusher wakes at 2% of available memory dirtied
 vm.dirty_background_ratio = 2
 
 # dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
@@ -5922,10 +5922,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 50
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
 
-# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+# dirty_background_ratio: 2 - background flusher wakes at 2% of available memory dirtied
 vm.dirty_background_ratio = 2
 
 # dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
@@ -5994,10 +5994,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6066,10 +6066,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6138,10 +6138,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6210,10 +6210,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6282,10 +6282,10 @@ vm.watermark_scale_factor = 2000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6354,10 +6354,10 @@ vm.watermark_scale_factor = 2000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6426,10 +6426,10 @@ vm.watermark_scale_factor = 1000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6498,10 +6498,10 @@ vm.watermark_scale_factor = 1000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6570,10 +6570,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6642,10 +6642,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6714,10 +6714,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
 
-# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+# dirty_background_ratio: 15 - background flusher wakes at 15% of available memory dirtied
 vm.dirty_background_ratio = 15
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6786,10 +6786,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
 
-# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+# dirty_background_ratio: 15 - background flusher wakes at 15% of available memory dirtied
 vm.dirty_background_ratio = 15
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -6859,10 +6859,10 @@ vm.watermark_scale_factor = 2000
 vm.vfs_cache_pressure = 50
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 5 - synchronous stall ceiling at 5% of RAM dirtied
+# dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
 
-# dirty_background_ratio: 2 - background flusher wakes at 2% of RAM dirtied
+# dirty_background_ratio: 2 - background flusher wakes at 2% of available memory dirtied
 vm.dirty_background_ratio = 2
 
 # dirty_expire_centisecs: 500 - dirty pages eligible for flush after 5.0 s
@@ -6932,10 +6932,10 @@ vm.watermark_scale_factor = 2000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -7005,10 +7005,10 @@ vm.watermark_scale_factor = 2000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -7078,10 +7078,10 @@ vm.watermark_scale_factor = 2000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -7151,10 +7151,10 @@ vm.watermark_scale_factor = 1000
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -7224,10 +7224,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 20 - synchronous stall ceiling at 20% of RAM dirtied
+# dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
 
-# dirty_background_ratio: 10 - background flusher wakes at 10% of RAM dirtied
+# dirty_background_ratio: 10 - background flusher wakes at 10% of available memory dirtied
 vm.dirty_background_ratio = 10
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s
@@ -7297,10 +7297,10 @@ vm.watermark_scale_factor = 10
 vm.vfs_cache_pressure = 100
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
-# dirty_ratio: 30 - synchronous stall ceiling at 30% of RAM dirtied
+# dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
 
-# dirty_background_ratio: 15 - background flusher wakes at 15% of RAM dirtied
+# dirty_background_ratio: 15 - background flusher wakes at 15% of available memory dirtied
 vm.dirty_background_ratio = 15
 
 # dirty_expire_centisecs: 3000 - dirty pages eligible for flush after 30.0 s

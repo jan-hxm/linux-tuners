@@ -34,9 +34,8 @@ jobs:
         run: npm run build
         env:
           # VITE_* env vars are baked into the JS bundle at build time. Pulled
-          # from repository secrets — when unset, the consent banner stays
-          # hidden and AdSlot renders an empty space. See .env.example for the
-          # full list of supported keys.
+          # from repository secrets; when unset, AdSlot renders an empty space.
+          # See .env.example for the full list of supported keys.
           VITE_ADSENSE_CLIENT: ${{ secrets.VITE_ADSENSE_CLIENT }}
           VITE_ADSENSE_SLOT_LANDING: ${{ secrets.VITE_ADSENSE_SLOT_LANDING }}
           VITE_ADSENSE_SLOT_SWAP: ${{ secrets.VITE_ADSENSE_SLOT_SWAP }}
@@ -53,8 +52,6 @@ jobs:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    # Only deploy when the Cloudflare credentials secret exists. This lets the
-    # workflow stay green on a fresh repo before secrets are configured.
     environment:
       name: production
       url: https://linux-tuners.dev

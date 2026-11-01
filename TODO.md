@@ -21,16 +21,7 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 5. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
 6. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`.
 
-## 2. Correctness
-
-- [ ] Swap: make `dirty_writeback_centisecs > dirty_expire_centisecs` a warning instead of a blocking error (per [Design.md §3](Design.md#3-product-principles) principle 4). `src/tuners/swap/validation.js`
-- [ ] Swap: gate the `watermark_scale_factor` max by kernel version, like swappiness. Older kernels cap it at 1000, so the Kubernetes default of 2000 fails there. Verify the exact version that raised the cap to 3000 first.
-- [ ] Swap: `applyPreset` doesn't clamp preset values to `rangeFor`, so the "Kubernetes + zram" preset (swappiness 133) emits a value kernels before 5.8 reject when the profile names such a kernel. Clamp in the store's `applyPreset` (or hold presets to every kernel), then the PresetSelector shows the preset as customised. `src/core/createTunerStore.js`
-- [ ] Swap: the config comments say `dirty_ratio` is a percentage "of RAM"; the kernel actually uses dirtyable (free + reclaimable) memory. Reword in `src/tuners/swap/config.js`.
-- [ ] `AdSlot` labels ads "Werbung"; use "Advertisement" to match the English site. `src/ui/AdSlot.vue`
-- [ ] Remove the stale comments in `.github/workflows/ci.yml` (the removed consent banner, and a "skip deploy when the secret is missing" condition that doesn't exist).
-
-## 3. UX
+## 2. UX
 
 - [ ] Show the preset "what would change" diff somewhere other than a native `title` tooltip, which is invisible on touch and unreachable by keyboard. `src/ui/PresetSelector.vue`
 - [ ] Add an "Undo" toast after a reset or a preset snap, so an accidental one is recoverable.
@@ -41,20 +32,20 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 - [ ] Use one grid for the landing page's available and coming-soon cards (currently 2 vs 3 columns).
 - [ ] Give the top nav an active state on the landing page.
 
-## 4. Engineering
+## 3. Engineering
 
 - [ ] `ConfigOutput`: a download per file for multi-file tuners (systemd), instead of one combined `.conf`.
 - [ ] Tests: `ConfigOutput` flow (textarea matches the generator, copy calls the clipboard API, blocked state).
 - [ ] Automated accessibility sweep (axe-core / Lighthouse): focus visibility on the dark hero, a live-region announcement when a preset is applied or validation fires, and a full WCAG AA contrast pass.
 - [ ] Bundle: re-measure (last measured before `/systemd`), drop unused Chart.js parts (check whether `Filler` is needed), lazy-load chart components per tab.
 
-## 5. Launch & SEO
+## 4. Launch & SEO
 
 - [ ] Replace the SVG OG image with a real 1200×630 PNG (or per-route images); update `OG_IMAGE_PATH` in `src/routes-meta.js`.
 - [ ] Check link previews on X/Twitter, Discord, Slack and LinkedIn.
 - [ ] Per-route `<lastmod>` in the sitemap from `git log -1 --format=%cI -- <view file>` instead of the build date. `scripts/generate-static-routes.mjs`
 - [ ] Verify the site in Google Search Console and submit `https://linux-tuners.dev/sitemap.xml`; optionally Bing Webmaster Tools.
 
-## 6. Legal
+## 5. Legal
 
 - [ ] Have the privacy policy reviewed by a data-protection officer or German IT lawyer if the site becomes commercial; it's templated, not legal advice.

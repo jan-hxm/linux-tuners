@@ -57,22 +57,27 @@ Per image ([suite.mjs](suite.mjs)):
    `threads-max`, a non-root user is held to `kernel.keys.maxkeys`, the
    console loglevel filters the console but not `dmesg`, root reaches SysRq
    at 0, and a panic reboots after `kernel.panic` seconds or stays down at 0.
-6. **Block I/O claims.** Each kind of disk (an NVMe drive, a SATA SSD and
+6. **Swap claims.** `vm.page-cluster` starts at 3 and takes 0 to 31, and
+   a process reading back swapped-out memory gets readahead from a swap
+   file at 3 and none at 0. From zram it gets none for pages it maps alone
+   and some for pages shared after a fork, and none at 0; the Ubuntu cloud
+   kernels have no zram, which is asserted rather than skipped.
+7. **Block I/O claims.** Each kind of disk (an NVMe drive, a SATA SSD and
    hard disk on AHCI, virtio) starts with the read-ahead the drawer says,
    every scheduler and bound the profile offers is accepted and one past
    `nr_requests`' top is refused, and every rules file for each kind,
    workload and preset applies through `udevadm trigger` with no failed
    write and reads back on every disk of that kind. Skipped on Ubuntu 18.04
    (kernel 4.15, before the multi-queue-only block layer).
-7. **Every sysctl and tmpfiles.d file** (swap, network, security,
+8. **Every sysctl and tmpfiles.d file** (swap, network, security,
    filesystem, huge pages, System V IPC, kernel; each workload's defaults and each preset) applies
    with `sysctl -p` or `systemd-tmpfiles --create` without errors, and every
    key and `/sys` file reads back as written. One-way values are ordered last, with a reboot when a later
    file would need to lower them.
-8. **systemd drop-ins** for each workload and preset load after
+9. **systemd drop-ins** for each workload and preset load after
    `daemon-reexec` with no PID 1 warning about our files, and `systemctl show`
    reports each directive.
-9. **After a reboot**, systemd-sysctl applies the swap, network, security,
+10. **After a reboot**, systemd-sysctl applies the swap, network, security,
    filesystem, huge pages, Db2 IPC and kernel defaults together, systemd-tmpfiles sets the
    THP and KSM files and a small pool is reserved, udev applies a block I/O
    rules file for each kind of disk without a failed write, and the glob lines the

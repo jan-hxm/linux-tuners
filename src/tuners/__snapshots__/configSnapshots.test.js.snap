@@ -7690,6 +7690,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
 vm.vfs_cache_pressure = 50
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
@@ -7761,6 +7764,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
@@ -7834,6 +7840,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -7905,6 +7914,9 @@ vm.watermark_scale_factor = 2000
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
@@ -7978,6 +7990,9 @@ vm.watermark_scale_factor = 1000
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
@@ -8049,6 +8064,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -8122,6 +8140,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
@@ -8193,6 +8214,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
 vm.vfs_cache_pressure = 50
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
@@ -8266,6 +8290,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -8337,6 +8364,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -8410,6 +8440,9 @@ vm.watermark_scale_factor = 2000
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -8481,6 +8514,9 @@ vm.watermark_scale_factor = 1000
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -8554,6 +8590,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -8625,6 +8664,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
@@ -8698,6 +8740,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
 vm.vfs_cache_pressure = 50
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
@@ -8769,6 +8814,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
@@ -8842,6 +8890,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -8913,6 +8964,9 @@ vm.watermark_scale_factor = 2000
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
@@ -8986,6 +9040,9 @@ vm.watermark_scale_factor = 1000
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
@@ -9057,6 +9114,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -9130,6 +9190,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
@@ -9201,6 +9264,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
 vm.vfs_cache_pressure = 50
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
@@ -9274,6 +9340,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
 vm.vfs_cache_pressure = 50
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
@@ -9345,6 +9414,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -9418,6 +9490,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -9489,6 +9564,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -9562,6 +9640,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -9633,6 +9714,9 @@ vm.watermark_scale_factor = 2000
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -9706,6 +9790,9 @@ vm.watermark_scale_factor = 2000
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -9777,6 +9864,9 @@ vm.watermark_scale_factor = 1000
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -9850,6 +9940,9 @@ vm.watermark_scale_factor = 1000
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -9921,6 +10014,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -9994,6 +10090,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -10066,6 +10165,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
 vm.dirty_ratio = 30
@@ -10137,6 +10239,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied
@@ -10211,6 +10316,9 @@ vm.watermark_scale_factor = 2000
 # vfs_cache_pressure: 50 - prefer keeping filesystem metadata in cache
 vm.vfs_cache_pressure = 50
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 5 - synchronous stall ceiling at 5% of available memory dirtied
 vm.dirty_ratio = 5
@@ -10283,6 +10391,9 @@ vm.watermark_scale_factor = 2000
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -10357,6 +10468,9 @@ vm.watermark_scale_factor = 2000
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -10429,6 +10543,9 @@ vm.watermark_scale_factor = 2000
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
@@ -10503,6 +10620,9 @@ vm.watermark_scale_factor = 1000
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -10576,6 +10696,9 @@ vm.watermark_scale_factor = 10
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
 
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
+
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 20 - synchronous stall ceiling at 20% of available memory dirtied
 vm.dirty_ratio = 20
@@ -10648,6 +10771,9 @@ vm.watermark_scale_factor = 10
 
 # vfs_cache_pressure: 100 - balanced dentry/inode vs page-cache reclaim
 vm.vfs_cache_pressure = 100
+
+# page_cluster: 3 - read up to 8 pages ahead on each swap-in
+vm.page-cluster = 3
 
 # ── Dirty page writeback ────────────────────────────────────────────────────
 # dirty_ratio: 30 - synchronous stall ceiling at 30% of available memory dirtied

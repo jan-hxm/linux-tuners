@@ -31,7 +31,9 @@ export const IMAGES = {
     // cloud kernel without AHCI has no SATA). readAhead: read_ahead_kb a
     // class starts at where it isn't 128. A profile without 'block-io'
     // skips the block I/O checks (kernel before 5.0).
-    expect: { perfBlocksAt: 3, procpsGlobs: true, systemdGlobs: true, nrOpen: 1073741816, watchesScale: true, thp: 'always', mapCount: 1048576, sysrq: '438', console: '7', disks: ['nvme', 'ssd', 'hdd', 'virtio'], readAhead: {} },
+    // zram: the kernel ships the zram module (the Ubuntu cloud kernels don't).
+    // zramSwap: the image boots with zram swap active.
+    expect: { perfBlocksAt: 3, procpsGlobs: true, systemdGlobs: true, nrOpen: 1073741816, watchesScale: true, thp: 'always', mapCount: 1048576, sysrq: '438', console: '7', disks: ['nvme', 'ssd', 'hdd', 'virtio'], readAhead: {}, zram: true },
   },
   'ubuntu-24.04': {
     file: 'ubuntu-24.04.img',
@@ -39,7 +41,7 @@ export const IMAGES = {
     why: 'Ubuntu kernel 6.8 (Ubuntu perf patch), procps 4, systemd 255',
     profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.8' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' }, 'block-io': { schedulers: 'basic' } },
     expect: {
-      perfBlocksAt: 4, procpsGlobs: true, systemdGlobs: true, apport: true, nrOpen: 1048576, watchesScale: true, thp: 'madvise', mapCount: 1048576, sysrq: '176', console: '4', disks: ['nvme', 'ssd', 'hdd', 'virtio'], readAhead: {},
+      perfBlocksAt: 4, procpsGlobs: true, systemdGlobs: true, apport: true, nrOpen: 1048576, watchesScale: true, thp: 'madvise', mapCount: 1048576, sysrq: '176', console: '4', disks: ['nvme', 'ssd', 'hdd', 'virtio'], readAhead: {}, zram: false,
       // /usr/lib/sysctl.d/99-protect-links.conf; seen once at boot, stricter.
       stricter: { 'fs.protected_regular': '2' },
     },
@@ -49,7 +51,7 @@ export const IMAGES = {
     url: 'https://dl.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2',
     why: 'close-to-upstream kernel 6.17 (no perf patch), procps 4, systemd 258',
     profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.17' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' }, 'block-io': { schedulers: 'all' } },
-    expect: { perfBlocksAt: null, procpsGlobs: true, systemdGlobs: true, networkManager: true, nrOpen: 2147483584, watchesScale: true, thp: 'madvise', mapCount: 1048576, sysrq: '16', console: '7', disks: ['nvme', 'ssd', 'hdd', 'virtio'], readAhead: { virtio: '8192', hdd: '256' } },
+    expect: { perfBlocksAt: null, procpsGlobs: true, systemdGlobs: true, networkManager: true, nrOpen: 2147483584, watchesScale: true, thp: 'madvise', mapCount: 1048576, sysrq: '16', console: '7', disks: ['nvme', 'ssd', 'hdd', 'virtio'], readAhead: { virtio: '8192', hdd: '256' }, zram: true, zramSwap: true },
   },
   'debian-11': {
     file: 'debian-11.qcow2',
@@ -57,7 +59,7 @@ export const IMAGES = {
     why: 'Debian kernel 5.10 (before 5.13), procps 3.3 without glob support, systemd 247',
     profile: { security: { kernel: 'lts' }, swap: { kernelVersion: '5.10' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' }, 'block-io': { schedulers: 'all' } },
     expect: {
-      perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: true, nrOpen: 1048576, watchesScale: true, thp: 'always', mapCount: 65530, sysrq: '438', console: '7', disks: ['nvme', 'virtio'], readAhead: {},
+      perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: true, nrOpen: 1048576, watchesScale: true, thp: 'always', mapCount: 65530, sysrq: '438', console: '7', disks: ['nvme', 'virtio'], readAhead: {}, zram: true,
       // /usr/lib/sysctl.d/protect-links.conf sorts after 99-*.conf.
       stricter: { 'fs.protected_regular': '2' },
     },
@@ -67,6 +69,6 @@ export const IMAGES = {
     url: 'https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img',
     why: 'Ubuntu kernel 4.15 (before 4.19), procps 3.3, systemd 237',
     profile: { security: { kernel: 'legacy' }, swap: { kernelVersion: '4.15' }, systemd: { cgroupVersion: 'v1' }, filesystem: { systemd: 'older' }, kernel: { systemd: 'older' } },
-    expect: { perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: false, apport: true, conntrackIpv4: true, nrOpen: 1048576, watchesScale: false, thp: 'madvise', mapCount: 65530, sysrq: '176', console: '4' },
+    expect: { perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: false, apport: true, conntrackIpv4: true, nrOpen: 1048576, watchesScale: false, thp: 'madvise', mapCount: 65530, sysrq: '176', console: '4', zram: false },
   },
 }

@@ -95,6 +95,8 @@ export function deriveDefaults(hw) {
     min_free_kbytes,
     watermark_scale_factor,
     vfs_cache_pressure: PARAMETER_DEFS_BY_KEY.vfs_cache_pressure.kernelDefault,
+    // zram reads cost no seek, so readahead only fetches pages that may never be used
+    page_cluster: hw.swapDevice === 'zram' ? 0 : PARAMETER_DEFS_BY_KEY.page_cluster.kernelDefault,
     dirty_ratio,
     dirty_background_ratio,
     dirty_expire_centisecs: PARAMETER_DEFS_BY_KEY.dirty_expire_centisecs.kernelDefault,

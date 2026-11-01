@@ -10,6 +10,7 @@ import {
   rangeFor,
 } from './calculations.js'
 import { PARAMETER_DEFS_BY_KEY } from './defs.js'
+import { formatReadahead } from './formatting.js'
 
 describe('deriveDefaults', () => {
   it('returns kernel defaults for a general-purpose 16 GiB / NVMe / 8 GiB swap node', () => {
@@ -106,6 +107,23 @@ describe('deriveDefaults', () => {
       kernelVersion: null,
     })
     expect(p.swappiness).toBe(0)
+  })
+
+  it('turns swap readahead off on zram only', () => {
+    const hw = { ramGiB: 8, swapGiB: 4, workload: 'general', cgroupVersion: 'v2', kernelVersion: null }
+    expect(deriveDefaults({ ...hw, swapDevice: 'zram' }).page_cluster).toBe(0)
+    for (const swapDevice of ['hdd', 'sata-ssd', 'nvme-ssd', 'zswap', 'network']) {
+      expect(deriveDefaults({ ...hw, swapDevice }).page_cluster).toBe(3)
+    }
+  })
+})
+
+describe('formatReadahead', () => {
+  it('shows the window an order allows', () => {
+    expect(formatReadahead(0)).toBe('0 (off, one page per fault)')
+    expect(formatReadahead(3)).toBe('3 (up to 8 pages, 32 KiB)')
+    expect(formatReadahead(8)).toBe(`8 (up to ${(256).toLocaleString()} pages, 1 MiB)`)
+    expect(formatReadahead(31)).toBe(`31 (up to ${(2 ** 31).toLocaleString()} pages, ${(8192).toLocaleString()} GiB)`)
   })
 })
 

@@ -11,12 +11,11 @@ Each one is a new domain module following [Design.md §6](Design.md#6-adding-a-t
 
 sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages tuner added, per-device ones the udev writer the block I/O tuner added:
 
-1. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Measure whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU before relying on them.
+1. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Parked until it can be measured on real hardware: the VM guests have no cpufreq at all (no `cpu*/cpufreq`, `acpi-cpufreq` finds no device). That needs the driver (`intel_pstate`, `amd-pstate`, `acpi-cpufreq`), the governors and EPP values each offers, the min/max bounds, and whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU. `kernel.numa_balancing` could be measured in a VM with two NUMA nodes (a single-node guest starts it at 0).
 
 On shipped tuners:
 
 - [ ] **Security: `user.max_user_namespaces = 0`** for servers that run no containers, sandboxed browsers or Flatpak, which need user namespaces. The kernel starts it at half of `threads-max`. Ubuntu 24.04 already blocks unprivileged ones through AppArmor (`kernel.apparmor_restrict_unprivileged_userns`), and Debian has `kernel.unprivileged_userns_clone`; measure both before offering it.
-- [ ] **Swap: `vm.page-cluster`** (swap readahead, 2^n pages): 0 for zram, the kernel default 3 elsewhere. It belongs with the swap device, so it moved here from the huge pages item. Measured: 6.x accepts 0 to 31; 5.10 and 4.15 also take 32.
 
 ## 2. UX
 

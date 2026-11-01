@@ -31,7 +31,7 @@ They are not one tuner per `/proc/sys` root. For example, hardening keys from
 
 | Route | Covers | Output |
 |---|---|---|
-| `/swap` | 11 `vm.*` parameters: swappiness, `min_free_kbytes`, watermark scaling, `vfs_cache_pressure`, dirty-page writeback, overcommit, `panic_on_oom`. Graphs: swap pressure, watermark zones, dirty writeback. | `/etc/sysctl.d/99-swap-tuning.conf`, plus device-aware swap setup instructions (swap file, zram-generator, zswap) |
+| `/swap` | 12 `vm.*` parameters: swappiness, `min_free_kbytes`, watermark scaling, `vfs_cache_pressure`, swap readahead (`page-cluster`), dirty-page writeback, overcommit, `panic_on_oom`. Graphs: swap pressure, watermark zones, dirty writeback. | `/etc/sysctl.d/99-swap-tuning.conf`, plus device-aware swap setup instructions (swap file, zram-generator, zswap) |
 | `/systemd` | Manager defaults (accounting, `DefaultTasksMax`, `DefaultLimitNOFILE`, `DefaultLimitMEMLOCK`) and per-slice controls (`CPUWeight`, `CPUQuota`, `MemoryHigh`, `MemoryMax`, `MemorySwapMax`, `IOWeight`, `TasksMax`) for `system.slice`, `user.slice` or `machine.slice`. Graphs: CPU shares, memory budget, task and FD caps. | Two drop-ins in one document: `/etc/systemd/system.conf.d/99-resource-tuning.conf` and `/etc/systemd/system/<slice>.d/50-resources.conf` |
 | `/security` | 17 hardening sysctls: `kptr_restrict`, `dmesg_restrict`, `perf_event_paranoid`, `yama.ptrace_scope`, `randomize_va_space`, `unprivileged_bpf_disabled`; `rp_filter`, `tcp_syncookies`, IPv4/IPv6 `accept_redirects`, `send_redirects`, `accept_source_route`; `fs.protected_*`, `suid_dumpable`. The profile's kernel generation and IPv6 switch decide which keys and values exist. No graphs. | `/etc/sysctl.d/99-security-hardening.conf`, with notes on one-way values and on existing network interfaces |
 | `/network` | 17 `net.*` sysctls: `rmem_max`, `wmem_max`, `tcp_rmem`, `tcp_wmem`; `somaxconn`, `tcp_max_syn_backlog`, `netdev_max_backlog`; `tcp_congestion_control`, `default_qdisc`, `tcp_slow_start_after_idle`, `tcp_mtu_probing`; `ip_local_port_range`, `tcp_tw_reuse`, `tcp_fin_timeout`; `nf_conntrack_max`, `nf_conntrack_buckets`, `nf_conntrack_tcp_timeout_established`. Buffers are sized from the bandwidth-delay product of the profile's link speed and longest path; the conntrack keys exist only when the profile says `nf_conntrack` is loaded. Targets kernel 4.19+. Graph: per-connection throughput ceiling against RTT. | `/etc/sysctl.d/99-network-tuning.conf`, with notes on the qdisc reaching only new interfaces, congestion-control modules, and loading `nf_conntrack` before `systemd-sysctl` runs |
@@ -170,7 +170,11 @@ debounce. Because a shared link is untrusted input that ends up in a config
 file someone may run as root, restoring it is strict:
 
 - Envelope version must match; every parameter key must be present and parse
-  strictly as its def's value type (`core/valueTypes.js` `restore`).
+  strictly as its def's value type (`core/valueTypes.js` `restore`). The
+  version is per tuner (`linkVersion` in the spec, 1 when omitted). Adding a
+  parameter to a shipped tuner bumps it, so a link from before is refused
+  outright rather than failing on the missing key; `/swap` is at 2 since
+  `vm.page-cluster`.
 - Profile fields are checked against the schema derived from the profile
   field list (enum lists, numeric ranges with a step, or a strict pattern),
   so a link can't inject lines into the generated config. Numeric fields snap
@@ -658,6 +662,18 @@ behaviour goes in only once a VM has shown it; facts found that way so far:
   the next rule, both on `udevadm trigger` and at boot. Kernel 4.15
   (Ubuntu 18.04) runs SATA disks on the legacy layer (noop, deadline, cfq)
   and its cloud image has no multi-queue scheduler at all.
+- `vm.page-cluster` starts at 3 everywhere (no distribution sets it, not
+  even Fedora with its default zram swap) and takes 0 to 31, 5.10 and 4.15
+  more. Reading back 256 MiB swapped out by one process, nearly every page
+  came through readahead from a swap file at 3 and none at 0. From zram the
+  kernel skips readahead for a page one process maps whatever the setting;
+  pages shared after a fork were read ahead at 3 and not at 0. The Ubuntu
+  cloud kernels have no zram module. systemd swaps a zram `.swap` unit back
+  on within seconds of a `swapoff`, so the test swaps to its own device at
+  the top priority instead.
+- The VM guests have no cpufreq (QEMU exposes no P-states: `acpi-cpufreq`
+  refuses to load and `cpu*/cpufreq` is missing), so the CPU frequency
+  tuner can't be measured there.
 
 ### Guardrails
 

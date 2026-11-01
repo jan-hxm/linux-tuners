@@ -112,11 +112,11 @@ describe('generateConfig — swap setup instructions', () => {
 describe('generateConfig — body', () => {
   it('emits every standard parameter exactly once as a vm.* assignment', () => {
     const out = generateConfig(baseOpts())
-    const assignments = out.match(/^vm\.[a-z_]+\s+=\s+\d+$/gm) ?? []
-    // 11 total - overcommit_ratio (suppressed when overcommit_memory ≠ 2) = 10
-    expect(assignments).toHaveLength(10)
+    const assignments = out.match(/^vm\.[a-z_-]+\s+=\s+\d+$/gm) ?? []
+    // 12 total - overcommit_ratio (suppressed when overcommit_memory ≠ 2) = 11
+    expect(assignments).toHaveLength(11)
     for (const key of [
-      'swappiness', 'min_free_kbytes', 'watermark_scale_factor', 'vfs_cache_pressure',
+      'swappiness', 'min_free_kbytes', 'watermark_scale_factor', 'vfs_cache_pressure', 'page-cluster',
       'dirty_ratio', 'dirty_background_ratio', 'dirty_expire_centisecs',
       'dirty_writeback_centisecs', 'overcommit_memory', 'panic_on_oom',
     ]) {

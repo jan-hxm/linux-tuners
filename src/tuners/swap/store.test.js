@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useTunerStoreFor } from '@/core/createTunerStore.js'
+import { compressToEncodedURIComponent } from 'lz-string'
+import { useTunerStoreFor, restoreState } from '@/core/createTunerStore.js'
 import { swapDomain } from './index.js'
 import { deriveDefaults } from './calculations.js'
 
@@ -66,5 +67,28 @@ describe('tuner store — applyPreset', () => {
     store.applyPreset('k8s-zram', { swappiness: 133, watermark_scale_factor: 2000 })
     expect(store.params.swappiness).toBe(100)
     expect(store.params.watermark_scale_factor).toBe(1000)
+  })
+})
+
+describe('shared links', () => {
+  const v1Link = (params) => compressToEncodedURIComponent(JSON.stringify({ v: 1, hardware: swapDomain.defaultHardware, params, activePreset: null, activeTab: null }))
+
+  it('refuses a link from before vm.page-cluster, and round-trips a current one', () => {
+    const { page_cluster, ...before } = deriveDefaults(swapDomain.defaultHardware)
+    expect(restoreState(swapDomain, v1Link(before))).toBeNull()
+    // A version 1 link is refused even with every current key in it.
+    expect(restoreState(swapDomain, v1Link({ ...before, page_cluster }))).toBeNull()
+    const params = { ...before, page_cluster: 0 }
+    const hash = swapDomain.encodeState({ hardware: swapDomain.defaultHardware, params })
+    expect(restoreState(swapDomain, hash).params).toEqual(params)
+  })
+
+  it('holds a hostile vm.page-cluster to what the slider offers', () => {
+    const base = deriveDefaults(swapDomain.defaultHardware)
+    const restore = (v) => restoreState(swapDomain, swapDomain.encodeState({ hardware: swapDomain.defaultHardware, params: { ...base, page_cluster: v } }))
+    expect(restore(99).params.page_cluster).toBe(31)
+    expect(restore(-5).params.page_cluster).toBe(0)
+    expect(restore(3.4).params.page_cluster).toBe(3)
+    for (const bad of ['3', '"><script>', null, [3], {}]) expect(restore(bad)).toBeNull()
   })
 })

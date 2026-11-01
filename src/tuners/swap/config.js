@@ -246,6 +246,10 @@ function commentFor(def, value, hw, params) {
       if (value < 100) return 'prefer keeping filesystem metadata in cache'
       if (value === 100) return 'balanced dentry/inode vs page-cache reclaim'
       return 'aggressively reclaim filesystem metadata'
+    case 'page_cluster':
+      if (hw.swapGiB === 0) return 'no swap configured, value has no effect'
+      if (value === 0) return 'swap readahead off, one page per fault'
+      return `read up to ${2 ** value} pages ahead on each swap-in`
     case 'dirty_ratio':
       return `synchronous stall ceiling at ${value}% of available memory dirtied`
     case 'dirty_background_ratio':

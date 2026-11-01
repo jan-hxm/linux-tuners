@@ -47,6 +47,8 @@ const DEFAULTS = {
   simulation: {},
   /** No graphs: the tune step goes full width and the impact bar hides. */
   graphTabs: [],
+  /** Shared links carry envelope version 1. */
+  linkVersion: 1,
 }
 
 /**
@@ -62,14 +64,14 @@ export function defineTuner(spec) {
 }
 
 /** The default profile and the link codec, both from the profile field list. */
-function fromProfile({ profile, parameterKeys, defsByKey }) {
+function fromProfile({ profile, parameterKeys, defsByKey, linkVersion = DEFAULTS.linkVersion }) {
   // Without a field list there is no schema, so no link restores: the spec
   // can't supply a looser decodeState of its own.
   if (!profile?.fields) return { decodeState: () => null }
   const defaultHardware = profileDefaults(profile.fields)
   return {
     defaultHardware,
-    ...makeSerialization({ parameterKeys, defsByKey, defaultHardware, hardwareSchema: profileSchema(profile.fields) }),
+    ...makeSerialization({ parameterKeys, defsByKey, defaultHardware, hardwareSchema: profileSchema(profile.fields), version: linkVersion }),
   }
 }
 
@@ -89,6 +91,7 @@ export function assertTuner(domain) {
   // Ids key the Pinia store and the shared URL hash, so they're permanent.
   if (!/^[a-z][a-z0-9-]*$/.test(domain.id)) fail('id must be kebab-case')
   if (!/^[a-z0-9][a-z0-9._-]*\.(conf|rules)$/.test(domain.outputFilename)) fail('outputFilename must be a plain *.conf or *.rules name')
+  if (!Number.isInteger(domain.linkVersion) || domain.linkVersion < 1) fail('linkVersion must be a positive integer')
 
   for (const key of domain.parameterKeys) {
     if (!Object.hasOwn(domain.defsByKey, key)) fail(`no def for key "${key}"`)

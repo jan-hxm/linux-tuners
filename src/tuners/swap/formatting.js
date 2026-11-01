@@ -41,6 +41,21 @@ export function formatPercentOfRam(pct, ramGiB) {
 }
 
 /**
+ * Render a swap readahead order as the window it allows, in 4 KiB pages.
+ * @param {number} order
+ * @returns {string} e.g. "3 (up to 8 pages, 32 KiB)"
+ */
+export function formatReadahead(order) {
+  if (order === 0) return '0 (off, one page per fault)'
+  const pages = 2 ** order
+  const kib = pages * 4
+  const size = kib >= KIB_PER_GIB ? `${(kib / KIB_PER_GIB).toLocaleString()} GiB`
+    : kib >= KIB_PER_MIB ? `${(kib / KIB_PER_MIB).toLocaleString()} MiB`
+      : `${kib} KiB`
+  return `${order} (up to ${pages.toLocaleString()} pages, ${size})`
+}
+
+/**
  * @param {number} value
  * @param {string} unit  Matches ParameterDef.unit
  * @param {number} ramGiB
@@ -55,6 +70,8 @@ export function formatValue(value, unit, ramGiB) {
       return formatPercentOfRam(value, ramGiB)
     case 'mode':
       return `mode ${value}`
+    case 'log2-pages':
+      return formatReadahead(value)
     default:
       return value.toLocaleString()
   }

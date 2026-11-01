@@ -116,7 +116,7 @@ function rawHash(envelope) {
 }
 
 function envelope(domain, { hardware = domain.defaultHardware, params, activePreset = null, activeTab = null } = {}) {
-  return { v: 1, hardware, params: params ?? domain.deriveDefaults(hardware), activePreset, activeTab }
+  return { v: domain.linkVersion, hardware, params: params ?? domain.deriveDefaults(hardware), activePreset, activeTab }
 }
 
 const INJECTIONS = [
@@ -187,7 +187,7 @@ function fuzzEnvelopes(domain, count, seed = 1) {
       params[key] = r < 0.6 ? defaults[key] : r < 0.9 ? edgeValue(def, pick, rand) : pick(HOSTILE_VALUES)
     }
     const activePreset = rand() < 0.5 ? pick(domain.presets).id : pick(HOSTILE_VALUES)
-    out.push({ v: rand() < 0.95 ? 1 : pick([0, 2, '1', null]), hardware, params, activePreset, activeTab: pick(['x', null, 1, domain.defaultTab]) })
+    out.push({ v: rand() < 0.95 ? domain.linkVersion : pick([domain.linkVersion - 1, domain.linkVersion + 1, String(domain.linkVersion), null]), hardware, params, activePreset, activeTab: pick(['x', null, 1, domain.defaultTab]) })
   }
   return out
 }
@@ -418,7 +418,7 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
 
     it('rejects malformed envelopes', () => {
       const ok = envelope(domain)
-      for (const bad of ['', 'not json', 'null', '[]', '1', JSON.stringify({ ...ok, v: 2 }), JSON.stringify({ ...ok, hardware: [] }), JSON.stringify({ ...ok, params: null })]) {
+      for (const bad of ['', 'not json', 'null', '[]', '1', JSON.stringify({ ...ok, v: domain.linkVersion + 1 }), JSON.stringify({ ...ok, hardware: [] }), JSON.stringify({ ...ok, params: null })]) {
         expect(restoreState(domain, rawHash(bad)), bad).toBeNull()
       }
       expect(restoreState(domain, '%%%not-lz')).toBeNull()

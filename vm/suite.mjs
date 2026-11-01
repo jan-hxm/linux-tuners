@@ -40,6 +40,17 @@ const hugepages = TUNER_DOMAINS.find((d) => d.id === 'hugepages')
 const ipc = TUNER_DOMAINS.find((d) => d.id === 'sysv-ipc')
 const kernel = TUNER_DOMAINS.find((d) => d.id === 'kernel')
 const blockIo = TUNER_DOMAINS.find((d) => d.id === 'block-io')
+const swap = TUNER_DOMAINS.find((d) => d.id === 'swap')
+
+// Fills 256 MiB, then reads it back in order: held to 64 MiB, most of it is
+// swapped in. With FORK set a child keeps the pages mapped too, so they are shared.
+const SWAP_HOG_PAGES = 65536
+const SWAP_HOG = `import os, time
+b = bytearray(256 * 1024 * 1024)
+for i in range(0, len(b), 4096): b[i] = 1
+if os.environ.get('FORK') and os.fork() == 0:
+    time.sleep(120); os._exit(0)
+print(sum(b[i] for i in range(0, len(b), 4096)))`
 
 // Disks besides the virtio root disk, so each block I/O device class exists:
 // an NVMe drive, and a SATA SSD and hard disk on the q35 AHCI controller.
@@ -285,6 +296,76 @@ export function imageSuite(id) {
         expect(await vm.sysctlWrite('kernel.yama.ptrace_scope', 3)).toBe('')
         expect(await vm.sysctlWrite('kernel.yama.ptrace_scope', 1)).not.toBe('')
         await vm.reboot()
+      })
+    })
+
+    describe('swap claims on a fresh boot', () => {
+      const pageCluster = swap.defsByKey.page_cluster
+      const vmstat = async () => Object.fromEntries((await vm.run("grep -E '^(swap_ra|pswpin) ' /proc/vmstat")).stdout.trim().split('\n').map((l) => l.split(' ')).map(([k, v]) => [k, Number(v)]))
+      /** Swap-ins and how many of them came through readahead, for one run of the hog. */
+      async function swapIn(order, { shared = false } = {}) {
+        await vm.sysctlWrite('vm.page-cluster', order)
+        const before = await vmstat()
+        // MemoryHigh reclaims without the OOM kill a hard limit sometimes gave on
+        // 5.10; systemd 237 (cgroup v1) only has MemoryLimit.
+        const limit = image.profile.systemd?.cgroupVersion === 'v1' ? 'MemoryLimit' : 'MemoryHigh'
+        const r = await vm.sudo(`systemd-run --quiet --wait -p ${limit}=64M ${shared ? '-E FORK=1 ' : ''}python3 /tmp/swap-hog.py`, { check: false })
+        if (r.code) throw new Error(`the hog exited ${r.code}: ${(await vm.sudo('dmesg | tail -5')).stdout}`)
+        const after = await vmstat()
+        return { swapIns: after.pswpin - before.pswpin, readahead: after.swap_ra - before.swap_ra }
+      }
+      let active
+
+      beforeAll(async () => {
+        await vm.writeFile('/tmp/swap-hog.py', SWAP_HOG)
+        active = (await vm.sudo('swapon --show=NAME --noheadings')).stdout.trim().split('\n').filter(Boolean)
+        expect(active.some((d) => d.includes('zram'))).toBe(Boolean(image.expect.zramSwap))
+      })
+      afterAll(async () => {
+        await vm.sudo('swapoff /swapfile-lt; rm -f /swapfile-lt', { check: false })
+        expect((await vm.sudo('swapon --show=NAME --noheadings')).stdout.trim().split('\n').filter(Boolean)).toEqual(active)
+        await vm.sysctlWrite('vm.page-cluster', pageCluster.kernelDefault)
+      })
+
+      it('vm.page-cluster starts at the kernel default, and every bound is accepted', async () => {
+        expect(await vm.sysctl('vm.page-cluster')).toBe(String(pageCluster.kernelDefault))
+        for (const v of [pageCluster.kernelMax, pageCluster.kernelMin]) expect(await vm.sysctlWrite('vm.page-cluster', v)).toBe('')
+      })
+
+      // The image's own swap stays on (systemd swaps a zram unit back on after a
+      // swapoff); the test device takes the top priority, so it is used first.
+      it('on a swap file it reads ahead at the default and not at 0', async () => {
+        // btrfs refuses a fallocated swap file; mkswapfile makes it no-copy-on-write.
+        await vm.sudo('if [ "$(stat -f -c %T /)" = btrfs ]; then btrfs filesystem mkswapfile --size 1g /swapfile-lt >/dev/null; else fallocate -l 1G /swapfile-lt && chmod 600 /swapfile-lt && mkswap /swapfile-lt >/dev/null; fi && swapon -p 32767 /swapfile-lt')
+        try {
+          const on = await swapIn(pageCluster.kernelDefault)
+          expect(on.swapIns).toBeGreaterThan(10000)
+          // Kernels before 6.x count pswpin and swap_ra about twice per page.
+          expect(on.readahead).toBeGreaterThan(SWAP_HOG_PAGES / 4)
+          expect((await swapIn(0)).readahead).toBe(0)
+        } finally {
+          await vm.sudo('swapoff /swapfile-lt')
+        }
+      })
+
+      it.runIf(image.expect.zram)('on zram it reads ahead only for shared pages, and not at all at 0', async () => {
+        // Use the image's zram swap where it has one, else set one up.
+        const own = !active.includes('/dev/zram0')
+        if (own) await vm.sudo('modprobe zram && echo 1G > /sys/block/zram0/disksize && mkswap /dev/zram0 >/dev/null && swapon -p 32767 /dev/zram0')
+        try {
+          const single = await swapIn(pageCluster.kernelDefault)
+          expect(single.swapIns).toBeGreaterThan(10000)
+          expect(single.readahead).toBe(0)
+          const shared = await swapIn(pageCluster.kernelDefault, { shared: true })
+          expect(shared.readahead).toBeGreaterThan(SWAP_HOG_PAGES / 4)
+          expect((await swapIn(0, { shared: true })).readahead).toBe(0)
+        } finally {
+          if (own) await vm.sudo('swapoff /dev/zram0')
+        }
+      })
+
+      it.runIf(!image.expect.zram)('the cloud kernel has no zram module, so the zram check is skipped for a reason', async () => {
+        expect((await vm.sudo('modprobe zram', { check: false })).code).not.toBe(0)
       })
     })
 

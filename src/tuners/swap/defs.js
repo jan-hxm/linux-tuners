@@ -13,6 +13,7 @@
  * @property {number} min_free_kbytes            In kB
  * @property {number} watermark_scale_factor     Tenths of a per-cent (kernel raw units)
  * @property {number} vfs_cache_pressure         0–500
+ * @property {number} page_cluster               Swap readahead, up to 2^n pages
  * @property {number} dirty_ratio                Percent of available memory
  * @property {number} dirty_background_ratio     Percent of available memory
  * @property {number} dirty_expire_centisecs     1/100 s
@@ -134,6 +135,27 @@ export const PARAMETER_DEFS = [
     unit: '',
     zones: ['below 100: keep metadata', '100: balanced', 'above 100: reclaim aggressively'],
     dangerousIfZero: true,
+  },
+  {
+    key: 'page_cluster',
+    sysctlName: 'vm.page-cluster',
+    group: 'memory-reclaim',
+    control: 'slider',
+    shortDesc: 'How many neighbouring pages the kernel reads back with each swap-in.',
+    longDesc: [
+      'When a process touches a page that was swapped out, the kernel reads it back and, on the guess that nearby pages are needed next, reads up to 2^n neighbouring pages with it (swap readahead). The default 3 means up to 8 pages, 32 KiB. For a process that reads its memory back in order nearly every page then arrives early: in our tests on a swap file almost every swap-in came through readahead, and 99.9% of those pages were used.',
+      'At 0 readahead is off and each fault reads one page. That suits zram, where a read costs no seek. On zram the kernel already skips readahead for a page only one process maps, whatever this says; for pages several processes share after a fork it read ahead at 3 and stopped at 0 in our tests.',
+      'Raise it only for slow disk swap that is read back in long runs. Every kernel we tested accepts 0 to 31.',
+    ],
+    tuningTip: 'Set it to 0 on zram; keep 3 for swap on a disk.',
+    kernelDocsUrl: `${KERNEL_VM_BASE}#page-cluster`,
+    k8sNote: null,
+    kernelDefault: 3,
+    kernelDefaultNote: 'Debian, Ubuntu and Fedora all keep it, Fedora even with the zram swap it sets up by default.',
+    kernelMin: 0,
+    kernelMax: 31,
+    step: 1,
+    unit: 'log2-pages',
   },
   {
     key: 'dirty_ratio',

@@ -37,7 +37,7 @@ describe('encodeState / decodeState', () => {
     // missing one of the required ParameterValues keys.
     const { swappiness, ...partial } = original.params
     const tampered = compressToEncodedURIComponent(
-      JSON.stringify({ v: 1, hardware: original.hardware, params: partial, activePreset: null, activeTab: 'pressure' }),
+      JSON.stringify({ v: swapDomain.linkVersion, hardware: original.hardware, params: partial, activePreset: null, activeTab: 'pressure' }),
     )
     expect(decodeState(tampered)).toBeNull()
   })
@@ -46,7 +46,7 @@ describe('encodeState / decodeState', () => {
   // link must not be able to smuggle extra lines (e.g. kernel.core_pattern) in.
   it('rejects hardware values outside the schema', () => {
     const encode = (hardware) =>
-      compressToEncodedURIComponent(JSON.stringify({ ...makeState(), v: 1, hardware }))
+      compressToEncodedURIComponent(JSON.stringify({ ...makeState(), v: swapDomain.linkVersion, hardware }))
     const hw = DEFAULT_HARDWARE
     expect(decodeState(encode({ ...hw, workload: "general\nkernel.core_pattern = |/bin/sh" }))).toBeNull()
     expect(decodeState(encode({ ...hw, swapDevice: 'nvme-ssd\nvm.panic_on_oom = 1' }))).toBeNull()
@@ -59,7 +59,7 @@ describe('encodeState / decodeState', () => {
     const state = makeState()
     const payload = compressToEncodedURIComponent(JSON.stringify({
       ...state,
-      v: 1,
+      v: swapDomain.linkVersion,
       hardware: { ...state.hardware, kernelVersion: '6.6', evil: 'x' },
       params: { ...state.params, evil: 1 },
     }))
@@ -71,14 +71,14 @@ describe('encodeState / decodeState', () => {
   it('rejects non-finite or non-numeric parameter values', () => {
     const state = makeState()
     const payload = compressToEncodedURIComponent(JSON.stringify({
-      ...state, v: 1, params: { ...state.params, swappiness: '60\nkernel.x=1' },
+      ...state, v: swapDomain.linkVersion, params: { ...state.params, swappiness: '60\nkernel.x=1' },
     }))
     expect(decodeState(payload)).toBeNull()
   })
 
   it('rejects a systemd targetSlice that would inject into the slice path', () => {
     const state = {
-      v: 1,
+      v: systemdDomain.linkVersion,
       hardware: { ...systemdDomain.defaultHardware, targetSlice: 'system.slice\n[Service]\nExecStartPre=/bin/sh' },
       params: systemdDomain.deriveDefaults(systemdDomain.defaultHardware),
     }

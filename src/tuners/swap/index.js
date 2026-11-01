@@ -34,7 +34,7 @@ const SECTIONS = [
     id: 'memory-reclaim',
     title: 'Memory reclaim & swap',
     summary: 'When does the kernel reclaim pages, and how aggressively does it swap?',
-    keys: ['swappiness', 'min_free_kbytes', 'watermark_scale_factor', 'vfs_cache_pressure'],
+    keys: ['swappiness', 'min_free_kbytes', 'watermark_scale_factor', 'vfs_cache_pressure', 'page_cluster'],
   },
   {
     id: 'dirty-writeback',
@@ -111,6 +111,8 @@ export const swapDomain = defineTuner({
   presetsById: PRESETS_BY_ID,
   generateConfig,
   outputFilename: '99-swap-tuning.conf',
+  // 2 added vm.page-cluster; a version 1 link lacks it and is refused.
+  linkVersion: 2,
   defaultTab: 'pressure',
   graphTabs: GRAPH_TABS,
   simulation,

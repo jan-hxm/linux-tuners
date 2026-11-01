@@ -51,16 +51,22 @@ Per image ([suite.mjs](suite.mjs)):
    `shmmax`/`shmall` at no limit, every bound offered (each `kernel.sem`
    field's) is accepted, a new IPC namespace starts at the kernel defaults,
    `shm_rmid_forced` removes an orphaned segment, and SEMMSL is enforced.
-5. **Every sysctl and tmpfiles.d file** (swap, network, security,
-   filesystem, huge pages, System V IPC; each workload's defaults and each preset) applies
+5. **Kernel claims.** `kernel.pid_max`, `threads-max`, the key quotas,
+   SysRq and the console loglevel start where the defs say, every bound and
+   option offered is accepted, systemd's `DefaultTasksMax` follows
+   `threads-max`, a non-root user is held to `kernel.keys.maxkeys`, the
+   console loglevel filters the console but not `dmesg`, root reaches SysRq
+   at 0, and a panic reboots after `kernel.panic` seconds or stays down at 0.
+6. **Every sysctl and tmpfiles.d file** (swap, network, security,
+   filesystem, huge pages, System V IPC, kernel; each workload's defaults and each preset) applies
    with `sysctl -p` or `systemd-tmpfiles --create` without errors, and every
    key and `/sys` file reads back as written. One-way values are ordered last, with a reboot when a later
    file would need to lower them.
-6. **systemd drop-ins** for each workload and preset load after
+7. **systemd drop-ins** for each workload and preset load after
    `daemon-reexec` with no PID 1 warning about our files, and `systemctl show`
    reports each directive.
-7. **After a reboot**, systemd-sysctl applies the swap, network, security,
-   filesystem, huge pages and Db2 IPC defaults together, systemd-tmpfiles sets the
+8. **After a reboot**, systemd-sysctl applies the swap, network, security,
+   filesystem, huge pages, Db2 IPC and kernel defaults together, systemd-tmpfiles sets the
    THP and KSM files and a small pool is reserved, and the glob lines the
    security file suggests reach the boot interface.
 

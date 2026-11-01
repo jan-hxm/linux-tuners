@@ -9,17 +9,14 @@ in the local, gitignored `PRIVATE.md`, not here.
 
 Each one is a new domain module following [Design.md §6](Design.md#6-adding-a-tuner).
 
-sysctl-based (output: `/etc/sysctl.d/`):
-
-1. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
-
 sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages tuner added; per-device ones need udev rules:
 
-2. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
-3. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Measure whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU before relying on them.
+1. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
+2. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Measure whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU before relying on them.
 
 On shipped tuners:
 
+- [ ] **Security: `user.max_user_namespaces = 0`** for servers that run no containers, sandboxed browsers or Flatpak, which need user namespaces. The kernel starts it at half of `threads-max`. Ubuntu 24.04 already blocks unprivileged ones through AppArmor (`kernel.apparmor_restrict_unprivileged_userns`), and Debian has `kernel.unprivileged_userns_clone`; measure both before offering it.
 - [ ] **Swap: `vm.page-cluster`** (swap readahead, 2^n pages): 0 for zram, the kernel default 3 elsewhere. It belongs with the swap device, so it moved here from the huge pages item. Measured: 6.x accepts 0 to 31; 5.10 and 4.15 also take 32.
 
 ## 2. UX

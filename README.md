@@ -17,8 +17,9 @@ ready-to-apply config file with citations to the source documentation.
 | [Filesystem & file descriptors](https://linux-tuners.dev/filesystem) | `fs.*` sysctl: open-file ceilings, inotify limits for IDEs and Kubernetes nodes, native AIO for databases |
 | [Huge pages & memory layout](https://linux-tuners.dev/hugepages) | huge page pools, Transparent Huge Pages and KSM (sysctl.d + tmpfiles.d), `vm.max_map_count`, NUMA zone reclaim |
 | [System V IPC & shared memory](https://linux-tuners.dev/sysv-ipc) | `kernel.sem`, `shmmni`, `shm_rmid_forced` and the message queue limits, with the Oracle and Db2 minimums |
+| [Kernel limits & panics](https://linux-tuners.dev/kernel) | `kernel.pid_max`, `threads-max`, key quotas for container hosts, panic and reboot behaviour, SysRq and the console loglevel |
 
-More are planned (filesystem, huge pages, …). Everything runs in
+More are planned (block I/O, CPU frequency, …). Everything runs in
 your browser; your settings are only stored in the URL you choose to share.
 
 ## Develop

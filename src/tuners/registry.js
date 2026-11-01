@@ -151,16 +151,27 @@ export const TUNERS = [
       jsonLdType: 'SoftwareApplication',
     },
   },
+  {
+    id: 'kernel',
+    status: 'live',
+    path: '/kernel',
+    navLabel: 'Kernel',
+    title: 'Kernel limits & panics',
+    blurb: 'Set the process and thread ceilings, the key quotas containers run into, whether a crashed machine reboots, and which kernel messages reach the console.',
+    keys: ['kernel.threads-max', 'kernel.keys.maxkeys', 'kernel.panic', 'kernel.sysrq', '…'],
+    route: {
+      title: 'Kernel limits & panics tuner | linux-tuners.dev',
+      description:
+        'Workload-aware tuner for Linux kernel.* sysctls: kernel.pid_max, threads-max, kernel.keys.maxkeys and maxbytes, kernel.panic, panic_on_oops, softlockup_panic, kernel.sysrq and the printk console loglevel. Knows what systemd sets at boot, shows the TasksMax systemd derives from threads-max, and writes a commented sysctl.d file.',
+      ogTitle: 'Kernel limits & panics tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+  },
   // Roadmap toward the whole sysctl tree plus the key sysfs runtime tunables,
   // grouped by what an operator tunes together (e.g. hardening keys from
   // kernel/net/fs live in one "Security hardening" tuner).
-  {
-    id: 'kernel',
-    status: 'planned',
-    title: 'Kernel & scheduler',
-    blurb: 'Tune kernel.* sysctls for scheduling and system behaviour, covering CFS scheduler tunables, the PID and thread ceilings, panic and printk behaviour, and user-namespace limits.',
-    keys: ['kernel.sched_*', 'kernel.pid_max', 'kernel.threads-max', 'user.max_user_namespaces', '…'],
-  },
   {
     id: 'block-io',
     status: 'planned',

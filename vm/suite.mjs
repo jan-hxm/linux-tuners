@@ -9,14 +9,17 @@
  *     value blocks, what locks, which warnings fire. So do the filesystem
  *     tuner's: what systemd sets at boot, and what a low fs.nr_open does;
  *     and the huge pages tuner's: what each distro starts THP and the map
- *     count at, and that its tmpfiles.d lines set /sys; and the System V
- *     IPC tuner's: the defaults, and that containers don't see the values.
+ *     count at, and that its tmpfiles.d lines set /sys; the System V
+ *     IPC tuner's: the defaults, and that containers don't see the values;
+ *     and the kernel tuner's: what systemd derives from threads-max, the
+ *     key quota, what the console shows, and what a panic does.
  *  3. The files survive a reboot, applied by systemd-sysctl as on a real
  *     machine, including the interface caveats the security file explains.
  *
  * Run with `npm run test:vm` (vm/README.md).
  */
 
+import { readFileSync } from 'node:fs'
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { VM } from './lib/vm.mjs'
 import { IMAGES } from './lib/images.mjs'
@@ -25,14 +28,17 @@ import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { isEmitted } from '@/tuners/security/calculations.js'
 import { kernelFileMax, kernelWatches } from '@/tuners/filesystem/calculations.js'
 import { presetParams } from '@/core/createTunerStore.js'
+import { valueTypeOf } from '@/core/valueTypes.js'
+import { defaultTasksMax, kernelThreads } from '@/tuners/kernel/calculations.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
 // Tuners whose output is sysctl.d files, and tmpfiles.d files for /sys.
-const SYSCTL_TUNERS = TUNER_DOMAINS.filter((d) => ['swap', 'network', 'security', 'filesystem', 'hugepages', 'sysv-ipc'].includes(d.id))
+const SYSCTL_TUNERS = TUNER_DOMAINS.filter((d) => ['swap', 'network', 'security', 'filesystem', 'hugepages', 'sysv-ipc', 'kernel'].includes(d.id))
 const security = TUNER_DOMAINS.find((d) => d.id === 'security')
 const filesystem = TUNER_DOMAINS.find((d) => d.id === 'filesystem')
 const hugepages = TUNER_DOMAINS.find((d) => d.id === 'hugepages')
 const ipc = TUNER_DOMAINS.find((d) => d.id === 'sysv-ipc')
+const kernel = TUNER_DOMAINS.find((d) => d.id === 'kernel')
 
 /** `key = value` lines of a sysctl.d file, comments skipped. */
 export function sysctlLines(content) {
@@ -415,6 +421,125 @@ export function imageSuite(id) {
       })
     })
 
+    describe('kernel claims on a fresh boot', () => {
+      const hw = { ...kernel.defaultHardware, ...image.profile.kernel, ramGiB: 3 }
+      const defs = kernel.parameterKeys.map((k) => kernel.defsByKey[k])
+      const consoleLog = () => readFileSync(vm.console.replace(/\.log$/, `-${vm.boots}.log`), 'utf8')
+
+      it('pid_max, threads-max, the key quotas, SysRq and the console start where the defs say', async () => {
+        const got = await vm.sysctls(defs.map((d) => d.sysctlName))
+        expect(got['kernel.pid_max'] === '4194304').toBe(hw.systemd === 'modern')
+        // The kernel counts RAM before freeing its boot memory: a little under the estimate.
+        const threads = Number(got['kernel.threads-max'])
+        expect(threads).toBeLessThanOrEqual(kernelThreads(hw))
+        expect(threads).toBeGreaterThan(kernelThreads(hw) * 0.9)
+        for (const k of ['maxkeys', 'maxbytes', 'panic', 'panic_on_oops', 'softlockup_panic']) {
+          expect(got[kernel.defsByKey[k].sysctlName], k).toBe(String(kernel.defsByKey[k].kernelDefault))
+        }
+        expect(got['kernel.sysrq']).toBe(image.expect.sysrq)
+        expect(got['kernel.printk']).toBe(`${image.expect.console} 4 1 7`)
+        // The drawer names this distribution's starting value.
+        const note = kernel.defsByKey.sysrq.kernelDefaultNote
+        expect(note).toContain(image.expect.sysrq)
+      })
+
+      it('every bound and option the tuner offers is accepted', async () => {
+        const before = await vm.sysctls(defs.map((d) => d.sysctlName))
+        const rejected = []
+        const write = async (name, v) => {
+          const err = await vm.sysctlWrite(name, v)
+          if (err) rejected.push(`${name}=${v}: ${err}`)
+        }
+        for (const d of defs) {
+          const range = kernel.rangeFor(d.key, hw)
+          if (d.type === 'enum') for (const o of d.options) await write(d.sysctlName, valueTypeOf(d).format(o.value, d))
+          else if (d.type === 'tuple') for (const end of ['max', 'min']) await write(d.sysctlName, range.elements.map((r) => r[end]).join(' '))
+          // threads-max only upwards: below the running threads nothing forks.
+          else for (const v of [range.max, range.min]) await write(d.sysctlName, v)
+          await vm.sysctlWrite(d.sysctlName, before[d.sysctlName])
+        }
+        expect(rejected).toEqual([])
+      })
+
+      it('systemd derives DefaultTasksMax from threads-max, as the note says', async () => {
+        const before = await vm.sysctl('kernel.threads-max')
+        const params = { ...kernel.deriveDefaults(hw), pid_max: Number(await vm.sysctl('kernel.pid_max')), threads_max: 200704 }
+        await vm.sysctlWrite('kernel.threads-max', params.threads_max)
+        await vm.sudo('systemctl daemon-reexec')
+        const got = (await vm.run('systemctl show -p DefaultTasksMax --value')).stdout.trim()
+        await vm.sysctlWrite('kernel.threads-max', before)
+        await vm.sudo('systemctl daemon-reexec')
+        expect(got).toBe(String(defaultTasksMax({ ...hw, systemd: 'older' }, params)))
+      })
+
+      it('a non-root user is held to kernel.keys.maxkeys', async () => {
+        const KEYS = String.raw`
+import ctypes, errno
+libc = ctypes.CDLL(None, use_errno=True)
+libc.syscall(250, 7, -4)
+n = 0
+while n < 10000:
+    if libc.syscall(248, b"user", ("k%d" % n).encode(), b"x", 1, -4) < 0:
+        print(n, errno.errorcode[ctypes.get_errno()]); break
+    n += 1
+libc.syscall(250, 7, -4)
+`
+        const at = async () => (await vm.asUser(py(KEYS))).stdout.trim().split(' ')
+        const [low, err] = await at()
+        await vm.sysctlWrite('kernel.keys.maxkeys', 2000)
+        await vm.sysctlWrite('kernel.keys.maxbytes', 2000000)
+        const [high] = await at()
+        await vm.sysctlWrite('kernel.keys.maxkeys', 200)
+        await vm.sysctlWrite('kernel.keys.maxbytes', 20000)
+        expect(err).toBe('EDQUOT')
+        expect(Number(low)).toBeGreaterThan(190)
+        expect(Number(low)).toBeLessThan(200)
+        expect(Number(high)).toBeGreaterThan(1990)
+      })
+
+      it('the console loglevel filters the console only, and root reaches SysRq at 0', async () => {
+        const before = await vm.sysctls(['kernel.printk', 'kernel.sysrq'])
+        const tag = `vmtest-${Date.now()}`
+        await vm.sysctlWrite('kernel.printk', '4 4 1 7')
+        await vm.sudo(`echo "<6>${tag}-info" > /dev/kmsg; echo "<3>${tag}-err" > /dev/kmsg`)
+        await vm.sysctlWrite('kernel.sysrq', 0)
+        await vm.sudo('echo h > /proc/sysrq-trigger')
+        const dmesg = (await vm.sudo('dmesg')).stdout
+        await vm.sysctlWrite('kernel.printk', before['kernel.printk'])
+        await vm.sysctlWrite('kernel.sysrq', before['kernel.sysrq'])
+        await vm.sudo('sync; sleep 1')
+        const shown = consoleLog()
+        expect(shown).toContain(`${tag}-err`)
+        expect(shown).not.toContain(`${tag}-info`)
+        expect(dmesg).toContain(`${tag}-info`)
+        expect(dmesg).toMatch(/sysrq: HELP/)
+        expect(kernel.generateConfig({ hardware: hw, params: kernel.deriveDefaults(hw), now: NOW })[0].content).toContain('root can\n# trigger every function through /proc/sysrq-trigger')
+      })
+
+      it('a panic reboots after kernel.panic seconds, and stays down at 0', async () => {
+        const crash = async (seconds) => {
+          await vm.sysctlWrite('kernel.panic', seconds)
+          vm.run('sudo sh -c "sleep 1; echo c > /proc/sysrq-trigger"', { check: false, timeoutMs: 15_000 })
+          const t0 = Date.now()
+          const r = await Promise.race([vm.exited.then(() => 'rebooted'), new Promise((res) => setTimeout(() => res('down'), 30_000))])
+          if (r === 'down') {
+            vm.proc.kill()
+            await vm.exited
+          }
+          const log = consoleLog()
+          await vm.launch()
+          return { r, s: (Date.now() - t0) / 1000, log }
+        }
+        const reboot = await crash(3)
+        expect(reboot.r).toBe('rebooted')
+        expect(reboot.log).toContain('Rebooting in 3 seconds')
+        const stay = await crash(0)
+        expect(stay.r).toBe('down')
+        expect(stay.log).toContain('Kernel panic')
+        expect(stay.log).not.toContain('Rebooting in')
+      })
+    })
+
     describe('every generated sysctl file applies and reads back', () => {
       const all = SYSCTL_TUNERS.flatMap((d) => cases(d, image))
         .map((c) => ({ ...c, lines: c.files.flatMap((f) => sysctlLines(f.content)), writes: c.files.flatMap((f) => tmpfilesWrites(f.content)) }))
@@ -438,6 +563,12 @@ export function imageSuite(id) {
           state = { ptrace3: state.ptrace3 || l.ptrace3, bpf1: state.bpf1 || l.bpf1 }
           const got = await vm.sysctls(c.lines.map((x) => x.key))
           const diff = c.lines.filter((x) => got[x.key] !== x.value).map((x) => `${x.key}: wrote ${x.value}, reads ${got[x.key]}`)
+          // Don't run the rest of the suite with the panic switches on: under
+          // load (five VMs on one host) a guest can report a soft lockup, and
+          // softlockup_panic then reboots it mid-test.
+          if (c.domain.id === 'kernel') {
+            for (const k of ['kernel.softlockup_panic', 'kernel.panic_on_oops', 'kernel.panic']) await vm.sysctlWrite(k, 0)
+          }
           expect([...diff, ...await sysfsDiff(vm, c.writes)]).toEqual([])
         })
       }
@@ -495,12 +626,13 @@ export function imageSuite(id) {
           return { hardware, params, files: hugepages.generateConfig({ hardware, params, presetLabel: null, now: NOW }) }
         })(),
         pick(ipc, 'db2'),
+        pick(kernel, 'server'),
       ]
       const lines = installed.flatMap((c) => c.files.flatMap((f) => sysctlLines(f.content)))
       const writes = installed.flatMap((c) => c.files.flatMap((f) => tmpfilesWrites(f.content)))
       const securityFile = installed[2].files[0]
 
-      it('every key of the swap, network, security, filesystem, huge pages and IPC defaults is set at boot', async () => {
+      it('every key of the swap, network, security, filesystem, huge pages, IPC and kernel defaults is set at boot', async () => {
         await vm.reboot()
         for (const c of installed) for (const f of c.files) await vm.writeFile(f.path, f.content)
         // As the network file says, so the conntrack keys exist when the files load.

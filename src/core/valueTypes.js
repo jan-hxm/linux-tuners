@@ -52,13 +52,18 @@ const bool = {
   equals: (a, b) => a === b,
 }
 
-/** One of `def.options[].value`, all plain tokens. */
+/**
+ * One of `def.options[].value`, all plain tokens. An option may print as a
+ * different `sysctlValue`, for keys whose values are numbers with a meaning
+ * (kernel.sysrq's bitmasks), so the state and the link keep the name.
+ */
 const enumType = {
   restore: (raw, def) => (enumValues(def).includes(raw) ? raw : undefined),
   clamp: (v, def) => (enumValues(def).includes(v) ? v : def.kernelDefault),
   format: (v, def) => {
-    if (!enumValues(def).includes(v)) throw new Error(`Not an option of ${def.key}: ${v}`)
-    return v
+    const option = (def.options ?? []).find((o) => o.value === v)
+    if (!option) throw new Error(`Not an option of ${def.key}: ${v}`)
+    return option.sysctlValue ?? v
   },
   equals: (a, b) => a === b,
 }

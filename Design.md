@@ -38,6 +38,7 @@ They are not one tuner per `/proc/sys` root. For example, hardening keys from
 | `/filesystem` | 6 `fs.*` sysctls: `file-max`, `nr_open`; `inotify.max_user_watches`, `max_user_instances`, `max_queued_events`; `aio-max-nr`. Ranges start at the kernel default, since lower values only make programs fail. `file-max` is left out on systemd 240+, which raises it to the maximum at boot, and `nr_open` is left out at the kernel default so distributions that raise it keep their value. The watch limit is held to a worst case of a tenth of RAM. No graphs. | `/etc/sysctl.d/99-filesystem-tuning.conf`, with notes on what is left out and on units whose `LimitNOFILE=` passes `nr_open` |
 | `/hugepages` | 9 keys: `vm.nr_hugepages`, `nr_overcommit_hugepages`; THP `enabled` and `defrag`; KSM `run`, `pages_to_scan`, `sleep_millisecs`; `vm.max_map_count`, `zone_reclaim_mode`. The THP and KSM keys are sysfs files (a def's `sysfsPath`). The pool starts at 0 and is offered up to nine tenths of RAM, since it takes RAM whether used or not; THP starts at `madvise` for every workload and KSM is on for VM hosts. Keys at a default that a distribution, the boot options or a service may already set are left out: the pools at 0, KSM off, `max_map_count` at 65530. `zone_reclaim_mode` exists only with several NUMA nodes. No kernel defaults preset, since the THP default is a kernel build choice. `vm.mmap_min_addr` is not offered: the only reason to change it is lowering it for Wine or DOSEMU, which reopens NULL-dereference exploits. No graphs. | Two files in one document: `/etc/sysctl.d/99-hugepages-tuning.conf` and `/etc/tmpfiles.d/99-hugepages-tuning.conf`, whose `w` lines set `/sys/kernel/mm` at boot |
 | `/sysv-ipc` | 6 System V IPC sysctls: `kernel.shmmni`, `shm_rmid_forced`; `kernel.sem` (SEMMSL, SEMMNS, SEMOPM, SEMMNI); `msgmni`, `msgmax`, `msgmnb`. Since 3.19 the kernel defaults pass what Oracle and Db2 ask for, apart from Db2's RAM-based counts and 64 KiB messages, so every range starts at the kernel default and only the Db2 workload raises anything. Every key is written, at the default too, so the file undoes an older guide's lower values (Oracle's minimum `kernel.sem = 250 32000 100 128` cuts SEMMNI from 32000 to 128). `kernel.shmmax` and `kernel.shmall` are not offered: their default is no limit and any value lowers it. `kernel.sem` is a tuple with one range per field (`def.elementLimits`). The worst-case memory of full message queues (`msgmni` × `msgmnb`) is shown in the formula. No graphs. | `/etc/sysctl.d/99-sysv-ipc-tuning.conf`, with notes on what is left out, the vendor minimums, and containers starting at the kernel defaults |
+| `/kernel` | 9 `kernel.*` sysctls: `pid_max`, `threads-max`; `kernel.keys.maxkeys`, `maxbytes`; `panic`, `panic_on_oops`, `softlockup_panic`, `sysrq`; `printk` (four fields). `pid_max` has a card only for systemd before 243, which raises it to 4194304 at boot. `threads-max` starts at the kernel's RAM-based value (thread stacks in an eighth of RAM) and is written only when raised, since a value below the running threads stops every fork; the formula shows the `DefaultTasksMax` systemd derives from it. Container hosts get LXD's key quotas, unattended machines reboot 10 s after a panic and panic on an oops, and every workload gets SysRq 176 and console loglevel 4. `kernel.sysrq` is an enum whose options print their bitmask (`sysctlValue`). The pre-5.13 scheduler sysctls, `sched_autogroup_enabled` (no effect under systemd's cpu controller) and the user namespace limits are not offered. No graphs. | `/etc/sysctl.d/99-kernel-tuning.conf`, with notes on what is left out, `kernel.panic` deciding every reboot, SysRq and `/proc/sysrq-trigger`, and the console loglevel |
 
 The planned tuners and their order are listed in [TODO.md](TODO.md).
 
@@ -288,7 +289,7 @@ must follow them, and existing UI must not regress.
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
-not plumbing. Seven tuners are shipped and about three are planned, so anything
+not plumbing. Eight tuners are shipped and about two are planned, so anything
 written twice gets written ten times. Duplication is the main risk.
 
 ### Layers and dependency direction
@@ -368,7 +369,9 @@ so that a new variant is an addition rather than an edit to shared code.
   default), `bool` (stored as 0/1), `enum` (one of `def.options[].value`, for
   `tcp_congestion_control` or the I/O `scheduler`) or `tuple` (`def.length`
   integers, for `tcp_rmem` or `kernel.sem`). The network tuner is the first
-  with enum and tuple defs. A tuple's range may carry `elements`, one range
+  with enum and tuple defs. An enum option may print as a different
+  `sysctlValue`, so state and links keep a name (`reboot`) for a key whose
+  values are numbers (`kernel.sysrq = 176`). A tuple's range may carry `elements`, one range
   per element (`elementRange(range, i)`), when the fields take different
   values: `kernel.sem`'s SEMMNI stops at 32768 while SEMMNS goes to
   2147483647. The def then lists them in `elementLimits`, which the drawer
@@ -603,6 +606,27 @@ behaviour goes in only once a VM has shown it; facts found that way so far:
   (`unshare -i`, every container) starts at the kernel defaults, not the
   host's values. With `shm_rmid_forced = 1` a segment whose creator exited
   unattached is removed at once.
+- `kernel.pid_max` starts at 32768, or 1024 per possible CPU when that is
+  more (40960 with 40), and at 4194304 wherever systemd 243+ ships
+  `50-pid-max.conf` (all but Ubuntu 18.04). `kernel.threads-max` is about
+  RAM / 128 KiB, a few percent under, and accepts any value down to below
+  the running threads, at which point nothing forks, SSH included.
+  systemd's `DefaultTasksMax` is 15% of the smaller of the two, read again
+  on `daemon-reexec`. The `user.max_*_namespaces` start at half of it.
+- `kernel.sysrq` starts at 438 on Debian, 176 on Ubuntu and 16 on Fedora
+  (systemd's `50-default.conf`); root's `/proc/sysrq-trigger` ignores it.
+  The console loglevel starts at 7, 4 on Ubuntu (`10-console-messages.conf`);
+  `kernel.printk` takes any integers, and a line with fewer fields leaves
+  the rest unchanged. A panic with `kernel.panic = 3` reboots about 3 s
+  later. The key quota is 200 keys and 20000 bytes per non-root user
+  everywhere. Fedora's kernel has no hung-task detector
+  (`hung_task_timeout_secs` is missing).
+- The CFS sysctls (`sched_min_granularity_ns` and siblings) exist on 5.10
+  and 4.15 only. `sched_autogroup_enabled` changes CPU shares only for
+  tasks in the root CPU cgroup: under systemd with the cpu controller on
+  (Debian 13, Ubuntu 24.04, Fedora 43) a session's share was the same with
+  it on or off. RT throttling (`sched_rt_runtime_us`) gave inconsistent
+  results under WHPX, so no claim rests on it.
 
 ### Guardrails
 

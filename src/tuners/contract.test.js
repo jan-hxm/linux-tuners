@@ -301,7 +301,10 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         expect(() => valueTypeOf(def), key).not.toThrow()
         expect(CONTROLS[def.control].types, `${key}: ${def.control} edits ${def.type ?? 'int'}`).toContain(def.type ?? 'int')
         // Enum values are emitted verbatim by every writer, so they must be plain tokens.
-        for (const opt of def.options ?? []) expect(opt.value, key).toMatch(/^[A-Za-z0-9_.+-]+$/)
+        for (const opt of def.options ?? []) {
+          expect(opt.value, key).toMatch(/^[A-Za-z0-9_.+-]+$/)
+          if (opt.sysctlValue !== undefined) expect(opt.sysctlValue, key).toMatch(/^[A-Za-z0-9_.+-]+$/)
+        }
         if (def.sysfsPath) {
           // A sysfs def shows the tail of its path as its name.
           expect(def.sysfsPath, key).toMatch(/^\/sys(\/[a-z0-9_]+)+$/)

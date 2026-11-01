@@ -12,5 +12,6 @@ import { networkDomain } from './network/index.js'
 import { filesystemDomain } from './filesystem/index.js'
 import { hugepagesDomain } from './hugepages/index.js'
 import { sysvIpcDomain } from './sysv-ipc/index.js'
+import { kernelDomain } from './kernel/index.js'
 
-export const TUNER_DOMAINS = [swapDomain, systemdDomain, securityDomain, networkDomain, filesystemDomain, hugepagesDomain, sysvIpcDomain]
+export const TUNER_DOMAINS = [swapDomain, systemdDomain, securityDomain, networkDomain, filesystemDomain, hugepagesDomain, sysvIpcDomain, kernelDomain]

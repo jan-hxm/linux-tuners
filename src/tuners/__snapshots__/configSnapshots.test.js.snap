@@ -1796,6 +1796,822 @@ w /sys/kernel/mm/ksm/pages_to_scan - - - - 100
 w /sys/kernel/mm/ksm/sleep_millisecs - - - - 20"
 `;
 
+exports[`generated config: kernel > container / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Container host or Kubernetes node, 16 GiB RAM, systemd 243 or newer
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 2000 - keys per non-root user
+kernel.keys.maxkeys = 2000
+
+# maxbytes: 2000000 - key bytes per non-root user
+kernel.keys.maxbytes = 2000000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 10 - reboot 10 s after a panic
+kernel.panic = 10
+
+# panic_on_oops: 1 - an oops panics
+kernel.panic_on_oops = 1
+
+# softlockup_panic: 0 - a soft lockup is logged
+kernel.softlockup_panic = 0
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > container / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Container host or Kubernetes node, 16 GiB RAM, systemd 243 or newer
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 0 - stay down after a panic
+kernel.panic = 0
+
+# panic_on_oops: 0 - an oops kills the task
+kernel.panic_on_oops = 0
+
+# softlockup_panic: 0 - a soft lockup is logged
+kernel.softlockup_panic = 0
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > container / reboot-on-failure 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Container host or Kubernetes node, 16 GiB RAM, systemd 243 or newer
+# Profile: Reboot on any kernel failure
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 2000 - keys per non-root user
+kernel.keys.maxkeys = 2000
+
+# maxbytes: 2000000 - key bytes per non-root user
+kernel.keys.maxbytes = 2000000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 10 - reboot 10 s after a panic
+kernel.panic = 10
+
+# panic_on_oops: 1 - an oops panics
+kernel.panic_on_oops = 1
+
+# softlockup_panic: 1 - a soft lockup panics
+kernel.softlockup_panic = 1
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > desktop / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Desktop or developer workstation, 16 GiB RAM, systemd 243 or newer
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 0 - stay down after a panic
+kernel.panic = 0
+
+# panic_on_oops: 0 - an oops kills the task
+kernel.panic_on_oops = 0
+
+# softlockup_panic: 0 - a soft lockup is logged
+kernel.softlockup_panic = 0
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > desktop / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Desktop or developer workstation, 16 GiB RAM, systemd 243 or newer
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 0 - stay down after a panic
+kernel.panic = 0
+
+# panic_on_oops: 0 - an oops kills the task
+kernel.panic_on_oops = 0
+
+# softlockup_panic: 0 - a soft lockup is logged
+kernel.softlockup_panic = 0
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > desktop / reboot-on-failure 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Desktop or developer workstation, 16 GiB RAM, systemd 243 or newer
+# Profile: Reboot on any kernel failure
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 10 - reboot 10 s after a panic
+kernel.panic = 10
+
+# panic_on_oops: 1 - an oops panics
+kernel.panic_on_oops = 1
+
+# softlockup_panic: 1 - a soft lockup panics
+kernel.softlockup_panic = 1
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > server / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Server or cloud VM, 16 GiB RAM, systemd 243 or newer
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 10 - reboot 10 s after a panic
+kernel.panic = 10
+
+# panic_on_oops: 1 - an oops panics
+kernel.panic_on_oops = 1
+
+# softlockup_panic: 0 - a soft lockup is logged
+kernel.softlockup_panic = 0
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > server / defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Server or cloud VM, 16 GiB RAM, systemd 243 or newer
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 10 - reboot 10 s after a panic
+kernel.panic = 10
+
+# panic_on_oops: 1 - an oops panics
+kernel.panic_on_oops = 1
+
+# softlockup_panic: 0 - a soft lockup is logged
+kernel.softlockup_panic = 0
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > server / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Server or cloud VM, 16 GiB RAM, systemd 243 or newer
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 0 - stay down after a panic
+kernel.panic = 0
+
+# panic_on_oops: 0 - an oops kills the task
+kernel.panic_on_oops = 0
+
+# softlockup_panic: 0 - a soft lockup is logged
+kernel.softlockup_panic = 0
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > server / kernel-defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Server or cloud VM, 16 GiB RAM, systemd 243 or newer
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 0 - stay down after a panic
+kernel.panic = 0
+
+# panic_on_oops: 0 - an oops kills the task
+kernel.panic_on_oops = 0
+
+# softlockup_panic: 0 - a soft lockup is logged
+kernel.softlockup_panic = 0
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > server / reboot-on-failure 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Server or cloud VM, 16 GiB RAM, systemd 243 or newer
+# Profile: Reboot on any kernel failure
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 10 - reboot 10 s after a panic
+kernel.panic = 10
+
+# panic_on_oops: 1 - an oops panics
+kernel.panic_on_oops = 1
+
+# softlockup_panic: 1 - a soft lockup panics
+kernel.softlockup_panic = 1
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
+exports[`generated config: kernel > server / reboot-on-failure 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux kernel sysctls: process limits, key quotas, panics, console
+# Generated 2026-01-01 by linux-tuners.dev/kernel
+# System: Server or cloud VM, 16 GiB RAM, systemd 243 or newer
+# Profile: Reboot on any kernel failure
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-kernel-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# NOTES
+#
+# kernel.pid_max is left out: systemd 243 and newer raise it to
+# 4194304, the most the kernel takes on 64-bit, at boot.
+#
+# kernel.threads-max is left out at the kernel's own value, about
+# one thread per 128 KiB of RAM.
+#
+# kernel.panic decides whether a panic ends in a reboot, including the
+# panics vm.panic_on_oom asks for.
+#
+# kernel.sysrq covers the keyboard and serial console only: root can
+# trigger every function through /proc/sysrq-trigger at any setting.
+#
+# kernel.printk only decides what reaches the console: dmesg and the
+# journal keep every message.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   key quotas:     https://docs.kernel.org/security/keys/core.html
+
+# ── Key quotas ──────────────────────────────────────────────────────────────
+# maxkeys: 200 - keys per non-root user
+kernel.keys.maxkeys = 200
+
+# maxbytes: 20000 - key bytes per non-root user
+kernel.keys.maxbytes = 20000
+
+# ── Panics & SysRq ──────────────────────────────────────────────────────────
+# panic: 10 - reboot 10 s after a panic
+kernel.panic = 10
+
+# panic_on_oops: 1 - an oops panics
+kernel.panic_on_oops = 1
+
+# softlockup_panic: 1 - a soft lockup panics
+kernel.softlockup_panic = 1
+
+# sysrq: 176 - SysRq functions allowed (bitmask)
+kernel.sysrq = 176
+
+# ── Console ─────────────────────────────────────────────────────────────────
+# printk: 4 4 1 7 - console shows levels below 4
+kernel.printk = 4 4 1 7"
+`;
+
 exports[`generated config: network > bulk / bbr 1`] = `
 "# ────────────────────────────────────────────────────────────────────────────
 # Linux network stack sysctls

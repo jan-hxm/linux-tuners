@@ -18,7 +18,7 @@ const SECTIONS = [
     id: 'kernel',
     title: 'Kernel information & attack surface',
     summary: 'What unprivileged users can learn about the kernel, and which risky interfaces they can reach.',
-    keys: ['kptr_restrict', 'dmesg_restrict', 'perf_event_paranoid', 'ptrace_scope', 'randomize_va_space', 'unprivileged_bpf_disabled'],
+    keys: ['kptr_restrict', 'dmesg_restrict', 'perf_event_paranoid', 'ptrace_scope', 'randomize_va_space', 'unprivileged_bpf_disabled', 'user_namespaces'],
   },
   {
     id: 'network',
@@ -34,9 +34,10 @@ const SECTIONS = [
   },
 ]
 
-/** The card's value text: the segment's label, or on/off. */
+/** The card's value text: the segment's or option's label, or on/off. */
 function formatValue(value, def) {
   if (def.segmentLabels) return def.segmentLabels[value] ?? String(value)
+  if (def.options) return def.options.find((o) => o.value === value)?.label ?? String(value)
   return value === 1 ? 'on' : 'off'
 }
 
@@ -58,6 +59,8 @@ export const securityDomain = defineTuner({
   outputFilename: '99-security-hardening.conf',
   workloads: ['server', 'container', 'router', 'desktop'],
   workloadField: 'workload',
+  // 2 added user.max_user_namespaces; a version 1 link lacks it and is refused.
+  linkVersion: 2,
   context: { badge: 'CIS', label: 'CIS benchmark', url: CIS_BENCHMARKS },
   docsLabel: 'kernel.org docs',
   noteKey: 'cisNote',

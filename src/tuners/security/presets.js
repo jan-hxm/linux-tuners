@@ -38,7 +38,7 @@ export const PRESETS = [
   {
     id: 'kspp',
     label: 'Maximum (KSPP)',
-    description: 'The Kernel Self Protection Project\'s strictest values. ptrace and unprivileged BPF stay locked off until the next reboot. perf_event_paranoid is 4 where KSPP lists 3, because Ubuntu kernels only block perf from 4.',
+    description: 'The Kernel Self Protection Project\'s strictest values. ptrace and unprivileged BPF stay locked off until the next reboot, and nothing can create user namespaces. perf_event_paranoid is 4 where KSPP lists 3, because Ubuntu kernels only block perf from 4.',
     source: 'kspp.github.io Recommended Settings (sysctls)',
     values: {
       kptr_restrict: 2,
@@ -47,6 +47,7 @@ export const PRESETS = [
       ptrace_scope: 3,
       randomize_va_space: 2,
       unprivileged_bpf_disabled: 1,
+      user_namespaces: 'blocked',
       protected_symlinks: 1,
       protected_hardlinks: 1,
       protected_fifos: 2,

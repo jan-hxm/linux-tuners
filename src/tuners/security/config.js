@@ -201,6 +201,8 @@ function commentFor(def, value, hw) {
       return ['ASLR off', 'partial ASLR, heap not randomised', 'full ASLR'][value]
     case 'unprivileged_bpf_disabled':
       return ['unprivileged bpf() allowed', 'unprivileged bpf() off, locked until reboot', 'unprivileged bpf() off'][value]
+    case 'user_namespaces':
+      return 'no user namespaces, root included'
     case 'rp_filter':
       return ['no reverse-path filtering', 'strict reverse-path filtering (RFC 3704)', 'loose reverse-path filtering'][value]
     case 'tcp_syncookies':

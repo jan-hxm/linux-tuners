@@ -212,6 +212,7 @@ export function imageSuite(id) {
         const rejected = []
         for (const def of security.parameterKeys.map((k) => security.defsByKey[k])) {
           if (def.key === 'unprivileged_bpf_disabled' || def.key === 'ptrace_scope') continue // locking: below
+          if (def.type === 'enum') continue // user namespaces: below
           const { min, max } = security.rangeFor(def.key, hw)
           const before = await vm.sysctl(def.sysctlName)
           if (before === null) continue // key not on this kernel: covered by the file sweep
@@ -262,7 +263,7 @@ export function imageSuite(id) {
         const ptr = (await vm.asUser("awk 'NR==2 {print $1}' /proc/net/netlink")).stdout.trim()
         const raw = /^ffff/.test(ptr)
         const warned = security.validate(hw, { ...security.deriveDefaults(hw), kptr_restrict: 0 }).some((i) => i.id === 'kptr-raw')
-        // The legacy profile spans 4.4 to 4.18 and only the part before 4.15
+        // The legacy profile spans 4.9 to 4.18 and only the part before 4.15
         // prints raw pointers, so it warns even where this kernel hashes.
         if (raw) expect(warned, ptr).toBe(true)
         if (hw.kernel !== 'legacy') expect(warned).toBe(false)
@@ -287,6 +288,48 @@ export function imageSuite(id) {
         expect(rejected).toEqual([])
         for (const w of security.workloads) {
           expect(security.deriveDefaults({ ...hw, workload: w }).unprivileged_bpf_disabled, w).toBeGreaterThan(0)
+        }
+      })
+
+      it('blocked user namespaces stop everyone, root and PrivateUsers= services included', async () => {
+        const def = security.defsByKey.user_namespaces
+        const threads = Number(await vm.sysctl('kernel.threads-max'))
+        expect(Number(await vm.sysctl(def.sysctlName))).toBe(Math.floor(threads / 2))
+        for (const w of security.workloads) {
+          expect(security.deriveDefaults({ ...hw, workload: w }).user_namespaces, w).toBe(w === 'server' || w === 'router' ? 'blocked' : 'allowed')
+        }
+        // Distro switches the description names.
+        expect(await vm.sysctl('kernel.unprivileged_userns_clone') !== null).toBe(image.expect.usernsClone)
+        expect(await vm.sysctl('kernel.apparmor_restrict_unprivileged_userns')).toBe(image.expect.apparmorUserns ? '1' : null)
+        const asUser = (await vm.asUser('unshare -Ur id -u', { check: false })).code
+        expect(asUser === 0, 'unprivileged unshare -Ur at the kernel limit').toBe(!image.expect.apparmorUserns)
+        const unit = image.expect.privateUsersUnit
+        if (unit) expect((await vm.sudo(`systemctl cat ${unit}`)).stdout).toMatch(/^PrivateUsers=yes$/m)
+
+        const blocked = def.options.find((o) => o.value === 'blocked').sysctlValue
+        expect(await vm.sysctlWrite(def.sysctlName, blocked)).toBe('')
+        try {
+          expect((await vm.asUser('unshare -U true', { check: false })).stderr).toMatch(/No space left on device/)
+          expect((await vm.sudo('unshare -U true', { check: false })).stderr).toMatch(/No space left on device/)
+          expect((await vm.sudo('systemd-run --wait -q -p PrivateUsers=yes /bin/true', { check: false })).code).not.toBe(0)
+          if (unit) {
+            const state = (await vm.sudo(`systemctl restart ${unit}; sleep 2; systemctl is-active ${unit}`, { check: false })).stdout.trim()
+            expect(state, unit).toBe('failed')
+          }
+        } finally {
+          await vm.sysctlWrite(def.sysctlName, threads >> 1)
+          if (unit) await vm.sudo(`systemctl stop ${unit}; systemctl reset-failed ${unit}`, { check: false })
+        }
+        if (image.expect.usernsClone) {
+          // 0 stops only unprivileged users; root and PrivateUsers= still work.
+          expect(await vm.sysctlWrite('kernel.unprivileged_userns_clone', 0)).toBe('')
+          try {
+            expect((await vm.asUser('unshare -U true', { check: false })).stderr).toMatch(/Operation not permitted/)
+            expect((await vm.sudo('unshare -U true', { check: false })).code).toBe(0)
+            expect((await vm.sudo('systemd-run --wait -q -p PrivateUsers=yes /bin/true', { check: false })).code).toBe(0)
+          } finally {
+            await vm.sysctlWrite('kernel.unprivileged_userns_clone', 1)
+          }
         }
       })
 

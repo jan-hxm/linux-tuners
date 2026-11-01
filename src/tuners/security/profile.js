@@ -41,7 +41,7 @@ export const PROFILE = {
       options: [
         { value: 'current', label: '5.13 or newer', note: 'every key and value' },
         { value: 'lts', label: '4.19 to 5.12', note: 'unprivileged BPF can only be locked off' },
-        { value: 'legacy', label: '4.4 to 4.18', note: 'also no protected_fifos or protected_regular' },
+        { value: 'legacy', label: '4.9 to 4.18', note: 'also no protected_fifos or protected_regular' },
       ],
       default: 'current',
     },

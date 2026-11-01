@@ -39,7 +39,9 @@ Per image ([suite.mjs](suite.mjs)):
 1. **Security claims on a fresh boot.** Every value the tuner offers is
    accepted; perf_event_paranoid blocks unprivileged perf where the comments say;
    `kallsyms-exposed` and `kptr-raw` fire exactly when the kernel exposes
-   addresses; the BPF defaults stop unprivileged `bpf()`; 1 and ptrace 3 lock.
+   addresses; the BPF defaults stop unprivileged `bpf()`; blocked user
+   namespaces stop root and `PrivateUsers=` units too, and the distro switches
+   the description names exist where it says; 1 and ptrace 3 lock.
 2. **Filesystem claims.** `fs.file-max` and `fs.nr_open` start where the notes
    say, the watch default follows RAM as the drawer says, every bound offered
    is accepted, and a unit asking for more than `fs.nr_open` is cut down, or

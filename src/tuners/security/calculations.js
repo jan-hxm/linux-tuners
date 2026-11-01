@@ -22,6 +22,8 @@ export function deriveDefaults(hw) {
     randomize_va_space: 2,
     // 2 is reversible but needs 5.13; older kernels only have the one-way 1.
     unprivileged_bpf_disabled: hasReversibleBpfOff(hw) ? 2 : 1,
+    // Container hosts and desktops run rootless containers and sandboxes.
+    user_namespaces: w === 'server' || w === 'router' ? 'blocked' : 'allowed',
     // Strict filtering breaks asymmetric routes: routers, CNIs, VPN clients.
     rp_filter: w === 'server' ? 1 : 2,
     tcp_syncookies: 1,
@@ -67,7 +69,8 @@ export function hasProtectedFifos(hw) {
 /**
  * Whether a key is written to the file. Keys the chosen system doesn't have
  * are left out, and so is unprivileged_bpf_disabled = 0 before 5.13, which
- * those kernels reject (it is their default anyway).
+ * those kernels reject (it is their default anyway), and user namespaces left
+ * at the kernel's own limit, which follows RAM.
  *
  * @param {string} key
  * @param {import('./profile.js').SecuritySpec} hw
@@ -77,6 +80,7 @@ export function isEmitted(key, hw, params) {
   if (key === 'protected_fifos' || key === 'protected_regular') return hasProtectedFifos(hw)
   if (key === 'accept_redirects_v6') return hw.ipv6 === 'on'
   if (key === 'unprivileged_bpf_disabled') return hasReversibleBpfOff(hw) || params.unprivileged_bpf_disabled !== 0
+  if (key === 'user_namespaces') return params.user_namespaces === 'blocked'
   return true
 }
 

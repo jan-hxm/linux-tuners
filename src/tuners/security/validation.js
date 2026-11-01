@@ -71,6 +71,19 @@ export function validate(hw, p) {
       : 'On kernels before 5.13 this can\'t be changed again until the next reboot.')
   }
 
+  if (p.user_namespaces === 'blocked') {
+    if (hw.workload === 'container') {
+      warn('userns-container', ['user_namespaces'],
+        'Rootless containers, Podman and Docker\'s userns-remap, and Kubernetes pods with hostUsers: false need user namespaces. Block them only if the host runs none of these.')
+    } else if (hw.workload === 'desktop') {
+      warn('userns-desktop', ['user_namespaces'],
+        'Flatpak and the sandboxes of Chromium-based browsers need user namespaces, and some apps won\'t start without them.')
+    } else {
+      info('userns-blocked', ['user_namespaces'],
+        'Nothing can create a user namespace, root included: rootless containers and systemd services with PrivateUsers= fail to start, such as uuidd on Debian and Ubuntu and chrony-wait on Fedora.')
+    }
+  }
+
   if (p.rp_filter === 1) {
     info('rp-strict-interfaces', ['rp_filter'],
       'The kernel applies the higher of conf.all and each interface\'s value, and systemd sets interfaces to 2 (loose). Lower them too, as the generated file explains, or strict mode has no effect. NetworkManager sets the interfaces it manages back to 2, so strict mode doesn\'t hold where it runs.')

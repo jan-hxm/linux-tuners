@@ -45,6 +45,14 @@ describe('security config: keys the system has', () => {
     expect(ids(lts, { unprivileged_bpf_disabled: 0 })).toContain('bpf-left-out')
   })
 
+  // Measured: the limit starts at half of threads-max, which follows RAM (vm/README.md).
+  it('writes user.max_user_namespaces = 0 only when blocked, and never the kernel limit', () => {
+    expect(config(DEFAULT_SECURITY_SPEC)).toMatch(/^user\.max_user_namespaces = 0$/m)
+    const container = config({ ...DEFAULT_SECURITY_SPEC, workload: 'container' })
+    expect(container).not.toContain('user.max_user_namespaces')
+    expect(config({ ...DEFAULT_SECURITY_SPEC, kernel: 'legacy' })).toMatch(/^user\.max_user_namespaces = 0$/m)
+  })
+
   it('lists one-way values in a warning block', () => {
     const out = config(DEFAULT_SECURITY_SPEC, { ptrace_scope: 3, unprivileged_bpf_disabled: 1 })
     expect(out).toContain('# ONE-WAY SETTINGS')
@@ -83,8 +91,16 @@ describe('security config: keys the system has', () => {
 })
 
 describe('security validation', () => {
-  it('has no notes for the server defaults beyond the interface, perf 4 and apport caveats', () => {
-    expect(ids(DEFAULT_SECURITY_SPEC).sort()).toEqual(['perf-4-patched', 'redirects-v6-interfaces', 'rp-strict-interfaces', 'suid-dump-apport'])
+  it('has no notes for the server defaults beyond the interface, perf 4, apport and user namespace caveats', () => {
+    expect(ids(DEFAULT_SECURITY_SPEC).sort()).toEqual(['perf-4-patched', 'redirects-v6-interfaces', 'rp-strict-interfaces', 'suid-dump-apport', 'userns-blocked'])
+  })
+
+  it('warns when user namespaces are blocked where containers or sandboxes need them', () => {
+    const blocked = { user_namespaces: 'blocked' }
+    expect(ids({ ...DEFAULT_SECURITY_SPEC, workload: 'container' }, blocked)).toContain('userns-container')
+    expect(ids({ ...DEFAULT_SECURITY_SPEC, workload: 'desktop' }, blocked)).toContain('userns-desktop')
+    expect(ids({ ...DEFAULT_SECURITY_SPEC, workload: 'router' }, blocked)).toContain('userns-blocked')
+    expect(ids({ ...DEFAULT_SECURITY_SPEC, workload: 'desktop' }).filter((i) => i.startsWith('userns'))).toEqual([])
   })
 
   it('warns that perf 3 loosens Ubuntu kernels', () => {

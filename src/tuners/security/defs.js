@@ -17,6 +17,7 @@
  * @property {0|1|2|3} ptrace_scope               3 can't be lowered until reboot
  * @property {0|1|2}   randomize_va_space
  * @property {0|1|2}   unprivileged_bpf_disabled  1 can't be lowered until reboot; 2 needs 5.13+
+ * @property {'allowed'|'blocked'} user_namespaces  'allowed' leaves user.max_user_namespaces out
  * @property {0|1|2}   rp_filter
  * @property {0|1|2}   tcp_syncookies
  * @property {0|1}     accept_redirects
@@ -168,6 +169,32 @@ export const PARAMETER_DEFS = [
     kernelMax: 2,
     step: 1,
     unit: 'segment',
+  },
+  {
+    key: 'user_namespaces',
+    sysctlName: 'user.max_user_namespaces',
+    group: 'kernel',
+    type: 'enum',
+    control: 'select',
+    // 'allowed' keeps the kernel's own limit and is left out of the file.
+    options: [
+      { value: 'allowed', label: 'allowed (kernel limit)' },
+      { value: 'blocked', sysctlValue: '0', label: '0: blocked for everyone' },
+    ],
+    shortDesc: 'Whether any process may create a user namespace.',
+    longDesc: [
+      'A user namespace gives a process root inside it, with every capability over the mount, network and other namespaces it creates there. That lets unprivileged users reach kernel code otherwise kept for root, such as netfilter and filesystem mounting, and bugs there have led to many local privilege escalations.',
+      'The kernel limits how many each user may create, at half of kernel.threads-max by default. At 0 nobody can create one, root included, and the change applies at once. Rootless containers (Podman, rootless Docker), Flatpak and the sandboxes of Chromium-based browsers need them, and so do systemd services with PrivateUsers=: uuidd on Debian and Ubuntu and chrony-wait on Fedora fail to start.',
+      'Debian and Ubuntu kernels also have kernel.unprivileged_userns_clone, which blocks only unprivileged users at 0, and Ubuntu 24.04 already stops them from gaining privileges in one through AppArmor, unless a program\'s AppArmor profile allows it.',
+    ],
+    tuningTip: 'Block them on servers that run no containers; keep them where something sandboxes.',
+    kernelDocsUrl: 'https://docs.kernel.org/admin-guide/sysctl/user.html#max-user-namespaces',
+    cisNote: null,
+    kernelDefault: 'allowed',
+    kernelDefaultNote: 'The limit is half of kernel.threads-max, which follows RAM: about 7,800 on a 2 GB machine.',
+    kernelMin: 0,
+    kernelMax: 0,
+    unit: 'enum',
   },
 
   // ── Network ───────────────────────────────────────────────────────────────

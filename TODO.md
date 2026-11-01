@@ -13,10 +13,6 @@ sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages t
 
 1. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Parked until it can be measured on real hardware: the VM guests have no cpufreq at all (no `cpu*/cpufreq`, `acpi-cpufreq` finds no device). That needs the driver (`intel_pstate`, `amd-pstate`, `acpi-cpufreq`), the governors and EPP values each offers, the min/max bounds, and whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU. `kernel.numa_balancing` could be measured in a VM with two NUMA nodes (a single-node guest starts it at 0).
 
-On shipped tuners:
-
-- [ ] **Security: `user.max_user_namespaces = 0`** for servers that run no containers, sandboxed browsers or Flatpak, which need user namespaces. The kernel starts it at half of `threads-max`. Ubuntu 24.04 already blocks unprivileged ones through AppArmor (`kernel.apparmor_restrict_unprivileged_userns`), and Debian has `kernel.unprivileged_userns_clone`; measure both before offering it.
-
 ## 2. UX
 
 - [ ] Show the preset "what would change" diff somewhere other than a native `title` tooltip, which is invisible on touch and unreachable by keyboard. `src/ui/PresetSelector.vue`

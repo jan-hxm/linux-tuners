@@ -11,15 +11,14 @@ Each one is a new domain module following [Design.md §6](Design.md#6-adding-a-t
 
 sysctl-based (output: `/etc/sysctl.d/`):
 
-1. [ ] **Filesystem & file descriptors** (`fs.*`): `file-max`, `nr_open`, `inotify.max_user_watches`/`max_user_instances`, `aio-max-nr`.
-2. [ ] **Huge pages & memory layout** (the rest of `vm.*` + THP/KSM sysfs): `nr_hugepages`, `nr_overcommit_hugepages`, `max_map_count`, `mmap_min_addr`, `zone_reclaim_mode`, `page-cluster`; THP and KSM via `/sys/kernel/mm/`. Mixed output (sysctl.d + sysfs/tuned).
-3. [ ] **System V IPC & shared memory**: `kernel.shmmax`, `shmall`, `shmmni`, `sem`, `msgmni`/`msgmnb`/`msgmax`.
-4. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
+1. [ ] **Huge pages & memory layout** (the rest of `vm.*` + THP/KSM sysfs): `nr_hugepages`, `nr_overcommit_hugepages`, `max_map_count`, `mmap_min_addr`, `zone_reclaim_mode`, `page-cluster`; THP and KSM via `/sys/kernel/mm/`. Mixed output (sysctl.d + sysfs/tuned).
+2. [ ] **System V IPC & shared memory**: `kernel.shmmax`, `shmall`, `shmmni`, `sem`, `msgmni`/`msgmnb`/`msgmax`.
+3. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
 
 sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profile):
 
-5. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
-6. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`.
+4. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
+5. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`.
 
 ## 2. UX
 
@@ -46,6 +45,13 @@ sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profil
 - [ ] Per-route `<lastmod>` in the sitemap from `git log -1 --format=%cI -- <view file>` instead of the build date. `scripts/generate-static-routes.mjs`
 - [ ] Verify the site in Google Search Console and submit `https://linux-tuners.dev/sitemap.xml`; optionally Bing Webmaster Tools.
 
-## 5. Legal
+## 5. Guided system setup
+
+Once most tuners exist. Design it in Design.md first.
+
+- [ ] Landing page: explain the bigger picture (which tuners matter for which machine, and in what order) and lead the user through them as steps, most important first.
+- [ ] All-in-one quick configuration: enter the shared profile once (RAM, workload, kernel, systemd version), then walk through each tuner as a step that links to its full page, and end with every file for the whole system. It has to respect the cross-tuner limits, such as `fs.nr_open` against systemd's `DefaultLimitNOFILE` hard limit. Tuners don't import each other ([Design.md §9](Design.md#9-code-organization-and-reuse)), so the shared profile and the combined output belong in `core`/`ui`.
+
+## 6. Legal
 
 - [ ] Have the privacy policy reviewed by a data-protection officer or German IT lawyer if the site becomes commercial; it's templated, not legal advice.

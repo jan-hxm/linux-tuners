@@ -6,7 +6,8 @@
  *  1. Every sysctl tuner's file, for each workload and preset, applies with
  *     no error and every key reads back as written.
  *  2. The security tuner's claims about kernel behaviour hold: what each
- *     value blocks, what locks, which warnings fire.
+ *     value blocks, what locks, which warnings fire. So do the filesystem
+ *     tuner's: what systemd sets at boot, and what a low fs.nr_open does.
  *  3. The files survive a reboot, applied by systemd-sysctl as on a real
  *     machine, including the interface caveats the security file explains.
  *
@@ -19,11 +20,13 @@ import { IMAGES } from './lib/images.mjs'
 import { PERF_OPEN, BPF_MAP, py } from './lib/probes.mjs'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { isEmitted } from '@/tuners/security/calculations.js'
+import { kernelFileMax, kernelWatches } from '@/tuners/filesystem/calculations.js'
 import { presetParams } from '@/core/createTunerStore.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
-const SYSCTL_TUNERS = TUNER_DOMAINS.filter((d) => ['swap', 'network', 'security'].includes(d.id))
+const SYSCTL_TUNERS = TUNER_DOMAINS.filter((d) => ['swap', 'network', 'security', 'filesystem'].includes(d.id))
 const security = TUNER_DOMAINS.find((d) => d.id === 'security')
+const filesystem = TUNER_DOMAINS.find((d) => d.id === 'filesystem')
 
 /** `key = value` lines of a sysctl.d file, comments skipped. */
 export function sysctlLines(content) {
@@ -206,6 +209,63 @@ export function imageSuite(id) {
       })
     })
 
+    describe('filesystem claims on a fresh boot', () => {
+      const hw = { ...filesystem.defaultHardware, ...image.profile.filesystem }
+      const fileFor = (h, values = {}) => filesystem.generateConfig({ hardware: h, params: { ...filesystem.deriveDefaults(h), ...values }, presetLabel: null, now: NOW })[0].content
+      const memGiB = async () => Number((await vm.run("awk '/MemTotal/ {print $2}' /proc/meminfo")).stdout) / 1024 / 1024
+
+      it('fs.file-max is left out exactly where systemd already set the maximum', async () => {
+        const got = await vm.sysctl('fs.file-max')
+        const lines = sysctlLines(fileFor(hw)).map((l) => l.key)
+        if (hw.systemd === 'modern') {
+          expect(got).toBe('9223372036854775807')
+          expect(lines).not.toContain('fs.file-max')
+        } else {
+          const want = kernelFileMax({ ...hw, ramGiB: await memGiB() })
+          expect(Math.abs(Number(got) - want) / want).toBeLessThan(0.05)
+          expect(lines).toContain('fs.file-max')
+        }
+      })
+
+      it('fs.nr_open starts where the notes say, and is left out at the kernel default', async () => {
+        expect(await vm.sysctl('fs.nr_open')).toBe(String(image.expect.nrOpen))
+        expect(sysctlLines(fileFor(hw)).map((l) => l.key)).not.toContain('fs.nr_open')
+      })
+
+      it('the inotify watch default follows RAM where the drawer says', async () => {
+        const got = Number(await vm.sysctl('fs.inotify.max_user_watches'))
+        if (!image.expect.watchesScale) return expect(got).toBe(8192)
+        const want = kernelWatches({ ...hw, ramGiB: await memGiB() })
+        expect(Math.abs(got - want) / want).toBeLessThan(0.05)
+      })
+
+      it('every bound the tuner offers is accepted', async () => {
+        const rejected = []
+        for (const def of filesystem.parameterKeys.map((k) => filesystem.defsByKey[k])) {
+          const before = await vm.sysctl(def.sysctlName)
+          // The top first: a low fs.nr_open makes sudo warn on the next call.
+          for (const v of [def.kernelMax, def.kernelMin]) {
+            const err = await vm.sysctlWrite(def.sysctlName, v)
+            if (err) rejected.push(`${def.sysctlName}=${v}: ${err}`)
+          }
+          await vm.sysctlWrite(def.sysctlName, before)
+        }
+        expect(rejected).toEqual([])
+      })
+
+      it('a unit asking for more than fs.nr_open is cut down, or fails where it was lowered, as the note says', async () => {
+        const note = fileFor(hw, { nr_open: 2097152 })
+        expect(note).toContain('gets less')
+        expect(note).toContain('fails to start instead (status 205)')
+        await vm.sysctlWrite('fs.nr_open', 1048576)
+        const r = await vm.sudo("systemd-run --wait --pipe -q -p LimitNOFILE=2000000 sh -c 'ulimit -Hn'", { check: false })
+        await vm.sysctlWrite('fs.nr_open', image.expect.nrOpen)
+        // Lowered below what systemd runs with (raised at boot): it fails.
+        if (image.expect.nrOpen > 1048576) expect(r.code).not.toBe(0)
+        else expect(r.stdout.trim()).toBe('1048576')
+      })
+    })
+
     describe('every generated sysctl file applies and reads back', () => {
       const all = SYSCTL_TUNERS.flatMap((d) => cases(d, image))
         .map((c) => ({ ...c, lines: c.files.flatMap((f) => sysctlLines(f.content)) }))
@@ -278,11 +338,12 @@ export function imageSuite(id) {
         pick(SYSCTL_TUNERS.find((d) => d.id === 'swap'), 'general'),
         pick(SYSCTL_TUNERS.find((d) => d.id === 'network'), 'web'),
         pick(security, 'server'),
+        pick(filesystem, 'server'),
       ]
       const lines = installed.flatMap((c) => c.files.flatMap((f) => sysctlLines(f.content)))
       const securityFile = installed[2].files[0]
 
-      it('every key of the swap, network and security defaults is set at boot', async () => {
+      it('every key of the swap, network, security and filesystem defaults is set at boot', async () => {
         await vm.reboot()
         for (const c of installed) for (const f of c.files) await vm.writeFile(f.path, f.content)
         // As the network file says, so the conntrack keys exist when the files load.

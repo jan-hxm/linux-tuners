@@ -14,6 +14,7 @@ ready-to-apply config file with citations to the source documentation.
 | [systemd & resource limits](https://linux-tuners.dev/systemd) | systemd manager defaults and cgroup v2 slice controls |
 | [Security hardening](https://linux-tuners.dev/security) | hardening sysctls from `kernel.*`, `net.*` and `fs.*`, with KSPP and CIS-style presets |
 | [Network stack](https://linux-tuners.dev/network) | `net.*` sysctl: socket buffers sized to your link and path, listen queues, congestion control, local ports, conntrack |
+| [Filesystem & file descriptors](https://linux-tuners.dev/filesystem) | `fs.*` sysctl: open-file ceilings, inotify limits for IDEs and Kubernetes nodes, native AIO for databases |
 
 More are planned (filesystem, huge pages, …). Everything runs in
 your browser; your settings are only stored in the URL you choose to share.

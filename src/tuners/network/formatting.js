@@ -3,18 +3,9 @@
  * value text per def unit. Pure, for easy unit testing.
  */
 
-const KiB = 1024
-const MiB = 1024 * KiB
-const GiB = 1024 * MiB
+import { formatBytes } from '@/core/formatting.js'
 
-/** "6 MiB", "1.5 GiB", "512 KiB", "300 B". */
-export function formatBytes(bytes) {
-  const trim = (n) => String(Math.round(n * 10) / 10)
-  if (bytes >= GiB) return `${trim(bytes / GiB)} GiB`
-  if (bytes >= MiB) return `${trim(bytes / MiB)} MiB`
-  if (bytes >= KiB) return `${trim(bytes / KiB)} KiB`
-  return `${bytes} B`
-}
+export { formatBytes }
 
 /** "250 Mbit/s", "9.4 Gbit/s". */
 export function formatRate(bps) {

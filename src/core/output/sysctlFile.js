@@ -23,10 +23,10 @@ export function sysctlLine(name, text) {
 }
 
 /**
- * The body of a sysctl file: one header per section, then each def of that
- * section (in def order) as a comment line and a `name = value` line, plus one
- * more line per name in the def's `alsoSets` (e.g. the `conf.default` twin of
- * a `conf.all` key), all with the same value.
+ * The body of a sysctl file: one header per section that writes a key, then
+ * each def of that section (in def order) as a comment line and a
+ * `name = value` line, plus one more line per name in the def's `alsoSets`
+ * (e.g. the `conf.default` twin of a `conf.all` key), all with the same value.
  *
  * @param {Object}   opts
  * @param {Object[]} opts.defs       Defs with `key`, `group`, `sysctlName` and optional `alsoSets`
@@ -39,9 +39,10 @@ export function sysctlLine(name, text) {
 export function sysctlConfig({ defs, sections, params, comment, include = () => true }) {
   const lines = []
   for (const section of sections) {
+    const written = defs.filter((def) => def.group === section.id && include(def))
+    if (!written.length) continue
     lines.push(sectionHeader(section.title))
-    for (const def of defs) {
-      if (def.group !== section.id || !include(def)) continue
+    for (const def of written) {
       const value = params[def.key]
       const text = valueTypeOf(def).format(value, def)
       lines.push(commentLine(`${def.key}: ${text} - ${comment(def, value)}`))

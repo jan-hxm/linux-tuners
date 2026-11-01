@@ -20,6 +20,7 @@ const TUNER_DOMAIN_LOADERS = {
   systemd: () => import('@/tuners/systemd/index.js').then((m) => m.systemdDomain),
   security: () => import('@/tuners/security/index.js').then((m) => m.securityDomain),
   network: () => import('@/tuners/network/index.js').then((m) => m.networkDomain),
+  filesystem: () => import('@/tuners/filesystem/index.js').then((m) => m.filesystemDomain),
 }
 
 /** A lazy route component that renders the shared TunerPage for one domain. */

@@ -97,16 +97,27 @@ export const TUNERS = [
       jsonLdType: 'SoftwareApplication',
     },
   },
+  {
+    id: 'filesystem',
+    status: 'live',
+    path: '/filesystem',
+    navLabel: 'Filesystem',
+    title: 'Filesystem & file descriptors',
+    blurb: 'Tune fs.* sysctls for file-heavy and event-driven workloads, covering the open-file ceilings, inotify watch limits for IDEs and Kubernetes nodes, and native AIO capacity for databases.',
+    keys: ['fs.inotify.max_user_watches', 'fs.inotify.max_user_instances', 'fs.nr_open', 'fs.aio-max-nr', '…'],
+    route: {
+      title: 'Filesystem & file descriptors tuner | linux-tuners.dev',
+      description:
+        'Workload-aware tuner for Linux fs.* sysctls: fs.file-max, fs.nr_open, inotify max_user_watches, max_user_instances and max_queued_events, and fs.aio-max-nr. Shows the kernel memory each watch limit can pin, knows what systemd raises at boot, and writes a commented sysctl.d file.',
+      ogTitle: 'Filesystem & file descriptors tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+  },
   // Roadmap toward the whole sysctl tree plus the key sysfs runtime tunables,
   // grouped by what an operator tunes together (e.g. hardening keys from
   // kernel/net/fs live in one "Security hardening" tuner).
-  {
-    id: 'filesystem',
-    status: 'planned',
-    title: 'Filesystem & file descriptors',
-    blurb: 'Tune fs.* sysctls for file-heavy and event-driven workloads, covering the system-wide file-descriptor ceiling, inotify watch limits, and async I/O capacity.',
-    keys: ['fs.file-max', 'fs.inotify.max_user_watches', 'fs.aio-max-nr', '…'],
-  },
   {
     id: 'kernel',
     status: 'planned',

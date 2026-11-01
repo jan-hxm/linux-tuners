@@ -40,16 +40,20 @@ Per image ([suite.mjs](suite.mjs)):
    accepted; perf_event_paranoid blocks unprivileged perf where the comments say;
    `kallsyms-exposed` and `kptr-raw` fire exactly when the kernel exposes
    addresses; the BPF defaults stop unprivileged `bpf()`; 1 and ptrace 3 lock.
-2. **Every sysctl file** (swap, network, security; each workload's defaults and
-   each preset) applies with `sysctl -p` without errors, and every key reads
-   back as written. One-way values are ordered last, with a reboot when a later
+2. **Filesystem claims.** `fs.file-max` and `fs.nr_open` start where the notes
+   say, the watch default follows RAM as the drawer says, every bound offered
+   is accepted, and a unit asking for more than `fs.nr_open` is cut down, or
+   fails where `fs.nr_open` was lowered below what systemd runs with.
+3. **Every sysctl file** (swap, network, security, filesystem; each
+   workload's defaults and each preset) applies with `sysctl -p` without
+   errors, and every key reads back as written. One-way values are ordered last, with a reboot when a later
    file would need to lower them.
-3. **systemd drop-ins** for each workload and preset load after
+4. **systemd drop-ins** for each workload and preset load after
    `daemon-reexec` with no PID 1 warning about our files, and `systemctl show`
    reports each directive.
-4. **After a reboot**, systemd-sysctl applies the swap, network and security
-   defaults together, and the glob lines the security file suggests reach the
-   boot interface.
+5. **After a reboot**, systemd-sysctl applies the swap, network, security and
+   filesystem defaults together, and the glob lines the security file
+   suggests reach the boot interface.
 
 ## Notes for changing it
 

@@ -35,6 +35,7 @@ They are not one tuner per `/proc/sys` root. For example, hardening keys from
 | `/systemd` | Manager defaults (accounting, `DefaultTasksMax`, `DefaultLimitNOFILE`, `DefaultLimitMEMLOCK`) and per-slice controls (`CPUWeight`, `CPUQuota`, `MemoryHigh`, `MemoryMax`, `MemorySwapMax`, `IOWeight`, `TasksMax`) for `system.slice`, `user.slice` or `machine.slice`. Graphs: CPU shares, memory budget, task and FD caps. | Two drop-ins in one document: `/etc/systemd/system.conf.d/99-resource-tuning.conf` and `/etc/systemd/system/<slice>.d/50-resources.conf` |
 | `/security` | 17 hardening sysctls: `kptr_restrict`, `dmesg_restrict`, `perf_event_paranoid`, `yama.ptrace_scope`, `randomize_va_space`, `unprivileged_bpf_disabled`; `rp_filter`, `tcp_syncookies`, IPv4/IPv6 `accept_redirects`, `send_redirects`, `accept_source_route`; `fs.protected_*`, `suid_dumpable`. The profile's kernel generation and IPv6 switch decide which keys and values exist. No graphs. | `/etc/sysctl.d/99-security-hardening.conf`, with notes on one-way values and on existing network interfaces |
 | `/network` | 17 `net.*` sysctls: `rmem_max`, `wmem_max`, `tcp_rmem`, `tcp_wmem`; `somaxconn`, `tcp_max_syn_backlog`, `netdev_max_backlog`; `tcp_congestion_control`, `default_qdisc`, `tcp_slow_start_after_idle`, `tcp_mtu_probing`; `ip_local_port_range`, `tcp_tw_reuse`, `tcp_fin_timeout`; `nf_conntrack_max`, `nf_conntrack_buckets`, `nf_conntrack_tcp_timeout_established`. Buffers are sized from the bandwidth-delay product of the profile's link speed and longest path; the conntrack keys exist only when the profile says `nf_conntrack` is loaded. Targets kernel 4.19+. Graph: per-connection throughput ceiling against RTT. | `/etc/sysctl.d/99-network-tuning.conf`, with notes on the qdisc reaching only new interfaces, congestion-control modules, and loading `nf_conntrack` before `systemd-sysctl` runs |
+| `/filesystem` | 6 `fs.*` sysctls: `file-max`, `nr_open`; `inotify.max_user_watches`, `max_user_instances`, `max_queued_events`; `aio-max-nr`. Ranges start at the kernel default, since lower values only make programs fail. `file-max` is left out on systemd 240+, which raises it to the maximum at boot, and `nr_open` is left out at the kernel default so distributions that raise it keep their value. The watch limit is held to a worst case of a tenth of RAM. No graphs. | `/etc/sysctl.d/99-filesystem-tuning.conf`, with notes on what is left out and on units whose `LimitNOFILE=` passes `nr_open` |
 
 The planned tuners and their order are listed in [TODO.md](TODO.md).
 
@@ -285,7 +286,7 @@ must follow them, and existing UI must not regress.
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
-not plumbing. Four tuners are shipped and about six are planned, so anything
+not plumbing. Five tuners are shipped and about five are planned, so anything
 written twice gets written ten times. Duplication is the main risk.
 
 ### Layers and dependency direction
@@ -553,6 +554,17 @@ behaviour goes in only once a VM has shown it; facts found that way so far:
 - systemd 258 removed `DefaultCPUAccounting=`; on cgroup v2 it was a no-op,
   so it is written for cgroup v1 only. `MemorySwapMax=` works on v2 only, and
   systemd 237 rejects 0, so it is left out on v1.
+- systemd 240+ starts `fs.file-max` at 9223372036854775807; Ubuntu 18.04
+  (237) keeps the kernel's ~10% of RAM in KiB. Writing 0 locks every
+  unprivileged process, SSH logins included, out of opening files.
+- `fs.nr_open` starts at 1073741816 on Debian 13 and 2147483584 on Fedora 43,
+  1048576 elsewhere. A unit whose `LimitNOFILE=` is above it gets its limit
+  cut down to it, unless `fs.nr_open` is below the limit PID 1 runs with
+  (lowered after boot): then the unit fails with status 205, and below
+  1048576 so does every unit at the default 524288. `LimitNOFILE=infinity`
+  takes the value PID 1 read at boot or its last `daemon-reexec`.
+- The inotify watch default follows RAM on 5.10 updates and newer (about
+  1330 bytes per watch, 1% of RAM, 8192 to 1048576); 4.15 has 8192.
 
 ### Guardrails
 

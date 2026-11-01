@@ -197,7 +197,7 @@ function grammarViolations(domain, config) {
   for (const line of config.split('\n')) {
     if (line === '' || line.startsWith('#')) continue
     if (/^\[[A-Z][A-Za-z]*\]$/.test(line)) continue
-    const m = /^([A-Za-z][\w.]*)(?: = |=)([A-Za-z0-9:%_]+(?: [A-Za-z0-9:%_]+)*)$/.exec(line)
+    const m = /^([A-Za-z][\w.-]*)(?: = |=)([A-Za-z0-9:%_]+(?: [A-Za-z0-9:%_]+)*)$/.exec(line)
     if (m && names.has(m[1])) continue
     bad.push(line)
   }
@@ -213,7 +213,7 @@ function typeFormatterViolations(domain, config, params) {
   const defsByName = new Map(Object.values(domain.defsByKey).flatMap((d) => emittedNames(d).map((name) => [name, d])))
   const bad = []
   for (const line of config.split('\n')) {
-    const m = /^([a-z][\w.]*) = (.*)$/.exec(line)
+    const m = /^([a-z][\w.-]*) = (.*)$/.exec(line)
     if (!m) continue
     const def = defsByName.get(m[1])
     if (!def || m[2] !== valueTypeOf(def).format(params[def.key], def)) bad.push(line)
@@ -292,7 +292,7 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         expect(CONTROLS[def.control].types, `${key}: ${def.control} edits ${def.type ?? 'int'}`).toContain(def.type ?? 'int')
         // Enum values are emitted verbatim by every writer, so they must be plain tokens.
         for (const opt of def.options ?? []) expect(opt.value, key).toMatch(/^[A-Za-z0-9_.-]+$/)
-        expect(def.sysctlName, key).toMatch(/^[A-Za-z][\w.]*( \(\w+\))?$/)
+        expect(def.sysctlName, key).toMatch(/^[A-Za-z][\w.-]*( \(\w+\))?$/)
         expect(Number.isInteger(def.kernelMin) && Number.isInteger(def.kernelMax), key).toBe(true)
         expect(def.kernelMin, key).toBeLessThanOrEqual(def.kernelMax)
       }

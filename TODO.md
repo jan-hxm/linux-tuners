@@ -15,7 +15,6 @@ sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages t
 
 ## 2. UX
 
-- [ ] Show the preset "what would change" diff somewhere other than a native `title` tooltip, which is invisible on touch and unreachable by keyboard. `src/ui/PresetSelector.vue`
 - [ ] Add an "Undo" toast after a reset or a preset snap, so an accidental one is recoverable.
 - [ ] Make the "Jump to" step chain highlight the active section (scroll-spy).
 - [ ] Add a way to jump from the mobile impact bar to the full `GraphPanel`.

@@ -1,34 +1,48 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
-import { differingKeys, valueTypeOf } from '@/core/valueTypes.js'
+import { differingKeys } from '@/core/valueTypes.js'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
 const PRESETS = domain.presets
+const panelId = useId()
 
 /**
  * For each preset, compute which of the keys it defines differ from the current
  * store value. Drives both the "customised" badge on the active preset and the
- * hover tooltip on every chip.
+ * "what would change" panel.
  */
 const diffsByPreset = computed(() => {
-  /** @type {Record<string, string[]>} */
+  /** @type {Record<string, { key: string, name: string, current: string, preset: string }[]>} */
   const result = {}
   for (const preset of PRESETS) {
     result[preset.id] = differingKeys(domain.defsByKey, preset.values, tuner.params).map((key) => {
       const def = domain.defsByKey[key]
-      const { format } = valueTypeOf(def)
-      return `${key}: current ${format(tuner.params[key], def)} ↔ preset ${format(preset.values[key], def)}`
+      return {
+        key,
+        name: def.sysctlName,
+        current: domain.formatValue(tuner.params[key], def, tuner.hardware),
+        preset: domain.formatValue(preset.values[key], def, tuner.hardware),
+      }
     })
   }
   return result
 })
 
-function tooltipFor(preset) {
-  const diffs = diffsByPreset.value[preset.id]
-  if (!diffs.length) return `${preset.description}\n\nIdentical to current values.`
-  return `${preset.description}\n\nWould change:\n${diffs.map((d) => `  • ${d}`).join('\n')}`
+// The preset whose changes are shown below the chips, or null. A separate
+// button rather than a hover tooltip, so touch and keyboard users can see the
+// changes before a click on the chip applies them.
+const previewId = ref(null)
+const previewPreset = computed(() => PRESETS.find((p) => p.id === previewId.value) ?? null)
+
+function togglePreview(preset) {
+  previewId.value = previewId.value === preset.id ? null : preset.id
+}
+
+function changeCount(preset) {
+  const n = diffsByPreset.value[preset.id].length
+  return n === 1 ? '1 change' : `${n} changes`
 }
 
 function isActive(preset) {
@@ -41,6 +55,8 @@ function isCustomised(preset) {
 
 function apply(preset) {
   tuner.applyPreset(preset.id, preset.values)
+  // Its preview would now say "nothing", with its toggle gone.
+  if (previewId.value === preset.id) previewId.value = null
 }
 </script>
 
@@ -51,11 +67,10 @@ function apply(preset) {
     </p>
 
     <ul class="mt-3 flex flex-wrap gap-2">
-      <li v-for="preset in PRESETS" :key="preset.id">
+      <li v-for="preset in PRESETS" :key="preset.id" class="flex max-w-xs flex-col gap-1">
         <button
           type="button"
-          :title="tooltipFor(preset)"
-          class="group flex max-w-xs items-start gap-2 rounded border px-3 py-2 text-left text-sm transition"
+          class="group flex flex-1 items-start gap-2 rounded border px-3 py-2 text-left text-sm transition"
           :class="[
             isActive(preset)
               ? 'border-slate-800 bg-slate-800 text-white'
@@ -79,7 +94,34 @@ function apply(preset) {
             customised
           </span>
         </button>
+        <button
+          v-if="diffsByPreset[preset.id].length"
+          type="button"
+          class="self-start px-1 text-xs text-slate-500 hover:text-slate-700"
+          :aria-expanded="previewId === preset.id"
+          :aria-controls="panelId"
+          :aria-label="`${preset.label}: ${changeCount(preset)}, show what would change`"
+          @click="togglePreview(preset)"
+        >
+          {{ previewId === preset.id ? '▾' : '▸' }} {{ changeCount(preset) }}
+        </button>
+        <span v-else class="px-1 text-xs text-slate-500">Matches current values</span>
       </li>
     </ul>
+
+    <div :id="panelId">
+      <div
+        v-if="previewPreset"
+        class="mt-3 rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"
+      >
+        <p class="font-semibold text-slate-800">Applying {{ previewPreset.label }} would change:</p>
+        <ul v-if="diffsByPreset[previewPreset.id].length" class="mt-2 space-y-1">
+          <li v-for="d in diffsByPreset[previewPreset.id]" :key="d.key" class="break-words">
+            <span class="font-mono">{{ d.name }}</span>: {{ d.current }} → {{ d.preset }}
+          </li>
+        </ul>
+        <p v-else class="mt-2">Nothing: it matches your current values.</p>
+      </div>
+    </div>
   </section>
 </template>

@@ -255,6 +255,11 @@ must follow them, and existing UI must not regress.
 - **Nothing a user needs lives only in a `title` tooltip**, which touch
   screens never show and keyboards can't reach. The preset "what would change"
   list sits behind a per-preset toggle button in `PresetSelector` instead.
+- **No page-level sideways scroll down to 320px.** Whatever can be wider than
+  a phone handles it itself: the header nav scrolls inside its own box (and
+  keeps the current tuner in view), selects are capped at `max-w-full`,
+  segmented controls wrap with growing segments, a card's value wraps under
+  its name, and parameter names break after `.`, `_`, `-` or `/` (`<wbr>`).
 - **Tablists need roving tabindex *and* arrow-key handling**
   (Left/Right/Home/End), as in `GraphPanel`'s `onTabKeydown`.
 - **Modals and drawers trap focus, close on Escape, and restore focus to the

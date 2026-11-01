@@ -19,6 +19,9 @@ const issues = computed(() => tuner.issuesByParam[props.paramKey] ?? [])
 const expanded = ref(false)
 
 const formatted = computed(() => domain.formatValue(value.value, def.value, tuner.hardware))
+// Long names break after a separator (kernel.unprivileged_bpf_ / disabled)
+// rather than mid-word; <wbr> marks the spots without changing copied text.
+const nameParts = computed(() => def.value.sysctlName.split(/(?<=[._/-])/))
 
 // Stable id used to link the control to the param-name button via aria-labelledby.
 const labelId = computed(() => `param-label-${props.paramKey}`)
@@ -99,16 +102,17 @@ function openInDrawer() {
   <article
     class="rounded border border-slate-200 bg-white p-3 shadow-sm transition focus-within:border-slate-400"
   >
-    <header class="flex items-start justify-between gap-3">
-      <div class="min-w-0 flex-1">
+    <!-- On a phone the value wraps under the name instead of squeezing it. -->
+    <header class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+      <div class="min-w-0 flex-1 basis-56">
         <button
           :id="labelId"
           type="button"
-          class="break-all text-left font-mono text-sm font-semibold text-slate-900 hover:underline"
+          class="break-words text-left font-mono text-sm font-semibold text-slate-900 hover:underline"
           :aria-label="`${def.sysctlName}, open reference`"
           @click="openInDrawer"
         >
-          {{ def.sysctlName }}
+          <template v-for="(part, i) in nameParts" :key="i">{{ part }}<wbr></template>
         </button>
         <a
           :href="def.kernelDocsUrl"
@@ -140,7 +144,7 @@ function openInDrawer() {
         <p class="mt-1.5 text-xs text-slate-600">{{ def.shortDesc }}</p>
       </div>
 
-      <div class="shrink-0 text-right">
+      <div class="ml-auto shrink-0 text-right">
         <input
           v-if="editing"
           ref="numberEl"

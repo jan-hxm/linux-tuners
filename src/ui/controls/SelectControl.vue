@@ -17,11 +17,12 @@ const options = computed(() => props.def.options.filter((o) => !props.range?.opt
 
 <template>
   <div class="mt-3">
+    <!-- max-w-full: a native select is as wide as its longest option, which is wider than a phone. -->
     <!-- Options come from def.options (narrowed by the range), so the store's enum restore/clamp still decides what's valid. -->
     <select
       :value="value"
       :aria-labelledby="labelId"
-      class="rounded border border-slate-300 bg-white px-2 py-1 font-mono text-sm text-slate-900 focus:border-slate-600 focus:outline-none"
+      class="max-w-full rounded border border-slate-300 bg-white px-2 py-1 font-mono text-sm text-slate-900 focus:border-slate-600 focus:outline-none"
       @change="emit('update', $event.target.value)"
     >
       <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>

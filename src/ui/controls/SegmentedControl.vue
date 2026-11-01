@@ -21,10 +21,13 @@ const segments = computed(() =>
 </script>
 
 <template>
+  <!-- Wraps onto more rows when the segments are wider than the card (phones);
+       the 1px gaps over the slate background draw the dividers, and the
+       segments grow so a short row leaves no gap. -->
   <div
     role="radiogroup"
     :aria-labelledby="labelId"
-    class="mt-3 inline-flex overflow-hidden rounded border border-slate-300"
+    class="mt-3 flex w-fit max-w-full flex-wrap gap-px overflow-hidden rounded border border-slate-300 bg-slate-300"
   >
     <button
       v-for="seg in segments"
@@ -32,7 +35,7 @@ const segments = computed(() =>
       type="button"
       role="radio"
       :aria-checked="value === seg.value"
-      class="px-3 py-1 text-xs"
+      class="flex-auto px-3 py-1 text-xs"
       :class="value === seg.value ? 'bg-slate-800 text-white' : 'bg-white hover:bg-slate-50'"
       @click="emit('update', seg.value)"
     >

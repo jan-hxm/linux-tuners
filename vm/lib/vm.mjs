@@ -242,6 +242,23 @@ export class VM {
     return out
   }
 
+  /**
+   * Read sysfs files as root. A choice file such as "always [madvise] never"
+   * reads as its bracketed, active value; a missing file as null.
+   * @param {string[]} paths
+   * @returns {Promise<Record<string, string|null>>}
+   */
+  async sysfs(paths) {
+    const script = paths.map((p) => `v=$(cat ${quote(p)} 2>/dev/null) && printf '%s=%s\\n' ${quote(p)} "$(echo $v)" || printf '%s\\n' ${quote(p)}`).join('\n')
+    const { stdout } = await this.run('sudo sh', { input: script })
+    const out = Object.fromEntries(paths.map((p) => [p, null]))
+    for (const line of stdout.split('\n')) {
+      const i = line.indexOf('=')
+      if (i > 0) out[line.slice(0, i)] = line.slice(i + 1).match(/\[([^\]]+)\]/)?.[1] ?? line.slice(i + 1)
+    }
+    return out
+  }
+
   /** Read one sysctl as root, or null when the key doesn't exist. */
   async sysctl(key) {
     return (await this.sysctls([key]))[key]

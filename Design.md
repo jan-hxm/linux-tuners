@@ -36,6 +36,7 @@ They are not one tuner per `/proc/sys` root. For example, hardening keys from
 | `/security` | 17 hardening sysctls: `kptr_restrict`, `dmesg_restrict`, `perf_event_paranoid`, `yama.ptrace_scope`, `randomize_va_space`, `unprivileged_bpf_disabled`; `rp_filter`, `tcp_syncookies`, IPv4/IPv6 `accept_redirects`, `send_redirects`, `accept_source_route`; `fs.protected_*`, `suid_dumpable`. The profile's kernel generation and IPv6 switch decide which keys and values exist. No graphs. | `/etc/sysctl.d/99-security-hardening.conf`, with notes on one-way values and on existing network interfaces |
 | `/network` | 17 `net.*` sysctls: `rmem_max`, `wmem_max`, `tcp_rmem`, `tcp_wmem`; `somaxconn`, `tcp_max_syn_backlog`, `netdev_max_backlog`; `tcp_congestion_control`, `default_qdisc`, `tcp_slow_start_after_idle`, `tcp_mtu_probing`; `ip_local_port_range`, `tcp_tw_reuse`, `tcp_fin_timeout`; `nf_conntrack_max`, `nf_conntrack_buckets`, `nf_conntrack_tcp_timeout_established`. Buffers are sized from the bandwidth-delay product of the profile's link speed and longest path; the conntrack keys exist only when the profile says `nf_conntrack` is loaded. Targets kernel 4.19+. Graph: per-connection throughput ceiling against RTT. | `/etc/sysctl.d/99-network-tuning.conf`, with notes on the qdisc reaching only new interfaces, congestion-control modules, and loading `nf_conntrack` before `systemd-sysctl` runs |
 | `/filesystem` | 6 `fs.*` sysctls: `file-max`, `nr_open`; `inotify.max_user_watches`, `max_user_instances`, `max_queued_events`; `aio-max-nr`. Ranges start at the kernel default, since lower values only make programs fail. `file-max` is left out on systemd 240+, which raises it to the maximum at boot, and `nr_open` is left out at the kernel default so distributions that raise it keep their value. The watch limit is held to a worst case of a tenth of RAM. No graphs. | `/etc/sysctl.d/99-filesystem-tuning.conf`, with notes on what is left out and on units whose `LimitNOFILE=` passes `nr_open` |
+| `/hugepages` | 9 keys: `vm.nr_hugepages`, `nr_overcommit_hugepages`; THP `enabled` and `defrag`; KSM `run`, `pages_to_scan`, `sleep_millisecs`; `vm.max_map_count`, `zone_reclaim_mode`. The THP and KSM keys are sysfs files (a def's `sysfsPath`). The pool starts at 0 and is offered up to nine tenths of RAM, since it takes RAM whether used or not; THP starts at `madvise` for every workload and KSM is on for VM hosts. Keys at a default that a distribution, the boot options or a service may already set are left out: the pools at 0, KSM off, `max_map_count` at 65530. `zone_reclaim_mode` exists only with several NUMA nodes. No kernel defaults preset, since the THP default is a kernel build choice. `vm.mmap_min_addr` is not offered: the only reason to change it is lowering it for Wine or DOSEMU, which reopens NULL-dereference exploits. No graphs. | Two files in one document: `/etc/sysctl.d/99-hugepages-tuning.conf` and `/etc/tmpfiles.d/99-hugepages-tuning.conf`, whose `w` lines set `/sys/kernel/mm` at boot |
 
 The planned tuners and their order are listed in [TODO.md](TODO.md).
 
@@ -286,7 +287,7 @@ must follow them, and existing UI must not regress.
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
-not plumbing. Five tuners are shipped and about five are planned, so anything
+not plumbing. Six tuners are shipped and about four are planned, so anything
 written twice gets written ten times. Duplication is the main risk.
 
 ### Layers and dependency direction
@@ -448,7 +449,13 @@ so that a new variant is an addition rather than an edit to shared code.
     like `sysctlName`.
   - `iniDropIn.js` (systemd): `iniSection` and `iniDirective`, with values
     limited to plain tokens.
-  - Later, `udevRule` and `tunedProfile` for the sysfs tuners.
+  - `tmpfilesFile.js` (sysfs values at boot): `tmpfilesConfig` and
+    `tmpfilesWrite`, which print only `w <path> - - - - <value>` lines. The
+    path is a def's `sysfsPath`, held to `^/sys(/[a-z0-9_]+)+$`, and the
+    value a plain token with no `%` (a tmpfiles specifier) or backslash.
+    `sysctlConfig` and `tmpfilesConfig` share the section loop in
+    `sections.js`. The huge pages tuner is the first user.
+  - Later, `udevRule` for per-device sysfs (Block I/O).
 
   A writer throws rather than emit a malformed line, so a bad value fails the
   contract fuzz tests instead of reaching a file. Each file of a multi-file
@@ -517,8 +524,10 @@ The suite is `src/tuners/contract.test.js`, next to
 `src/tuners/configSnapshots.test.js`, which snapshots the config for every
 profile's defaults and every preset so each migration step can prove
 byte-identical output. The page-mount check is `src/tuners/views.test.js`.
-The type-formatter check covers sysctl lines; ini values are composed by the
-tuner from typed values and held to plain tokens by the grammar check.
+The type-formatter check covers sysctl lines and tmpfiles `w` lines, which
+the grammar check accepts only for a def's `sysfsPath`; ini values are
+composed by the tuner from typed values and held to plain tokens by the
+grammar check.
 `src/ui/ParameterCard.enum.test.js` covers the enum path (select, clamp,
 restore) with a fixture domain. The suite is type-aware: the grammar check
 accepts space-separated tuple values, the clamp check runs per tuple element,
@@ -565,6 +574,20 @@ behaviour goes in only once a VM has shown it; facts found that way so far:
   takes the value PID 1 read at boot or its last `daemon-reexec`.
 - The inotify watch default follows RAM on 5.10 updates and newer (about
   1330 bytes per watch, 1% of RAM, 8192 to 1048576); 4.15 has 8192.
+- Debian kernels start THP `enabled` at `always`, Ubuntu and Fedora at
+  `madvise`; `defrag` is `madvise` everywhere. `vm.max_map_count` starts at
+  1048576 on Debian 13, Ubuntu 24.04 and Fedora 43 (from a distro
+  sysctl.d file) and 65530 on the older two, accepts up to 2147483647, and
+  at 0 no process can map memory, SSH logins included.
+- A tmpfiles.d `w` line sets `/sys/kernel/mm` both from
+  `systemd-tmpfiles --create` and at boot, from systemd 237 on; a line for a
+  file the kernel lacks is skipped with exit 0 and boot stays clean. KSM
+  is built in and off on every image.
+- Writing THP `enabled` as `always` or `madvise` (even the value it already
+  has) makes khugepaged raise `vm.min_free_kbytes` to its floor if lower
+  (67584 on the 3 GiB test VMs); `never` and the pool keys don't. At boot
+  systemd-tmpfiles runs after systemd-sysctl, so a lower value from the
+  swap tuner holds only with THP `never`. Both tuners say so.
 
 ### Guardrails
 
@@ -623,7 +646,8 @@ These hold for every tuner and every output writer (§9 `core/output`):
   `script=`, systemd `Exec*`, or sysctls that name a program
   (`kernel.core_pattern`, `kernel.modprobe`, `kernel.poweroff_cmd`, ...). This
   is a non-goal, not a feature request. A tuner that seems to need one is
-  out of scope.
+  out of scope. tmpfiles.d output is `w` lines to constant `/sys` paths only:
+  no other line type, which could create, copy, link or remove files.
 - **Paths are constants.** Output file paths and download names are fixed per
   tuner, match `^/etc/[a-z0-9._/-]+$` and contain no `..`. Apply commands are
   fixed text with only those paths interpolated.

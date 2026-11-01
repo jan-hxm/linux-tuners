@@ -3,6 +3,7 @@ import { combineFiles, configFile, isSafeConfigPath } from './files.js'
 import { commentLine, fileBanner, presetSummary, sectionHeader } from './comments.js'
 import { sysctlConfig, sysctlLine } from './sysctlFile.js'
 import { iniDirective, iniSection } from './iniDropIn.js'
+import { tmpfilesConfig, tmpfilesWrite } from './tmpfilesFile.js'
 
 const LS = String.fromCharCode(0x2028)
 
@@ -86,6 +87,37 @@ describe('sysctl writer', () => {
       sectionHeader('Two'),
       '# a: 1 - note 1', 'vm.a = 1', '',
     ])
+  })
+})
+
+describe('tmpfiles writer', () => {
+  const THP = '/sys/kernel/mm/transparent_hugepage/enabled'
+
+  it('writes a w line with mode, owner, group and age left alone', () => {
+    expect(tmpfilesWrite(THP, 'madvise')).toBe(`w ${THP} - - - - madvise`)
+    expect(tmpfilesWrite('/sys/kernel/mm/transparent_hugepage/defrag', 'defer+madvise')).toMatch(/ defer\+madvise$/)
+  })
+
+  it('refuses a value that could add a field, a line, a specifier or an escape', () => {
+    for (const bad of ['', 'a b', 'x\nw /etc/shadow - - - - x', '%h', 'a\\nb', '1;2', '/etc/x']) {
+      expect(() => tmpfilesWrite(THP, bad), JSON.stringify(bad)).toThrow()
+    }
+  })
+
+  it('refuses a path outside /sys or with traversal or spaces', () => {
+    for (const bad of ['/etc/shadow', '/sys/../etc/shadow', '/sys/kernel/a b', 'sys/kernel/x', '/sys/', '/sys/kernel/X']) {
+      expect(() => tmpfilesWrite(bad, '1'), bad).toThrow()
+    }
+  })
+
+  it('prints sections and values through the def types', () => {
+    const defs = [
+      { key: 'a', group: 't', sysfsPath: '/sys/kernel/mm/a', type: 'enum', options: [{ value: 'on' }] },
+      { key: 'b', group: 't', sysfsPath: '/sys/kernel/mm/b' },
+    ]
+    const lines = tmpfilesConfig({ defs, sections: [{ id: 't', title: 'T' }], params: { a: 'on', b: 7 }, comment: () => 'n', include: (d) => d.key === 'a' })
+    expect(lines).toEqual([sectionHeader('T'), '# a: on - n', 'w /sys/kernel/mm/a - - - - on', ''])
+    expect(() => tmpfilesConfig({ defs, sections: [{ id: 't', title: 'T' }], params: { a: 'off', b: 7 }, comment: () => 'n' })).toThrow()
   })
 })
 

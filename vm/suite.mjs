@@ -7,7 +7,9 @@
  *     no error and every key reads back as written.
  *  2. The security tuner's claims about kernel behaviour hold: what each
  *     value blocks, what locks, which warnings fire. So do the filesystem
- *     tuner's: what systemd sets at boot, and what a low fs.nr_open does.
+ *     tuner's: what systemd sets at boot, and what a low fs.nr_open does;
+ *     and the huge pages tuner's: what each distro starts THP and the map
+ *     count at, and that its tmpfiles.d lines set /sys.
  *  3. The files survive a reboot, applied by systemd-sysctl as on a real
  *     machine, including the interface caveats the security file explains.
  *
@@ -24,9 +26,11 @@ import { kernelFileMax, kernelWatches } from '@/tuners/filesystem/calculations.j
 import { presetParams } from '@/core/createTunerStore.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
-const SYSCTL_TUNERS = TUNER_DOMAINS.filter((d) => ['swap', 'network', 'security', 'filesystem'].includes(d.id))
+// Tuners whose output is sysctl.d files, and tmpfiles.d files for /sys.
+const SYSCTL_TUNERS = TUNER_DOMAINS.filter((d) => ['swap', 'network', 'security', 'filesystem', 'hugepages'].includes(d.id))
 const security = TUNER_DOMAINS.find((d) => d.id === 'security')
 const filesystem = TUNER_DOMAINS.find((d) => d.id === 'filesystem')
+const hugepages = TUNER_DOMAINS.find((d) => d.id === 'hugepages')
 
 /** `key = value` lines of a sysctl.d file, comments skipped. */
 export function sysctlLines(content) {
@@ -34,6 +38,14 @@ export function sysctlLines(content) {
     .map((l) => l.match(/^\s*([a-z0-9_.*-]+)\s*=\s*(.*?)\s*$/i))
     .filter(Boolean)
     .map((m) => ({ key: m[1], value: m[2].replace(/\s+/g, ' ') }))
+}
+
+/** `w <path> - - - - <value>` lines of a tmpfiles.d file. */
+export function tmpfilesWrites(content) {
+  return content.split('\n')
+    .map((l) => l.match(/^w (\/sys\/\S+) - - - - (\S+)$/))
+    .filter(Boolean)
+    .map((m) => ({ path: m[1], value: m[2] }))
 }
 
 /** Every workload's defaults and every preset, generated for this image. */
@@ -66,11 +78,23 @@ function conflicts(state, lines) {
   return (state.bpf1 && bpf !== undefined && bpf !== '1') || (state.ptrace3 && ptrace !== undefined && ptrace !== '3')
 }
 
-/** Apply one sysctl.d file with sysctl -p. Errors are on stderr: procps 3.3 exits 0 anyway. */
+/**
+ * Apply one file the way its apply instructions say: a sysctl.d file with
+ * sysctl -p (errors are on stderr: procps 3.3 exits 0 anyway), a tmpfiles.d
+ * file with systemd-tmpfiles --create.
+ */
 async function applyFile(vm, file) {
   await vm.writeFile(file.path, file.content)
-  const r = await vm.sudo(`sysctl -p ${file.path}`, { check: false })
-  return { code: r.code, errors: r.stderr.trim() }
+  const cmd = file.path.startsWith('/etc/tmpfiles.d/') ? 'systemd-tmpfiles --create' : 'sysctl -p'
+  const r = await vm.sudo(`${cmd} ${file.path}`, { check: false })
+  return { code: r.code, errors: (r.stderr.trim() || (r.code ? `exit ${r.code}` : '')) }
+}
+
+/** The tmpfiles.d writes whose /sys file doesn't read back as written. */
+async function sysfsDiff(vm, writes) {
+  if (!writes.length) return []
+  const got = await vm.sysfs(writes.map((w) => w.path))
+  return writes.filter((w) => got[w.path] !== w.value).map((w) => `${w.path}: wrote ${w.value}, reads ${got[w.path]}`)
 }
 
 const UNITS = { K: 1024, M: 1024 ** 2, G: 1024 ** 3, T: 1024 ** 4 }
@@ -266,9 +290,72 @@ export function imageSuite(id) {
       })
     })
 
+    describe('huge pages claims on a fresh boot', () => {
+      const hw = { ...hugepages.defaultHardware, ...image.profile.hugepages }
+      const THP = '/sys/kernel/mm/transparent_hugepage'
+      const filesFor = (values = {}) => hugepages.generateConfig({ hardware: hw, params: { ...hugepages.deriveDefaults(hw), ...values }, presetLabel: null, now: NOW })
+      const def = (k) => hugepages.defsByKey[k]
+
+      it('THP and the map count start where the drawer and notes say', async () => {
+        const got = await vm.sysfs([`${THP}/enabled`, `${THP}/defrag`])
+        expect(got[`${THP}/enabled`]).toBe(image.expect.thp)
+        expect(got[`${THP}/defrag`]).toBe(def('thp_defrag').kernelDefault)
+        expect(await vm.sysctl('vm.max_map_count')).toBe(String(image.expect.mapCount))
+        const notes = filesFor({ max_map_count: 65530 })[0].content
+        expect(notes).toContain(image.expect.thp === 'always' ? 'Debian kernels start transparent_hugepage/enabled at always' : 'Ubuntu and')
+        if (image.expect.mapCount > 65530) expect(def('max_map_count').kernelDefaultNote).toContain(String(image.expect.mapCount))
+      })
+
+      it('every THP option and KSM bound the tuner offers is set by its tmpfiles.d line', async () => {
+        const path = '/etc/tmpfiles.d/99-hugepages-tuning.conf'
+        const before = await vm.sysfs([`${THP}/enabled`, `${THP}/defrag`])
+        const failed = []
+        const sets = [
+          ...def('thp_enabled').options.map((o) => ({ thp_enabled: o.value })),
+          ...def('thp_defrag').options.map((o) => ({ thp_defrag: o.value })),
+          ...['kernelMin', 'kernelMax'].map((b) => ({ ksm_run: 1, ksm_pages_to_scan: def('ksm_pages_to_scan')[b], ksm_sleep_millisecs: def('ksm_sleep_millisecs')[b] })),
+        ]
+        for (const values of sets) {
+          const file = filesFor(values)[1]
+          expect(file.path).toBe(path)
+          const { errors } = await applyFile(vm, file)
+          if (errors) failed.push(`${JSON.stringify(values)}: ${errors}`)
+          failed.push(...await sysfsDiff(vm, tmpfilesWrites(file.content)))
+        }
+        await vm.sudo(`rm -f ${path} && echo ${before[`${THP}/enabled`]} > ${THP}/enabled && echo ${before[`${THP}/defrag`]} > ${THP}/defrag && echo 0 > /sys/kernel/mm/ksm/run`)
+        expect(failed).toEqual([])
+      })
+
+      it('a tmpfiles.d line for a /sys file the kernel lacks is skipped, as the file says', async () => {
+        expect(filesFor()[1].content).toContain('A path the kernel lacks is skipped')
+        await vm.writeFile('/etc/tmpfiles.d/98-vmtest-missing.conf', 'w /sys/kernel/mm/vmtest_missing - - - - 1')
+        const r = await vm.sudo('systemd-tmpfiles --create /etc/tmpfiles.d/98-vmtest-missing.conf', { check: false })
+        await vm.sudo('rm -f /etc/tmpfiles.d/98-vmtest-missing.conf')
+        expect(r.code).toBe(0)
+      })
+
+      it('the map count bounds are accepted, and a pool is reserved as asked', async () => {
+        const rejected = []
+        for (const v of [def('max_map_count').kernelMax, def('max_map_count').kernelMin]) {
+          const err = await vm.sysctlWrite('vm.max_map_count', v)
+          if (err) rejected.push(`vm.max_map_count=${v}: ${err}`)
+        }
+        await vm.sysctlWrite('vm.max_map_count', image.expect.mapCount)
+        // 128 MiB on a fresh VM: the kernel finds every page.
+        for (const k of ['vm.nr_hugepages', 'vm.nr_overcommit_hugepages']) {
+          const err = await vm.sysctlWrite(k, 64)
+          if (err) rejected.push(`${k}=64: ${err}`)
+        }
+        const total = (await vm.run("awk '/HugePages_Total/ {print $2}' /proc/meminfo")).stdout.trim()
+        for (const k of ['vm.nr_hugepages', 'vm.nr_overcommit_hugepages']) await vm.sysctlWrite(k, 0)
+        expect(rejected).toEqual([])
+        expect(total).toBe('64')
+      })
+    })
+
     describe('every generated sysctl file applies and reads back', () => {
       const all = SYSCTL_TUNERS.flatMap((d) => cases(d, image))
-        .map((c) => ({ ...c, lines: c.files.flatMap((f) => sysctlLines(f.content)) }))
+        .map((c) => ({ ...c, lines: c.files.flatMap((f) => sysctlLines(f.content)), writes: c.files.flatMap((f) => tmpfilesWrites(f.content)) }))
       // Lock-free cases first, so a lock only costs a reboot when it conflicts.
       all.sort((a, b) => Number(locks(a.lines).bpf1 || locks(a.lines).ptrace3) - Number(locks(b.lines).bpf1 || locks(b.lines).ptrace3))
       let state = { ptrace3: false, bpf1: false }
@@ -280,7 +367,7 @@ export function imageSuite(id) {
             state = { ptrace3: false, bpf1: false }
           }
           for (const f of c.files) {
-            expect(f.path).toMatch(/^\/etc\/sysctl\.d\/[a-z0-9-]+\.conf$/)
+            expect(f.path).toMatch(/^\/etc\/(sysctl|tmpfiles)\.d\/[a-z0-9-]+\.conf$/)
             const { errors } = await applyFile(vm, f)
             expect(errors, f.path).toBe('')
             await vm.sudo(`rm -f ${f.path}`)
@@ -289,7 +376,7 @@ export function imageSuite(id) {
           state = { ptrace3: state.ptrace3 || l.ptrace3, bpf1: state.bpf1 || l.bpf1 }
           const got = await vm.sysctls(c.lines.map((x) => x.key))
           const diff = c.lines.filter((x) => got[x.key] !== x.value).map((x) => `${x.key}: wrote ${x.value}, reads ${got[x.key]}`)
-          expect(diff).toEqual([])
+          expect([...diff, ...await sysfsDiff(vm, c.writes)]).toEqual([])
         })
       }
     })
@@ -339,11 +426,18 @@ export function imageSuite(id) {
         pick(SYSCTL_TUNERS.find((d) => d.id === 'network'), 'web'),
         pick(security, 'server'),
         pick(filesystem, 'server'),
+        // A VM host with a small pool, so the pool and KSM lines are in it.
+        (() => {
+          const hardware = { ...hugepages.defaultHardware, ...image.profile.hugepages, workload: 'vm-host' }
+          const params = { ...hugepages.deriveDefaults(hardware), nr_hugepages: 64 }
+          return { hardware, params, files: hugepages.generateConfig({ hardware, params, presetLabel: null, now: NOW }) }
+        })(),
       ]
       const lines = installed.flatMap((c) => c.files.flatMap((f) => sysctlLines(f.content)))
+      const writes = installed.flatMap((c) => c.files.flatMap((f) => tmpfilesWrites(f.content)))
       const securityFile = installed[2].files[0]
 
-      it('every key of the swap, network, security and filesystem defaults is set at boot', async () => {
+      it('every key of the swap, network, security, filesystem and huge pages defaults is set at boot', async () => {
         await vm.reboot()
         for (const c of installed) for (const f of c.files) await vm.writeFile(f.path, f.content)
         // As the network file says, so the conntrack keys exist when the files load.
@@ -359,12 +453,23 @@ export function imageSuite(id) {
           expect(securityFile.content).toContain('sudo systemctl disable --now apport')
           allowed['fs.suid_dumpable'] = '2'
         }
+        // THP at madvise: khugepaged raises min_free_kbytes to its floor
+        // after the sysctl files, as the huge pages file says. Only upwards.
+        const minFree = lines.find((x) => x.key === 'vm.min_free_kbytes')
+        if (minFree && Number(got['vm.min_free_kbytes']) > Number(minFree.value)) {
+          expect(installed[4].files[0].content).toContain('makes khugepaged raise vm.min_free_kbytes')
+          allowed['vm.min_free_kbytes'] = got['vm.min_free_kbytes']
+        }
         const diff = lines
           .filter((x) => got[x.key] !== x.value && got[x.key] !== allowed[x.key])
           .map((x) => `${x.key}: wrote ${x.value}, reads ${got[x.key]}`)
         expect(diff).toEqual([])
         const log = (await vm.sudo('journalctl -b -u systemd-sysctl --no-pager -o cat', { check: false })).stdout
         expect(log).not.toMatch(/Couldn't write|Failed to write|Invalid argument|not found|Permission denied/i)
+        // systemd-tmpfiles wrote the /sys values at boot, and without an error.
+        expect(await sysfsDiff(vm, writes)).toEqual([])
+        expect((await vm.sudo('systemctl is-failed systemd-tmpfiles-setup.service', { check: false })).stdout.trim()).toBe('active')
+        expect((await vm.run('awk \'/HugePages_Total/ {print $2}\' /proc/meminfo')).stdout.trim()).toBe('64')
       })
 
       it('the interface caveats: what the boot interface ends up with', async () => {

@@ -70,10 +70,14 @@ function profileLabel(domain, hw) {
   return diff.map((k) => `${k}=${hw[k]}`).join(', ') || 'default'
 }
 
-/** Every name a def writes: its sysctlName and any `alsoSets` twins. */
+/** Every sysctl name a def writes: its sysctlName and any `alsoSets` twins. A sysfs def writes none. */
 function emittedNames(def) {
+  if (def.sysfsPath) return []
   return [def.sysctlName.split(' ')[0], ...(def.alsoSets ?? [])]
 }
+
+/** A tmpfiles.d `w` line: the sysfs path and the value written to it. */
+const TMPFILES_WRITE = /^w (\/sys\/\S+) - - - - ([A-Za-z0-9_+.-]+)$/
 
 
 function configFor(domain, { hardware, params, activePreset = null }) {
@@ -193,10 +197,13 @@ function grammarViolations(domain, config) {
   // sysctlName may carry a display suffix ("DefaultLimitNOFILE (soft)"); the
   // emitted name is the part before it.
   const names = new Set(Object.values(domain.defsByKey).flatMap(emittedNames))
+  const sysfsPaths = new Set(Object.values(domain.defsByKey).map((d) => d.sysfsPath).filter(Boolean))
   const bad = []
   for (const line of config.split('\n')) {
     if (line === '' || line.startsWith('#')) continue
     if (/^\[[A-Z][A-Za-z]*\]$/.test(line)) continue
+    const w = TMPFILES_WRITE.exec(line)
+    if (w && sysfsPaths.has(w[1])) continue
     const m = /^([A-Za-z][\w.-]*)(?: = |=)([A-Za-z0-9:%_]+(?: [A-Za-z0-9:%_]+)*)$/.exec(line)
     if (m && names.has(m[1])) continue
     bad.push(line)
@@ -205,17 +212,20 @@ function grammarViolations(domain, config) {
 }
 
 /**
- * sysctl lines whose value isn't exactly what the def's value type prints for
- * the param. ini lines are exempt: the tuner wraps typed values in ini syntax
- * (`50%`, `yes`), and the grammar check holds those to plain tokens.
+ * sysctl and tmpfiles lines whose value isn't exactly what the def's value
+ * type prints for the param. ini lines are exempt: the tuner wraps typed
+ * values in ini syntax (`50%`, `yes`), and the grammar check holds those to
+ * plain tokens.
  */
 function typeFormatterViolations(domain, config, params) {
-  const defsByName = new Map(Object.values(domain.defsByKey).flatMap((d) => emittedNames(d).map((name) => [name, d])))
+  const defs = Object.values(domain.defsByKey)
+  const defsByName = new Map(defs.flatMap((d) => emittedNames(d).map((name) => [name, d])))
+  const defsByPath = new Map(defs.filter((d) => d.sysfsPath).map((d) => [d.sysfsPath, d]))
   const bad = []
   for (const line of config.split('\n')) {
-    const m = /^([a-z][\w.-]*) = (.*)$/.exec(line)
+    const m = /^([a-z][\w.-]*) = (.*)$/.exec(line) ?? TMPFILES_WRITE.exec(line)
     if (!m) continue
-    const def = defsByName.get(m[1])
+    const def = defsByName.get(m[1]) ?? defsByPath.get(m[1])
     if (!def || m[2] !== valueTypeOf(def).format(params[def.key], def)) bad.push(line)
   }
   return bad
@@ -291,8 +301,14 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         expect(() => valueTypeOf(def), key).not.toThrow()
         expect(CONTROLS[def.control].types, `${key}: ${def.control} edits ${def.type ?? 'int'}`).toContain(def.type ?? 'int')
         // Enum values are emitted verbatim by every writer, so they must be plain tokens.
-        for (const opt of def.options ?? []) expect(opt.value, key).toMatch(/^[A-Za-z0-9_.-]+$/)
-        expect(def.sysctlName, key).toMatch(/^[A-Za-z][\w.-]*( \(\w+\))?$/)
+        for (const opt of def.options ?? []) expect(opt.value, key).toMatch(/^[A-Za-z0-9_.+-]+$/)
+        if (def.sysfsPath) {
+          // A sysfs def shows the tail of its path as its name.
+          expect(def.sysfsPath, key).toMatch(/^\/sys(\/[a-z0-9_]+)+$/)
+          expect(def.sysfsPath.endsWith(`/${def.sysctlName}`), key).toBe(true)
+        } else {
+          expect(def.sysctlName, key).toMatch(/^[A-Za-z][\w.-]*( \(\w+\))?$/)
+        }
         expect(Number.isInteger(def.kernelMin) && Number.isInteger(def.kernelMax), key).toBe(true)
         expect(def.kernelMin, key).toBeLessThanOrEqual(def.kernelMax)
       }

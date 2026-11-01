@@ -795,6 +795,1007 @@ fs.inotify.max_queued_events = 16384
 fs.aio-max-nr = 65536"
 `;
 
+exports[`generated config: hugepages > database / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Database server, 16 GiB RAM, one NUMA node
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to madvise makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: madvise - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise
+
+# thp_defrag: madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - madvise"
+`;
+
+exports[`generated config: hugepages > database / thp-always 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Database server, 16 GiB RAM, one NUMA node
+# Profile: THP always
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to always makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: always - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - always
+
+# thp_defrag: defer+madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise"
+`;
+
+exports[`generated config: hugepages > database / thp-off 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Database server, 16 GiB RAM, one NUMA node
+# Profile: THP off
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: never - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - never
+
+# thp_defrag: never - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - never"
+`;
+
+exports[`generated config: hugepages > desktop / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Desktop or gaming machine, 16 GiB RAM, one NUMA node
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to madvise makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: madvise - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise
+
+# thp_defrag: madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - madvise"
+`;
+
+exports[`generated config: hugepages > desktop / thp-always 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Desktop or gaming machine, 16 GiB RAM, one NUMA node
+# Profile: THP always
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to always makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: always - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - always
+
+# thp_defrag: defer+madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise"
+`;
+
+exports[`generated config: hugepages > desktop / thp-off 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Desktop or gaming machine, 16 GiB RAM, one NUMA node
+# Profile: THP off
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: never - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - never
+
+# thp_defrag: never - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - never"
+`;
+
+exports[`generated config: hugepages > server / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Web, application or file server, 16 GiB RAM, one NUMA node
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to madvise makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: madvise - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise
+
+# thp_defrag: madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - madvise"
+`;
+
+exports[`generated config: hugepages > server / defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Web, application or file server, 16 GiB RAM, one NUMA node
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to madvise makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: madvise - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise
+
+# thp_defrag: madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - madvise"
+`;
+
+exports[`generated config: hugepages > server / thp-always 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Web, application or file server, 16 GiB RAM, one NUMA node
+# Profile: THP always
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to always makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: always - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - always
+
+# thp_defrag: defer+madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise"
+`;
+
+exports[`generated config: hugepages > server / thp-always 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Web, application or file server, 16 GiB RAM, one NUMA node
+# Profile: THP always
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to always makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: always - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - always
+
+# thp_defrag: defer+madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise"
+`;
+
+exports[`generated config: hugepages > server / thp-off 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Web, application or file server, 16 GiB RAM, one NUMA node
+# Profile: THP off
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: never - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - never
+
+# thp_defrag: never - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - never"
+`;
+
+exports[`generated config: hugepages > server / thp-off 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Web, application or file server, 16 GiB RAM, one NUMA node
+# Profile: THP off
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# ksm/run is left out while KSM is off, so a service that turns it on
+# (such as ksmtuned) keeps working.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: never - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - never
+
+# thp_defrag: never - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - never"
+`;
+
+exports[`generated config: hugepages > vm-host / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Virtual machine host (KVM, QEMU), 16 GiB RAM, one NUMA node
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to madvise makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: madvise - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise
+
+# thp_defrag: madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - madvise
+
+# ── Kernel samepage merging ─────────────────────────────────────────────────
+# ksm_run: 1 - merge identical pages that programs marked mergeable
+w /sys/kernel/mm/ksm/run - - - - 1
+
+# ksm_pages_to_scan: 100 - pages ksmd scans per wake-up
+w /sys/kernel/mm/ksm/pages_to_scan - - - - 100
+
+# ksm_sleep_millisecs: 20 - milliseconds ksmd sleeps between scans
+w /sys/kernel/mm/ksm/sleep_millisecs - - - - 20"
+`;
+
+exports[`generated config: hugepages > vm-host / thp-always 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Virtual machine host (KVM, QEMU), 16 GiB RAM, one NUMA node
+# Profile: THP always
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# Setting it to always makes khugepaged raise vm.min_free_kbytes to its
+# own floor if it is lower, and systemd-tmpfiles runs after the sysctl
+# files at boot. A lower vm.min_free_kbytes set elsewhere (such as the
+# swap tuner's file) only holds with transparent huge pages set to never.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: always - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - always
+
+# thp_defrag: defer+madvise - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
+
+# ── Kernel samepage merging ─────────────────────────────────────────────────
+# ksm_run: 1 - merge identical pages that programs marked mergeable
+w /sys/kernel/mm/ksm/run - - - - 1
+
+# ksm_pages_to_scan: 100 - pages ksmd scans per wake-up
+w /sys/kernel/mm/ksm/pages_to_scan - - - - 100
+
+# ksm_sleep_millisecs: 20 - milliseconds ksmd sleeps between scans
+w /sys/kernel/mm/ksm/sleep_millisecs - - - - 20"
+`;
+
+exports[`generated config: hugepages > vm-host / thp-off 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux huge pages, THP, KSM and memory map sysctls
+# Generated 2026-01-01 by linux-tuners.dev/hugepages
+# System: Virtual machine host (KVM, QEMU), 16 GiB RAM, one NUMA node
+# Profile: THP off
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# This output is two files. Each starts at its "# =====" banner.
+#
+# 1. Persist them. Save each part as its own file:
+#      sudo nano /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo nano /etc/tmpfiles.d/99-hugepages-tuning.conf
+#    The first loads with the sysctl files on boot; systemd-tmpfiles
+#    writes the second to /sys on boot.
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#      sudo systemd-tmpfiles --create /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
+# 3. Verify they took effect:
+#      grep HugePages_ /proc/meminfo
+#      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# NOTES
+#
+# vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
+# sysctl.d file, or hugepages= on the kernel command line) stays.
+#
+# Debian kernels start transparent_hugepage/enabled at always, Ubuntu and
+# Fedora at madvise; the second file sets it either way.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html
+#   THP: https://docs.kernel.org/admin-guide/mm/transhuge.html
+#   KSM: https://docs.kernel.org/admin-guide/mm/ksm.html
+#   tmpfiles.d: https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html
+
+# ===== /etc/sysctl.d/99-hugepages-tuning.conf ===============================
+# ── Memory maps and NUMA ────────────────────────────────────────────────────
+# max_map_count: 1048576 - memory mappings per process
+vm.max_map_count = 1048576
+
+# ===== /etc/tmpfiles.d/99-hugepages-tuning.conf =============================
+# Each "w" line writes its value to that /sys file when systemd-tmpfiles
+# runs at boot. A path the kernel lacks is skipped.
+
+# ── Transparent huge pages ──────────────────────────────────────────────────
+# thp_enabled: never - which memory gets transparent huge pages
+w /sys/kernel/mm/transparent_hugepage/enabled - - - - never
+
+# thp_defrag: never - how long a fault waits for a free 2 MiB block
+w /sys/kernel/mm/transparent_hugepage/defrag - - - - never
+
+# ── Kernel samepage merging ─────────────────────────────────────────────────
+# ksm_run: 1 - merge identical pages that programs marked mergeable
+w /sys/kernel/mm/ksm/run - - - - 1
+
+# ksm_pages_to_scan: 100 - pages ksmd scans per wake-up
+w /sys/kernel/mm/ksm/pages_to_scan - - - - 100
+
+# ksm_sleep_millisecs: 20 - milliseconds ksmd sleeps between scans
+w /sys/kernel/mm/ksm/sleep_millisecs - - - - 20"
+`;
+
 exports[`generated config: network > bulk / bbr 1`] = `
 "# ────────────────────────────────────────────────────────────────────────────
 # Linux network stack sysctls

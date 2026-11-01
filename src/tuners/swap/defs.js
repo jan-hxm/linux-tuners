@@ -82,6 +82,7 @@ export const PARAMETER_DEFS = [
       "This is the emergency reserve: the amount of free memory the kernel refuses to dip below across all memory zones. It sets the lowest 'min' watermark, the line that triggers slow synchronous direct reclaim once crossed, and protects the atomic allocations that drivers and the network stack make in contexts where they cannot afford to wait.",
       "Raise it to give the kernel a bigger safety buffer, and to widen the entire watermark window, since the low and high watermarks are built on top of this floor. It's commonly raised together with watermark_scale_factor to keep background reclaim comfortably ahead of demand.",
       "Set it too low and atomic allocations start failing under load; you'll see order-0 allocation failures in dmesg. Set it too high and you permanently hand usable RAM to a reserve that mostly sits idle.",
+      'With transparent huge pages at always or madvise, khugepaged raises it to its own floor each time THP is switched on, at boot included; the 67584 shown as the default is that floor on a small VM. A lower value only holds with THP set to never.',
     ],
     tuningTip: 'Bump it up if you see atomic allocation failures under load; lower it if reserves are eating RAM you need.',
     kernelDocsUrl: `${KERNEL_VM_BASE}#min-free-kbytes`,

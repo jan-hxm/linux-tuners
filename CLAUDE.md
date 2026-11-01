@@ -4,7 +4,7 @@ Agent instructions for [linux-tuners.dev](https://linux-tuners.dev). Loaded into
 
 ## At a glance
 
-Static Vue 3 SPA (plain JS, Pinia, Tailwind, Chart.js) with five tuners: `/swap` (`vm.*` sysctl), `/systemd` (systemd resource control), `/security` (hardening sysctls), `/network` (`net.*` sysctls) and `/filesystem` (`fs.*` sysctls), plus landing and legal pages. Hosted on Cloudflare Pages; GitHub Actions deploys every push to `main`, so a push is a release.
+Static Vue 3 SPA (plain JS, Pinia, Tailwind, Chart.js) with six tuners: `/swap` (`vm.*` sysctl), `/systemd` (systemd resource control), `/security` (hardening sysctls), `/network` (`net.*` sysctls), `/filesystem` (`fs.*` sysctls) and `/hugepages` (huge pages, THP and KSM, via sysctl.d and tmpfiles.d), plus landing and legal pages. Hosted on Cloudflare Pages; GitHub Actions deploys every push to `main`, so a push is a release.
 
 ## Docs map
 

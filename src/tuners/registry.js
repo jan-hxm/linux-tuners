@@ -115,6 +115,24 @@ export const TUNERS = [
       jsonLdType: 'SoftwareApplication',
     },
   },
+  {
+    id: 'hugepages',
+    status: 'live',
+    path: '/hugepages',
+    navLabel: 'Huge pages',
+    title: 'Huge pages & memory layout',
+    blurb: 'Tune huge page pools, Transparent Huge Pages and KSM for databases and VM hosts, plus the per-process memory map limit and NUMA zone reclaim. Writes a sysctl.d file and a tmpfiles.d file for the /sys settings.',
+    keys: ['vm.nr_hugepages', 'transparent_hugepage/enabled', 'ksm/run', 'vm.max_map_count', '…'],
+    route: {
+      title: 'Huge pages & memory layout tuner | linux-tuners.dev',
+      description:
+        'Workload-aware tuner for Linux huge pages: vm.nr_hugepages and overcommit pools, Transparent Huge Pages enabled and defrag, KSM page merging for KVM hosts, vm.max_map_count and zone_reclaim_mode. Shows the RAM a pool takes, knows what each distribution starts with, and writes sysctl.d and tmpfiles.d files.',
+      ogTitle: 'Huge pages & memory layout tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+  },
   // Roadmap toward the whole sysctl tree plus the key sysfs runtime tunables,
   // grouped by what an operator tunes together (e.g. hardening keys from
   // kernel/net/fs live in one "Security hardening" tuner).
@@ -124,13 +142,6 @@ export const TUNERS = [
     title: 'Kernel & scheduler',
     blurb: 'Tune kernel.* sysctls for scheduling and system behaviour, covering CFS scheduler tunables, the PID and thread ceilings, panic and printk behaviour, and user-namespace limits.',
     keys: ['kernel.sched_*', 'kernel.pid_max', 'kernel.threads-max', 'user.max_user_namespaces', '…'],
-  },
-  {
-    id: 'hugepages',
-    status: 'planned',
-    title: 'Huge pages & memory layout',
-    blurb: 'Tune the rest of vm.* plus Transparent Huge Pages for large-memory workloads, covering hugepage pools, the mmap count limit, NUMA zone reclaim, and THP and KSM policy.',
-    keys: ['vm.nr_hugepages', 'vm.max_map_count', 'vm.zone_reclaim_mode', '/sys/kernel/mm/transparent_hugepage', '…'],
   },
   {
     id: 'sysv-ipc',

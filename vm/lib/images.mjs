@@ -23,7 +23,9 @@ export const IMAGES = {
     // stricter: keys a distro file sets to a stricter value after ours.
     // nrOpen: fs.nr_open at boot. watchesScale: the inotify watch default
     // follows RAM (5.11, backported to 5.10).
-    expect: { perfBlocksAt: 3, procpsGlobs: true, systemdGlobs: true, nrOpen: 1073741816, watchesScale: true },
+    // thp: transparent_hugepage/enabled at boot, chosen when the kernel is
+    // built. mapCount: vm.max_map_count at boot.
+    expect: { perfBlocksAt: 3, procpsGlobs: true, systemdGlobs: true, nrOpen: 1073741816, watchesScale: true, thp: 'always', mapCount: 1048576 },
   },
   'ubuntu-24.04': {
     file: 'ubuntu-24.04.img',
@@ -31,7 +33,7 @@ export const IMAGES = {
     why: 'Ubuntu kernel 6.8 (Ubuntu perf patch), procps 4, systemd 255',
     profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.8' }, filesystem: { systemd: 'modern' } },
     expect: {
-      perfBlocksAt: 4, procpsGlobs: true, systemdGlobs: true, apport: true, nrOpen: 1048576, watchesScale: true,
+      perfBlocksAt: 4, procpsGlobs: true, systemdGlobs: true, apport: true, nrOpen: 1048576, watchesScale: true, thp: 'madvise', mapCount: 1048576,
       // /usr/lib/sysctl.d/99-protect-links.conf; seen once at boot, stricter.
       stricter: { 'fs.protected_regular': '2' },
     },
@@ -41,7 +43,7 @@ export const IMAGES = {
     url: 'https://dl.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2',
     why: 'close-to-upstream kernel 6.17 (no perf patch), procps 4, systemd 258',
     profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.17' }, filesystem: { systemd: 'modern' } },
-    expect: { perfBlocksAt: null, procpsGlobs: true, systemdGlobs: true, networkManager: true, nrOpen: 2147483584, watchesScale: true },
+    expect: { perfBlocksAt: null, procpsGlobs: true, systemdGlobs: true, networkManager: true, nrOpen: 2147483584, watchesScale: true, thp: 'madvise', mapCount: 1048576 },
   },
   'debian-11': {
     file: 'debian-11.qcow2',
@@ -49,7 +51,7 @@ export const IMAGES = {
     why: 'Debian kernel 5.10 (before 5.13), procps 3.3 without glob support, systemd 247',
     profile: { security: { kernel: 'lts' }, swap: { kernelVersion: '5.10' }, filesystem: { systemd: 'modern' } },
     expect: {
-      perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: true, nrOpen: 1048576, watchesScale: true,
+      perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: true, nrOpen: 1048576, watchesScale: true, thp: 'always', mapCount: 65530,
       // /usr/lib/sysctl.d/protect-links.conf sorts after 99-*.conf.
       stricter: { 'fs.protected_regular': '2' },
     },
@@ -59,6 +61,6 @@ export const IMAGES = {
     url: 'https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img',
     why: 'Ubuntu kernel 4.15 (before 4.19), procps 3.3, systemd 237',
     profile: { security: { kernel: 'legacy' }, swap: { kernelVersion: '4.15' }, systemd: { cgroupVersion: 'v1' }, filesystem: { systemd: 'older' } },
-    expect: { perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: false, apport: true, conntrackIpv4: true, nrOpen: 1048576, watchesScale: false },
+    expect: { perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: false, apport: true, conntrackIpv4: true, nrOpen: 1048576, watchesScale: false, thp: 'madvise', mapCount: 65530 },
   },
 }

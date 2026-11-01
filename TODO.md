@@ -11,14 +11,17 @@ Each one is a new domain module following [Design.md §6](Design.md#6-adding-a-t
 
 sysctl-based (output: `/etc/sysctl.d/`):
 
-1. [ ] **Huge pages & memory layout** (the rest of `vm.*` + THP/KSM sysfs): `nr_hugepages`, `nr_overcommit_hugepages`, `max_map_count`, `mmap_min_addr`, `zone_reclaim_mode`, `page-cluster`; THP and KSM via `/sys/kernel/mm/`. Mixed output (sysctl.d + sysfs/tuned).
-2. [ ] **System V IPC & shared memory**: `kernel.shmmax`, `shmall`, `shmmni`, `sem`, `msgmni`/`msgmnb`/`msgmax`.
-3. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
+1. [ ] **System V IPC & shared memory**: `kernel.shmmax`, `shmall`, `shmmni`, `sem`, `msgmni`/`msgmnb`/`msgmax`.
+2. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
 
-sysfs-based (these need a non-sysctl apply model: udev rules or a `tuned` profile):
+sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages tuner added; per-device ones need udev rules:
 
-4. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
-5. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`.
+3. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
+4. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Measure whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU before relying on them.
+
+On shipped tuners:
+
+- [ ] **Swap: `vm.page-cluster`** (swap readahead, 2^n pages): 0 for zram, the kernel default 3 elsewhere. It belongs with the swap device, so it moved here from the huge pages item. Measured: 6.x accepts 0 to 31; 5.10 and 4.15 also take 32.
 
 ## 2. UX
 

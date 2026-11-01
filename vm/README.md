@@ -44,16 +44,21 @@ Per image ([suite.mjs](suite.mjs)):
    say, the watch default follows RAM as the drawer says, every bound offered
    is accepted, and a unit asking for more than `fs.nr_open` is cut down, or
    fails where `fs.nr_open` was lowered below what systemd runs with.
-3. **Every sysctl file** (swap, network, security, filesystem; each
-   workload's defaults and each preset) applies with `sysctl -p` without
-   errors, and every key reads back as written. One-way values are ordered last, with a reboot when a later
+3. **Huge pages claims.** THP and `vm.max_map_count` start where the notes
+   say, every THP option and KSM bound is set by its tmpfiles.d line, a line
+   for a missing `/sys` file is skipped, and a pool is reserved as asked.
+4. **Every sysctl and tmpfiles.d file** (swap, network, security,
+   filesystem, huge pages; each workload's defaults and each preset) applies
+   with `sysctl -p` or `systemd-tmpfiles --create` without errors, and every
+   key and `/sys` file reads back as written. One-way values are ordered last, with a reboot when a later
    file would need to lower them.
-4. **systemd drop-ins** for each workload and preset load after
+5. **systemd drop-ins** for each workload and preset load after
    `daemon-reexec` with no PID 1 warning about our files, and `systemctl show`
    reports each directive.
-5. **After a reboot**, systemd-sysctl applies the swap, network, security and
-   filesystem defaults together, and the glob lines the security file
-   suggests reach the boot interface.
+6. **After a reboot**, systemd-sysctl applies the swap, network, security,
+   filesystem and huge pages defaults together, systemd-tmpfiles sets the
+   THP and KSM files and a small pool is reserved, and the glob lines the
+   security file suggests reach the boot interface.
 
 ## Notes for changing it
 

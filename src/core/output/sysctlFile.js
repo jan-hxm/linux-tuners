@@ -4,8 +4,7 @@
  * so a value can never add structure to the file (Design.md §10).
  */
 
-import { commentLine, sectionHeader } from './comments.js'
-import { valueTypeOf } from '../valueTypes.js'
+import { sectionedConfig } from './sections.js'
 
 const SYSCTL_NAME = /^[a-z][a-z0-9_]*(\.[a-z0-9_-]+)+$/
 const SYSCTL_VALUE = /^[A-Za-z0-9_.-]+( [A-Za-z0-9_.-]+)*$/
@@ -37,18 +36,12 @@ export function sysctlLine(name, text) {
  * @returns {string[]}
  */
 export function sysctlConfig({ defs, sections, params, comment, include = () => true }) {
-  const lines = []
-  for (const section of sections) {
-    const written = defs.filter((def) => def.group === section.id && include(def))
-    if (!written.length) continue
-    lines.push(sectionHeader(section.title))
-    for (const def of written) {
-      const value = params[def.key]
-      const text = valueTypeOf(def).format(value, def)
-      lines.push(commentLine(`${def.key}: ${text} - ${comment(def, value)}`))
-      for (const name of [def.sysctlName, ...(def.alsoSets ?? [])]) lines.push(sysctlLine(name, text))
-      lines.push('')
-    }
-  }
-  return lines
+  return sectionedConfig({
+    defs,
+    sections,
+    params,
+    comment,
+    include,
+    lines: (def, text) => [def.sysctlName, ...(def.alsoSets ?? [])].map((name) => sysctlLine(name, text)),
+  })
 }

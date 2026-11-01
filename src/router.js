@@ -21,6 +21,7 @@ const TUNER_DOMAIN_LOADERS = {
   security: () => import('@/tuners/security/index.js').then((m) => m.securityDomain),
   network: () => import('@/tuners/network/index.js').then((m) => m.networkDomain),
   filesystem: () => import('@/tuners/filesystem/index.js').then((m) => m.filesystemDomain),
+  hugepages: () => import('@/tuners/hugepages/index.js').then((m) => m.hugepagesDomain),
 }
 
 /** A lazy route component that renders the shared TunerPage for one domain. */

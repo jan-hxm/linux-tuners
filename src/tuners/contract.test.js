@@ -10,7 +10,7 @@ import { assertTuner } from '@/core/defineTuner.js'
 import { restoreState, presetParams } from '@/core/createTunerStore.js'
 import { parseRichText } from '@/ui/richText.js'
 import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
-import { differingKeys, valueTypeOf } from '@/core/valueTypes.js'
+import { differingKeys, elementRange, valueTypeOf } from '@/core/valueTypes.js'
 import { CONTROLS } from '@/ui/controls/index.js'
 import { normalizeField } from '@/core/profile.js'
 
@@ -311,6 +311,15 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         }
         expect(Number.isInteger(def.kernelMin) && Number.isInteger(def.kernelMax), key).toBe(true)
         expect(def.kernelMin, key).toBeLessThanOrEqual(def.kernelMax)
+        if (def.elementLimits) {
+          // One limit per tuple element, inside the def's outer bounds.
+          expect(def.type, key).toBe('tuple')
+          expect(def.elementLimits.length, key).toBe(def.length)
+          for (const { min, max } of def.elementLimits) {
+            expect(Number.isInteger(min) && Number.isInteger(max) && min <= max, key).toBe(true)
+            expect(min >= def.kernelMin && max <= def.kernelMax, key).toBe(true)
+          }
+        }
       }
     })
   })
@@ -400,12 +409,13 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
           const value = def.type === 'tuple' ? Array(def.length).fill(n) : n
           const params = { ...domain.deriveDefaults(domain.defaultHardware), [key]: value }
           const restored = restoreState(domain, rawHash(envelope(domain, { params })))
-          const { min, max } = domain.rangeFor(key, restored.hardware)
-          for (const element of [restored.params[key]].flat()) {
+          const range = domain.rangeFor(key, restored.hardware)
+          ;[restored.params[key]].flat().forEach((element, i) => {
+            const { min, max } = elementRange(range, i)
             expect(Number.isInteger(element), `${key} = ${n}`).toBe(true)
             expect(element).toBeGreaterThanOrEqual(min)
             expect(element).toBeLessThanOrEqual(max)
-          }
+          })
         }
       }
     })

@@ -36,12 +36,15 @@ const workloadComparison = computed(() => {
 })
 
 // The accepted values and the kernel default, worded for the def's type: an
-// enum lists its options, a tuple holds each element to the range.
+// enum lists its options, a tuple holds each element to the range, or to its
+// own one in def.elementLimits.
 const rangeText = computed(() => {
   const d = def.value
   if (!d) return null
   const accepts = d.type === 'enum'
     ? `Offered: ${d.options.map((o) => o.value).join(', ')}.`
+    : d.elementLimits
+    ? `Kernel accepts ${d.elementLimits.map((r, i) => `${d.tupleLabels[i]} ${r.min.toLocaleString()} – ${r.max.toLocaleString()}`).join(', ')}.`
     : `Kernel accepts ${d.kernelMin.toLocaleString()} – ${d.kernelMax.toLocaleString()}${d.type === 'tuple' ? ' for each value' : ''}.`
   const kernelDefault = typeof d.kernelDefault === 'number' ? d.kernelDefault.toLocaleString() : valueTypeOf(d).format(d.kernelDefault, d)
   return { accepts, kernelDefault }

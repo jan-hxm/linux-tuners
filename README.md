@@ -16,6 +16,7 @@ ready-to-apply config file with citations to the source documentation.
 | [Network stack](https://linux-tuners.dev/network) | `net.*` sysctl: socket buffers sized to your link and path, listen queues, congestion control, local ports, conntrack |
 | [Filesystem & file descriptors](https://linux-tuners.dev/filesystem) | `fs.*` sysctl: open-file ceilings, inotify limits for IDEs and Kubernetes nodes, native AIO for databases |
 | [Huge pages & memory layout](https://linux-tuners.dev/hugepages) | huge page pools, Transparent Huge Pages and KSM (sysctl.d + tmpfiles.d), `vm.max_map_count`, NUMA zone reclaim |
+| [System V IPC & shared memory](https://linux-tuners.dev/sysv-ipc) | `kernel.sem`, `shmmni`, `shm_rmid_forced` and the message queue limits, with the Oracle and Db2 minimums |
 
 More are planned (filesystem, huge pages, …). Everything runs in
 your browser; your settings are only stored in the URL you choose to share.

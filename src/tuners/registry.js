@@ -133,6 +133,24 @@ export const TUNERS = [
       jsonLdType: 'SoftwareApplication',
     },
   },
+  {
+    id: 'sysv-ipc',
+    status: 'live',
+    path: '/sysv-ipc',
+    navLabel: 'IPC',
+    title: 'System V IPC & shared memory',
+    blurb: 'Set the System V shared memory, semaphore and message queue limits that Oracle, Db2 and older middleware check, without values from old guides lowering the kernel defaults.',
+    keys: ['kernel.sem', 'kernel.shmmni', 'kernel.msgmnb', 'kernel.msgmax', '…'],
+    route: {
+      title: 'System V IPC & shared memory tuner | linux-tuners.dev',
+      description:
+        'Workload-aware tuner for Linux System V IPC sysctls: kernel.shmmni, shm_rmid_forced, kernel.sem, msgmni, msgmax and msgmnb. Knows the kernel defaults that already pass the Oracle minimums, sizes the Db2 minimums from RAM, shows the kernel memory full message queues can hold, and writes a commented sysctl.d file.',
+      ogTitle: 'System V IPC & shared memory tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+  },
   // Roadmap toward the whole sysctl tree plus the key sysfs runtime tunables,
   // grouped by what an operator tunes together (e.g. hardening keys from
   // kernel/net/fs live in one "Security hardening" tuner).
@@ -142,13 +160,6 @@ export const TUNERS = [
     title: 'Kernel & scheduler',
     blurb: 'Tune kernel.* sysctls for scheduling and system behaviour, covering CFS scheduler tunables, the PID and thread ceilings, panic and printk behaviour, and user-namespace limits.',
     keys: ['kernel.sched_*', 'kernel.pid_max', 'kernel.threads-max', 'user.max_user_namespaces', '…'],
-  },
-  {
-    id: 'sysv-ipc',
-    status: 'planned',
-    title: 'System V IPC & shared memory',
-    blurb: 'Tune System V IPC limits for databases and legacy middleware, covering shared-memory segment sizes, semaphore arrays, and message-queue limits.',
-    keys: ['kernel.shmmax', 'kernel.shmall', 'kernel.sem', 'kernel.msgmni', '…'],
   },
   {
     id: 'block-io',

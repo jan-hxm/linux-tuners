@@ -11,13 +11,12 @@ Each one is a new domain module following [Design.md §6](Design.md#6-adding-a-t
 
 sysctl-based (output: `/etc/sysctl.d/`):
 
-1. [ ] **System V IPC & shared memory**: `kernel.shmmax`, `shmall`, `shmmni`, `sem`, `msgmni`/`msgmnb`/`msgmax`.
-2. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
+1. [ ] **Kernel & scheduler** (`kernel.*`, `user.*`): exposed `sched_*` tunables, `pid_max`, `threads-max`, panic/printk behaviour, `user.max_*_namespaces`.
 
 sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages tuner added; per-device ones need udev rules:
 
-3. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
-4. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Measure whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU before relying on them.
+2. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
+3. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Measure whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU before relying on them.
 
 On shipped tuners:
 

@@ -73,6 +73,10 @@ describe('tuple', () => {
     expect(() => t.format([1, 2], TUPLE)).toThrow()
     expect(() => t.format([1, 2.5, 3], TUPLE)).toThrow()
   })
+  it('clamps each element to its own range when the range names them', () => {
+    const range = { ...RANGE, elements: [{ min: 0, max: 10 }, { min: 20, max: 30 }, { min: 0, max: 100 }] }
+    expect(t.clamp([50, 0, 500], TUPLE, range)).toEqual([10, 20, 100])
+  })
   it('compares element-wise', () => {
     expect(t.equals([1, 2, 3], [1, 2, 3])).toBe(true)
     expect(t.equals([1, 2, 3], [1, 2, 4])).toBe(false)

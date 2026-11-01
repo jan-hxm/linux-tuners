@@ -9,7 +9,8 @@
  *     value blocks, what locks, which warnings fire. So do the filesystem
  *     tuner's: what systemd sets at boot, and what a low fs.nr_open does;
  *     and the huge pages tuner's: what each distro starts THP and the map
- *     count at, and that its tmpfiles.d lines set /sys.
+ *     count at, and that its tmpfiles.d lines set /sys; and the System V
+ *     IPC tuner's: the defaults, and that containers don't see the values.
  *  3. The files survive a reboot, applied by systemd-sysctl as on a real
  *     machine, including the interface caveats the security file explains.
  *
@@ -27,10 +28,11 @@ import { presetParams } from '@/core/createTunerStore.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
 // Tuners whose output is sysctl.d files, and tmpfiles.d files for /sys.
-const SYSCTL_TUNERS = TUNER_DOMAINS.filter((d) => ['swap', 'network', 'security', 'filesystem', 'hugepages'].includes(d.id))
+const SYSCTL_TUNERS = TUNER_DOMAINS.filter((d) => ['swap', 'network', 'security', 'filesystem', 'hugepages', 'sysv-ipc'].includes(d.id))
 const security = TUNER_DOMAINS.find((d) => d.id === 'security')
 const filesystem = TUNER_DOMAINS.find((d) => d.id === 'filesystem')
 const hugepages = TUNER_DOMAINS.find((d) => d.id === 'hugepages')
+const ipc = TUNER_DOMAINS.find((d) => d.id === 'sysv-ipc')
 
 /** `key = value` lines of a sysctl.d file, comments skipped. */
 export function sysctlLines(content) {
@@ -353,6 +355,66 @@ export function imageSuite(id) {
       })
     })
 
+    describe('System V IPC claims on a fresh boot', () => {
+      const defs = ipc.parameterKeys.map((k) => ipc.defsByKey[k])
+      const text = (v) => [v].flat().join(' ')
+      const keys = defs.map((d) => d.sysctlName)
+
+      it('every key starts at the kernel default, and shmmax and shmall at no limit', async () => {
+        const got = await vm.sysctls([...keys, 'kernel.shmmax', 'kernel.shmall'])
+        expect(got['kernel.shmmax']).toBe('18446744073692774399')
+        expect(got['kernel.shmall']).toBe('18446744073692774399')
+        for (const d of defs) expect(got[d.sysctlName], d.sysctlName).toBe(text(d.kernelDefault))
+        const notes = ipc.generateConfig({ hardware: ipc.defaultHardware, params: ipc.deriveDefaults(ipc.defaultHardware), presetLabel: null, now: NOW })[0].content
+        expect(notes).toContain('default to 18446744073692774399, no limit')
+      })
+
+      it('every bound the tuner offers is accepted', async () => {
+        const rejected = []
+        for (const d of defs) {
+          const ends = d.elementLimits
+            ? [d.elementLimits.map((r) => r.max), d.elementLimits.map((r) => r.min)]
+            : [d.kernelMax, d.kernelMin]
+          for (const v of ends) {
+            const err = await vm.sysctlWrite(d.sysctlName, text(v))
+            if (err) rejected.push(`${d.sysctlName}=${text(v)}: ${err}`)
+          }
+          await vm.sysctlWrite(d.sysctlName, text(d.kernelDefault))
+        }
+        expect(rejected).toEqual([])
+      })
+
+      it('a new IPC namespace starts at the kernel defaults, not the host values, as the notes say', async () => {
+        const raised = ipc.presetsById['most-ids'].values
+        await vm.sysctlWrite('kernel.shmmni', raised.shmmni)
+        await vm.sysctlWrite('kernel.msgmnb', 65536)
+        const r = await vm.sudo(`unshare -i sysctl -n ${keys.join(' ')}`)
+        for (const d of defs) {
+          await vm.sysctlWrite(d.sysctlName, text(d.kernelDefault))
+        }
+        expect(r.stdout.trim().split('\n').map((l) => l.trim().replace(/\s+/g, ' '))).toEqual(defs.map((d) => text(d.kernelDefault)))
+        expect(ipc.validate({ ...ipc.defaultHardware, workload: 'container' }, ipc.deriveDefaults(ipc.defaultHardware)).map((i) => i.id)).toContain('ipc-namespace')
+      })
+
+      it('shm_rmid_forced removes a segment its creator left behind, and a semaphore array above SEMMSL fails', async () => {
+        expect(ipc.defsByKey.shm_rmid_forced.longDesc.join(' ')).toContain('the process that created it has exited')
+        const count = async () => Number((await vm.sudo('ipcs -m | grep -c "^0x" || true')).stdout.trim())
+        await vm.sudo('ipcrm -a')
+        await vm.sudo('ipcmk -M 4096')
+        const kept = await count()
+        await vm.sysctlWrite('kernel.shm_rmid_forced', 1)
+        const r = await vm.sudo('ipcmk -M 4096 >/dev/null; ipcs -m | grep -c "^0x" || true')
+        await vm.sysctlWrite('kernel.shm_rmid_forced', 0)
+        await vm.sudo('ipcrm -a')
+        expect(kept).toBe(1)
+        expect(Number(r.stdout.trim())).toBe(0)
+        await vm.sysctlWrite('kernel.sem', '10 1024000000 500 32000')
+        const over = await vm.sudo('ipcmk -S 11', { check: false })
+        await vm.sysctlWrite('kernel.sem', text(ipc.defsByKey.sem.kernelDefault))
+        expect(over.code).not.toBe(0)
+      })
+    })
+
     describe('every generated sysctl file applies and reads back', () => {
       const all = SYSCTL_TUNERS.flatMap((d) => cases(d, image))
         .map((c) => ({ ...c, lines: c.files.flatMap((f) => sysctlLines(f.content)), writes: c.files.flatMap((f) => tmpfilesWrites(f.content)) }))
@@ -432,12 +494,13 @@ export function imageSuite(id) {
           const params = { ...hugepages.deriveDefaults(hardware), nr_hugepages: 64 }
           return { hardware, params, files: hugepages.generateConfig({ hardware, params, presetLabel: null, now: NOW }) }
         })(),
+        pick(ipc, 'db2'),
       ]
       const lines = installed.flatMap((c) => c.files.flatMap((f) => sysctlLines(f.content)))
       const writes = installed.flatMap((c) => c.files.flatMap((f) => tmpfilesWrites(f.content)))
       const securityFile = installed[2].files[0]
 
-      it('every key of the swap, network, security, filesystem and huge pages defaults is set at boot', async () => {
+      it('every key of the swap, network, security, filesystem, huge pages and IPC defaults is set at boot', async () => {
         await vm.reboot()
         for (const c of installed) for (const f of c.files) await vm.writeFile(f.path, f.content)
         // As the network file says, so the conntrack keys exist when the files load.

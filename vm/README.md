@@ -47,16 +47,20 @@ Per image ([suite.mjs](suite.mjs)):
 3. **Huge pages claims.** THP and `vm.max_map_count` start where the notes
    say, every THP option and KSM bound is set by its tmpfiles.d line, a line
    for a missing `/sys` file is skipped, and a pool is reserved as asked.
-4. **Every sysctl and tmpfiles.d file** (swap, network, security,
-   filesystem, huge pages; each workload's defaults and each preset) applies
+4. **System V IPC claims.** Every key starts at the kernel default and
+   `shmmax`/`shmall` at no limit, every bound offered (each `kernel.sem`
+   field's) is accepted, a new IPC namespace starts at the kernel defaults,
+   `shm_rmid_forced` removes an orphaned segment, and SEMMSL is enforced.
+5. **Every sysctl and tmpfiles.d file** (swap, network, security,
+   filesystem, huge pages, System V IPC; each workload's defaults and each preset) applies
    with `sysctl -p` or `systemd-tmpfiles --create` without errors, and every
    key and `/sys` file reads back as written. One-way values are ordered last, with a reboot when a later
    file would need to lower them.
-5. **systemd drop-ins** for each workload and preset load after
+6. **systemd drop-ins** for each workload and preset load after
    `daemon-reexec` with no PID 1 warning about our files, and `systemctl show`
    reports each directive.
-6. **After a reboot**, systemd-sysctl applies the swap, network, security,
-   filesystem and huge pages defaults together, systemd-tmpfiles sets the
+7. **After a reboot**, systemd-sysctl applies the swap, network, security,
+   filesystem, huge pages and Db2 IPC defaults together, systemd-tmpfiles sets the
    THP and KSM files and a small pool is reserved, and the glob lines the
    security file suggests reach the boot interface.
 

@@ -22,6 +22,7 @@ const TUNER_DOMAIN_LOADERS = {
   network: () => import('@/tuners/network/index.js').then((m) => m.networkDomain),
   filesystem: () => import('@/tuners/filesystem/index.js').then((m) => m.filesystemDomain),
   hugepages: () => import('@/tuners/hugepages/index.js').then((m) => m.hugepagesDomain),
+  'sysv-ipc': () => import('@/tuners/sysv-ipc/index.js').then((m) => m.sysvIpcDomain),
 }
 
 /** A lazy route component that renders the shared TunerPage for one domain. */

@@ -10947,3 +10947,936 @@ IOWeight=100
 # TasksMax: hard task cap for the whole slice (~15% of pid_max)
 TasksMax=629146"
 `;
+
+exports[`generated config: sysv-ipc > container / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: Container host or Kubernetes node, 16 GiB RAM
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 500 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > container / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: Container host or Kubernetes node, 16 GiB RAM
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 500 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > container / most-ids 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: Container host or Kubernetes node, 16 GiB RAM
+# Profile: Most IPC objects
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 32768 - shared memory segments system-wide
+kernel.shmmni = 32768
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32768 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32768
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32768 - message queues system-wide
+kernel.msgmni = 32768
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 512 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > db2 / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: IBM Db2, 16 GiB RAM
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Db2 raises these to its minimums when an instance starts, but not at
+# boot; this file makes them hold from boot.
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 65536 - largest message in bytes
+kernel.msgmax = 65536
+
+# msgmnb: 65536 - bytes per queue, up to 2 GiB if every queue fills
+kernel.msgmnb = 65536"
+`;
+
+exports[`generated config: sysv-ipc > db2 / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: IBM Db2, 16 GiB RAM
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Db2 raises these to its minimums when an instance starts, but not at
+# boot; this file makes them hold from boot.
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 500 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > db2 / most-ids 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: IBM Db2, 16 GiB RAM
+# Profile: Most IPC objects
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Db2 raises these to its minimums when an instance starts, but not at
+# boot; this file makes them hold from boot.
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 32768 - shared memory segments system-wide
+kernel.shmmni = 32768
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32768 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32768
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32768 - message queues system-wide
+kernel.msgmni = 32768
+
+# msgmax: 65536 - largest message in bytes
+kernel.msgmax = 65536
+
+# msgmnb: 65536 - bytes per queue, up to 2 GiB if every queue fills
+kernel.msgmnb = 65536"
+`;
+
+exports[`generated config: sysv-ipc > general / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: General server or desktop, 16 GiB RAM
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 500 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > general / defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: General server or desktop, 16 GiB RAM
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 500 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > general / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: General server or desktop, 16 GiB RAM
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 500 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > general / kernel-defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: General server or desktop, 16 GiB RAM
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 500 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > general / most-ids 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: General server or desktop, 16 GiB RAM
+# Profile: Most IPC objects
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 32768 - shared memory segments system-wide
+kernel.shmmni = 32768
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32768 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32768
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32768 - message queues system-wide
+kernel.msgmni = 32768
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 512 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > general / most-ids 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: General server or desktop, 16 GiB RAM
+# Profile: Most IPC objects
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 32768 - shared memory segments system-wide
+kernel.shmmni = 32768
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32768 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32768
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32768 - message queues system-wide
+kernel.msgmni = 32768
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 512 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > oracle / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: Oracle Database, 16 GiB RAM
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Oracle's minimums (kernel.sem 250 32000 100 128, kernel.shmmni 4096)
+# are all at or below the kernel defaults, so none is raised here.
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 500 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > oracle / kernel-defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: Oracle Database, 16 GiB RAM
+# Profile: Kernel defaults
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Oracle's minimums (kernel.sem 250 32000 100 128, kernel.shmmni 4096)
+# are all at or below the kernel defaults, so none is raised here.
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 4096 - shared memory segments system-wide
+kernel.shmmni = 4096
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32000 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32000
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32000 - message queues system-wide
+kernel.msgmni = 32000
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 500 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;
+
+exports[`generated config: sysv-ipc > oracle / most-ids 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux System V IPC sysctls: shared memory, semaphores, message queues
+# Generated 2026-01-01 by linux-tuners.dev/sysv-ipc
+# System: Oracle Database, 16 GiB RAM
+# Profile: Most IPC objects
+# ────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a drop-in (sysctl ignores
+#    the comment lines, and any *.conf in /etc/sysctl.d/ loads on boot):
+#      sudo nano /etc/sysctl.d/99-sysv-ipc-tuning.conf   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo sysctl --system
+#
+# 3. Verify they took effect:
+#      ipcs -l
+#
+# NOTES
+#
+# kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
+# default to 18446744073692774399, no limit, and any value lowers them.
+#
+# Every key is written, at the kernel default too. sysctl.d files load
+# in name order and a 99- file after most others, so this one undoes
+# lower values an older guide left in another file. Check for those:
+#   grep -rs "kernel\\.\\(shm\\|sem\\|msg\\)" /etc/sysctl.conf /etc/sysctl.d
+#
+# Oracle's minimums (kernel.sem 250 32000 100 128, kernel.shmmni 4096)
+# are all at or below the kernel defaults, so none is raised here.
+#
+# Each container gets its own IPC namespace, which starts at the kernel
+# defaults, not at these values: set them per container instead.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html
+#   kernel.sem: https://man7.org/linux/man-pages/man5/proc_sys_kernel.5.html
+
+# ── Shared memory ───────────────────────────────────────────────────────────
+# shmmni: 32768 - shared memory segments system-wide
+kernel.shmmni = 32768
+
+# shm_rmid_forced: 0 - segments stay until removed
+kernel.shm_rmid_forced = 0
+
+# ── Semaphores ──────────────────────────────────────────────────────────────
+# sem: 32000 1024000000 500 32768 - per array, system-wide, ops per semop(), arrays
+kernel.sem = 32000 1024000000 500 32768
+
+# ── Message queues ──────────────────────────────────────────────────────────
+# msgmni: 32768 - message queues system-wide
+kernel.msgmni = 32768
+
+# msgmax: 8192 - largest message in bytes
+kernel.msgmax = 8192
+
+# msgmnb: 16384 - bytes per queue, up to 512 MiB if every queue fills
+kernel.msgmnb = 16384"
+`;

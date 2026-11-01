@@ -164,7 +164,7 @@ function openInDrawer() {
           @click="startEdit"
         >{{ formatted }}<span aria-hidden="true" class="text-[11px] text-slate-400">✎</span></button>
         <div v-else class="font-mono text-sm font-semibold text-slate-900">{{ formatted }}</div>
-        <div v-if="control.showsRange" class="text-[11px] text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
+        <div v-if="control.showsRange && !range.elements" class="text-[11px] text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
       </div>
     </header>
 

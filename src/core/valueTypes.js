@@ -12,7 +12,17 @@
  *   equals(a, b)
  */
 
-/** @typedef {{ min: number, max: number }} Range */
+/**
+ * A tuple's range may name one range per element in `elements`, for keys such
+ * as kernel.sem whose fields take different values.
+ *
+ * @typedef {{ min: number, max: number, elements?: Range[] }} Range
+ */
+
+/** The range that holds element `i` of a tuple. */
+export function elementRange(range, i) {
+  return range.elements?.[i] ?? range
+}
 
 /** @param {number} v @param {Range} range */
 function clampInt(v, { min, max }) {
@@ -53,13 +63,13 @@ const enumType = {
   equals: (a, b) => a === b,
 }
 
-/** `def.length` integers, each held to the def's range; printed space-separated. */
+/** `def.length` integers, each held to its element's range; printed space-separated. */
 const tuple = {
   restore: (raw, def) => {
     if (!Array.isArray(raw) || raw.length !== def.length || !raw.every(Number.isFinite)) return undefined
     return raw.map(Math.round)
   },
-  clamp: (v, _def, range) => v.map((n) => clampInt(n, range)),
+  clamp: (v, _def, range) => v.map((n, i) => clampInt(n, elementRange(range, i))),
   format: (v, def) => {
     if (!Array.isArray(v) || v.length !== def.length) throw new Error(`Not a ${def.length}-tuple`)
     return v.map(formatInt).join(' ')

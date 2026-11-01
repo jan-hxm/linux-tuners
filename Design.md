@@ -37,6 +37,7 @@ They are not one tuner per `/proc/sys` root. For example, hardening keys from
 | `/network` | 17 `net.*` sysctls: `rmem_max`, `wmem_max`, `tcp_rmem`, `tcp_wmem`; `somaxconn`, `tcp_max_syn_backlog`, `netdev_max_backlog`; `tcp_congestion_control`, `default_qdisc`, `tcp_slow_start_after_idle`, `tcp_mtu_probing`; `ip_local_port_range`, `tcp_tw_reuse`, `tcp_fin_timeout`; `nf_conntrack_max`, `nf_conntrack_buckets`, `nf_conntrack_tcp_timeout_established`. Buffers are sized from the bandwidth-delay product of the profile's link speed and longest path; the conntrack keys exist only when the profile says `nf_conntrack` is loaded. Targets kernel 4.19+. Graph: per-connection throughput ceiling against RTT. | `/etc/sysctl.d/99-network-tuning.conf`, with notes on the qdisc reaching only new interfaces, congestion-control modules, and loading `nf_conntrack` before `systemd-sysctl` runs |
 | `/filesystem` | 6 `fs.*` sysctls: `file-max`, `nr_open`; `inotify.max_user_watches`, `max_user_instances`, `max_queued_events`; `aio-max-nr`. Ranges start at the kernel default, since lower values only make programs fail. `file-max` is left out on systemd 240+, which raises it to the maximum at boot, and `nr_open` is left out at the kernel default so distributions that raise it keep their value. The watch limit is held to a worst case of a tenth of RAM. No graphs. | `/etc/sysctl.d/99-filesystem-tuning.conf`, with notes on what is left out and on units whose `LimitNOFILE=` passes `nr_open` |
 | `/hugepages` | 9 keys: `vm.nr_hugepages`, `nr_overcommit_hugepages`; THP `enabled` and `defrag`; KSM `run`, `pages_to_scan`, `sleep_millisecs`; `vm.max_map_count`, `zone_reclaim_mode`. The THP and KSM keys are sysfs files (a def's `sysfsPath`). The pool starts at 0 and is offered up to nine tenths of RAM, since it takes RAM whether used or not; THP starts at `madvise` for every workload and KSM is on for VM hosts. Keys at a default that a distribution, the boot options or a service may already set are left out: the pools at 0, KSM off, `max_map_count` at 65530. `zone_reclaim_mode` exists only with several NUMA nodes. No kernel defaults preset, since the THP default is a kernel build choice. `vm.mmap_min_addr` is not offered: the only reason to change it is lowering it for Wine or DOSEMU, which reopens NULL-dereference exploits. No graphs. | Two files in one document: `/etc/sysctl.d/99-hugepages-tuning.conf` and `/etc/tmpfiles.d/99-hugepages-tuning.conf`, whose `w` lines set `/sys/kernel/mm` at boot |
+| `/sysv-ipc` | 6 System V IPC sysctls: `kernel.shmmni`, `shm_rmid_forced`; `kernel.sem` (SEMMSL, SEMMNS, SEMOPM, SEMMNI); `msgmni`, `msgmax`, `msgmnb`. Since 3.19 the kernel defaults pass what Oracle and Db2 ask for, apart from Db2's RAM-based counts and 64 KiB messages, so every range starts at the kernel default and only the Db2 workload raises anything. Every key is written, at the default too, so the file undoes an older guide's lower values (Oracle's minimum `kernel.sem = 250 32000 100 128` cuts SEMMNI from 32000 to 128). `kernel.shmmax` and `kernel.shmall` are not offered: their default is no limit and any value lowers it. `kernel.sem` is a tuple with one range per field (`def.elementLimits`). The worst-case memory of full message queues (`msgmni` × `msgmnb`) is shown in the formula. No graphs. | `/etc/sysctl.d/99-sysv-ipc-tuning.conf`, with notes on what is left out, the vendor minimums, and containers starting at the kernel defaults |
 
 The planned tuners and their order are listed in [TODO.md](TODO.md).
 
@@ -287,7 +288,7 @@ must follow them, and existing UI must not regress.
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
-not plumbing. Six tuners are shipped and about four are planned, so anything
+not plumbing. Seven tuners are shipped and about three are planned, so anything
 written twice gets written ten times. Duplication is the main risk.
 
 ### Layers and dependency direction
@@ -367,7 +368,11 @@ so that a new variant is an addition rather than an edit to shared code.
   default), `bool` (stored as 0/1), `enum` (one of `def.options[].value`, for
   `tcp_congestion_control` or the I/O `scheduler`) or `tuple` (`def.length`
   integers, for `tcp_rmem` or `kernel.sem`). The network tuner is the first
-  with enum and tuple defs. The type owns four operations:
+  with enum and tuple defs. A tuple's range may carry `elements`, one range
+  per element (`elementRange(range, i)`), when the fields take different
+  values: `kernel.sem`'s SEMMNI stops at 32768 while SEMMNS goes to
+  2147483647. The def then lists them in `elementLimits`, which the drawer
+  prints per field. The type owns four operations:
   - `restore`: strict parsing of untrusted URL input; enums accept only listed
     values. `decodeState` rejects the link when it returns `undefined`.
   - `clamp`: used by `restoreState` and `setParam`.
@@ -588,6 +593,16 @@ behaviour goes in only once a VM has shown it; facts found that way so far:
   (67584 on the 3 GiB test VMs); `never` and the pool keys don't. At boot
   systemd-tmpfiles runs after systemd-sysctl, so a lower value from the
   swap tuner holds only with THP `never`. Both tuners say so.
+- The System V IPC keys start at the same values on every image (`shmmni`
+  4096, `kernel.sem` 32000 1024000000 500 32000, `msgmni` 32000, `msgmax`
+  8192, `msgmnb` 16384, `shmmax` and `shmall` 18446744073692774399), and
+  no distribution file sets them. `shmmni`, `msgmni` and SEMMNI reject
+  values above 32768 from 5.10 on (4.15 takes them); the other fields,
+  `msgmax` and `msgmnb` take up to 2147483647. A `kernel.sem` line with
+  three fields leaves the fourth as it was. A new IPC namespace
+  (`unshare -i`, every container) starts at the kernel defaults, not the
+  host's values. With `shm_rmid_forced = 1` a segment whose creator exited
+  unattached is removed at once.
 
 ### Guardrails
 

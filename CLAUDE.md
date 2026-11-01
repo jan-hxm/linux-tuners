@@ -38,6 +38,7 @@ Each links to its full rationale in Design.md.
 ```bash
 npm run dev          # vite dev server (5173, falls back to 5174)
 npm test             # vitest run
+npm run test:vm      # boots distro VMs and checks the output on real kernels (vm/README.md)
 npm run build        # vite build + postbuild (per-route HTML + sitemap.xml)
 npm run gen:icons    # regen favicons + OG image (uses sharp)
 ```

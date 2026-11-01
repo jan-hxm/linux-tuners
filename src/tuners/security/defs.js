@@ -11,7 +11,7 @@
  * @typedef {'kernel' | 'network' | 'filesystem'} SecurityGroup
  *
  * @typedef {Object} SecurityValues
- * @property {0|1|2}   kptr_restrict              0 hashes only on 5.2+
+ * @property {0|1|2}   kptr_restrict              0 hashes only on 4.15+
  * @property {0|1}     dmesg_restrict
  * @property {0|1|2|3|4} perf_event_paranoid      -1 (open to all) is not offered; 3 and 4 need a distro patch
  * @property {0|1|2|3} ptrace_scope               3 can't be lowered until reboot
@@ -51,7 +51,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'Whether kernel addresses in /proc files are shown, hashed or hidden.',
     longDesc: [
       'Kernel code prints some pointers with the %pK format, for example in /proc/modules and in many driver files. Knowing where the kernel sits in memory is the first step of most kernel exploits, because it defeats the address randomisation (KASLR) that would otherwise make them guess.',
-      'At 0 kernel 5.2 and newer hash those addresses, so they are unique but useless to an attacker; older kernels print them in full. At 1 they print as zeros unless the reader has CAP_SYSLOG, and at 2 they print as zeros for everyone, root included.',
+      'At 0 kernel 4.15 and newer hash those addresses, so they are unique but useless to an attacker; older kernels print them in full. At 1 they print as zeros unless the reader has CAP_SYSLOG, and at 2 they print as zeros for everyone, root included.',
       'The same setting decides who sees real addresses in /proc/kallsyms. At 0, every user does when perf_event_paranoid is 1 or lower; at 1 only CAP_SYSLOG holders do. Use 1 on most systems; 2 also blinds root tools such as perf and crash analysers.',
     ],
     tuningTip: 'Use 1 so only privileged tools see addresses; 2 if root never needs them.',
@@ -94,13 +94,13 @@ export const PARAMETER_DEFS = [
     longDesc: [
       'perf_event_open() gives programs access to CPU performance counters, tracepoints and kernel profiling. It is a large, complex interface, and it has been the source of several kernel vulnerabilities, so it is restricted for users without CAP_PERFMON (or CAP_SYS_ADMIN on kernels before 5.8).',
       'At 0 users may also collect CPU-wide events; at 1 they may profile their own processes including kernel code; at 2 (the upstream default) only the user-space part of their own processes. The value -1, open to everyone, is not offered here.',
-      'Debian and Android kernels carry a patch that blocks unprivileged perf entirely from 3 up. Ubuntu\'s version of the patch blocks it only from 4, starts at 4, and treats 3 like 2. Upstream kernels accept 3 and 4 and treat both like 2, so 4 is the value that blocks perf wherever a patch exists.',
+      'Debian and Android kernels carry a patch that blocks unprivileged perf entirely from 3 up, and so did older Ubuntu kernels (18.04). Current Ubuntu kernels (24.04) block it only from 4, start at 4, and treat 3 like 2. Upstream kernels accept 3 and 4 and treat both like 2, so 4 is the value that blocks perf wherever a patch exists.',
     ],
     tuningTip: 'Keep 2 for developers who profile their own code; use 4 on servers.',
     kernelDocsUrl: `${KERNEL_DOCS}#perf-event-paranoid`,
     cisNote: null,
     kernelDefault: 2,
-    kernelDefaultNote: 'Debian kernels start at 3 and Ubuntu kernels at 4.',
+    kernelDefaultNote: 'Debian kernels start at 3, current Ubuntu kernels at 4.',
     kernelMin: 0,
     kernelMax: 4,
     step: 1,
@@ -156,7 +156,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'Whether users without privileges may load BPF programs.',
     longDesc: [
       'The bpf() system call loads small programs into the kernel, checked first by the BPF verifier. When unprivileged users may call it, every user can reach the verifier, and verifier bugs have led to several local privilege escalations.',
-      'At 1 unprivileged bpf() is off and can\'t be turned back on until the next reboot. At 2 it is off but an admin can change it again. Value 2 needs kernel 5.13 or newer; on older kernels 1 is the only way to turn it off, and they reject writing 0, so this tuner leaves the key out of the file at 0.',
+      'At 1 unprivileged bpf() is off and can\'t be turned back on until the next reboot. At 2 it is off but an admin can change it again. Value 2 needs kernel 5.13 or newer; older upstream kernels accept only 1 and reject writing 0, so this tuner sets 1 there and leaves the key out of the file at 0. Some distribution kernels before 5.13 (Debian 11, Ubuntu 18.04) carry the newer code and start at 2; on those, 1 swaps a reversible setting for one that holds until reboot.',
       'Kernels built with CONFIG_BPF_UNPRIV_DEFAULT_OFF start at 2. That option is on by default from kernel 5.16 and in the major distributions\' kernels, so writing 0 on a current kernel turns unprivileged BPF back on. Tools such as bpftrace and most BPF-based monitoring run as root and are not affected.',
     ],
     tuningTip: 'Use 2 on 5.13+, 1 on older kernels, unless something really needs unprivileged BPF.',
@@ -399,6 +399,7 @@ export const PARAMETER_DEFS = [
     longDesc: [
       'A core dump is a copy of a crashed process\'s memory. For a setuid program or one that changed its privileges, that memory can hold password hashes, keys and other secrets, so by default (0) such processes don\'t dump at all.',
       'At 1 they dump as if they were ordinary processes, readable by the user who ran them; the kernel documents this as insecure and for debugging only. At 2 the dump is readable by root only, and it is only written when kernel.core_pattern is a pipe (as with systemd-coredump or apport) or an absolute path.',
+      'On Ubuntu, apport sets this to 2 each time it starts, after the sysctl files are applied, so 0 doesn\'t hold unless apport is turned off. The generated file says how.',
     ],
     tuningTip: 'Use 0; 2 if a crash handler such as systemd-coredump needs those dumps.',
     kernelDocsUrl: `${FS_DOCS}#suid-dumpable`,

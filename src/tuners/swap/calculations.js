@@ -72,6 +72,9 @@ export function deriveDefaults(hw) {
   }
   // device caps
   swappiness = clampSwappinessForDevice(swappiness, hw.swapDevice)
+  // kernel caps: older kernels reject the values above
+  swappiness = Math.min(swappiness, swappinessKernelMax(hw.kernelVersion))
+  watermark_scale_factor = Math.min(watermark_scale_factor, watermarkKernelMax(hw.kernelVersion))
 
   // No swap configured? swappiness is irrelevant; surface it as 0 to be honest.
   if (hw.swapGiB === 0) swappiness = 0
@@ -138,13 +141,26 @@ const SWAPPINESS_MAX_LEGACY = 100
  * @returns {number}
  */
 export function swappinessKernelMax(kernelVersion) {
-  if (!kernelVersion) return SWAPPINESS_MAX_MODERN
-  const m = /^\s*(\d+)\.(\d+)/.exec(kernelVersion)
-  if (!m) return SWAPPINESS_MAX_MODERN
-  const major = Number(m[1])
-  const minor = Number(m[2])
-  if (major < 5 || (major === 5 && minor < 8)) return SWAPPINESS_MAX_LEGACY
-  return SWAPPINESS_MAX_MODERN
+  return kernelBefore(kernelVersion, 5, 8) ? SWAPPINESS_MAX_LEGACY : SWAPPINESS_MAX_MODERN
+}
+
+/**
+ * Hard kernel limit for vm.watermark_scale_factor: 1000 until 5.17 raised it
+ * to 3000 (checked in the kernel source, and a 4.15 kernel rejects 2000). A
+ * blank version is treated as modern, as for swappiness.
+ *
+ * @param {string|null|undefined} kernelVersion
+ * @returns {number}
+ */
+export function watermarkKernelMax(kernelVersion) {
+  return kernelBefore(kernelVersion, 5, 17) ? 1000 : PARAMETER_DEFS_BY_KEY.watermark_scale_factor.kernelMax
+}
+
+/** Whether a "major.minor" version is known to be older than major.minor. */
+function kernelBefore(kernelVersion, major, minor) {
+  const m = /^\s*(\d+)\.(\d+)/.exec(kernelVersion ?? '')
+  if (!m) return false
+  return Number(m[1]) < major || (Number(m[1]) === major && Number(m[2]) < minor)
 }
 
 /**
@@ -218,6 +234,9 @@ export function rangeFor(key, hw) {
     // Slider reaches the kernel-legal max (200 on ≥5.8, 100 before). Whether a
     // high value suits the device is a soft warning, not a hard cap.
     return { min: def.kernelMin, max: swappinessKernelMax(hw.kernelVersion) }
+  }
+  if (key === 'watermark_scale_factor') {
+    return { min: def.kernelMin, max: watermarkKernelMax(hw.kernelVersion) }
   }
   if (key === 'min_free_kbytes') {
     // Cap upper bound at 10% of RAM — beyond that the slider becomes useless.

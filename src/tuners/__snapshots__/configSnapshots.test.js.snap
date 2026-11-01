@@ -35,6 +35,8 @@ exports[`generated config: network > bulk / bbr 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -137,6 +139,8 @@ exports[`generated config: network > bulk / defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -235,6 +239,8 @@ exports[`generated config: network > bulk / kernel-defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -337,6 +343,8 @@ exports[`generated config: network > bulk / proxy 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -439,6 +447,8 @@ exports[`generated config: network > container / bbr 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -537,6 +547,8 @@ exports[`generated config: network > container / defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -635,6 +647,8 @@ exports[`generated config: network > container / kernel-defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -733,6 +747,8 @@ exports[`generated config: network > container / proxy 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -835,6 +851,8 @@ exports[`generated config: network > desktop / bbr 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -933,6 +951,8 @@ exports[`generated config: network > desktop / defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1031,6 +1051,8 @@ exports[`generated config: network > desktop / kernel-defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1129,6 +1151,8 @@ exports[`generated config: network > desktop / proxy 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1231,6 +1255,8 @@ exports[`generated config: network > router / bbr 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1329,6 +1355,8 @@ exports[`generated config: network > router / defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1427,6 +1455,8 @@ exports[`generated config: network > router / kernel-defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1525,6 +1555,8 @@ exports[`generated config: network > router / proxy 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1627,6 +1659,8 @@ exports[`generated config: network > web / bbr 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1729,6 +1763,8 @@ exports[`generated config: network > web / bbr 2`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1827,6 +1863,8 @@ exports[`generated config: network > web / defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -1925,6 +1963,8 @@ exports[`generated config: network > web / defaults 2`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -2023,6 +2063,8 @@ exports[`generated config: network > web / kernel-defaults 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -2121,6 +2163,8 @@ exports[`generated config: network > web / kernel-defaults 2`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -2219,6 +2263,8 @@ exports[`generated config: network > web / proxy 1`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -2317,6 +2363,8 @@ exports[`generated config: network > web / proxy 2`] = `
 # that can happen after this file is applied, and the keys are then
 # skipped. Load the module first:
 #   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf
+# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:
+#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf
 # nf_conntrack_buckets can only be written from the host, not from
 # inside a container.
 #
@@ -2418,17 +2466,27 @@ exports[`generated config: security > container / cis 1`] = `
 #
 # Strict rp_filter: the kernel uses the higher of conf.all and the
 # interface value, and systemd sets every interface to 2 (loose).
+# NetworkManager also sets each interface it manages back to 2 when it
+# brings the connection up, so strict mode doesn't hold where it runs.
 #
 # IPv6 redirects: the kernel only reads each interface's own value, so
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add these lines to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add these lines to the end of this file:
 #   net.ipv4.conf.*.rp_filter = 1
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -2533,11 +2591,19 @@ exports[`generated config: security > container / defaults 1`] = `
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add this line to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add this line to the end of this file:
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -2651,11 +2717,19 @@ exports[`generated config: security > container / kspp 1`] = `
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add this line to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add this line to the end of this file:
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -2758,17 +2832,27 @@ exports[`generated config: security > desktop / cis 1`] = `
 #
 # Strict rp_filter: the kernel uses the higher of conf.all and the
 # interface value, and systemd sets every interface to 2 (loose).
+# NetworkManager also sets each interface it manages back to 2 when it
+# brings the connection up, so strict mode doesn't hold where it runs.
 #
 # IPv6 redirects: the kernel only reads each interface's own value, so
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add these lines to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add these lines to the end of this file:
 #   net.ipv4.conf.*.rp_filter = 1
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -2873,11 +2957,19 @@ exports[`generated config: security > desktop / defaults 1`] = `
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add this line to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add this line to the end of this file:
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -2991,11 +3083,19 @@ exports[`generated config: security > desktop / kspp 1`] = `
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add this line to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add this line to the end of this file:
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -3098,17 +3198,27 @@ exports[`generated config: security > router / cis 1`] = `
 #
 # Strict rp_filter: the kernel uses the higher of conf.all and the
 # interface value, and systemd sets every interface to 2 (loose).
+# NetworkManager also sets each interface it manages back to 2 when it
+# brings the connection up, so strict mode doesn't hold where it runs.
 #
 # IPv6 redirects: the kernel only reads each interface's own value, so
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add these lines to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add these lines to the end of this file:
 #   net.ipv4.conf.*.rp_filter = 1
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -3213,11 +3323,19 @@ exports[`generated config: security > router / defaults 1`] = `
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add this line to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add this line to the end of this file:
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -3331,11 +3449,19 @@ exports[`generated config: security > router / kspp 1`] = `
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add this line to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add this line to the end of this file:
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -3438,17 +3564,27 @@ exports[`generated config: security > server / cis 1`] = `
 #
 # Strict rp_filter: the kernel uses the higher of conf.all and the
 # interface value, and systemd sets every interface to 2 (loose).
+# NetworkManager also sets each interface it manages back to 2 when it
+# brings the connection up, so strict mode doesn't hold where it runs.
 #
 # IPv6 redirects: the kernel only reads each interface's own value, so
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add these lines to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add these lines to the end of this file:
 #   net.ipv4.conf.*.rp_filter = 1
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -3551,17 +3687,27 @@ exports[`generated config: security > server / cis 2`] = `
 #
 # Strict rp_filter: the kernel uses the higher of conf.all and the
 # interface value, and systemd sets every interface to 2 (loose).
+# NetworkManager also sets each interface it manages back to 2 when it
+# brings the connection up, so strict mode doesn't hold where it runs.
 #
 # IPv6 redirects: the kernel only reads each interface's own value, so
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add these lines to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add these lines to the end of this file:
 #   net.ipv4.conf.*.rp_filter = 1
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -3664,17 +3810,27 @@ exports[`generated config: security > server / defaults 1`] = `
 #
 # Strict rp_filter: the kernel uses the higher of conf.all and the
 # interface value, and systemd sets every interface to 2 (loose).
+# NetworkManager also sets each interface it manages back to 2 when it
+# brings the connection up, so strict mode doesn't hold where it runs.
 #
 # IPv6 redirects: the kernel only reads each interface's own value, so
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add these lines to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add these lines to the end of this file:
 #   net.ipv4.conf.*.rp_filter = 1
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -3777,17 +3933,27 @@ exports[`generated config: security > server / defaults 2`] = `
 #
 # Strict rp_filter: the kernel uses the higher of conf.all and the
 # interface value, and systemd sets every interface to 2 (loose).
+# NetworkManager also sets each interface it manages back to 2 when it
+# brings the connection up, so strict mode doesn't hold where it runs.
 #
 # IPv6 redirects: the kernel only reads each interface's own value, so
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add these lines to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add these lines to the end of this file:
 #   net.ipv4.conf.*.rp_filter = 1
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -3899,17 +4065,27 @@ exports[`generated config: security > server / kspp 1`] = `
 #
 # Strict rp_filter: the kernel uses the higher of conf.all and the
 # interface value, and systemd sets every interface to 2 (loose).
+# NetworkManager also sets each interface it manages back to 2 when it
+# brings the connection up, so strict mode doesn't hold where it runs.
 #
 # IPv6 redirects: the kernel only reads each interface's own value, so
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add these lines to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add these lines to the end of this file:
 #   net.ipv4.conf.*.rp_filter = 1
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -4021,17 +4197,27 @@ exports[`generated config: security > server / kspp 2`] = `
 #
 # Strict rp_filter: the kernel uses the higher of conf.all and the
 # interface value, and systemd sets every interface to 2 (loose).
+# NetworkManager also sets each interface it manages back to 2 when it
+# brings the connection up, so strict mode doesn't hold where it runs.
 #
 # IPv6 redirects: the kernel only reads each interface's own value, so
 # interfaces that exist before this file is applied (often the main one
 # at boot) keep accepting redirects.
 #
-# To cover every interface, add these lines to the end of this file.
-# systemd-sysctl, which applies the file at boot, expands globs and
-# applies them to interfaces as they appear. sysctl from procps before 4.0
-# rejects globs; apply with: sudo systemctl restart systemd-sysctl
+# To cover every interface, add these lines to the end of this file:
 #   net.ipv4.conf.*.rp_filter = 1
 #   net.ipv6.conf.*.accept_redirects = 0
+# systemd 245 and newer (systemctl --version) apply them at boot and to
+# each interface as it appears; apply them now with
+#   sudo systemctl restart systemd-sysctl
+# since sysctl from procps before 4.0 rejects them. Older systemd skips
+# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which
+# is after this file is applied. To keep 0, turn apport off:
+#   sudo systemctl disable --now apport
 #
 # ────────────────────────────────────────────────────────────────────────────
 #
@@ -7143,8 +7329,7 @@ exports[`generated config: systemd > container-host / container-host 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7188,8 +7373,7 @@ exports[`generated config: systemd > container-host / database-server 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7214,7 +7398,7 @@ CPUWeight=100
 MemoryHigh=85%
 # MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
 MemoryMax=95%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
@@ -7234,8 +7418,7 @@ exports[`generated config: systemd > container-host / defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7279,8 +7462,7 @@ exports[`generated config: systemd > container-host / desktop 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7323,8 +7505,7 @@ exports[`generated config: systemd > container-host / hardened-multitenant 1`] =
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7368,8 +7549,7 @@ exports[`generated config: systemd > container-host / kubernetes-node 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7413,8 +7593,7 @@ exports[`generated config: systemd > container-host / systemd-defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7456,8 +7635,7 @@ exports[`generated config: systemd > database / container-host 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7482,7 +7660,7 @@ CPUWeight=100
 MemoryHigh=80%
 # MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
 MemoryMax=90%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
@@ -7502,8 +7680,7 @@ exports[`generated config: systemd > database / database-server 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7528,7 +7705,7 @@ CPUWeight=100
 MemoryHigh=85%
 # MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
 MemoryMax=95%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
@@ -7548,8 +7725,7 @@ exports[`generated config: systemd > database / defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7574,7 +7750,7 @@ CPUWeight=100
 MemoryHigh=85%
 # MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
 MemoryMax=95%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
@@ -7594,8 +7770,7 @@ exports[`generated config: systemd > database / desktop 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7619,7 +7794,7 @@ CPUWeight=100
 # MemoryHigh: soft throttle limit ≈ 15.2 GiB of 16
 MemoryHigh=95%
 # MemoryMax: unset (infinity, no limit)
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
@@ -7639,8 +7814,7 @@ exports[`generated config: systemd > database / hardened-multitenant 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7665,7 +7839,7 @@ CPUWeight=100
 MemoryHigh=70%
 # MemoryMax: hard OOM limit ≈ 12.8 GiB of 16
 MemoryMax=80%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
@@ -7685,8 +7859,7 @@ exports[`generated config: systemd > database / kubernetes-node 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7711,7 +7884,7 @@ CPUWeight=200
 MemoryHigh=80%
 # MemoryMax: hard OOM limit ≈ 14.4 GiB of 16
 MemoryMax=90%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
@@ -7731,8 +7904,7 @@ exports[`generated config: systemd > database / systemd-defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7774,8 +7946,7 @@ exports[`generated config: systemd > desktop / container-host 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7819,8 +7990,7 @@ exports[`generated config: systemd > desktop / database-server 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7845,7 +8015,7 @@ CPUWeight=100
 MemoryHigh=85%
 # MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
 MemoryMax=95%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
@@ -7865,8 +8035,7 @@ exports[`generated config: systemd > desktop / defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7908,8 +8077,7 @@ exports[`generated config: systemd > desktop / desktop 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7952,8 +8120,7 @@ exports[`generated config: systemd > desktop / hardened-multitenant 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -7997,8 +8164,7 @@ exports[`generated config: systemd > desktop / kubernetes-node 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8042,8 +8208,7 @@ exports[`generated config: systemd > desktop / systemd-defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8085,8 +8250,7 @@ exports[`generated config: systemd > general / container-host 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8130,8 +8294,7 @@ exports[`generated config: systemd > general / container-host 2`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8175,8 +8338,7 @@ exports[`generated config: systemd > general / database-server 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8201,7 +8363,7 @@ CPUWeight=100
 MemoryHigh=85%
 # MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
 MemoryMax=95%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
@@ -8221,8 +8383,7 @@ exports[`generated config: systemd > general / database-server 2`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8247,7 +8408,7 @@ CPUWeight=100
 MemoryHigh=85%
 # MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
 MemoryMax=95%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
@@ -8267,8 +8428,7 @@ exports[`generated config: systemd > general / defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8310,8 +8470,7 @@ exports[`generated config: systemd > general / defaults 2`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8353,8 +8512,7 @@ exports[`generated config: systemd > general / desktop 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8397,8 +8555,7 @@ exports[`generated config: systemd > general / desktop 2`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8441,8 +8598,7 @@ exports[`generated config: systemd > general / hardened-multitenant 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8486,8 +8642,7 @@ exports[`generated config: systemd > general / hardened-multitenant 2`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8531,8 +8686,7 @@ exports[`generated config: systemd > general / kubernetes-node 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8576,8 +8730,7 @@ exports[`generated config: systemd > general / kubernetes-node 2`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8621,8 +8774,7 @@ exports[`generated config: systemd > general / systemd-defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8664,8 +8816,7 @@ exports[`generated config: systemd > general / systemd-defaults 2`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8707,8 +8858,7 @@ exports[`generated config: systemd > kubernetes / container-host 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8752,8 +8902,7 @@ exports[`generated config: systemd > kubernetes / database-server 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8778,7 +8927,7 @@ CPUWeight=100
 MemoryHigh=85%
 # MemoryMax: hard OOM limit ≈ 15.2 GiB of 16
 MemoryMax=95%
-# MemorySwapMax: slice forbidden from using swap
+# MemorySwapMax: slice forbidden from using swap (systemd 239+)
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
@@ -8798,8 +8947,7 @@ exports[`generated config: systemd > kubernetes / defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8843,8 +8991,7 @@ exports[`generated config: systemd > kubernetes / desktop 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8887,8 +9034,7 @@ exports[`generated config: systemd > kubernetes / hardened-multitenant 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8932,8 +9078,7 @@ exports[`generated config: systemd > kubernetes / kubernetes-node 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=yes
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
@@ -8977,8 +9122,7 @@ exports[`generated config: systemd > kubernetes / systemd-defaults 1`] = `
 
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
-# DefaultCPUAccounting: per-unit CPU time accounting
-DefaultCPUAccounting=no
+# DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
 # DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting

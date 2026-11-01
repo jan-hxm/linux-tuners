@@ -4,6 +4,7 @@ import {
   clampSwappinessForDevice,
   swappinessMaxForDevice,
   swappinessKernelMax,
+  watermarkKernelMax,
   watermarkWindowMiB,
   watermarkLevelsMiB,
   rangeFor,
@@ -160,6 +161,27 @@ describe('swappinessKernelMax', () => {
     ['garbage', 200], // unparseable → assume modern
   ])('%s → %i', (version, expected) => {
     expect(swappinessKernelMax(version)).toBe(expected)
+  })
+})
+
+// 5.17 raised the cap from 1000 to 3000; a 4.15 VM rejects 2000 (vm/README.md).
+describe('watermarkKernelMax', () => {
+  it.each([
+    [null, 3000],
+    ['6.8', 3000],
+    ['5.17', 3000],
+    ['5.16', 1000],
+    ['5.10', 1000],
+    ['4.15', 1000],
+  ])('%s → %i', (version, expected) => {
+    expect(watermarkKernelMax(version)).toBe(expected)
+  })
+
+  it('holds the k8s defaults to what an older kernel accepts', () => {
+    const hw = { ramGiB: 16, swapGiB: 8, swapDevice: 'zram', workload: 'k8s', cgroupVersion: 'v2', kernelVersion: '4.15' }
+    expect(deriveDefaults(hw)).toMatchObject({ swappiness: 100, watermark_scale_factor: 1000 })
+    expect(deriveDefaults({ ...hw, swapDevice: 'nvme-ssd', kernelVersion: '5.10' }).watermark_scale_factor).toBe(1000)
+    expect(rangeFor('watermark_scale_factor', hw).max).toBe(1000)
   })
 })
 

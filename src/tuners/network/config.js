@@ -102,6 +102,8 @@ function noteBlock(hw, params) {
       '# that can happen after this file is applied, and the keys are then',
       '# skipped. Load the module first:',
       "#   echo nf_conntrack | sudo tee /etc/modules-load.d/nf_conntrack.conf",
+      '# Before kernel 4.19 the TCP timeout keys come with nf_conntrack_ipv4:',
+      "#   echo nf_conntrack_ipv4 | sudo tee -a /etc/modules-load.d/nf_conntrack.conf",
       '# nf_conntrack_buckets can only be written from the host, not from',
       '# inside a container.',
     )

@@ -49,6 +49,7 @@ export const SYSTEMD_DEFS = [
     longDesc: [
       'Turns on CPU usage accounting for all units that do not override it, so that `systemctl status` and `systemd-cgtop` report CPU time per service. It maps to the per-unit CPUAccounting= setting.',
       'On the unified cgroup v2 hierarchy CPU accounting is essentially free because the cpu controller is always present, so enabling it system-wide costs almost nothing and gives you per-service CPU visibility. The main reason to leave it off is to keep the cgroup tree minimal on very constrained systems.',
+      'On cgroup v2 with kernel 4.15 or newer systemd reports CPU time without this option and treats it as a no-op, and systemd 258 removed it. This tuner offers it only for cgroup v1.',
     ],
     tuningTip: 'Turn it on for observability on servers; the overhead on cgroup v2 is negligible.',
     kernelDocsUrl: `${SYSTEM_CONF}#DefaultCPUAccounting=`,

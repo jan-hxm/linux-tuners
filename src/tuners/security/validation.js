@@ -28,13 +28,13 @@ export function validate(hw, p) {
     warn('kallsyms-exposed', ['kptr_restrict', 'perf_event_paranoid'],
       'With kptr_restrict 0 and perf_event_paranoid 1 or lower, /proc/kallsyms shows real kernel addresses to every user, which defeats KASLR.')
   }
-  if (p.kptr_restrict === 0 && hw.kernel !== 'current') {
+  if (p.kptr_restrict === 0 && hw.kernel === 'legacy') {
     warn('kptr-raw', ['kptr_restrict'],
-      'Kernels before 5.2 print %pK addresses in full at 0, so every user can read them. Use 1.')
+      'Kernels before 4.15 print %pK addresses in full at 0, so every user can read them. Use 1.')
   }
   if (p.perf_event_paranoid === 3) {
     warn('perf-3-ubuntu', ['perf_event_paranoid'],
-      'Only Debian and Android kernels block perf at 3. Ubuntu kernels start at 4 and treat 3 like 2, so 3 loosens them. Use 4, which blocks perf on all three.')
+      'Debian, Android and older Ubuntu kernels block perf at 3. Current Ubuntu kernels start at 4 and treat 3 like 2, so 3 loosens them. Use 4, which blocks perf on all of them.')
   }
   if (p.perf_event_paranoid === 4) {
     info('perf-4-patched', ['perf_event_paranoid'],
@@ -73,7 +73,7 @@ export function validate(hw, p) {
 
   if (p.rp_filter === 1) {
     info('rp-strict-interfaces', ['rp_filter'],
-      'The kernel applies the higher of conf.all and each interface\'s value, and systemd sets interfaces to 2 (loose). Lower them too, as the generated file explains, or strict mode has no effect.')
+      'The kernel applies the higher of conf.all and each interface\'s value, and systemd sets interfaces to 2 (loose). Lower them too, as the generated file explains, or strict mode has no effect. NetworkManager sets the interfaces it manages back to 2, so strict mode doesn\'t hold where it runs.')
     if (hw.workload === 'router') {
       warn('rp-strict-router', ['rp_filter'],
         'Strict filtering drops legitimate traffic on asymmetric routes, which routers and VPN gateways often have. Loose (2) still drops unroutable sources.')
@@ -117,6 +117,10 @@ export function validate(hw, p) {
     }
   }
 
+  if (p.suid_dumpable === 0) {
+    info('suid-dump-apport', ['suid_dumpable'],
+      'On Ubuntu, apport sets this back to 2 when it starts. The generated file shows how to turn apport off to keep 0.')
+  }
   if (p.suid_dumpable === 1) {
     warn('suid-dump-debug', ['suid_dumpable'],
       'Mode 1 writes core dumps of privileged processes that their user can read, which can leak password hashes and keys.')

@@ -6,7 +6,7 @@
  * the top of the first. Pure over (hardware, params, presetLabel).
  */
 
-import { cpuQuotaNoLimit } from './calculations.js'
+import { cpuQuotaNoLimit, hasCpuAccountingOption, hasSwapControl } from './calculations.js'
 import { configFile } from '@/core/output/files.js'
 import { commentLine, fileBanner, isoDate, presetSummary } from '@/core/output/comments.js'
 import { iniDirective, iniSection } from '@/core/output/iniDropIn.js'
@@ -48,7 +48,11 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   manager.push('')
   manager.push(fileBanner(MANAGER_PATH))
   manager.push(iniSection('Manager'))
-  manager.push(...iniDirective('DefaultCPUAccounting', yesNo(t.default_cpu_accounting), 'per-unit CPU time accounting'))
+  if (hasCpuAccountingOption(hardware)) {
+    manager.push(...iniDirective('DefaultCPUAccounting', yesNo(t.default_cpu_accounting), 'per-unit CPU time accounting'))
+  } else {
+    manager.push(commentLine('DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)'))
+  }
   manager.push(...iniDirective('DefaultMemoryAccounting', yesNo(t.default_memory_accounting), 'per-unit memory accounting (required for memory limits)'))
   manager.push(...iniDirective('DefaultIOAccounting', yesNo(t.default_io_accounting), 'per-unit block-I/O accounting'))
   manager.push(...iniDirective('DefaultTasksAccounting', yesNo(t.default_tasks_accounting), 'per-unit task counting (required for TasksMax)'))
@@ -90,8 +94,9 @@ function memoryLines(key, pct, text, hw, comment) {
 }
 
 function swapLines(pct, text, hw) {
+  if (!hasSwapControl(hw)) return [commentLine('MemorySwapMax: left out, it needs cgroup v2')]
   if (pct >= 100) return [commentLine('MemorySwapMax: unset (infinity, slice may swap freely)')]
-  if (pct === 0) return iniDirective('MemorySwapMax', '0', 'slice forbidden from using swap')
+  if (pct === 0) return iniDirective('MemorySwapMax', '0', 'slice forbidden from using swap (systemd 239+)')
   const gib = ((hw.ramGiB * pct) / 100).toFixed(1)
   return iniDirective('MemorySwapMax', `${text}%`, `swap budget ≈ ${gib} GiB`)
 }

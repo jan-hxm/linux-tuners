@@ -75,23 +75,26 @@ describe('security config: keys the system has', () => {
     expect(config(DEFAULT_SECURITY_SPEC)).toMatch(/^# perf_event_paranoid: 4 - no unprivileged perf on Debian, Ubuntu and Android.*\nkernel\.perf_event_paranoid = 4$/m)
   })
 
-  it('says kptr_restrict 0 only hashes from 5.2', () => {
+  it('says kptr_restrict 0 only hashes from 4.15', () => {
     expect(config(DEFAULT_SECURITY_SPEC, { kptr_restrict: 0 })).toMatch(/^# kptr_restrict: 0 - kernel pointers hashed$/m)
-    expect(config({ ...DEFAULT_SECURITY_SPEC, kernel: 'lts' }, { kptr_restrict: 0 })).toContain('shown in full before')
+    expect(config({ ...DEFAULT_SECURITY_SPEC, kernel: 'lts' }, { kptr_restrict: 0 })).toMatch(/^# kptr_restrict: 0 - kernel pointers hashed$/m)
+    expect(config({ ...DEFAULT_SECURITY_SPEC, kernel: 'legacy' }, { kptr_restrict: 0 })).toContain('shown in full before')
   })
 })
 
 describe('security validation', () => {
-  it('has no notes for the server defaults beyond the interface caveats and perf 4', () => {
-    expect(ids(DEFAULT_SECURITY_SPEC).sort()).toEqual(['perf-4-patched', 'redirects-v6-interfaces', 'rp-strict-interfaces'])
+  it('has no notes for the server defaults beyond the interface, perf 4 and apport caveats', () => {
+    expect(ids(DEFAULT_SECURITY_SPEC).sort()).toEqual(['perf-4-patched', 'redirects-v6-interfaces', 'rp-strict-interfaces', 'suid-dump-apport'])
   })
 
   it('warns that perf 3 loosens Ubuntu kernels', () => {
     expect(ids(DEFAULT_SECURITY_SPEC, { perf_event_paranoid: 3 })).toContain('perf-3-ubuntu')
   })
 
-  it('warns that kptr_restrict 0 prints raw addresses before 5.2', () => {
+  // Measured: a 4.15 and a 5.10 kernel both hash %pK at 0 (vm/README.md).
+  it('warns that kptr_restrict 0 prints raw addresses before 4.15', () => {
     expect(ids({ ...DEFAULT_SECURITY_SPEC, kernel: 'legacy' }, { kptr_restrict: 0 })).toContain('kptr-raw')
+    expect(ids({ ...DEFAULT_SECURITY_SPEC, kernel: 'lts' }, { kptr_restrict: 0 })).not.toContain('kptr-raw')
     expect(ids(DEFAULT_SECURITY_SPEC, { kptr_restrict: 0 })).not.toContain('kptr-raw')
   })
 

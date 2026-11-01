@@ -58,7 +58,8 @@ The planned tuners and their order are listed in [TODO.md](TODO.md).
    in the UI.
 3. **The output is the product.** What the textarea shows is exactly what gets
    copied: commented, dated, with the profile, the apply commands and the
-   sources. Every value it emits must be one the kernel or systemd accepts.
+   sources. Every value it emits must be one the kernel or systemd accepts,
+   which the VM tests check on real distribution kernels (§9 "VM tests").
 4. **Validation has two levels.** *Blocking* issues hide the output, and are
    reserved for settings that the kernel or systemd rejects or that are clearly
    broken (for example `dirty_background_ratio >= dirty_ratio`, or a soft rlimit
@@ -67,7 +68,8 @@ The planned tuners and their order are listed in [TODO.md](TODO.md).
 5. **No silent no-ops.** If systemd or the kernel ignores a value, the slider
    doesn't offer it. For example `CPUQuota=0%` and `MemoryMax=0%` are ignored
    by systemd (meaning "no limit"), so `CPUQuota` starts at 10% and the memory
-   limits start at 1%. `MemorySwapMax=0` is valid and stays available.
+   limits start at 1%. `MemorySwapMax=0` is valid (systemd 239+, cgroup v2) and
+   stays available.
 6. **Static and private by default.** There is no backend and no cookies of
    our own. State lives in the URL hash, which is never sent to the server.
 
@@ -493,8 +495,12 @@ over **every** registered tuner and checks:
 
 - Every key has a def with a docs URL, a description and a valid control/type.
 - The derived defaults lie within `rangeFor` for the default profile, for
-  each workload and for each option of every other choice field. Every preset
-  names only known keys, with values in range on all those profiles.
+  each workload, for each option of every other choice field, and for each
+  `samples` value of a text field (an old kernel version) with every
+  workload. Every preset names only known keys with values in range on the
+  default profile; elsewhere `presetParams` (what `applyPreset` uses) holds
+  it to the profile's range, so a zram preset's swappiness 133 reaches a 4.15
+  kernel as 100.
 - `encodeState` → `restoreState` round-trips. A tampered hash (out-of-range
   value, unknown preset, injected profile string) is rejected or clamped.
 - The defaults and every preset generate a config with no blocking issues,
@@ -519,6 +525,34 @@ an unlisted enum option or a tuple of the wrong length rejects the link, and
 the fuzz builds edge values of each def's own shape so they reach the clamp.
 The page-mount check stubs every graph tab's component, by its SFC name.
 A section with no visible key for the profile is not rendered.
+
+### VM tests
+
+The unit tests prove we generate what we intend; `npm run test:vm` proves it
+does what we claim. Each `vm/*.vm.test.js` boots a throwaway QEMU VM from a
+distribution cloud image (Debian 11 and 13, Ubuntu 18.04 and 24.04, Fedora),
+applies every sysctl tuner's file for each workload and preset with
+`sysctl -p`, reads every key back, loads every systemd drop-in through
+`daemon-reexec` with no PID 1 warning, reboots, and probes the security
+claims as an unprivileged user (perf, bpf, kallsyms, `%pK`). They take 10 to
+20 minutes, need QEMU, and run by hand rather than in CI; run them after
+changing a range, a default, a preset or an apply instruction.
+[vm/README.md](vm/README.md) has the setup, and `vm/lib/images.mjs` records
+what each distribution was measured to do. A claim about kernel or distro
+behaviour goes in only once a VM has shown it; facts found that way so far:
+
+- `watermark_scale_factor` takes up to 1000 before 5.17. Swappiness above 100
+  needs 5.8.
+- `kptr_restrict = 0` hashes `%pK` from 4.15, not 5.2.
+- Before 4.19 the TCP conntrack keys come with `nf_conntrack_ipv4`.
+- systemd-sysctl expands `conf.*` globs from systemd 245; procps from 4.0.
+- NetworkManager resets each managed interface's `rp_filter` to 2, and apport
+  (Ubuntu) resets `fs.suid_dumpable` to 2 at start, both after sysctl.d runs.
+- Debian 11 and Ubuntu 18.04 kernels carry `unprivileged_bpf_disabled = 2`
+  before 5.13, and Ubuntu 18.04 blocks perf at 3 like Debian.
+- systemd 258 removed `DefaultCPUAccounting=`; on cgroup v2 it was a no-op,
+  so it is written for cgroup v1 only. `MemorySwapMax=` works on v2 only, and
+  systemd 237 rejects 0, so it is left out on v1.
 
 ### Guardrails
 

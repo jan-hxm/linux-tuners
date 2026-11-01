@@ -54,6 +54,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('#')
   lines.push(...oneWayBlock(hardware, params))
   lines.push(...interfaceBlock(hardware, params))
+  lines.push(...apportBlock(params))
   lines.push('# Sources:')
   lines.push('#   Kernel sysctl docs: https://docs.kernel.org/admin-guide/sysctl/')
   lines.push('#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html')
@@ -89,6 +90,19 @@ function oneWayBlock(hw, params) {
   ]
 }
 
+/** Ubuntu's crash reporter raises suid_dumpable again after boot. */
+function apportBlock(params) {
+  if (params.suid_dumpable !== 0) return []
+  return [
+    '# UBUNTU: apport sets fs.suid_dumpable to 2 each time it starts, which',
+    '# is after this file is applied. To keep 0, turn apport off:',
+    '#   sudo systemctl disable --now apport',
+    '#',
+    rule(),
+    '#',
+  ]
+}
+
 /**
  * The all/default caveat for the per-interface network keys. IPv4 copies a
  * conf.default write to existing interfaces whose own value was never set;
@@ -117,6 +131,8 @@ function interfaceBlock(hw, params) {
       '#',
       '# Strict rp_filter: the kernel uses the higher of conf.all and the',
       '# interface value, and systemd sets every interface to 2 (loose).',
+      '# NetworkManager also sets each interface it manages back to 2 when it',
+      '# brings the connection up, so strict mode doesn\'t hold where it runs.',
     )
   }
   if (v6Redirects) {
@@ -130,11 +146,13 @@ function interfaceBlock(hw, params) {
   if (globs.length) {
     out.push(
       '#',
-      `# To cover every interface, add ${globs.length > 1 ? 'these lines' : 'this line'} to the end of this file.`,
-      '# systemd-sysctl, which applies the file at boot, expands globs and',
-      '# applies them to interfaces as they appear. sysctl from procps before 4.0',
-      '# rejects globs; apply with: sudo systemctl restart systemd-sysctl',
+      `# To cover every interface, add ${globs.length > 1 ? 'these lines' : 'this line'} to the end of this file:`,
       ...globs.map((g) => `#   ${g}`),
+      '# systemd 245 and newer (systemctl --version) apply them at boot and to',
+      '# each interface as it appears; apply them now with',
+      '#   sudo systemctl restart systemd-sysctl',
+      '# since sysctl from procps before 4.0 rejects them. Older systemd skips',
+      '# them: name each interface instead, e.g. net.ipv4.conf.eth0.rp_filter.',
     )
   }
   out.push('#', rule(), '#')
@@ -158,7 +176,7 @@ function commentFor(def, value, hw) {
   switch (def.key) {
     case 'kptr_restrict':
       return [
-        hw.kernel === 'current' ? 'kernel pointers hashed' : 'kernel pointers hashed on 5.2+, shown in full before',
+        hw.kernel === 'legacy' ? 'kernel pointers hashed on 4.15+, shown in full before' : 'kernel pointers hashed',
         'kernel pointers hidden without CAP_SYSLOG',
         'kernel pointers hidden from everyone',
       ][value]
@@ -169,7 +187,7 @@ function commentFor(def, value, hw) {
         'users may collect CPU-wide perf events',
         'users may profile their own processes, kernel included',
         'users may profile the user space of their own processes',
-        'no unprivileged perf on Debian and Android kernels, otherwise same as 2',
+        'no unprivileged perf on Debian, Android and older Ubuntu kernels, otherwise same as 2',
         'no unprivileged perf on Debian, Ubuntu and Android kernels, otherwise same as 2',
       ][value]
     case 'ptrace_scope':

@@ -13,6 +13,18 @@ function gen(workload = 'general', overrides = {}, hwOverrides = {}) {
 }
 
 describe('systemd generateConfig', () => {
+  // Measured in VMs: systemd 258 logs that it ignores DefaultCPUAccounting=,
+  // and systemd 237 on cgroup v1 rejects MemorySwapMax=0 (vm/README.md).
+  it('writes the cgroup-version-specific directives only where they work', () => {
+    const v2 = gen('database')
+    expect(v2).not.toMatch(/^DefaultCPUAccounting=/m)
+    expect(v2).toMatch(/^MemorySwapMax=0$/m)
+    const v1 = gen('database', {}, { cgroupVersion: 'v1' })
+    expect(v1).toMatch(/^DefaultCPUAccounting=(yes|no)$/m)
+    expect(v1).not.toMatch(/^MemorySwapMax=/m)
+    expect(v1).toContain('# MemorySwapMax: left out, it needs cgroup v2')
+  })
+
   it('emits both drop-in files with their target paths', () => {
     const out = gen('general')
     expect(out).toContain('/etc/systemd/system.conf.d/99-resource-tuning.conf')

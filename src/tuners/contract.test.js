@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest'
 import { compressToEncodedURIComponent } from 'lz-string'
 import { TUNER_DOMAINS } from './domains.js'
 import { assertTuner } from '@/core/defineTuner.js'
-import { restoreState } from '@/core/createTunerStore.js'
+import { restoreState, presetParams } from '@/core/createTunerStore.js'
 import { parseRichText } from '@/ui/richText.js'
 import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
 import { differingKeys, valueTypeOf } from '@/core/valueTypes.js'
@@ -44,15 +44,23 @@ function isValidValue(domain, key, value, hw) {
 
 // ── State builders ──────────────────────────────────────────────────────────
 
-/** The default profile, each workload, and each option of every other choice field. */
+/**
+ * The default profile, each workload, each option of every other choice
+ * field, and each `samples` value of a text field (such as an old kernel
+ * version) with every workload.
+ */
 function profilesFor(domain) {
   const variants = domain.profile.fields
     .filter((f) => f.type === 'choice' && f.key !== domain.workloadField)
     .flatMap((f) => f.options.filter((o) => o.value !== f.default).map((o) => ({ ...domain.defaultHardware, [f.key]: o.value })))
+  const samples = domain.profile.fields
+    .filter((f) => f.samples)
+    .flatMap((f) => f.samples.flatMap((v) => domain.workloads.map((w) => ({ ...domain.defaultHardware, [domain.workloadField]: w, [f.key]: v }))))
   return [
     domain.defaultHardware,
     ...domain.workloads.map((w) => ({ ...domain.defaultHardware, [domain.workloadField]: w })),
     ...variants,
+    ...samples,
   ]
 }
 
@@ -67,10 +75,6 @@ function emittedNames(def) {
   return [def.sysctlName.split(' ')[0], ...(def.alsoSets ?? [])]
 }
 
-/** The same merge the store's applyPreset does. */
-function presetParams(domain, hw, preset) {
-  return { ...domain.deriveDefaults(hw), ...preset.values }
-}
 
 function configFor(domain, { hardware, params, activePreset = null }) {
   const preset = activePreset ? domain.presetsById[activePreset] : null
@@ -89,7 +93,7 @@ function legitimateStates(domain) {
   for (const hardware of profilesFor(domain)) {
     states.push({ hardware, params: domain.deriveDefaults(hardware), activePreset: null })
     for (const preset of domain.presets) {
-      states.push({ hardware, params: presetParams(domain, hardware, preset), activePreset: preset.id })
+      states.push({ hardware, params: presetParams(domain, hardware, preset.values), activePreset: preset.id })
     }
   }
   return states
@@ -307,13 +311,19 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
       },
     )
 
-    it('has presets that name only known keys with values valid on every profile', () => {
+    // A preset may name a value an older kernel lacks (swappiness 133 for
+    // zram): applyPreset holds it to the profile's range there.
+    it('has presets that name only known keys, valid on the default profile and held in range on every other', () => {
       for (const preset of domain.presets) {
         expect(preset.label && preset.description && preset.source, preset.id).toBeTruthy()
         for (const [key, value] of Object.entries(preset.values)) {
           expect(domain.parameterKeys, `${preset.id}.${key}`).toContain(key)
-          for (const hw of profilesFor(domain)) {
-            expect(isValidValue(domain, key, value, hw), `${preset.id}.${key} = ${value} on ${JSON.stringify(hw)}`).toBe(true)
+          expect(isValidValue(domain, key, value, domain.defaultHardware), `${preset.id}.${key} = ${value}`).toBe(true)
+        }
+        for (const hw of profilesFor(domain)) {
+          const params = presetParams(domain, hw, preset.values)
+          for (const key of domain.parameterKeys) {
+            expect(isValidValue(domain, key, params[key], hw), `${preset.id}.${key} = ${params[key]} on ${JSON.stringify(hw)}`).toBe(true)
           }
         }
       }

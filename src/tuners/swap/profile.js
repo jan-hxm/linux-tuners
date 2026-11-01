@@ -87,6 +87,9 @@ export const PROFILE = {
       placeholder: 'e.g. 6.6',
       // Echoed into the generated config, so a link must not carry anything else.
       pattern: /^[\w.+-]{0,32}$/,
+      // Old kernels the contract tests sample: 4.15 caps swappiness at 100
+      // and watermark_scale_factor at 1000, 5.10 only the latter.
+      samples: ['4.15', '5.10'],
       invalidMessage: 'Use up to 32 letters, digits, dots, dashes or plus signs, e.g. 6.6.',
       help: [
         'Sets the swappiness slider range: 0–200 on kernel 5.8+, 0–100 before. Left blank, we assume a modern (≥5.8) kernel.',

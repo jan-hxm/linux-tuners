@@ -101,7 +101,7 @@ export const PARAMETER_DEFS = [
     longDesc: [
       "The kernel wakes its background reclaim thread (kswapd) when free memory falls to the 'low' watermark, and lets it sleep again once memory recovers to the 'high' watermark. This factor sets how far apart those two lines sit: the runway kswapd has to free memory quietly in the background before your processes are dragged into slow direct reclaim themselves.",
       "A wider window matters because it lets kswapd start earlier and reclaim more per pass, so a sudden burst of allocations gets absorbed in the background instead of stalling the workload. That's why latency-sensitive and high-allocation-rate services widen it; the only cost is the kernel keeps a little more memory free at all times.",
-      "The value is in tenths of a percent of total managed memory, so 10 means 0.1%. Raising it to 500–2000 is a common aggressive setting for latency-sensitive nodes. On a 16 GiB host that widens the reclaim window from about 16 MiB at the default to roughly 3.2 GiB at 2000.",
+      "The value is in hundredths of a percent of total managed memory, so 10 means 0.1%. Raising it to 500–2000 is a common aggressive setting for latency-sensitive nodes. On a 16 GiB host that widens the reclaim window from about 16 MiB at the default to roughly 3.2 GiB at 2000. Kernels before 5.17 accept at most 1000.",
     ],
     tuningTip: 'Bump it up when allocation bursts cause reclaim stalls; lower it to hand idle reserve memory back to apps.',
     kernelDocsUrl: `${KERNEL_VM_BASE}#watermark-scale-factor`,

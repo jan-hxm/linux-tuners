@@ -111,6 +111,27 @@ export function rangeFor(key, hw) {
   return { min: def.kernelMin, max: def.kernelMax }
 }
 
+/**
+ * DefaultCPUAccounting= only matters on cgroup v1. On v2 the kernel (4.15+)
+ * reports CPU time without the cpu controller, systemd treats the option as a
+ * no-op, and systemd 258 removed it (it logs that it ignores the line).
+ *
+ * @param {import('./profile.js').SystemdSpec} hw
+ */
+export function hasCpuAccountingOption(hw) {
+  return hw.cgroupVersion === 'v1'
+}
+
+/**
+ * MemorySwapMax= exists only on the cgroup v2 hierarchy; on v1 systemd ignores
+ * it (and systemd 237 even rejects the value 0 there).
+ *
+ * @param {import('./profile.js').SystemdSpec} hw
+ */
+export function hasSwapControl(hw) {
+  return hw.cgroupVersion === 'v2'
+}
+
 /** The CPUQuota value that means "no limit" for the given core count. */
 export function cpuQuotaNoLimit(hw) {
   return Math.max(1, hw.cpuCores) * 100

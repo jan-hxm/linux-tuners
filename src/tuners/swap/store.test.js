@@ -59,4 +59,12 @@ describe('tuner store — applyPreset', () => {
     store.applyPreset('database', { swappiness: 1 })
     expect(store.activePreset).toBe('database')
   })
+
+  it('holds preset values to what the profile kernel accepts', () => {
+    const store = useTunerStoreFor(swapDomain)
+    store.setHardware({ ...store.hardware, kernelVersion: '4.15' })
+    store.applyPreset('k8s-zram', { swappiness: 133, watermark_scale_factor: 2000 })
+    expect(store.params.swappiness).toBe(100)
+    expect(store.params.watermark_scale_factor).toBe(1000)
+  })
 })

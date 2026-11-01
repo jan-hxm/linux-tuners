@@ -19,3 +19,6 @@ Thumbs.db
 # Local-only notes (account details, business state, open security findings).
 # The repo is public; see CLAUDE.md → "Private notes".
 PRIVATE.md
+
+# VM test images, overlays and the SSH key (vm/README.md)
+vm/.cache/

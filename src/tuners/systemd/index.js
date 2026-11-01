@@ -7,7 +7,7 @@
 import { defineTuner } from '@/core/defineTuner.js'
 import { PROFILE } from './profile.js'
 import { SYSTEMD_KEYS, SYSTEMD_DEFS_BY_KEY, SYSTEMD_RESOURCE_DOCS } from './defs.js'
-import { deriveDefaults, rangeFor, cpuQuotaNoLimit } from './calculations.js'
+import { deriveDefaults, rangeFor, cpuQuotaNoLimit, hasCpuAccountingOption, hasSwapControl } from './calculations.js'
 import { validate, hasBlockingIssue } from './validation.js'
 import { generateConfig } from './config.js'
 import { SYSTEMD_PRESETS, SYSTEMD_PRESETS_BY_ID } from './presets.js'
@@ -120,6 +120,9 @@ export const systemdDomain = defineTuner({
   outputFilename: 'systemd-resource-tuning.conf',
   defaultTab: 'cpu',
   graphTabs: GRAPH_TABS,
+  visibleKeys: (section, _params, hw) =>
+    section.keys.filter((k) =>
+      (k !== 'default_cpu_accounting' || hasCpuAccountingOption(hw)) && (k !== 'memory_swap_max' || hasSwapControl(hw))),
   simulation,
   workloads: ['container-host', 'kubernetes', 'database', 'general', 'desktop'],
   workloadField: 'workload',

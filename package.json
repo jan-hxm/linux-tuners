@@ -11,7 +11,8 @@
     "gen:icons": "node scripts/generate-icons.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:vm": "vitest run --config vitest.vm.config.js"
   },
   "dependencies": {
     "chart.js": "^4.6.1",

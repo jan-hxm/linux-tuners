@@ -13,6 +13,8 @@
  *   selected option's note).
  * - `text`: `pattern` (a RegExp), optional `placeholder`, `help` and
  *   `invalidMessage`. A `null` default makes the field optional: blank is null.
+ *   Optional `samples`: values the contract tests try with every workload,
+ *   for a field (such as a kernel version) that changes the ranges.
  *
  * Any field may set `half: true` (consecutive halves share a row) and
  * `disabledWhen: { field, equals }` with a `disabledNote`.

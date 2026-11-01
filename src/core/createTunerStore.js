@@ -93,12 +93,13 @@ export function defineTunerStore(id, domain) {
        * Snap all parameters to a preset's values. Resets to hardware-derived
        * defaults first, then layers the preset's partial values over that, so
        * parameters the preset doesn't mention return to their hardware default.
+       * Values the profile's kernel can't take are held to its range.
        *
        * @param {string} id
        * @param {Object} values
        */
       applyPreset(id, values) {
-        this.params = { ...domain.deriveDefaults(this.hardware), ...values }
+        this.params = presetParams(domain, this.hardware, values)
         this.activePreset = id
         this.syncUrl()
       },
@@ -173,6 +174,36 @@ function restoreFromUrlHash(domain) {
 }
 
 /**
+ * Hold every value to the range the profile allows, as a slider drag would.
+ *
+ * @param {import('@/core/types.js').TunerDomain} domain
+ * @param {Object} hardware
+ * @param {Object} params
+ */
+export function clampToProfile(domain, hardware, params) {
+  const out = { ...params }
+  for (const key of Object.keys(out)) {
+    const def = domain.defsByKey[key]
+    out[key] = valueTypeOf(def).clamp(out[key], def, domain.rangeFor(key, hardware))
+  }
+  return out
+}
+
+/**
+ * The params a preset gives on a profile: its values over the profile's
+ * defaults, held to the profile's ranges. A preset written for current
+ * kernels (swappiness 133 for zram) must not reach an older one as a value
+ * it rejects.
+ *
+ * @param {import('@/core/types.js').TunerDomain} domain
+ * @param {Object} hardware
+ * @param {Object} values  The preset's partial values
+ */
+export function presetParams(domain, hardware, values) {
+  return clampToProfile(domain, hardware, { ...domain.deriveDefaults(hardware), ...values })
+}
+
+/**
  * Decode a shared-link hash and hold it to what the UI itself could produce.
  *
  * @param {import('@/core/types.js').TunerDomain} domain
@@ -185,10 +216,7 @@ export function restoreState(domain, hash) {
   // decodeState already parsed each value strictly by its type (an int is
   // rounded: `vm.swappiness = 60.5` is rejected by sysctl). Hold it to the
   // same range a slider drag would.
-  for (const key of Object.keys(restored.params)) {
-    const def = domain.defsByKey[key]
-    restored.params[key] = valueTypeOf(def).clamp(restored.params[key], def, domain.rangeFor(key, restored.hardware))
-  }
+  restored.params = clampToProfile(domain, restored.hardware, restored.params)
   // Only a real preset id: presetsById is a plain object, so a name like
   // 'toString' would otherwise resolve to an inherited function.
   if (restored.activePreset !== null && !Object.hasOwn(domain.presetsById, restored.activePreset)) {

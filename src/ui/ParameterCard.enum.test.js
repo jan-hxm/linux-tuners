@@ -68,6 +68,18 @@ describe('ParameterCard with an enum def', () => {
     expect(wrapper.find('select').element.value).toBe('bbr')
   })
 
+  it('lists only the options the range allows, and the store holds the value to them', async () => {
+    const narrowed = { ...domain, rangeFor: () => ({ min: 0, max: 0, options: ['cubic'] }) }
+    store = defineTunerStore('fixture-narrow', narrowed)()
+    const wrapper = mount(ParameterCard, {
+      props: { paramKey: 'cc' },
+      global: { provide: { [TUNER_STORE_KEY]: store, [TUNER_DOMAIN_KEY]: narrowed } },
+    })
+    expect(wrapper.find('select').findAll('option').map((o) => o.text())).toEqual(['CUBIC'])
+    store.setParam('cc', 'bbr')
+    expect(store.params.cc).toBe('cubic')
+  })
+
   it('ignores an unlisted value', () => {
     store.setParam('cc', 'bbr')
     store.setParam('cc', 'reno')

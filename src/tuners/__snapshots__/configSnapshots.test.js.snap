@@ -1,5 +1,746 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`generated config: block-io > database / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Database, BFQ and Kyber available
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# queue/read_ahead_kb is left out at 128 KiB, so a device the kernel
+# starts higher keeps its value (Fedora 43 starts virtio disks at 8192).
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none""
+`;
+
+exports[`generated config: block-io > database / interactive 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Database, BFQ and Kyber available
+# Profile: Interactive (BFQ)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# queue/read_ahead_kb is left out at 128 KiB, so a device the kernel
+# starts higher keeps its value (Fedora 43 starts virtio disks at 8192).
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: bfq - the I/O scheduler
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="bfq""
+`;
+
+exports[`generated config: block-io > database / sequential 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Database, BFQ and Kyber available
+# Profile: Large sequential reads
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
+
+# ── Read-ahead & merging ────────────────────────────────────────────────────
+# read_ahead_kb: 4096 - KiB read ahead on sequential reads
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/read_ahead_kb}="4096""
+`;
+
+exports[`generated config: block-io > desktop / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Desktop or laptop, BFQ and Kyber available
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# queue/read_ahead_kb is left out at 128 KiB, so a device the kernel
+# starts higher keeps its value (Fedora 43 starts virtio disks at 8192).
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none""
+`;
+
+exports[`generated config: block-io > desktop / interactive 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Desktop or laptop, BFQ and Kyber available
+# Profile: Interactive (BFQ)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# queue/read_ahead_kb is left out at 128 KiB, so a device the kernel
+# starts higher keeps its value (Fedora 43 starts virtio disks at 8192).
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: bfq - the I/O scheduler
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="bfq""
+`;
+
+exports[`generated config: block-io > desktop / sequential 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Desktop or laptop, BFQ and Kyber available
+# Profile: Large sequential reads
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
+
+# ── Read-ahead & merging ────────────────────────────────────────────────────
+# read_ahead_kb: 4096 - KiB read ahead on sequential reads
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/read_ahead_kb}="4096""
+`;
+
+exports[`generated config: block-io > server / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Server or cloud VM, BFQ and Kyber available
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# queue/read_ahead_kb is left out at 128 KiB, so a device the kernel
+# starts higher keeps its value (Fedora 43 starts virtio disks at 8192).
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none""
+`;
+
+exports[`generated config: block-io > server / defaults 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Server or cloud VM, BFQ and Kyber available
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# queue/read_ahead_kb is left out at 128 KiB, so a device the kernel
+# starts higher keeps its value (Fedora 43 starts virtio disks at 8192).
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none""
+`;
+
+exports[`generated config: block-io > server / interactive 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Server or cloud VM, BFQ and Kyber available
+# Profile: Interactive (BFQ)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# queue/read_ahead_kb is left out at 128 KiB, so a device the kernel
+# starts higher keeps its value (Fedora 43 starts virtio disks at 8192).
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: bfq - the I/O scheduler
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="bfq""
+`;
+
+exports[`generated config: block-io > server / interactive 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Server or cloud VM, BFQ and Kyber available
+# Profile: Interactive (BFQ)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# queue/read_ahead_kb is left out at 128 KiB, so a device the kernel
+# starts higher keeps its value (Fedora 43 starts virtio disks at 8192).
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: bfq - the I/O scheduler
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="bfq""
+`;
+
+exports[`generated config: block-io > server / sequential 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Server or cloud VM, BFQ and Kyber available
+# Profile: Large sequential reads
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
+
+# ── Read-ahead & merging ────────────────────────────────────────────────────
+# read_ahead_kb: 4096 - KiB read ahead on sequential reads
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/read_ahead_kb}="4096""
+`;
+
+exports[`generated config: block-io > server / sequential 2`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, Server or cloud VM, BFQ and Kyber available
+# Profile: Large sequential reads
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
+
+# ── Read-ahead & merging ────────────────────────────────────────────────────
+# read_ahead_kb: 4096 - KiB read ahead on sequential reads
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/read_ahead_kb}="4096""
+`;
+
+exports[`generated config: block-io > streaming / defaults 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, File, media or backup server, BFQ and Kyber available
+# Profile: custom
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
+
+# ── Read-ahead & merging ────────────────────────────────────────────────────
+# read_ahead_kb: 1024 - KiB read ahead on sequential reads
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/read_ahead_kb}="1024""
+`;
+
+exports[`generated config: block-io > streaming / interactive 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, File, media or backup server, BFQ and Kyber available
+# Profile: Interactive (BFQ)
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# queue/read_ahead_kb is left out at 128 KiB, so a device the kernel
+# starts higher keeps its value (Fedora 43 starts virtio disks at 8192).
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: bfq - the I/O scheduler
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="bfq""
+`;
+
+exports[`generated config: block-io > streaming / sequential 1`] = `
+"# ────────────────────────────────────────────────────────────────────────────
+# Linux block I/O queue settings, as udev rules
+# Generated 2026-01-01 by linux-tuners.dev/block-io
+# System: NVMe SSD, File, media or backup server, BFQ and Kyber available
+# Profile: Large sequential reads
+# ────────────────────────────────────────────────────────────────────────────
+#
+# The rules below apply to every NVMe namespace (nvme0n1, nvme1n1, ...),
+# at boot, when one is plugged in, and when the rules are triggered.
+#
+# HOW TO APPLY THESE SETTINGS
+#
+# 1. Persist them. Save this whole file as a rules file:
+#      sudo nano /etc/udev/rules.d/99-block-tuning-nvme.rules   # then paste this file
+#
+# 2. Apply them now, without rebooting:
+#      sudo udevadm control --reload
+#      sudo udevadm trigger --action=change --subsystem-match=block
+#      sudo udevadm settle
+#
+# 3. Verify they took effect, and that udev wrote every value:
+#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
+#      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# NOTES
+#
+# udev writes each value when the rule runs. A value the kernel refuses,
+# such as a scheduler it lacks, is logged ("Failed to write") and
+# skipped; the rest still apply.
+#
+# queue/nr_requests is left out, so it keeps the value the kernel sets
+# with the scheduler: twice the queue depth, at most 256.
+#
+# ────────────────────────────────────────────────────────────────────────────
+#
+# Sources:
+#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html
+#   BFQ:              https://docs.kernel.org/block/bfq-iosched.html
+#   udev rules:       https://www.freedesktop.org/software/systemd/man/latest/udev.html
+
+# ── I/O scheduler ───────────────────────────────────────────────────────────
+# scheduler: none - no scheduler: the device orders requests
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
+
+# ── Read-ahead & merging ────────────────────────────────────────────────────
+# read_ahead_kb: 4096 - KiB read ahead on sequential reads
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/read_ahead_kb}="4096""
+`;
+
 exports[`generated config: filesystem > container / defaults 1`] = `
 "# ────────────────────────────────────────────────────────────────────────────
 # Linux filesystem and file-descriptor sysctls

@@ -169,16 +169,27 @@ export const TUNERS = [
       jsonLdType: 'SoftwareApplication',
     },
   },
+  {
+    id: 'block-io',
+    status: 'live',
+    path: '/block-io',
+    navLabel: 'Block I/O',
+    title: 'Block I/O & storage',
+    blurb: 'Pick the I/O scheduler, request depth, read-ahead and merging for NVMe, SATA and virtual disks, written as udev rules that apply at boot and on hotplug.',
+    keys: ['queue/scheduler', 'queue/nr_requests', 'queue/read_ahead_kb', 'queue/nomerges', '…'],
+    route: {
+      title: 'Block I/O & storage tuner | linux-tuners.dev',
+      description:
+        'Disk- and workload-aware tuner for Linux block queue settings: the I/O scheduler (none, mq-deadline, BFQ, Kyber), nr_requests, read_ahead_kb, nomerges and rotational for NVMe, SATA SSDs, hard disks and virtio disks. Knows which kernels lack BFQ and what Fedora sets, and writes a commented udev rules file.',
+      ogTitle: 'Block I/O & storage tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+  },
   // Roadmap toward the whole sysctl tree plus the key sysfs runtime tunables,
   // grouped by what an operator tunes together (e.g. hardening keys from
   // kernel/net/fs live in one "Security hardening" tuner).
-  {
-    id: 'block-io',
-    status: 'planned',
-    title: 'Block I/O & storage',
-    blurb: 'Tune the block layer through sysfs for storage-bound workloads, covering the per-device I/O scheduler, queue depth, and read-ahead.',
-    keys: ['/sys/block/<dev>/queue/scheduler', 'nr_requests', 'read_ahead_kb', '…'],
-  },
   {
     id: 'cpu-power',
     status: 'planned',

@@ -39,6 +39,11 @@ const filesystem = TUNER_DOMAINS.find((d) => d.id === 'filesystem')
 const hugepages = TUNER_DOMAINS.find((d) => d.id === 'hugepages')
 const ipc = TUNER_DOMAINS.find((d) => d.id === 'sysv-ipc')
 const kernel = TUNER_DOMAINS.find((d) => d.id === 'kernel')
+const blockIo = TUNER_DOMAINS.find((d) => d.id === 'block-io')
+
+// Disks besides the virtio root disk, so each block I/O device class exists:
+// an NVMe drive, and a SATA SSD and hard disk on the q35 AHCI controller.
+const EXTRA_DISKS = ['nvme,serial=lt0001', 'ide-hd,bus=ide.1,rotation_rate=1', 'ide-hd,bus=ide.2,rotation_rate=7200']
 
 /** `key = value` lines of a sysctl.d file, comments skipped. */
 export function sysctlLines(content) {
@@ -56,9 +61,12 @@ export function tmpfilesWrites(content) {
     .map((m) => ({ path: m[1], value: m[2] }))
 }
 
-/** Every workload's defaults and every preset, generated for this image. */
-function cases(domain, image) {
-  const base = { ...domain.defaultHardware, ...image.profile[domain.id] }
+/**
+ * Every workload's defaults and every preset, generated for this image.
+ * `extra` sets more profile fields (the block I/O device class).
+ */
+function cases(domain, image, extra = {}) {
+  const base = { ...domain.defaultHardware, ...image.profile[domain.id], ...extra }
   const out = []
   for (const workload of domain.workloads) {
     const hardware = { ...base, [domain.workloadField]: workload }
@@ -67,7 +75,7 @@ function cases(domain, image) {
       // What the page gives after picking the preset on this profile.
       const params = presetParams(domain, hardware, v.values)
       const files = domain.generateConfig({ hardware, params, presetLabel: v.label, customised: false, now: NOW })
-      out.push({ name: `${domain.id} ${workload} ${v.id}`, domain, hardware, params, files })
+      out.push({ name: [domain.id, ...Object.values(extra), workload, v.id].join(' '), domain, hardware, params, files })
     }
   }
   return out
@@ -96,6 +104,45 @@ async function applyFile(vm, file) {
   const cmd = file.path.startsWith('/etc/tmpfiles.d/') ? 'systemd-tmpfiles --create' : 'sysctl -p'
   const r = await vm.sudo(`${cmd} ${file.path}`, { check: false })
   return { code: r.code, errors: (r.stderr.trim() || (r.code ? `exit ${r.code}` : '')) }
+}
+
+/** Whole disks by block I/O device class, the way the tuner's rules match them. */
+async function blockDevices(vm) {
+  const { stdout } = await vm.run('for d in /sys/block/*; do echo "${d##*/} $(cat $d/queue/rotational)"; done')
+  const devs = { nvme: [], ssd: [], hdd: [], virtio: [] }
+  for (const [name, rot] of stdout.trim().split('\n').map((l) => l.split(' '))) {
+    if (/^nvme\d+n\d+$/.test(name)) devs.nvme.push(name)
+    else if (/^sd[a-z]+$/.test(name)) devs[rot === '0' ? 'ssd' : 'hdd'].push(name)
+    else if (/^vd[a-z]+$/.test(name)) devs.virtio.push(name)
+  }
+  return devs
+}
+
+/**
+ * Install a udev rules file and apply it the way the file says: reload,
+ * trigger a change event, settle. Returns the "Failed to write" lines udev
+ * logged for it.
+ */
+async function udevApply(vm, file) {
+  const name = file.path.split('/').pop()
+  const failures = async () => (await vm.sudo(`journalctl -b -u systemd-udevd -o cat --no-pager | grep "${name}.*Failed to write" || true`)).stdout.trim().split('\n').filter(Boolean)
+  const before = await failures()
+  await vm.writeFile(file.path, file.content)
+  await vm.sudo('udevadm control --reload && udevadm trigger --action=change --subsystem-match=block && udevadm settle && sleep 1')
+  return (await failures()).slice(before.length)
+}
+
+/** The rules' attribute writes that don't read back on every disk of the class. */
+async function udevDiff(vm, file, device) {
+  const writes = file.content.split('\n')
+    .map((l) => l.match(/ATTR\{(queue\/\w+)\}="([^"]+)"$/))
+    .filter(Boolean)
+  const devs = (await blockDevices(vm))[device]
+  const paths = devs.flatMap((d) => writes.map(([, attr]) => `/sys/block/${d}/${attr}`))
+  const got = await vm.sysfs(paths)
+  return devs.flatMap((d) => writes
+    .filter(([, attr, value]) => got[`/sys/block/${d}/${attr}`] !== value)
+    .map(([, attr, value]) => `${d} ${attr}: wrote ${value}, reads ${got[`/sys/block/${d}/${attr}`]}`))
 }
 
 /** The tmpfiles.d writes whose /sys file doesn't read back as written. */
@@ -141,7 +188,7 @@ export function imageSuite(id) {
       // The network tuner's conntrack keys exist only with the module loaded,
       // which the profile's "conntrack in use" means. Again after each reboot.
       vm.afterBoot = (v) => v.sudo(image.expect.conntrackIpv4 ? 'modprobe nf_conntrack && modprobe nf_conntrack_ipv4' : 'modprobe nf_conntrack')
-      await vm.start({ memory: 3072 })
+      await vm.start({ memory: 3072, disks: EXTRA_DISKS })
       nic = await vm.nic()
     })
     afterAll(() => vm.stop())
@@ -540,6 +587,71 @@ libc.syscall(250, 7, -4)
       })
     })
 
+    describe.runIf(image.profile['block-io'])('block I/O claims and rules', () => {
+      const hw = { ...blockIo.defaultHardware, ...image.profile['block-io'] }
+      const sys = (dev, attr) => `/sys/block/${dev}/queue/${attr}`
+
+      it('each kind of disk starts with the read-ahead the drawer says, and the lsblk check works', async () => {
+        const devs = await blockDevices(vm)
+        expect(Object.keys(devs).filter((k) => devs[k].length).sort()).toEqual([...image.expect.disks].sort())
+        for (const device of image.expect.disks) {
+          const ra = (await vm.sysfs([sys(devs[device][0], 'read_ahead_kb')]))[sys(devs[device][0], 'read_ahead_kb')]
+          expect(ra, device).toBe(image.expect.readAhead[device] ?? '128')
+        }
+        const r = await vm.run('lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA', { check: false })
+        expect(r.code, r.stderr).toBe(0)
+      })
+
+      it('every scheduler and bound the tuner offers is accepted on every kind of disk', async () => {
+        const devs = await blockDevices(vm)
+        const rejected = []
+        const write = async (dev, attr, v) => {
+          const r = await vm.sudo(`echo ${v} > ${sys(dev, attr)}`, { check: false })
+          if (r.code) rejected.push(`${dev} ${attr}=${v}: ${r.stderr.trim()}`)
+        }
+        for (const device of image.expect.disks) {
+          const dev = devs[device][0]
+          const before = (await vm.sysfs([sys(dev, 'scheduler')]))[sys(dev, 'scheduler')]
+          for (const s of blockIo.rangeFor('scheduler', hw).options) await write(dev, 'scheduler', s)
+          await write(dev, 'scheduler', 'mq-deadline')
+          const { max } = blockIo.rangeFor('nr_requests', hw)
+          for (const v of [4, max]) await write(dev, 'nr_requests', v)
+          // One past the top is refused: the range ends where the kernel does.
+          expect((await vm.sudo(`echo ${max + 4} > ${sys(dev, 'nr_requests')}`, { check: false })).code, dev).not.toBe(0)
+          for (const v of [0, blockIo.rangeFor('read_ahead_kb', hw).max, 128]) await write(dev, 'read_ahead_kb', v)
+          for (const v of [1, 2, 0]) await write(dev, 'nomerges', v)
+          await write(dev, 'scheduler', before)
+        }
+        // The kernel lacks the schedulers the profile leaves out.
+        if (hw.schedulers === 'basic') {
+          expect((await vm.sudo(`echo bfq > ${sys(devs.nvme[0], 'scheduler')}`, { check: false })).code).not.toBe(0)
+        }
+        expect(rejected).toEqual([])
+      })
+
+      it('rotational set at runtime leaves the writeback throttling target as it was, as the card says', async () => {
+        const dev = (await blockDevices(vm)).virtio.at(-1)
+        const read = async () => vm.sysfs([sys(dev, 'rotational'), sys(dev, 'wbt_lat_usec')])
+        const before = await read()
+        await vm.sudo(`echo 0 > ${sys(dev, 'rotational')}`)
+        const after = await read()
+        await vm.sudo(`echo 1 > ${sys(dev, 'rotational')}`)
+        expect(after[sys(dev, 'rotational')]).toBe('0')
+        expect(before[sys(dev, 'wbt_lat_usec')]).toBe('75000')
+        expect(after[sys(dev, 'wbt_lat_usec')]).toBe('75000')
+      })
+
+      const all = image.profile['block-io'] ? image.expect.disks.flatMap((device) => cases(blockIo, image, { device })) : []
+      for (const c of all) {
+        it(c.name, async () => {
+          const [file] = c.files
+          expect(await udevApply(vm, file)).toEqual([])
+          expect(await udevDiff(vm, file, c.hardware.device)).toEqual([])
+          await vm.sudo(`rm -f ${file.path}`)
+        })
+      }
+    })
+
     describe('every generated sysctl file applies and reads back', () => {
       const all = SYSCTL_TUNERS.flatMap((d) => cases(d, image))
         .map((c) => ({ ...c, lines: c.files.flatMap((f) => sysctlLines(f.content)), writes: c.files.flatMap((f) => tmpfilesWrites(f.content)) }))
@@ -631,10 +743,17 @@ libc.syscall(250, 7, -4)
       const lines = installed.flatMap((c) => c.files.flatMap((f) => sysctlLines(f.content)))
       const writes = installed.flatMap((c) => c.files.flatMap((f) => tmpfilesWrites(f.content)))
       const securityFile = installed[2].files[0]
+      // One rules file per kind of disk: SATA on a desktop (BFQ, loaded at
+      // boot where it is a module), NVMe and virtio streaming (read-ahead).
+      const blockFiles = (image.profile['block-io'] ? image.expect.disks : []).map((device) => {
+        const workload = device === 'ssd' || device === 'hdd' ? 'desktop' : 'streaming'
+        return { device, file: cases(blockIo, image, { device }).find((c) => c.hardware.workload === workload && c.name.endsWith(' defaults')).files[0] }
+      })
 
       it('every key of the swap, network, security, filesystem, huge pages, IPC and kernel defaults is set at boot', async () => {
         await vm.reboot()
         for (const c of installed) for (const f of c.files) await vm.writeFile(f.path, f.content)
+        for (const { file } of blockFiles) await vm.writeFile(file.path, file.content)
         // As the network file says, so the conntrack keys exist when the files load.
         const network = installed[1].files[0].content
         expect(network).toContain('nf_conntrack_ipv4')
@@ -665,6 +784,12 @@ libc.syscall(250, 7, -4)
         expect(await sysfsDiff(vm, writes)).toEqual([])
         expect((await vm.sudo('systemctl is-failed systemd-tmpfiles-setup.service', { check: false })).stdout.trim()).toBe('active')
         expect((await vm.run('awk \'/HugePages_Total/ {print $2}\' /proc/meminfo')).stdout.trim()).toBe('64')
+      })
+
+      it.runIf(image.profile['block-io'])('every block I/O rule applies at boot, without a failed write', async () => {
+        for (const { device, file } of blockFiles) expect(await udevDiff(vm, file, device), device).toEqual([])
+        const log = (await vm.sudo('journalctl -b -u systemd-udevd -o cat --no-pager', { check: false })).stdout
+        expect(log.split('\n').filter((l) => l.includes('99-block-tuning') && l.includes('Failed to write'))).toEqual([])
       })
 
       it('the interface caveats: what the boot interface ends up with', async () => {

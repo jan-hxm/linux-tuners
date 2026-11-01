@@ -127,8 +127,15 @@ export class VM {
     this.dir = join(RUN_DIR, this.name)
   }
 
-  /** Boot a fresh VM and wait until SSH and cloud-init are done. */
-  async start({ memory = 2048, cpus = 2, timeoutMs = 600_000 } = {}) {
+  /**
+   * Boot a fresh VM and wait until SSH and cloud-init are done.
+   *
+   * `disks` attaches blank 1 GiB disks besides the virtio root disk, each a
+   * QEMU `-device` string without its `drive=` (`nvme,serial=lt1`, or
+   * `ide-hd,bus=ide.1,rotation_rate=1` for a SATA SSD on the q35 AHCI
+   * controller), for the block I/O checks.
+   */
+  async start({ memory = 2048, cpus = 2, timeoutMs = 600_000, disks = [] } = {}) {
     const base = await ensureImage(this.id)
     const pubkey = ensureKey()
     rmSync(this.dir, { recursive: true, force: true })
@@ -146,7 +153,9 @@ export class VM {
       '-cpu', cpuModel(),
       '-m', String(memory),
       '-smp', String(cpus),
-      '-drive', `file=${this.overlay},if=virtio,format=qcow2`,
+      // bootindex keeps the firmware off the blank extra disks.
+      '-drive', `file=${this.overlay},if=none,id=root,format=qcow2`,
+      '-device', 'virtio-blk-pci,drive=root,bootindex=0',
       '-nic', `user,model=virtio-net-pci,hostfwd=tcp:127.0.0.1:${this.sshPort}-:22`,
       '-drive', `if=virtio,format=raw,readonly=on,file.driver=vvfat,file.dir=${seed},file.label=CIDATA`,
       '-display', 'none',
@@ -155,6 +164,11 @@ export class VM {
       // WHPX a warm reset hangs most guests right after GRUB.
       '-no-reboot',
     ]
+    disks.forEach((device, i) => {
+      const file = join(this.dir, `extra${i}.qcow2`)
+      sh(exe('qemu-img'), ['create', '-q', '-f', 'qcow2', file, '1G'])
+      this.args.push('-drive', `file=${file},if=none,id=extra${i},format=qcow2`, '-device', `${device},drive=extra${i}`)
+    })
     await this.launch(timeoutMs)
     await this.run('cloud-init status --wait >/dev/null 2>&1 || true', { timeoutMs: 600_000 })
     return this

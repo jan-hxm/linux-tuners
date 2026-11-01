@@ -23,14 +23,19 @@ const blocked = computed(() => blockingIssues.value.length > 0)
 
 // Multi-file tuners show every file in one text, each under a banner naming
 // its path; copy and download take that same text.
-const output = computed(() =>
-  combineFiles(domain.generateConfig({
+const files = computed(() =>
+  domain.generateConfig({
     hardware: tuner.hardware,
     params: tuner.params,
     presetLabel: presetLabel.value,
     customised: customised.value,
-  })),
+  }),
 )
+const output = computed(() => combineFiles(files.value))
+
+// One file downloads under its own name (the block I/O file depends on the
+// disk); several under the domain's combined name.
+const downloadName = computed(() => (files.value.length === 1 ? files.value[0].path.split('/').pop() : domain.outputFilename))
 
 const copyStatus = ref('idle') // 'idle' | 'ok' | 'fail'
 const shareStatus = ref('idle')
@@ -52,7 +57,7 @@ function download() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = domain.outputFilename
+  a.download = downloadName.value
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)

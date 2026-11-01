@@ -4,6 +4,7 @@ import { commentLine, fileBanner, presetSummary, sectionHeader } from './comment
 import { sysctlConfig, sysctlLine } from './sysctlFile.js'
 import { iniDirective, iniSection } from './iniDropIn.js'
 import { tmpfilesConfig, tmpfilesWrite } from './tmpfilesFile.js'
+import { udevAttrRule, udevConfig, udevMatch } from './udevRules.js'
 
 const LS = String.fromCharCode(0x2028)
 
@@ -118,6 +119,46 @@ describe('tmpfiles writer', () => {
     const lines = tmpfilesConfig({ defs, sections: [{ id: 't', title: 'T' }], params: { a: 'on', b: 7 }, comment: () => 'n', include: (d) => d.key === 'a' })
     expect(lines).toEqual([sectionHeader('T'), '# a: on - n', 'w /sys/kernel/mm/a - - - - on', ''])
     expect(() => tmpfilesConfig({ defs, sections: [{ id: 't', title: 'T' }], params: { a: 'off', b: 7 }, comment: () => 'n' })).toThrow()
+  })
+})
+
+describe('udev rules writer', () => {
+  const HDD = [['ACTION', 'add|change'], ['SUBSYSTEM', 'block'], ['KERNEL', 'sd[a-z]*'], ['ENV{DEVTYPE}', 'disk'], ['ATTR{queue/rotational}', '1']]
+
+  it('writes match clauses and one attribute assignment', () => {
+    expect(udevAttrRule(HDD, 'queue/scheduler', 'bfq')).toBe(
+      'ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="sd[a-z]*", ENV{DEVTYPE}=="disk", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"',
+    )
+    expect(udevAttrRule([['KERNEL', 'nvme[0-9]*n[0-9]*']], 'queue/scheduler', 'mq-deadline')).toMatch(/="mq-deadline"$/)
+  })
+
+  it('refuses a value that could close the quote, add a clause or substitute', () => {
+    for (const bad of ['', 'a b', 'x", RUN+="/bin/sh', '$kernel', '%k', 'a\\nb', 'x\nKERNEL=="sda"', '1,2']) {
+      expect(() => udevAttrRule(HDD, 'queue/scheduler', bad), JSON.stringify(bad)).toThrow()
+    }
+  })
+
+  it('refuses an assignment key, a substitution or a quote in the match', () => {
+    for (const clause of [['RUN', 'x'], ['PROGRAM', 'x'], ['IMPORT{program}', 'x'], ['NAME', 'x'], ['KERNEL', 'sd"'], ['KERNEL', '$name'], ['KERNEL', '%k'], ['KERNEL', 'a b'], ['ATTR{../x}', '1']]) {
+      expect(() => udevMatch([clause]), JSON.stringify(clause)).toThrow()
+    }
+    expect(() => udevMatch([])).toThrow()
+  })
+
+  it('refuses an attribute outside the device directory', () => {
+    for (const bad of ['../x', '/sys/x', 'queue/', 'queue/Scheduler', 'queue scheduler']) {
+      expect(() => udevAttrRule(HDD, bad, '1'), bad).toThrow()
+    }
+  })
+
+  it('prints sections and values through the def types', () => {
+    const defs = [
+      { key: 'a', group: 't', udevAttr: 'queue/a', type: 'enum', options: [{ value: 'on' }] },
+      { key: 'b', group: 't', udevAttr: 'queue/b' },
+    ]
+    const lines = udevConfig({ defs, sections: [{ id: 't', title: 'T' }], params: { a: 'on', b: 7 }, match: [['KERNEL', 'vd[a-z]*']], comment: () => 'n', include: (d) => d.key === 'a' })
+    expect(lines).toEqual([sectionHeader('T'), '# a: on - n', 'KERNEL=="vd[a-z]*", ATTR{queue/a}="on"', ''])
+    expect(() => udevConfig({ defs, sections: [{ id: 't', title: 'T' }], params: { a: 'off', b: 7 }, match: [['KERNEL', 'vd']], comment: () => 'n' })).toThrow()
   })
 })
 

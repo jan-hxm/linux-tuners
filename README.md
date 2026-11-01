@@ -18,8 +18,9 @@ ready-to-apply config file with citations to the source documentation.
 | [Huge pages & memory layout](https://linux-tuners.dev/hugepages) | huge page pools, Transparent Huge Pages and KSM (sysctl.d + tmpfiles.d), `vm.max_map_count`, NUMA zone reclaim |
 | [System V IPC & shared memory](https://linux-tuners.dev/sysv-ipc) | `kernel.sem`, `shmmni`, `shm_rmid_forced` and the message queue limits, with the Oracle and Db2 minimums |
 | [Kernel limits & panics](https://linux-tuners.dev/kernel) | `kernel.pid_max`, `threads-max`, key quotas for container hosts, panic and reboot behaviour, SysRq and the console loglevel |
+| [Block I/O & storage](https://linux-tuners.dev/block-io) | the I/O scheduler, request depth, read-ahead and merging for NVMe, SATA and virtio disks, as udev rules |
 
-More are planned (block I/O, CPU frequency, …). Everything runs in
+More are planned (CPU frequency, …). Everything runs in
 your browser; your settings are only stored in the URL you choose to share.
 
 ## Develop

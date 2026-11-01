@@ -14,9 +14,11 @@
 
 /**
  * A tuple's range may name one range per element in `elements`, for keys such
- * as kernel.sem whose fields take different values.
+ * as kernel.sem whose fields take different values. An enum's range may list
+ * the `options` the profile allows, for options the kernel may lack (BFQ is a
+ * module some kernels don't ship).
  *
- * @typedef {{ min: number, max: number, elements?: Range[] }} Range
+ * @typedef {{ min: number, max: number, elements?: Range[], options?: string[] }} Range
  */
 
 /** The range that holds element `i` of a tuple. */
@@ -55,11 +57,17 @@ const bool = {
 /**
  * One of `def.options[].value`, all plain tokens. An option may print as a
  * different `sysctlValue`, for keys whose values are numbers with a meaning
- * (kernel.sysrq's bitmasks), so the state and the link keep the name.
+ * (kernel.sysrq's bitmasks), so the state and the link keep the name. A range
+ * with `options` narrows the choice: clamp falls back to the default, or to
+ * the first allowed option when the default isn't one.
  */
 const enumType = {
   restore: (raw, def) => (enumValues(def).includes(raw) ? raw : undefined),
-  clamp: (v, def) => (enumValues(def).includes(v) ? v : def.kernelDefault),
+  clamp: (v, def, range) => {
+    const allowed = range?.options ?? enumValues(def)
+    if (allowed.includes(v)) return v
+    return allowed.includes(def.kernelDefault) ? def.kernelDefault : allowed[0]
+  },
   format: (v, def) => {
     const option = (def.options ?? []).find((o) => o.value === v)
     if (!option) throw new Error(`Not an option of ${def.key}: ${v}`)

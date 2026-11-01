@@ -13,7 +13,7 @@ export const IMAGES = {
     file: 'debian-13.qcow2',
     url: 'https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2',
     why: 'Debian kernel 6.12 (Debian perf patch), procps 4, systemd 257',
-    profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.12' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' } },
+    profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.12' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' }, 'block-io': { schedulers: 'all' } },
     // perfBlocksAt: lowest perf_event_paranoid at which a user can't open
     // perf events on their own process; null when no value blocks it.
     // procpsGlobs / systemdGlobs: whether sysctl -p and systemd-sysctl
@@ -27,15 +27,19 @@ export const IMAGES = {
     // built. mapCount: vm.max_map_count at boot.
     // sysrq / console: kernel.sysrq and the console loglevel at boot, from
     // the kernel build or a distro sysctl.d file.
-    expect: { perfBlocksAt: 3, procpsGlobs: true, systemdGlobs: true, nrOpen: 1073741816, watchesScale: true, thp: 'always', mapCount: 1048576, sysrq: '438', console: '7' },
+    // disks: the block I/O device classes the extra disks show up as (a
+    // cloud kernel without AHCI has no SATA). readAhead: read_ahead_kb a
+    // class starts at where it isn't 128. A profile without 'block-io'
+    // skips the block I/O checks (kernel before 5.0).
+    expect: { perfBlocksAt: 3, procpsGlobs: true, systemdGlobs: true, nrOpen: 1073741816, watchesScale: true, thp: 'always', mapCount: 1048576, sysrq: '438', console: '7', disks: ['nvme', 'ssd', 'hdd', 'virtio'], readAhead: {} },
   },
   'ubuntu-24.04': {
     file: 'ubuntu-24.04.img',
     url: 'https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img',
     why: 'Ubuntu kernel 6.8 (Ubuntu perf patch), procps 4, systemd 255',
-    profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.8' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' } },
+    profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.8' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' }, 'block-io': { schedulers: 'basic' } },
     expect: {
-      perfBlocksAt: 4, procpsGlobs: true, systemdGlobs: true, apport: true, nrOpen: 1048576, watchesScale: true, thp: 'madvise', mapCount: 1048576, sysrq: '176', console: '4',
+      perfBlocksAt: 4, procpsGlobs: true, systemdGlobs: true, apport: true, nrOpen: 1048576, watchesScale: true, thp: 'madvise', mapCount: 1048576, sysrq: '176', console: '4', disks: ['nvme', 'ssd', 'hdd', 'virtio'], readAhead: {},
       // /usr/lib/sysctl.d/99-protect-links.conf; seen once at boot, stricter.
       stricter: { 'fs.protected_regular': '2' },
     },
@@ -44,16 +48,16 @@ export const IMAGES = {
     file: 'fedora-43.qcow2',
     url: 'https://dl.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2',
     why: 'close-to-upstream kernel 6.17 (no perf patch), procps 4, systemd 258',
-    profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.17' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' } },
-    expect: { perfBlocksAt: null, procpsGlobs: true, systemdGlobs: true, networkManager: true, nrOpen: 2147483584, watchesScale: true, thp: 'madvise', mapCount: 1048576, sysrq: '16', console: '7' },
+    profile: { security: { kernel: 'current' }, swap: { kernelVersion: '6.17' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' }, 'block-io': { schedulers: 'all' } },
+    expect: { perfBlocksAt: null, procpsGlobs: true, systemdGlobs: true, networkManager: true, nrOpen: 2147483584, watchesScale: true, thp: 'madvise', mapCount: 1048576, sysrq: '16', console: '7', disks: ['nvme', 'ssd', 'hdd', 'virtio'], readAhead: { virtio: '8192', hdd: '256' } },
   },
   'debian-11': {
     file: 'debian-11.qcow2',
     url: 'https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2',
     why: 'Debian kernel 5.10 (before 5.13), procps 3.3 without glob support, systemd 247',
-    profile: { security: { kernel: 'lts' }, swap: { kernelVersion: '5.10' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' } },
+    profile: { security: { kernel: 'lts' }, swap: { kernelVersion: '5.10' }, filesystem: { systemd: 'modern' }, kernel: { systemd: 'modern' }, 'block-io': { schedulers: 'all' } },
     expect: {
-      perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: true, nrOpen: 1048576, watchesScale: true, thp: 'always', mapCount: 65530, sysrq: '438', console: '7',
+      perfBlocksAt: 3, procpsGlobs: false, systemdGlobs: true, nrOpen: 1048576, watchesScale: true, thp: 'always', mapCount: 65530, sysrq: '438', console: '7', disks: ['nvme', 'virtio'], readAhead: {},
       // /usr/lib/sysctl.d/protect-links.conf sorts after 99-*.conf.
       stricter: { 'fs.protected_regular': '2' },
     },

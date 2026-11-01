@@ -88,7 +88,7 @@ export function assertTuner(domain) {
   }
   // Ids key the Pinia store and the shared URL hash, so they're permanent.
   if (!/^[a-z][a-z0-9-]*$/.test(domain.id)) fail('id must be kebab-case')
-  if (!/^[a-z0-9][a-z0-9._-]*\.conf$/.test(domain.outputFilename)) fail('outputFilename must be a plain *.conf name')
+  if (!/^[a-z0-9][a-z0-9._-]*\.(conf|rules)$/.test(domain.outputFilename)) fail('outputFilename must be a plain *.conf or *.rules name')
 
   for (const key of domain.parameterKeys) {
     if (!Object.hasOwn(domain.defsByKey, key)) fail(`no def for key "${key}"`)

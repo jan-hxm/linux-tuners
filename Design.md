@@ -39,6 +39,7 @@ They are not one tuner per `/proc/sys` root. For example, hardening keys from
 | `/hugepages` | 9 keys: `vm.nr_hugepages`, `nr_overcommit_hugepages`; THP `enabled` and `defrag`; KSM `run`, `pages_to_scan`, `sleep_millisecs`; `vm.max_map_count`, `zone_reclaim_mode`. The THP and KSM keys are sysfs files (a def's `sysfsPath`). The pool starts at 0 and is offered up to nine tenths of RAM, since it takes RAM whether used or not; THP starts at `madvise` for every workload and KSM is on for VM hosts. Keys at a default that a distribution, the boot options or a service may already set are left out: the pools at 0, KSM off, `max_map_count` at 65530. `zone_reclaim_mode` exists only with several NUMA nodes. No kernel defaults preset, since the THP default is a kernel build choice. `vm.mmap_min_addr` is not offered: the only reason to change it is lowering it for Wine or DOSEMU, which reopens NULL-dereference exploits. No graphs. | Two files in one document: `/etc/sysctl.d/99-hugepages-tuning.conf` and `/etc/tmpfiles.d/99-hugepages-tuning.conf`, whose `w` lines set `/sys/kernel/mm` at boot |
 | `/sysv-ipc` | 6 System V IPC sysctls: `kernel.shmmni`, `shm_rmid_forced`; `kernel.sem` (SEMMSL, SEMMNS, SEMOPM, SEMMNI); `msgmni`, `msgmax`, `msgmnb`. Since 3.19 the kernel defaults pass what Oracle and Db2 ask for, apart from Db2's RAM-based counts and 64 KiB messages, so every range starts at the kernel default and only the Db2 workload raises anything. Every key is written, at the default too, so the file undoes an older guide's lower values (Oracle's minimum `kernel.sem = 250 32000 100 128` cuts SEMMNI from 32000 to 128). `kernel.shmmax` and `kernel.shmall` are not offered: their default is no limit and any value lowers it. `kernel.sem` is a tuple with one range per field (`def.elementLimits`). The worst-case memory of full message queues (`msgmni` × `msgmnb`) is shown in the formula. No graphs. | `/etc/sysctl.d/99-sysv-ipc-tuning.conf`, with notes on what is left out, the vendor minimums, and containers starting at the kernel defaults |
 | `/kernel` | 9 `kernel.*` sysctls: `pid_max`, `threads-max`; `kernel.keys.maxkeys`, `maxbytes`; `panic`, `panic_on_oops`, `softlockup_panic`, `sysrq`; `printk` (four fields). `pid_max` has a card only for systemd before 243, which raises it to 4194304 at boot. `threads-max` starts at the kernel's RAM-based value (thread stacks in an eighth of RAM) and is written only when raised, since a value below the running threads stops every fork; the formula shows the `DefaultTasksMax` systemd derives from it. Container hosts get LXD's key quotas, unattended machines reboot 10 s after a panic and panic on an oops, and every workload gets SysRq 176 and console loglevel 4. `kernel.sysrq` is an enum whose options print their bitmask (`sysctlValue`). The pre-5.13 scheduler sysctls, `sched_autogroup_enabled` (no effect under systemd's cpu controller) and the user namespace limits are not offered. No graphs. | `/etc/sysctl.d/99-kernel-tuning.conf`, with notes on what is left out, `kernel.panic` deciding every reboot, SysRq and `/proc/sysrq-trigger`, and the console loglevel |
+| `/block-io` | 5 block queue attributes under `/sys/block/<dev>/queue/`: `rotational`, `scheduler`, `nr_requests`, `read_ahead_kb`, `nomerges`. One profile is one kind of disk (NVMe, SATA SSD, hard disk, virtio), and the file applies to every disk of that kind. NVMe and virtio disks keep `none`, SATA servers get `mq-deadline` and SATA desktops BFQ; sequential workloads read 1 MiB ahead, 4 MiB on a hard disk. The profile says whether the kernel has the `bfq` and `kyber` modules, and the scheduler list follows it (an enum range's `options`). `nr_requests` has a card only with a scheduler, since without one its ceiling is the device's queue depth; at 0 it keeps the kernel's value. `rotational` has a card only for virtio disks, since the SATA rules match on it. `read_ahead_kb` is left out at 128 and `nomerges` at 0, so a kernel that starts a device higher keeps its value. Targets kernel 5.0+. No graphs. | `/etc/udev/rules.d/99-block-tuning-<kind>.rules`, one `ATTR{}` write per rule, with notes on refused writes, Fedora's BFQ rule, the legacy block layer before 5.0, and what is left out |
 
 The planned tuners and their order are listed in [TODO.md](TODO.md).
 
@@ -289,7 +290,7 @@ must follow them, and existing UI must not regress.
 
 **Goal:** adding a tuner touches its own folder plus one registry entry. Most
 of the effort should go into *data* (parameter defs, presets, docs and copy),
-not plumbing. Eight tuners are shipped and about two are planned, so anything
+not plumbing. Nine tuners are shipped and about one is planned, so anything
 written twice gets written ten times. Duplication is the main risk.
 
 ### Layers and dependency direction
@@ -371,7 +372,10 @@ so that a new variant is an addition rather than an edit to shared code.
   integers, for `tcp_rmem` or `kernel.sem`). The network tuner is the first
   with enum and tuple defs. An enum option may print as a different
   `sysctlValue`, so state and links keep a name (`reboot`) for a key whose
-  values are numbers (`kernel.sysrq = 176`). A tuple's range may carry `elements`, one range
+  values are numbers (`kernel.sysrq = 176`). An enum's range may list the
+  `options` the profile allows, for options a kernel may lack (BFQ is a
+  module Ubuntu's cloud kernel doesn't ship): `clamp` holds the value to them
+  and the `select` control lists only them. A tuple's range may carry `elements`, one range
   per element (`elementRange(range, i)`), when the fields take different
   values: `kernel.sem`'s SEMMNI stops at 32768 while SEMMNS goes to
   2147483647. The def then lists them in `elementLimits`, which the drawer
@@ -415,8 +419,8 @@ so that a new variant is an addition rather than an edit to shared code.
   (unique keys, known shapes, a default the field's own rule accepts) and the
   contract suite checks the picks and the summary. Shared pick lists, ceilings
   and the RAM field stay in `ui/profile/fieldOptions.js`. A profile the field
-  list can't express (e.g. Block I/O's per-device list) uses the `profile`
-  slot of `TunerPage`.
+  list can't express uses the `profile` slot of `TunerPage`; Block I/O
+  avoided needing one by making a profile one kind of disk.
 - **Page shell** (`ui/TunerPage.vue`). Renders the whole page from the
   domain alone: profile form, hero, step chain, the four steps, graph tabs, ad
   slot, about section, info drawer, and the mobile impact bar with its spacer.
@@ -463,13 +467,20 @@ so that a new variant is an addition rather than an edit to shared code.
     value a plain token with no `%` (a tmpfiles specifier) or backslash.
     `sysctlConfig` and `tmpfilesConfig` share the section loop in
     `sections.js`. The huge pages tuner is the first user.
-  - Later, `udevRule` for per-device sysfs (Block I/O).
+  - `udevRules.js` (per-device sysfs, Block I/O): `udevConfig` and
+    `udevAttrRule`, which print only `==` match clauses (on `ACTION`,
+    `SUBSYSTEM`, `KERNEL`, `ENV{...}` or `ATTR{...}`, glob values with no
+    quote, `$` or `%`) and one `ATTR{<attr>}="<value>"` write. The match
+    clauses are constants per device class and the attribute a def's
+    `udevAttr`; no other assignment key can be written.
 
   A writer throws rather than emit a malformed line, so a bad value fails the
   contract fuzz tests instead of reaching a file. Each file of a multi-file
   tuner opens with a `# =====` banner naming its path. `ConfigOutput` shows
   the files combined, and copy and download take that text; a download per
-  file is not built yet. Every emitted value goes through its def's value
+  file is not built yet. A single file downloads under its own name (so the
+  block I/O file is named after its kind of disk), several under the
+  domain's `outputFilename` (`*.conf` or `*.rules`). Every emitted value goes through its def's value
   type, so the "only values the kernel accepts" rule
   ([§3](#3-product-principles)) is enforced in one place. A writer that adds
   its own syntax around a value (systemd's `50%`, `yes`) starts from
@@ -532,8 +543,9 @@ The suite is `src/tuners/contract.test.js`, next to
 `src/tuners/configSnapshots.test.js`, which snapshots the config for every
 profile's defaults and every preset so each migration step can prove
 byte-identical output. The page-mount check is `src/tuners/views.test.js`.
-The type-formatter check covers sysctl lines and tmpfiles `w` lines, which
-the grammar check accepts only for a def's `sysfsPath`; ini values are
+The type-formatter check covers sysctl lines, tmpfiles `w` lines, which
+the grammar check accepts only for a def's `sysfsPath`, and udev rules,
+accepted only as `==` matches and one write to a def's `udevAttr`; ini values are
 composed by the tuner from typed values and held to plain tokens by the
 grammar check.
 `src/ui/ParameterCard.enum.test.js` covers the enum path (select, clamp,
@@ -550,7 +562,9 @@ The unit tests prove we generate what we intend; `npm run test:vm` proves it
 does what we claim. Each `vm/*.vm.test.js` boots a throwaway QEMU VM from a
 distribution cloud image (Debian 11 and 13, Ubuntu 18.04 and 24.04, Fedora),
 applies every sysctl tuner's file for each workload and preset with
-`sysctl -p`, reads every key back, loads every systemd drop-in through
+`sysctl -p`, reads every key back, applies every block I/O rules file
+through `udevadm trigger` on an NVMe drive, a SATA SSD, a SATA hard disk and
+virtio disks, loads every systemd drop-in through
 `daemon-reexec` with no PID 1 warning, reboots, and probes the security
 claims as an unprivileged user (perf, bpf, kallsyms, `%pK`). They take 10 to
 20 minutes, need QEMU, and run by hand rather than in CI; run them after
@@ -627,6 +641,23 @@ behaviour goes in only once a VM has shown it; facts found that way so far:
   (Debian 13, Ubuntu 24.04, Fedora 43) a session's share was the same with
   it on or off. RT throttling (`sched_rt_runtime_us`) gave inconsistent
   results under WHPX, so no claim rests on it.
+- Block queues (an NVMe drive, a SATA SSD and hard disk on AHCI, virtio):
+  a device with one hardware queue starts at `mq-deadline`, several at
+  `none`, except on Debian's cloud kernels (mq-deadline is a module there,
+  so every disk starts at `none`) and Fedora, whose systemd sets `bfq` on
+  every `sd*` disk (`60-block-scheduler.rules`). Writing `bfq` or `kyber`
+  loads the module; Ubuntu 24.04's cloud image has neither, and Debian 11's
+  cloud kernel has no AHCI driver. `nr_requests` takes 4 to 2048 with a
+  scheduler (below 4 becomes 4) and up to the queue depth without one (32
+  SATA, 256 virtio, 1023 NVMe); a scheduler switch resets it to twice the
+  depth, at most 256. `read_ahead_kb` takes up to 4294967292 in 4 KiB steps
+  and starts at 128, on Fedora 43 at 8192 for virtio and 256 for the hard
+  disk. `nomerges` takes 0 to 2 (3 reads back as 1), `rotational` 0 or 1;
+  changing `rotational` at runtime leaves `wbt_lat_usec` as it was (75 ms).
+  udev logs a refused `ATTR{}` write ("Failed to write") and goes on with
+  the next rule, both on `udevadm trigger` and at boot. Kernel 4.15
+  (Ubuntu 18.04) runs SATA disks on the legacy layer (noop, deadline, cfq)
+  and its cloud image has no multi-queue scheduler at all.
 
 ### Guardrails
 
@@ -654,7 +685,7 @@ There is no backend, so the risks are on the visitor's side:
 1. **Config injection (highest).** A shared link is attacker-controlled. If any
    part of it reaches the generated output other than as a validated value,
    the attacker writes into a file the victim installs as root. In sysctl.d
-   that means arbitrary sysctls; in the planned udev rules, tuned profiles and
+   that means arbitrary sysctls; in udev rules, tuned profiles and
    systemd drop-ins it means command execution (`RUN+=`, `[script]`, `Exec*`).
 2. **Script injection in the page.** Hash state, profile strings or
    third-party content rendered as HTML or followed as a URL.
@@ -686,7 +717,8 @@ These hold for every tuner and every output writer (§9 `core/output`):
   (`kernel.core_pattern`, `kernel.modprobe`, `kernel.poweroff_cmd`, ...). This
   is a non-goal, not a feature request. A tuner that seems to need one is
   out of scope. tmpfiles.d output is `w` lines to constant `/sys` paths only:
-  no other line type, which could create, copy, link or remove files.
+  no other line type, which could create, copy, link or remove files. udev
+  output is `==` matches plus one `ATTR{}` write per rule, nothing else.
 - **Paths are constants.** Output file paths and download names are fixed per
   tuner, match `^/etc/[a-z0-9._/-]+$` and contain no `..`. Apply commands are
   fixed text with only those paths interpolated.

@@ -70,14 +70,21 @@ function profileLabel(domain, hw) {
   return diff.map((k) => `${k}=${hw[k]}`).join(', ') || 'default'
 }
 
-/** Every sysctl name a def writes: its sysctlName and any `alsoSets` twins. A sysfs def writes none. */
+/** Every sysctl name a def writes: its sysctlName and any `alsoSets` twins. A sysfs or udev def writes none. */
 function emittedNames(def) {
-  if (def.sysfsPath) return []
+  if (def.sysfsPath || def.udevAttr) return []
   return [def.sysctlName.split(' ')[0], ...(def.alsoSets ?? [])]
 }
 
 /** A tmpfiles.d `w` line: the sysfs path and the value written to it. */
 const TMPFILES_WRITE = /^w (\/sys\/\S+) - - - - ([A-Za-z0-9_+.-]+)$/
+
+/**
+ * A udev rule: `==` match clauses on the event, subsystem, kernel name, a
+ * device property or a sysfs attribute, then one `ATTR{<attr>}="<value>"`.
+ * Captures the attribute and the value.
+ */
+const UDEV_ATTR_RULE = /^(?:(?:ACTION|SUBSYSTEM|KERNEL|ENV\{[A-Z_]+\}|ATTR\{[a-z_/]+\})=="[A-Za-z0-9_|*?[\]-]+", )+ATTR\{([a-z_/]+)\}="([A-Za-z0-9_+.-]+)"$/
 
 
 function configFor(domain, { hardware, params, activePreset = null }) {
@@ -198,12 +205,15 @@ function grammarViolations(domain, config) {
   // emitted name is the part before it.
   const names = new Set(Object.values(domain.defsByKey).flatMap(emittedNames))
   const sysfsPaths = new Set(Object.values(domain.defsByKey).map((d) => d.sysfsPath).filter(Boolean))
+  const udevAttrs = new Set(Object.values(domain.defsByKey).map((d) => d.udevAttr).filter(Boolean))
   const bad = []
   for (const line of config.split('\n')) {
     if (line === '' || line.startsWith('#')) continue
     if (/^\[[A-Z][A-Za-z]*\]$/.test(line)) continue
     const w = TMPFILES_WRITE.exec(line)
     if (w && sysfsPaths.has(w[1])) continue
+    const u = UDEV_ATTR_RULE.exec(line)
+    if (u && udevAttrs.has(u[1])) continue
     const m = /^([A-Za-z][\w.-]*)(?: = |=)([A-Za-z0-9:%_]+(?: [A-Za-z0-9:%_]+)*)$/.exec(line)
     if (m && names.has(m[1])) continue
     bad.push(line)
@@ -212,7 +222,7 @@ function grammarViolations(domain, config) {
 }
 
 /**
- * sysctl and tmpfiles lines whose value isn't exactly what the def's value
+ * sysctl, tmpfiles and udev lines whose value isn't exactly what the def's value
  * type prints for the param. ini lines are exempt: the tuner wraps typed
  * values in ini syntax (`50%`, `yes`), and the grammar check holds those to
  * plain tokens.
@@ -221,8 +231,15 @@ function typeFormatterViolations(domain, config, params) {
   const defs = Object.values(domain.defsByKey)
   const defsByName = new Map(defs.flatMap((d) => emittedNames(d).map((name) => [name, d])))
   const defsByPath = new Map(defs.filter((d) => d.sysfsPath).map((d) => [d.sysfsPath, d]))
+  const defsByAttr = new Map(defs.filter((d) => d.udevAttr).map((d) => [d.udevAttr, d]))
   const bad = []
   for (const line of config.split('\n')) {
+    const u = UDEV_ATTR_RULE.exec(line)
+    if (u) {
+      const def = defsByAttr.get(u[1])
+      if (!def || u[2] !== valueTypeOf(def).format(params[def.key], def)) bad.push(line)
+      continue
+    }
     const m = /^([a-z][\w.-]*) = (.*)$/.exec(line) ?? TMPFILES_WRITE.exec(line)
     if (!m) continue
     const def = defsByName.get(m[1]) ?? defsByPath.get(m[1])
@@ -309,6 +326,10 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
           // A sysfs def shows the tail of its path as its name.
           expect(def.sysfsPath, key).toMatch(/^\/sys(\/[a-z0-9_]+)+$/)
           expect(def.sysfsPath.endsWith(`/${def.sysctlName}`), key).toBe(true)
+        } else if (def.udevAttr) {
+          // A udev def names the attribute under the device's sysfs directory.
+          expect(def.udevAttr, key).toMatch(/^[a-z_]+(\/[a-z_]+)*$/)
+          expect(def.sysctlName, key).toBe(def.udevAttr)
         } else {
           expect(def.sysctlName, key).toMatch(/^[A-Za-z][\w.-]*( \(\w+\))?$/)
         }

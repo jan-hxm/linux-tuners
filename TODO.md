@@ -9,10 +9,9 @@ in the local, gitignored `PRIVATE.md`, not here.
 
 Each one is a new domain module following [Design.md §6](Design.md#6-adding-a-tuner).
 
-sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages tuner added; per-device ones need udev rules:
+sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages tuner added, per-device ones the udev writer the block I/O tuner added:
 
-1. [ ] **Block I/O & storage** (`/sys/block/<dev>/queue/*`): `scheduler`, `nr_requests`, `read_ahead_kb`, `rotational`, `nomerges`. Per device.
-2. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Measure whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU before relying on them.
+1. [ ] **CPU frequency & power**: `scaling_governor`, `scaling_min_freq`/`scaling_max_freq`, `energy_performance_preference`, plus `kernel.numa_balancing`. Measure whether tmpfiles.d `w` lines with a `cpu*` glob reach every CPU before relying on them.
 
 On shipped tuners:
 
@@ -32,6 +31,7 @@ On shipped tuners:
 
 ## 3. Engineering
 
+- [ ] VM suite: in a full parallel run the Ubuntu 24.04 guest sometimes drops off (SSH refused) at the first systemd drop-in case, right after the sysctl sweep; it comes back at the next reboot, and alone it always passes. Seen in two of three full runs, cause unknown (the panic switches are already reset after the kernel cases, and no other file sets them). Run with `VM_KEEP=1` and read `vm/.cache/run/lt-ubuntu2404/console-*.log` when it happens again.
 - [ ] `ConfigOutput`: a download per file for multi-file tuners (systemd), instead of one combined `.conf`.
 - [ ] Tests: `ConfigOutput` flow (textarea matches the generator, copy calls the clipboard API, blocked state).
 - [ ] Automated accessibility sweep (axe-core / Lighthouse): focus visibility on the dark hero, a live-region announcement when a preset is applied or validation fires, and a full WCAG AA contrast pass.

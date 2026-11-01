@@ -57,6 +57,13 @@ describe('enum', () => {
     expect(t.format('bbr', ENUM)).toBe('bbr')
     expect(() => t.format('reno', ENUM)).toThrow()
   })
+  it('holds a value to the options the range allows', () => {
+    const narrow = { ...RANGE, options: ['bbr'] }
+    expect(t.clamp('bbr', ENUM, narrow)).toBe('bbr')
+    expect(t.clamp('cubic', ENUM, narrow)).toBe('bbr')
+    expect(t.clamp('bbr', ENUM, { ...RANGE, options: ['cubic', 'bbr'] })).toBe('bbr')
+    expect(t.clamp('reno', ENUM, { ...RANGE, options: ['cubic', 'bbr'] })).toBe('cubic')
+  })
   it('prints an option sysctlValue in place of its name', () => {
     const SYSRQ = { key: 'sysrq', type: 'enum', kernelDefault: 'all', options: [{ value: 'all', sysctlValue: '1', label: 'all' }, { value: 'off', sysctlValue: '0', label: 'off' }] }
     expect(t.format('off', SYSRQ)).toBe('0')

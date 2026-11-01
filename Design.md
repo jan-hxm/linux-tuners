@@ -276,8 +276,13 @@ must follow them, and existing UI must not regress.
   "Edit" keeps the form open.
 - **Copy and share feedback** changes the button state and announces the
   result through an `aria-live="polite"` region.
-- **Reset needs no confirmation.** It only recomputes the defaults. A reset
-  control sits at the top of the tuning panel as well as in the export section.
+- **Reset needs no confirmation.** It only recomputes the defaults, and
+  `UndoToast` offers to put back what a reset or a preset snap replaced (the
+  store's `undoState`, one step deep; any other edit clears it, and it is never
+  part of the shared link). The toast pauses its timer while hovered or
+  focused, closes on Escape, and returns focus to the control that triggered
+  the snap. A reset control sits at the top of the tuning panel as well as in
+  the export section.
 
 ## 8. Copy conventions
 

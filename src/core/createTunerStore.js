@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { valueTypeOf } from './valueTypes.js'
+import { differingKeys, valueTypeOf } from './valueTypes.js'
 
 const URL_DEBOUNCE_MS = 200
 
@@ -25,6 +25,7 @@ export function defineTunerStore(id, domain) {
           activePreset: restored.activePreset,
           activeTab: restored.activeTab ?? domain.defaultTab,
           drawerParamKey: null,
+          undoState: null,
           _urlWriteTimer: null,
         }
       }
@@ -35,6 +36,12 @@ export function defineTunerStore(id, domain) {
         activeTab: domain.defaultTab,
         /** key of the parameter currently shown in the InfoDrawer, or null */
         drawerParamKey: null,
+        /**
+         * What the last reset or preset snap replaced, so UndoToast can put
+         * it back: { kind: 'reset' | 'preset', presetId, params, activePreset }.
+         * Any other change clears it. Never part of the shared link.
+         */
+        undoState: null,
         _urlWriteTimer: null,
       }
     },
@@ -69,6 +76,7 @@ export function defineTunerStore(id, domain) {
         this.hardware = { ...hw }
         this.params = domain.deriveDefaults(this.hardware)
         this.activePreset = null
+        this.undoState = null
         this.syncUrl()
       },
 
@@ -86,6 +94,7 @@ export function defineTunerStore(id, domain) {
         if (parsed === undefined) return
         this.params[key] = type.clamp(parsed, def, domain.rangeFor(key, this.hardware))
         this.activePreset = null
+        this.undoState = null
         this.syncUrl()
       },
 
@@ -99,14 +108,37 @@ export function defineTunerStore(id, domain) {
        * @param {Object} values
        */
       applyPreset(id, values) {
-        this.params = presetParams(domain, this.hardware, values)
-        this.activePreset = id
-        this.syncUrl()
+        this._replaceParams(presetParams(domain, this.hardware, values), id, { kind: 'preset', presetId: id })
       },
 
       resetToHardwareDefaults() {
-        this.params = domain.deriveDefaults(this.hardware)
-        this.activePreset = null
+        this._replaceParams(domain.deriveDefaults(this.hardware), null, { kind: 'reset', presetId: null })
+      },
+
+      /** Put back what the last reset or preset snap replaced. */
+      undo() {
+        if (!this.undoState) return
+        this.params = this.undoState.params
+        this.activePreset = this.undoState.activePreset
+        this.undoState = null
+        this.syncUrl()
+      },
+
+      dismissUndo() {
+        this.undoState = null
+      },
+
+      /**
+       * Swap in a whole new set of params and remember the old one for undo.
+       * A snap that changes nothing leaves nothing to undo.
+       */
+      _replaceParams(params, activePreset, undo) {
+        const changed = differingKeys(domain.defsByKey, params, this.params).length > 0
+        this.undoState = changed || activePreset !== this.activePreset
+          ? { ...undo, params: this.params, activePreset: this.activePreset }
+          : null
+        this.params = params
+        this.activePreset = activePreset
         this.syncUrl()
       },
 

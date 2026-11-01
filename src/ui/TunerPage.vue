@@ -2,7 +2,8 @@
 /**
  * The page shell every tuner renders through: hero with the step chain, the
  * four steps (profile, preset, tune, export), ad slot, About section, info
- * drawer, and the mobile impact bar with its spacer (Design.md §7). It
+ * drawer, the undo toast, and the mobile impact bar with its spacer
+ * (Design.md §7). It
  * provides the store and domain to the shared components below it, including
  * whatever goes into the `profile` slot.
  *
@@ -24,6 +25,7 @@ import InfoDrawer from '@/ui/InfoDrawer.vue'
 import AboutSection from '@/ui/AboutSection.vue'
 import StepHeader from '@/ui/StepHeader.vue'
 import MobileImpactBar from '@/ui/MobileImpactBar.vue'
+import UndoToast from '@/ui/UndoToast.vue'
 import AdSlot from '@/ui/AdSlot.vue'
 import RichText from '@/ui/RichText.vue'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
@@ -122,5 +124,6 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
     <!-- Spacer so the mobile impact bar never covers page content. -->
     <div v-if="impact.length" class="h-16 lg:hidden" aria-hidden="true" />
     <MobileImpactBar :impact="impact" />
+    <UndoToast :raised="impact.length > 0" />
   </section>
 </template>

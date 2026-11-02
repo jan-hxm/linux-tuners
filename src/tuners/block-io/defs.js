@@ -30,6 +30,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'rotational',
     title: 'Spinning disk or flash',
+    tier: 'essential',
     sysctlName: 'queue/rotational',
     udevAttr: 'queue/rotational',
     group: 'device',
@@ -60,6 +61,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'scheduler',
     title: 'I/O scheduler',
+    tier: 'essential',
     sysctlName: 'queue/scheduler',
     udevAttr: 'queue/scheduler',
     group: 'sched',
@@ -95,6 +97,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'nr_requests',
     title: 'Scheduler queue depth',
+    tier: 'advanced',
     sysctlName: 'queue/nr_requests',
     udevAttr: 'queue/nr_requests',
     group: 'sched',
@@ -120,6 +123,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'read_ahead_kb',
     title: 'Read-ahead',
+    tier: 'essential',
     sysctlName: 'queue/read_ahead_kb',
     udevAttr: 'queue/read_ahead_kb',
     group: 'reads',
@@ -144,6 +148,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'nomerges',
     title: 'Request merging',
+    tier: 'advanced',
     sysctlName: 'queue/nomerges',
     udevAttr: 'queue/nomerges',
     group: 'reads',

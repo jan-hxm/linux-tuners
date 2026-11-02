@@ -29,6 +29,8 @@
  * @property {'bool'}         [type]         Value type from core/valueTypes.js; int when omitted
  * @property {ControlKind}    control
  * @property {string}         title          Plain-language name, shown above sysctlName
+ * @property {'essential'|'advanced'} tier  Advanced cards hide behind "Show N advanced"
+ *                                           in their section (ui/ParameterPanel.vue)
  * @property {string}         shortDesc      One-line description for the card header
  * @property {{what: string[], when?: string[], watch?: string[]}} longDesc
  *                                           The card's "Learn more", in labelled parts
@@ -58,6 +60,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'swappiness',
     title: 'Swap aggressiveness',
+    tier: 'essential',
     sysctlName: 'vm.swappiness',
     group: 'memory-reclaim',
     control: 'slider',
@@ -86,6 +89,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'min_free_kbytes',
     title: 'Free memory reserve',
+    tier: 'advanced',
     sysctlName: 'vm.min_free_kbytes',
     group: 'memory-reclaim',
     control: 'slider',
@@ -114,6 +118,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'watermark_scale_factor',
     title: 'Background reclaim head start',
+    tier: 'advanced',
     sysctlName: 'vm.watermark_scale_factor',
     group: 'memory-reclaim',
     control: 'slider',
@@ -139,6 +144,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'vfs_cache_pressure',
     title: 'Metadata cache pressure',
+    tier: 'essential',
     sysctlName: 'vm.vfs_cache_pressure',
     group: 'memory-reclaim',
     control: 'slider',
@@ -168,6 +174,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'page_cluster',
     title: 'Swap readahead',
+    tier: 'advanced',
     sysctlName: 'vm.page-cluster',
     group: 'memory-reclaim',
     control: 'slider',
@@ -194,6 +201,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'dirty_ratio',
     title: 'Dirty page ceiling',
+    tier: 'essential',
     sysctlName: 'vm.dirty_ratio',
     group: 'dirty-writeback',
     control: 'slider',
@@ -221,6 +229,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'dirty_background_ratio',
     title: 'Background flush trigger',
+    tier: 'essential',
     sysctlName: 'vm.dirty_background_ratio',
     group: 'dirty-writeback',
     control: 'slider',
@@ -248,6 +257,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'dirty_expire_centisecs',
     title: 'Dirty page age limit',
+    tier: 'advanced',
     sysctlName: 'vm.dirty_expire_centisecs',
     group: 'dirty-writeback',
     control: 'slider',
@@ -272,6 +282,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'dirty_writeback_centisecs',
     title: 'Flusher wake-up interval',
+    tier: 'advanced',
     sysctlName: 'vm.dirty_writeback_centisecs',
     group: 'dirty-writeback',
     control: 'slider',
@@ -296,6 +307,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'overcommit_memory',
     title: 'Memory overcommit mode',
+    tier: 'essential',
     sysctlName: 'vm.overcommit_memory',
     group: 'oom-overcommit',
     control: 'segmented',
@@ -324,6 +336,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'overcommit_ratio',
     title: 'Strict commit limit share',
+    tier: 'advanced',
     sysctlName: 'vm.overcommit_ratio',
     group: 'oom-overcommit',
     control: 'slider',
@@ -348,6 +361,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'panic_on_oom',
     title: 'Reboot on out of memory',
+    tier: 'advanced',
     sysctlName: 'vm.panic_on_oom',
     group: 'oom-overcommit',
     type: 'bool',

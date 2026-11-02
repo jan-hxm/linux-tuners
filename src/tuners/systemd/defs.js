@@ -42,6 +42,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'default_cpu_accounting',
     title: 'CPU accounting',
+    tier: 'advanced',
     sysctlName: 'DefaultCPUAccounting',
     group: 'manager-defaults',
     type: 'bool',
@@ -71,6 +72,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'default_memory_accounting',
     title: 'Memory accounting',
+    tier: 'advanced',
     sysctlName: 'DefaultMemoryAccounting',
     group: 'manager-defaults',
     type: 'bool',
@@ -97,6 +99,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'default_io_accounting',
     title: 'Disk I/O accounting',
+    tier: 'advanced',
     sysctlName: 'DefaultIOAccounting',
     group: 'manager-defaults',
     type: 'bool',
@@ -123,6 +126,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'default_tasks_accounting',
     title: 'Task accounting',
+    tier: 'advanced',
     sysctlName: 'DefaultTasksAccounting',
     group: 'manager-defaults',
     type: 'bool',
@@ -149,6 +153,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'default_ip_accounting',
     title: 'Network accounting',
+    tier: 'advanced',
     sysctlName: 'DefaultIPAccounting',
     group: 'manager-defaults',
     type: 'bool',
@@ -175,6 +180,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'default_tasks_max',
     title: 'Tasks per service',
+    tier: 'essential',
     sysctlName: 'DefaultTasksMax',
     group: 'manager-defaults',
     control: 'slider',
@@ -201,6 +207,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'default_limit_nofile_soft',
     title: 'Open files per process, soft',
+    tier: 'essential',
     sysctlName: 'DefaultLimitNOFILE (soft)',
     group: 'manager-defaults',
     control: 'slider',
@@ -226,6 +233,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'default_limit_nofile_hard',
     title: 'Open files per process, hard',
+    tier: 'advanced',
     sysctlName: 'DefaultLimitNOFILE (hard)',
     group: 'manager-defaults',
     control: 'slider',
@@ -253,6 +261,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'default_limit_memlock',
     title: 'Locked memory per process',
+    tier: 'advanced',
     sysctlName: 'DefaultLimitMEMLOCK',
     group: 'manager-defaults',
     control: 'slider',
@@ -279,6 +288,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'cpu_weight',
     title: 'CPU share',
+    tier: 'essential',
     sysctlName: 'CPUWeight',
     group: 'slice-resources',
     control: 'slider',
@@ -307,6 +317,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'cpu_quota',
     title: 'CPU cap',
+    tier: 'advanced',
     sysctlName: 'CPUQuota',
     group: 'slice-resources',
     control: 'slider',
@@ -334,6 +345,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'memory_high',
     title: 'Memory soft limit',
+    tier: 'essential',
     sysctlName: 'MemoryHigh',
     group: 'slice-resources',
     control: 'slider',
@@ -360,6 +372,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'memory_max',
     title: 'Memory hard limit',
+    tier: 'essential',
     sysctlName: 'MemoryMax',
     group: 'slice-resources',
     control: 'slider',
@@ -388,6 +401,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'memory_swap_max',
     title: 'Swap cap',
+    tier: 'advanced',
     sysctlName: 'MemorySwapMax',
     group: 'slice-resources',
     control: 'slider',
@@ -413,6 +427,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'io_weight',
     title: 'Disk I/O share',
+    tier: 'advanced',
     sysctlName: 'IOWeight',
     group: 'slice-resources',
     control: 'slider',
@@ -441,6 +456,7 @@ export const SYSTEMD_DEFS = [
   {
     key: 'tasks_max',
     title: 'Tasks per slice',
+    tier: 'advanced',
     sysctlName: 'TasksMax',
     group: 'slice-resources',
     control: 'slider',

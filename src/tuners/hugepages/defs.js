@@ -51,6 +51,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'nr_hugepages',
     title: 'Huge page pool',
+    tier: 'essential',
     sysctlName: 'vm.nr_hugepages',
     group: 'pool',
     control: 'slider',
@@ -78,6 +79,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'nr_overcommit_hugepages',
     title: 'Surplus huge pages',
+    tier: 'advanced',
     sysctlName: 'vm.nr_overcommit_hugepages',
     group: 'pool',
     control: 'slider',
@@ -101,6 +103,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'thp_enabled',
     title: 'Transparent huge pages',
+    tier: 'essential',
     sysctlName: 'transparent_hugepage/enabled',
     sysfsPath: `${THP_PATH}/enabled`,
     group: 'thp',
@@ -136,6 +139,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'thp_defrag',
     title: 'THP defragmentation',
+    tier: 'advanced',
     sysctlName: 'transparent_hugepage/defrag',
     sysfsPath: `${THP_PATH}/defrag`,
     group: 'thp',
@@ -169,6 +173,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'ksm_run',
     title: 'Memory merging (KSM)',
+    tier: 'essential',
     sysctlName: 'ksm/run',
     sysfsPath: `${KSM_PATH}/run`,
     group: 'ksm',
@@ -197,6 +202,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'ksm_pages_to_scan',
     title: 'KSM pages per scan',
+    tier: 'advanced',
     sysctlName: 'ksm/pages_to_scan',
     sysfsPath: `${KSM_PATH}/pages_to_scan`,
     group: 'ksm',
@@ -219,6 +225,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'ksm_sleep_millisecs',
     title: 'KSM scan interval',
+    tier: 'advanced',
     sysctlName: 'ksm/sleep_millisecs',
     sysfsPath: `${KSM_PATH}/sleep_millisecs`,
     group: 'ksm',
@@ -242,6 +249,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'max_map_count',
     title: 'Memory mappings per process',
+    tier: 'essential',
     sysctlName: 'vm.max_map_count',
     group: 'maps',
     control: 'slider',
@@ -267,6 +275,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'zone_reclaim_mode',
     title: 'NUMA zone reclaim',
+    tier: 'advanced',
     sysctlName: 'vm.zone_reclaim_mode',
     group: 'maps',
     type: 'bool',

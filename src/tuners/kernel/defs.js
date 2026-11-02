@@ -37,6 +37,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'pid_max',
     title: 'Highest process ID',
+    tier: 'essential',
     sysctlName: 'kernel.pid_max',
     group: 'procs',
     control: 'slider',
@@ -60,6 +61,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'threads_max',
     title: 'Threads, system-wide',
+    tier: 'advanced',
     sysctlName: 'kernel.threads-max',
     group: 'procs',
     control: 'slider',
@@ -87,6 +89,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'maxkeys',
     title: 'Kernel keys per user',
+    tier: 'essential',
     sysctlName: 'kernel.keys.maxkeys',
     group: 'keys',
     control: 'slider',
@@ -111,6 +114,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'maxbytes',
     title: 'Key bytes per user',
+    tier: 'advanced',
     sysctlName: 'kernel.keys.maxbytes',
     group: 'keys',
     control: 'slider',
@@ -136,6 +140,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'panic',
     title: 'Reboot after a panic',
+    tier: 'essential',
     sysctlName: 'kernel.panic',
     group: 'panic',
     control: 'slider',
@@ -158,6 +163,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'panic_on_oops',
     title: 'Panic on oops',
+    tier: 'advanced',
     sysctlName: 'kernel.panic_on_oops',
     group: 'panic',
     type: 'bool',
@@ -184,6 +190,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'softlockup_panic',
     title: 'Panic on soft lockup',
+    tier: 'advanced',
     sysctlName: 'kernel.softlockup_panic',
     group: 'panic',
     type: 'bool',
@@ -210,6 +217,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'sysrq',
     title: 'Magic SysRq keys',
+    tier: 'essential',
     sysctlName: 'kernel.sysrq',
     group: 'panic',
     type: 'enum',
@@ -241,6 +249,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'printk',
     title: 'Console log levels',
+    tier: 'essential',
     sysctlName: 'kernel.printk',
     group: 'console',
     type: 'tuple',

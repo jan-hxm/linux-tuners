@@ -36,6 +36,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'file_max',
     title: 'Open files, system-wide',
+    tier: 'essential',
     sysctlName: 'fs.file-max',
     group: 'descriptors',
     control: 'slider',
@@ -62,6 +63,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'nr_open',
     title: 'Highest open-file limit',
+    tier: 'essential',
     sysctlName: 'fs.nr_open',
     group: 'descriptors',
     control: 'slider',
@@ -89,6 +91,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'max_user_watches',
     title: 'inotify watches per user',
+    tier: 'essential',
     sysctlName: 'fs.inotify.max_user_watches',
     group: 'inotify',
     control: 'slider',
@@ -114,6 +117,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'max_user_instances',
     title: 'inotify instances per user',
+    tier: 'advanced',
     sysctlName: 'fs.inotify.max_user_instances',
     group: 'inotify',
     control: 'slider',
@@ -136,6 +140,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'max_queued_events',
     title: 'inotify event queue',
+    tier: 'advanced',
     sysctlName: 'fs.inotify.max_queued_events',
     group: 'inotify',
     control: 'slider',
@@ -159,6 +164,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'aio_max_nr',
     title: 'Async I/O requests',
+    tier: 'essential',
     sysctlName: 'fs.aio-max-nr',
     group: 'aio',
     control: 'slider',

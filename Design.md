@@ -77,6 +77,8 @@ The planned tuners and their order are listed in [TODO.md](TODO.md).
    stays available.
 6. **Static and private by default.** There is no backend and no cookies of
    our own. State lives in the URL hash, which is never sent to the server.
+   The one exception is a viewer preference in local storage ([§5 Viewer
+   preferences](#viewer-preferences)), which holds no tuner state.
 
 ## 4. Anatomy of a tuner
 
@@ -190,6 +192,17 @@ file someone may run as root, restoring it is strict:
   first tab.
 - Hash writes preserve `history.state` (Vue Router keeps scroll and position
   data there) and are skipped if the user has navigated to another route since.
+
+### Viewer preferences
+
+One key in `localStorage`, `linux-tuners:show-all-parameters` (`ui/showAllParams.js`),
+remembers the parameter panel's "Show all parameters" switch: `'1'` when on,
+removed when off. It is a convenience for the viewer, never tuner state, so it
+is not part of the hash, is never sent anywhere, and the page works the same
+when storage is blocked or throws (the switch starts off). The privacy policy
+lists it in section 3. Any other preference worth remembering takes the same
+form: one on/off or enum value per key, prefixed `linux-tuners:`, and a line in
+the policy.
 
 ### Routes, SEO and build
 
@@ -539,6 +552,22 @@ must follow them, and existing UI must not regress.
   directives and udev rules), the context note, the formula with live values,
   defaults by workload, and the sources. The contract suite checks every def's
   title and parts.
+- **Essential and advanced parameters.** Every def has a `tier`. Each
+  section of `ParameterPanel` shows its essential cards and a "Show N
+  advanced" button (`aria-expanded`) for the rest. An advanced card is always
+  shown when its value differs from the profile's default (the store's
+  `changedKeys`: a preset or the user moved it) or it carries an issue, so
+  nothing changes out of sight. That set is recomputed on a bulk change (the
+  params object is replaced: profile, preset, reset, undo) and only grows on
+  an edit, so a card edited back to its default doesn't vanish under the
+  pointer. A section whose essential cards the domain's `visibleKeys` drops
+  for the profile shows its advanced ones, so a section is never just a
+  button. The "Show all parameters" switch above the sections shows every
+  card on every panel and is remembered per viewer ([§5 Viewer
+  preferences](#viewer-preferences)). The contract suite checks that every
+  def has a tier and every section an essential parameter. Essential means
+  what most readers of that tuner should look at; the rest is for a reason
+  the reader already has.
 - **Reset needs no confirmation.** It only recomputes the defaults, and
   `UndoToast` offers to put back what a reset or a preset snap replaced (the
   store's `undoState`, one step deep; any other edit clears it, and it is never

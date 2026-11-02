@@ -41,6 +41,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'shmmni',
     title: 'Shared memory segments',
+    tier: 'essential',
     sysctlName: 'kernel.shmmni',
     group: 'shm',
     control: 'slider',
@@ -68,6 +69,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'shm_rmid_forced',
     title: 'Remove unused segments',
+    tier: 'advanced',
     sysctlName: 'kernel.shm_rmid_forced',
     group: 'shm',
     type: 'bool',
@@ -94,6 +96,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'sem',
     title: 'Semaphore limits',
+    tier: 'essential',
     sysctlName: 'kernel.sem',
     group: 'sem',
     type: 'tuple',
@@ -131,6 +134,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'msgmni',
     title: 'Message queues',
+    tier: 'essential',
     sysctlName: 'kernel.msgmni',
     group: 'msg',
     control: 'slider',
@@ -155,6 +159,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'msgmax',
     title: 'Largest message',
+    tier: 'advanced',
     sysctlName: 'kernel.msgmax',
     group: 'msg',
     control: 'slider',
@@ -179,6 +184,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'msgmnb',
     title: 'Bytes per message queue',
+    tier: 'advanced',
     sysctlName: 'kernel.msgmnb',
     group: 'msg',
     control: 'slider',

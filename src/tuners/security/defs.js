@@ -46,6 +46,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'kptr_restrict',
     title: 'Hide kernel addresses',
+    tier: 'essential',
     sysctlName: 'kernel.kptr_restrict',
     group: 'kernel',
     control: 'segmented',
@@ -72,6 +73,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'dmesg_restrict',
     title: 'Restrict the kernel log',
+    tier: 'essential',
     sysctlName: 'kernel.dmesg_restrict',
     group: 'kernel',
     type: 'bool',
@@ -98,6 +100,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'perf_event_paranoid',
     title: 'Restrict perf profiling',
+    tier: 'advanced',
     sysctlName: 'kernel.perf_event_paranoid',
     group: 'kernel',
     control: 'segmented',
@@ -125,6 +128,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'ptrace_scope',
     title: 'Restrict ptrace',
+    tier: 'essential',
     sysctlName: 'kernel.yama.ptrace_scope',
     group: 'kernel',
     control: 'segmented',
@@ -151,6 +155,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'randomize_va_space',
     title: 'Address randomisation (ASLR)',
+    tier: 'advanced',
     sysctlName: 'kernel.randomize_va_space',
     group: 'kernel',
     control: 'segmented',
@@ -176,6 +181,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'unprivileged_bpf_disabled',
     title: 'Block unprivileged BPF',
+    tier: 'essential',
     sysctlName: 'kernel.unprivileged_bpf_disabled',
     group: 'kernel',
     control: 'segmented',
@@ -203,6 +209,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'user_namespaces',
     title: 'User namespaces',
+    tier: 'advanced',
     sysctlName: 'user.max_user_namespaces',
     group: 'kernel',
     type: 'enum',
@@ -236,6 +243,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'rp_filter',
     title: 'Reverse-path filter',
+    tier: 'essential',
     sysctlName: 'net.ipv4.conf.all.rp_filter',
     alsoSets: ['net.ipv4.conf.default.rp_filter'],
     group: 'network',
@@ -265,6 +273,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'tcp_syncookies',
     title: 'SYN cookies',
+    tier: 'essential',
     sysctlName: 'net.ipv4.tcp_syncookies',
     group: 'network',
     control: 'segmented',
@@ -288,6 +297,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'accept_redirects',
     title: 'Accept IPv4 redirects',
+    tier: 'essential',
     sysctlName: 'net.ipv4.conf.all.accept_redirects',
     alsoSets: ['net.ipv4.conf.default.accept_redirects'],
     group: 'network',
@@ -316,6 +326,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'accept_redirects_v6',
     title: 'Accept IPv6 redirects',
+    tier: 'advanced',
     sysctlName: 'net.ipv6.conf.all.accept_redirects',
     alsoSets: ['net.ipv6.conf.default.accept_redirects'],
     group: 'network',
@@ -345,6 +356,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'send_redirects',
     title: 'Send redirects',
+    tier: 'advanced',
     sysctlName: 'net.ipv4.conf.all.send_redirects',
     alsoSets: ['net.ipv4.conf.default.send_redirects'],
     group: 'network',
@@ -372,6 +384,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'accept_source_route',
     title: 'Accept source routing',
+    tier: 'advanced',
     sysctlName: 'net.ipv4.conf.all.accept_source_route',
     alsoSets: ['net.ipv4.conf.default.accept_source_route'],
     group: 'network',
@@ -400,6 +413,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'protected_symlinks',
     title: 'Protect symlinks',
+    tier: 'essential',
     sysctlName: 'fs.protected_symlinks',
     group: 'filesystem',
     type: 'bool',
@@ -424,6 +438,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'protected_hardlinks',
     title: 'Protect hard links',
+    tier: 'essential',
     sysctlName: 'fs.protected_hardlinks',
     group: 'filesystem',
     type: 'bool',
@@ -448,6 +463,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'protected_fifos',
     title: 'Protect FIFOs',
+    tier: 'advanced',
     sysctlName: 'fs.protected_fifos',
     group: 'filesystem',
     control: 'segmented',
@@ -471,6 +487,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'protected_regular',
     title: 'Protect regular files',
+    tier: 'advanced',
     sysctlName: 'fs.protected_regular',
     group: 'filesystem',
     control: 'segmented',
@@ -494,6 +511,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'suid_dumpable',
     title: 'Core dumps of setuid programs',
+    tier: 'essential',
     sysctlName: 'fs.suid_dumpable',
     group: 'filesystem',
     control: 'segmented',

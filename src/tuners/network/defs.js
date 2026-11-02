@@ -48,6 +48,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'rmem_max',
     title: 'Largest receive buffer',
+    tier: 'advanced',
     sysctlName: 'net.core.rmem_max',
     group: 'buffers',
     control: 'slider',
@@ -72,6 +73,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'wmem_max',
     title: 'Largest send buffer',
+    tier: 'advanced',
     sysctlName: 'net.core.wmem_max',
     group: 'buffers',
     control: 'slider',
@@ -94,6 +96,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'tcp_rmem',
     title: 'TCP receive buffers',
+    tier: 'essential',
     sysctlName: 'net.ipv4.tcp_rmem',
     group: 'buffers',
     type: 'tuple',
@@ -124,6 +127,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'tcp_wmem',
     title: 'TCP send buffers',
+    tier: 'essential',
     sysctlName: 'net.ipv4.tcp_wmem',
     group: 'buffers',
     type: 'tuple',
@@ -151,6 +155,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'somaxconn',
     title: 'Accept queue limit',
+    tier: 'essential',
     sysctlName: 'net.core.somaxconn',
     group: 'queues',
     control: 'slider',
@@ -178,6 +183,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'tcp_max_syn_backlog',
     title: 'Half-open connection queue',
+    tier: 'advanced',
     sysctlName: 'net.ipv4.tcp_max_syn_backlog',
     group: 'queues',
     control: 'slider',
@@ -200,6 +206,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'netdev_max_backlog',
     title: 'Incoming packet queue',
+    tier: 'advanced',
     sysctlName: 'net.core.netdev_max_backlog',
     group: 'queues',
     control: 'slider',
@@ -226,6 +233,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'tcp_congestion_control',
     title: 'Congestion control',
+    tier: 'essential',
     sysctlName: 'net.ipv4.tcp_congestion_control',
     group: 'tcp',
     type: 'enum',
@@ -256,6 +264,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'default_qdisc',
     title: 'Default queueing discipline',
+    tier: 'essential',
     sysctlName: 'net.core.default_qdisc',
     group: 'tcp',
     type: 'enum',
@@ -289,6 +298,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'tcp_slow_start_after_idle',
     title: 'Slow start after idle',
+    tier: 'advanced',
     sysctlName: 'net.ipv4.tcp_slow_start_after_idle',
     group: 'tcp',
     type: 'bool',
@@ -315,6 +325,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'tcp_mtu_probing',
     title: 'Path MTU probing',
+    tier: 'advanced',
     sysctlName: 'net.ipv4.tcp_mtu_probing',
     group: 'tcp',
     control: 'segmented',
@@ -340,6 +351,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'tcp_tw_reuse',
     title: 'Reuse TIME_WAIT ports',
+    tier: 'advanced',
     sysctlName: 'net.ipv4.tcp_tw_reuse',
     group: 'ports',
     control: 'segmented',
@@ -366,6 +378,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'tcp_fin_timeout',
     title: 'FIN_WAIT_2 timeout',
+    tier: 'advanced',
     sysctlName: 'net.ipv4.tcp_fin_timeout',
     group: 'ports',
     control: 'slider',
@@ -390,6 +403,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'ip_local_port_range',
     title: 'Outgoing port range',
+    tier: 'essential',
     sysctlName: 'net.ipv4.ip_local_port_range',
     group: 'ports',
     type: 'tuple',
@@ -422,6 +436,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'nf_conntrack_max',
     title: 'Connection tracking limit',
+    tier: 'essential',
     sysctlName: 'net.netfilter.nf_conntrack_max',
     group: 'conntrack',
     control: 'slider',
@@ -447,6 +462,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'nf_conntrack_buckets',
     title: 'Connection tracking hash size',
+    tier: 'advanced',
     sysctlName: 'net.netfilter.nf_conntrack_buckets',
     group: 'conntrack',
     control: 'slider',
@@ -471,6 +487,7 @@ export const PARAMETER_DEFS = [
   {
     key: 'nf_conntrack_tcp_timeout_established',
     title: 'Idle TCP tracking timeout',
+    tier: 'advanced',
     sysctlName: 'net.netfilter.nf_conntrack_tcp_timeout_established',
     group: 'conntrack',
     control: 'slider',

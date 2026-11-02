@@ -339,6 +339,15 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
       expect(new Set(titles).size).toBe(titles.length)
     })
 
+    it('gives every def a tier, and every section an essential parameter', () => {
+      for (const key of domain.parameterKeys) {
+        expect(['essential', 'advanced'], key).toContain(domain.defsByKey[key].tier)
+      }
+      for (const section of domain.sections) {
+        expect(section.keys.some((key) => domain.defsByKey[key].tier === 'essential'), section.id).toBe(true)
+      }
+    })
+
     it('splits every longDesc into the labelled parts, with what it does first', () => {
       const parts = DESC_PARTS.map((p) => p.key)
       for (const key of domain.parameterKeys) {

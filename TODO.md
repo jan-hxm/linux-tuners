@@ -16,7 +16,6 @@ Cheap, and nothing else pays off until people can find the site and shared links
 
 The next big feature, now that nine tuners exist: it turns separate tools into one path through a whole machine. Designed in [Design.md §5 Guided setup](Design.md#guided-setup); build in this order, each step shippable on its own.
 
-- [ ] systemd's `DefaultTasksMax` and `TasksMax` defaults take 15% of `pidMax` alone, and the def's `kernelDefault` is 629146. But systemd takes 15% of the smaller of `pid_max` and `threads-max`, and the kernel sizes `threads-max` from RAM (an eighth of RAM in 16 KiB stacks). So on a 16 GiB machine systemd's own default is about 19660, and the file writes 32 times that, presented as systemd's default. With facts, `/setup` would show the `tasks-above-kernel-limit` warning on a default 16 GiB machine. Fix: promote the kernel tuner's RAM formula (`kernelThreads`) to core, take the minimum in `deriveDefaults`, make the def's default note say it depends on RAM, check the claim on a VM, and review the snapshots.
 - [ ] `/setup`: the store option `urlSync: false`, the steps, the link envelope with its hostile-link tests, the output step with per-file download (which closes the `ConfigOutput` item in §4), the no-shared-key test, the route and the sitemap sources, the `src/setup/` import rule, and the landing page's "Start guided setup" button, which passes the picked role.
 
 ## 3. UI/UX: beginners and pros

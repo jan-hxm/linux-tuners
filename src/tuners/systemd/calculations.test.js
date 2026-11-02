@@ -16,9 +16,17 @@ describe('systemd deriveDefaults', () => {
     expect(p.default_ip_accounting).toBe(0)
   })
 
-  it('derives DefaultTasksMax as 15% of kernel.pid_max', () => {
-    const p = deriveDefaults(spec({ pidMax: 4194304 }))
-    expect(p.default_tasks_max).toBe(Math.round(4194304 * 0.15))
+  // systemd takes the smaller of pid_max and threads-max, and the kernel
+  // sizes threads-max from RAM: 131072 with 16 GiB, 4194304 with 512 GiB.
+  it('derives DefaultTasksMax as systemd does, 15% of the smaller of pid_max and threads-max', () => {
+    expect(deriveDefaults(spec({ pidMax: 4194304, ramGiB: 16 })).default_tasks_max).toBe(19660)
+    expect(deriveDefaults(spec({ pidMax: 4194304, ramGiB: 1024 })).default_tasks_max).toBe(629145)
+    expect(deriveDefaults(spec({ pidMax: 32768, ramGiB: 16 })).default_tasks_max).toBe(4915)
+    expect(deriveDefaults(spec({ pidMax: 32768, ramGiB: 1 })).default_tasks_max).toBe(1228)
+    for (const workload of ['container-host', 'kubernetes', 'database', 'general', 'desktop']) {
+      const p = deriveDefaults(spec({ workload }))
+      expect(p.tasks_max, workload).toBe(p.default_tasks_max)
+    }
   })
 
   it('leaves slice controls unset (no limit) by default', () => {

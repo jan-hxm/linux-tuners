@@ -32,9 +32,6 @@ export const LXD_SERVER_SETTINGS = 'https://canonical.com/lxd/docs/en/latest/ref
 /** The highest kernel.pid_max on 64-bit (PID_MAX_LIMIT), which systemd 243+ sets. */
 export const PID_MAX_LIMIT = 4194304
 
-/** Bytes of kernel stack per thread on x86_64: the kernel defaults threads-max to RAM / (8 × this). */
-export const THREAD_STACK_BYTES = 16384
-
 export const PARAMETER_DEFS = [
   // ── Processes & threads ───────────────────────────────────────────────────
   {

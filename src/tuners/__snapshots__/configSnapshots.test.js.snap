@@ -10869,8 +10869,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > container-host / database-server 1`] = `
@@ -10894,8 +10894,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -10914,8 +10914,8 @@ MemoryMax=95%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > container-host / defaults 1`] = `
@@ -10939,8 +10939,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -10958,8 +10958,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > container-host / desktop 1`] = `
@@ -10983,8 +10983,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11001,7 +11001,7 @@ MemoryHigh=95%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -11026,8 +11026,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11045,7 +11045,7 @@ MemoryMax=80%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -11089,8 +11089,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > container-host / systemd-defaults 1`] = `
@@ -11114,8 +11114,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11131,8 +11131,8 @@ CPUWeight=100
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > database / container-host 1`] = `
@@ -11176,8 +11176,8 @@ MemoryMax=90%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > database / database-server 1`] = `
@@ -11201,8 +11201,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11221,8 +11221,8 @@ MemoryMax=95%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > database / defaults 1`] = `
@@ -11246,8 +11246,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11266,8 +11266,8 @@ MemoryMax=95%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > database / desktop 1`] = `
@@ -11291,8 +11291,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11310,7 +11310,7 @@ MemoryHigh=95%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -11335,8 +11335,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11355,7 +11355,7 @@ MemoryMax=80%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -11400,8 +11400,8 @@ MemoryMax=90%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > database / systemd-defaults 1`] = `
@@ -11425,8 +11425,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11442,8 +11442,8 @@ CPUWeight=100
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > desktop / container-host 1`] = `
@@ -11486,8 +11486,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~10% of pid_max)
-TasksMax=419430"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > desktop / database-server 1`] = `
@@ -11511,8 +11511,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11531,8 +11531,8 @@ MemoryMax=95%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~10% of pid_max)
-TasksMax=419430"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > desktop / defaults 1`] = `
@@ -11556,8 +11556,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11573,8 +11573,8 @@ CPUWeight=100
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~10% of pid_max)
-TasksMax=419430"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > desktop / desktop 1`] = `
@@ -11598,8 +11598,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11616,7 +11616,7 @@ MemoryHigh=95%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -11641,8 +11641,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11660,7 +11660,7 @@ MemoryMax=80%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -11704,8 +11704,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~10% of pid_max)
-TasksMax=419430"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > desktop / systemd-defaults 1`] = `
@@ -11729,8 +11729,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11746,8 +11746,8 @@ CPUWeight=100
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / container-host 1`] = `
@@ -11790,8 +11790,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / container-host 2`] = `
@@ -11834,8 +11834,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / database-server 1`] = `
@@ -11859,8 +11859,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11879,8 +11879,8 @@ MemoryMax=95%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / database-server 2`] = `
@@ -11904,8 +11904,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11924,8 +11924,8 @@ MemoryMax=95%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / defaults 1`] = `
@@ -11949,8 +11949,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -11966,8 +11966,8 @@ CPUWeight=100
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / defaults 2`] = `
@@ -11991,8 +11991,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12008,8 +12008,8 @@ CPUWeight=100
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / desktop 1`] = `
@@ -12033,8 +12033,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12051,7 +12051,7 @@ MemoryHigh=95%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -12076,8 +12076,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12094,7 +12094,7 @@ MemoryHigh=95%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -12119,8 +12119,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12138,7 +12138,7 @@ MemoryMax=80%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -12163,8 +12163,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12182,7 +12182,7 @@ MemoryMax=80%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -12226,8 +12226,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / kubernetes-node 2`] = `
@@ -12270,8 +12270,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / systemd-defaults 1`] = `
@@ -12295,8 +12295,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12312,8 +12312,8 @@ CPUWeight=100
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > general / systemd-defaults 2`] = `
@@ -12337,8 +12337,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12354,8 +12354,8 @@ CPUWeight=100
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > kubernetes / container-host 1`] = `
@@ -12398,8 +12398,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > kubernetes / database-server 1`] = `
@@ -12423,8 +12423,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12443,8 +12443,8 @@ MemoryMax=95%
 MemorySwapMax=0
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > kubernetes / defaults 1`] = `
@@ -12468,8 +12468,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12487,8 +12487,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > kubernetes / desktop 1`] = `
@@ -12512,8 +12512,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12530,7 +12530,7 @@ MemoryHigh=95%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -12555,8 +12555,8 @@ DefaultIOAccounting=yes
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:1048576
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12574,7 +12574,7 @@ MemoryMax=80%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~6% of pid_max)
+# TasksMax: hard task cap for the whole slice (~6.3% of pid_max)
 TasksMax=262144"
 `;
 
@@ -12618,8 +12618,8 @@ MemoryMax=90%
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=200
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: systemd > kubernetes / systemd-defaults 1`] = `
@@ -12643,8 +12643,8 @@ DefaultIOAccounting=no
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
-# DefaultTasksMax: default per-unit task cap (~15% of pid_max)
-DefaultTasksMax=629146
+# DefaultTasksMax: default per-unit task cap (~0.5% of pid_max)
+DefaultTasksMax=19660
 # DefaultLimitNOFILE: default open-file-descriptor soft:hard limit
 DefaultLimitNOFILE=1024:524288
 # DefaultLimitMEMLOCK: default locked-in-memory ceiling
@@ -12660,8 +12660,8 @@ CPUWeight=100
 # MemorySwapMax: unset (infinity, slice may swap freely)
 # IOWeight: proportional block-I/O share under contention (default 100)
 IOWeight=100
-# TasksMax: hard task cap for the whole slice (~15% of pid_max)
-TasksMax=629146"
+# TasksMax: hard task cap for the whole slice (~0.5% of pid_max)
+TasksMax=19660"
 `;
 
 exports[`generated config: sysv-ipc > container / defaults 1`] = `

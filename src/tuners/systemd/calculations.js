@@ -1,4 +1,5 @@
 import { SYSTEMD_DEFS_BY_KEY } from './defs.js'
+import { bootThreadsMax, systemdTasksMax } from '@/core/kernelLimits.js'
 
 /**
  * Hardware/workload-aware defaults for every systemd resource-control parameter.
@@ -6,16 +7,17 @@ import { SYSTEMD_DEFS_BY_KEY } from './defs.js'
  * Like the swap tuner's deriveDefaults, the per-workload numbers here are
  * opinionated *starting points* (not kernel constants): they encode common
  * practice for container hosts, databases, etc., and the user adjusts from
- * there. Kernel/systemd-mandated values (accounting defaults, the 15%-of-pid_max
- * DefaultTasksMax rule, the 1024:524288 / 8M limit defaults) come straight from
+ * there. Kernel/systemd-mandated values (accounting defaults, the DefaultTasksMax
+ * rule, the 1024:524288 / 8M limit defaults) come straight from
  * the man pages — see defs.js sources.
  *
  * @param {import('./profile.js').SystemdSpec} hw
  * @returns {import('./defs.js').SystemdValues}
  */
 export function deriveDefaults(hw) {
-  // DefaultTasksMax = 15% of kernel.pid_max (systemd-system.conf(5)).
-  const tasksFromPid = Math.round(hw.pidMax * 0.15)
+  // systemd's own DefaultTasksMax: 15% of the smaller of kernel.pid_max and
+  // kernel.threads-max, which the kernel sizes from RAM (systemd-system.conf(5)).
+  const tasks = clamp(systemdTasksMax(hw.pidMax, bootThreadsMax(hw.ramGiB)), 64, hw.pidMax)
 
   // Accounting: systemd stock defaults (memory + tasks on, cpu/io/ip off).
   let cpuAcct = 0
@@ -33,8 +35,6 @@ export function deriveDefaults(hw) {
   let memory_swap_max = 100 // infinity
   let default_limit_nofile_hard = SYSTEMD_DEFS_BY_KEY.default_limit_nofile_hard.kernelDefault
   let default_limit_memlock = SYSTEMD_DEFS_BY_KEY.default_limit_memlock.kernelDefault
-  let default_tasks_max = clamp(tasksFromPid, 64, hw.pidMax)
-  let tasks_max = clamp(tasksFromPid, 64, hw.pidMax)
 
   switch (hw.workload) {
     case 'container-host':
@@ -55,10 +55,6 @@ export function deriveDefaults(hw) {
       memory_max = 95
       memory_swap_max = 0 // never swap the DB slice
       break
-    case 'desktop':
-      // Keep interactive sessions responsive; cap runaway user tasks modestly.
-      tasks_max = clamp(Math.round(hw.pidMax * 0.1), 64, hw.pidMax)
-      break
     case 'general':
     default:
       break
@@ -70,7 +66,7 @@ export function deriveDefaults(hw) {
     default_io_accounting: ioAcct,
     default_tasks_accounting: tasksAcct,
     default_ip_accounting: ipAcct,
-    default_tasks_max,
+    default_tasks_max: tasks,
     default_limit_nofile_soft: SYSTEMD_DEFS_BY_KEY.default_limit_nofile_soft.kernelDefault,
     default_limit_nofile_hard,
     default_limit_memlock,
@@ -80,7 +76,7 @@ export function deriveDefaults(hw) {
     memory_max,
     memory_swap_max,
     io_weight: 100,
-    tasks_max,
+    tasks_max: tasks,
   }
 }
 

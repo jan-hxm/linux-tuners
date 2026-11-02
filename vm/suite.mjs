@@ -643,6 +643,16 @@ export function imageSuite(id) {
         expect(got).toBe(String(defaultTasksMax({ ...hw, systemd: 'older' }, params)))
       })
 
+      it("the systemd tuner's task caps start at systemd's own DefaultTasksMax", async () => {
+        const systemd = TUNER_DOMAINS.find((d) => d.id === 'systemd')
+        const sdHw = { ...systemd.defaultHardware, ...image.profile.systemd, ramGiB: hw.ramGiB, pidMax: Number(await vm.sysctl('kernel.pid_max')) }
+        const want = systemd.deriveDefaults(sdHw).default_tasks_max
+        const got = Number((await vm.run('systemctl show -p DefaultTasksMax --value')).stdout.trim())
+        // threads-max is a little under the RAM estimate, as above.
+        expect(got).toBeLessThanOrEqual(want)
+        expect(got).toBeGreaterThan(want * 0.9)
+      })
+
       it('a non-root user is held to kernel.keys.maxkeys', async () => {
         const KEYS = String.raw`
 import ctypes, errno

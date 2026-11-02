@@ -330,7 +330,9 @@ domain reads facts in two ways, and both default to none:
   get there (the hard limit stops at 1048576, `fs.nr_open` starts there),
   so the rule guards against a range change. It also warns when
   `DefaultTasksMax` or `TasksMax` passes the smaller of `pidMax` and
-  `threadsMax`.
+  `threadsMax`. Both task caps start at systemd's own default, sized from
+  the same RAM formula as the kernel step's `threads-max`
+  (`core/kernelLimits.js`), so the rule stays quiet on a default machine.
 
 On a tuner's own page there are no facts, so it behaves as it does today.
 The rule stays with the tuner that owns the setting, written against the
@@ -339,8 +341,10 @@ tuner. The contract suite checks that every fact is provided by exactly one
 tuner, earlier in the setup order than every tuner reading it
 (`factsReadBy`). It also checks that a provider returns the same facts as
 numbers in every state, and that `validate` reads only the facts it declares,
-by handing it a guard that throws on any other. Finally, every value a
-provider gives a fact-fed field must restore unchanged from a link.
+by handing it a guard that throws on any other. Every value a provider
+gives a fact-fed field must restore unchanged from a link. Finally, walking
+the steps in order with every step at its defaults, for each machine profile,
+the facts add no issue.
 
 **Steps reuse the tuner UI.** The step's store comes from
 `defineTunerStore('setup/<id>', domain, { urlSync: false })`, a new factory
@@ -853,8 +857,9 @@ behaviour goes in only once a VM has shown it; facts found that way so far:
   `50-pid-max.conf` (all but Ubuntu 18.04). `kernel.threads-max` is about
   RAM / 128 KiB, a few percent under, and accepts any value down to below
   the running threads, at which point nothing forks, SSH included.
-  systemd's `DefaultTasksMax` is 15% of the smaller of the two, read again
-  on `daemon-reexec`. The `user.max_*_namespaces` start at half of it.
+  systemd's `DefaultTasksMax` is 15% of the smaller of the two, rounded
+  down and read again on `daemon-reexec`: below 512 GiB of RAM `threads-max`
+  decides, about 19660 with 16 GiB. The `user.max_*_namespaces` start at half of it.
 - `kernel.sysrq` starts at 438 on Debian, 176 on Ubuntu and 16 on Fedora
   (systemd's `50-default.conf`); root's `/proc/sysrq-trigger` ignores it.
   The console loglevel starts at 7, 4 on Ubuntu (`10-console-messages.conf`);

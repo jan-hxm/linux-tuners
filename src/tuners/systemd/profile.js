@@ -101,7 +101,7 @@ export const PROFILE = {
       inputStep: 1024,
       picks: PID_PICKS,
       help: [
-        'Drives DefaultTasksMax (15% of pid_max) and the TasksMax range.',
+        'Drives DefaultTasksMax (15% of pid_max, or of the threads RAM allows when that is fewer) and the TasksMax range.',
         'Run `sysctl kernel.pid_max` to find yours.',
       ],
       default: DEFAULT_PID_MAX,

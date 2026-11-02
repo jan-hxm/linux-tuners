@@ -121,8 +121,9 @@ function yesNo(text) {
   return text === '1' ? 'yes' : 'no'
 }
 
+/** One decimal, so systemd's default on a 16 GiB machine shows as 0.5%, not 0%. */
 function pctOfPid(value, pidMax) {
-  return `${Math.round((value / pidMax) * 100)}%`
+  return `${Math.round((value / pidMax) * 1000) / 10}%`
 }
 
 /** Render a byte count using systemd's size suffixes (8388608 → "8M"). */

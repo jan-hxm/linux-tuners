@@ -5,6 +5,7 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
+import { bootThreadsMax, systemdTasksMax } from '@/core/kernelLimits.js'
 import { PROFILE } from './profile.js'
 import { SYSTEMD_KEYS, SYSTEMD_DEFS_BY_KEY, SYSTEMD_RESOURCE_DOCS } from './defs.js'
 import { deriveDefaults, rangeFor, cpuQuotaNoLimit, hasCpuAccountingOption, hasSwapControl } from './calculations.js'
@@ -94,10 +95,16 @@ function formula(def, { hardware, params }) {
   }
   if (def.key === 'default_tasks_max' || def.key === 'tasks_max') {
     const pct = Math.round((params[def.key] / hardware.pidMax) * 1000) / 10
+    const threads = bootThreadsMax(hardware.ramGiB)
     return {
-      title: 'Task cap as a share of the PID space',
-      lines: ['share = value / kernel.pid_max', `kernel.pid_max = ${hardware.pidMax.toLocaleString()}`],
-      values: [{ label: 'share of pid_max', v: `${pct}%` }],
+      title: 'Task cap and the kernel limits',
+      lines: ['systemd default = 15% × min(pid_max, threads-max)', 'threads-max ≈ RAM / (8 × 16 KiB stack)'],
+      values: [
+        { label: 'kernel.pid_max', v: hardware.pidMax.toLocaleString() },
+        { label: 'threads-max', v: threads.toLocaleString() },
+        { label: 'systemd default', v: systemdTasksMax(hardware.pidMax, threads).toLocaleString() },
+        { label: 'share of pid_max', v: `${pct}%` },
+      ],
     }
   }
   return null

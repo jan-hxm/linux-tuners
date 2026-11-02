@@ -634,4 +634,21 @@ describe('guided setup facts', () => {
     }
     expect(Object.keys(providedBy).sort()).toEqual([...MACHINE_FACTS].sort())
   })
+
+  // A step's defaults already agree with the defaults before it, so a machine
+  // nobody tuned gets no warning from the facts.
+  it('raises no issue from the facts when every step keeps its defaults', () => {
+    const byId = Object.fromEntries(TUNER_DOMAINS.map((d) => [d.id, d]))
+    for (const machine of machineProfiles()) {
+      const facts = {}
+      for (const { id } of LIVE_TUNERS) {
+        const domain = byId[id]
+        const hardware = { ...domain.defaultHardware, ...machineValues(domain.profile.fields, machine), ...factValues(domain.profile.fields, facts) }
+        const params = domain.deriveDefaults(hardware)
+        const ids = (f) => domain.validate(hardware, params, f).map((i) => i.id)
+        expect(ids(facts), `${id} on ${JSON.stringify(machine)}`).toEqual(ids({}))
+        Object.assign(facts, domain.facts(hardware, params))
+      }
+    }
+  })
 })

@@ -20,13 +20,13 @@ export const SYSTEMD_PRESETS = [
     label: 'systemd defaults',
     description: 'Stock manager defaults, no slice-level resource limits. A known baseline.',
     source: 'systemd-system.conf(5) / systemd.resource-control(5)',
+    // No task caps: deriveDefaults gives systemd's own, which depend on RAM.
     values: {
       default_cpu_accounting: 0,
       default_memory_accounting: 1,
       default_io_accounting: 0,
       default_tasks_accounting: 1,
       default_ip_accounting: 0,
-      default_tasks_max: 629146,
       default_limit_nofile_soft: 1024,
       default_limit_nofile_hard: 524288,
       default_limit_memlock: 8388608,
@@ -35,7 +35,6 @@ export const SYSTEMD_PRESETS = [
       memory_max: 100,
       memory_swap_max: 100,
       io_weight: 100,
-      tasks_max: 629146,
     },
   },
   {

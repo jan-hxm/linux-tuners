@@ -1,9 +1,7 @@
-import { PARAMETER_DEFS_BY_KEY, PID_MAX_LIMIT, THREAD_STACK_BYTES } from './defs.js'
+import { PARAMETER_DEFS_BY_KEY, PID_MAX_LIMIT } from './defs.js'
+import { bootThreadsMax, systemdTasksMax, THREAD_STACK_BYTES } from '@/core/kernelLimits.js'
 
 const GiB = 1024 ** 3
-
-/** systemd's DefaultTasksMax: this share of min(pid_max, threads-max). */
-export const TASKS_MAX_SHARE = 0.15
 
 /** Thread stacks past this share of RAM are worth a warning. */
 export const THREAD_RAM_WARN = 0.5
@@ -25,7 +23,7 @@ export const THREADS_LOW_WARN = 32768
  */
 export function kernelThreads(hw) {
   const step = PARAMETER_DEFS_BY_KEY.threads_max.step
-  return Math.min(PID_MAX_LIMIT, Math.ceil((hw.ramGiB * GiB) / (8 * THREAD_STACK_BYTES) / step) * step)
+  return Math.min(PID_MAX_LIMIT, Math.ceil(bootThreadsMax(hw.ramGiB) / step) * step)
 }
 
 /** The pid_max the machine runs with: systemd 243+ sets the limit at boot. */
@@ -35,7 +33,7 @@ export function effectivePidMax(hw, p) {
 
 /** systemd's default TasksMax per service with these values. */
 export function defaultTasksMax(hw, p) {
-  return Math.floor(TASKS_MAX_SHARE * Math.min(effectivePidMax(hw, p), p.threads_max))
+  return systemdTasksMax(effectivePidMax(hw, p), p.threads_max)
 }
 
 /** Kernel stack memory if every thread allowed existed, as a share of RAM. */

@@ -36,7 +36,7 @@ export const TUNERS = [
     route: {
       title: 'Swap & memory tuner | linux-tuners.dev',
       description:
-        'Hardware-aware tuner for Linux vm.* sysctl parameters: swappiness, min_free_kbytes, watermark scaling, dirty-page writeback, OOM behaviour. Live simulation of swap pressure, watermark zones, and dirty timeline.',
+        'Tune Linux swap and memory sysctls from your hardware: swappiness, min_free_kbytes, watermarks and dirty writeback, with live graphs and a sysctl.d file.',
       ogTitle: 'Swap & memory tuner',
       priority: 0.9,
       changefreq: 'monthly',
@@ -54,7 +54,7 @@ export const TUNERS = [
     route: {
       title: 'systemd & resource limits tuner | linux-tuners.dev',
       description:
-        'Hardware-aware tuner for systemd resource control: manager defaults (accounting, DefaultTasksMax, DefaultLimitNOFILE/MEMLOCK) and per-slice cgroup v2 controls (CPUWeight, CPUQuota, MemoryHigh/Max, IOWeight, TasksMax). Live CPU-share, memory-budget and task-cap graphs with copy-pasteable drop-ins.',
+        'Tune systemd resource control from your hardware: DefaultTasksMax, DefaultLimitNOFILE and per-slice CPU, memory and IO caps, with live graphs and drop-ins.',
       ogTitle: 'systemd & resource limits tuner',
       priority: 0.9,
       changefreq: 'monthly',
@@ -72,7 +72,7 @@ export const TUNERS = [
     route: {
       title: 'Security hardening tuner | linux-tuners.dev',
       description:
-        'Workload-aware Linux hardening sysctls: kptr_restrict, dmesg_restrict, ptrace_scope, ASLR, unprivileged BPF, reverse-path filtering, SYN cookies, ICMP redirects, protected links and suid core dumps. KSPP and CIS-style presets, kernel-version aware, with a commented sysctl.d file.',
+        'Harden Linux with sysctls: kptr_restrict, ptrace_scope, ASLR, unprivileged BPF, rp_filter and SYN cookies. KSPP and CIS-style presets and a sysctl.d file.',
       ogTitle: 'Security hardening tuner',
       priority: 0.9,
       changefreq: 'monthly',
@@ -90,7 +90,7 @@ export const TUNERS = [
     route: {
       title: 'Network stack tuner | linux-tuners.dev',
       description:
-        'Link- and path-aware tuner for Linux network sysctls: tcp_rmem/tcp_wmem sized from the bandwidth-delay product, rmem_max, somaxconn, SYN and device backlogs, BBR or CUBIC with fq/fq_codel, TIME_WAIT reuse, local port range and nf_conntrack limits. Live per-connection throughput chart and a commented sysctl.d file.',
+        'Tune Linux network sysctls for your link: TCP buffers sized from the bandwidth-delay product, somaxconn, BBR with fq and conntrack, as a sysctl.d file.',
       ogTitle: 'Network stack tuner',
       priority: 0.9,
       changefreq: 'monthly',
@@ -108,7 +108,7 @@ export const TUNERS = [
     route: {
       title: 'Filesystem & file descriptors tuner | linux-tuners.dev',
       description:
-        'Workload-aware tuner for Linux fs.* sysctls: fs.file-max, fs.nr_open, inotify max_user_watches, max_user_instances and max_queued_events, and fs.aio-max-nr. Shows the kernel memory each watch limit can pin, knows what systemd raises at boot, and writes a commented sysctl.d file.',
+        'Tune Linux fs.* sysctls for your workload: file-max, nr_open, inotify watches and instances, aio-max-nr, with their kernel memory cost and a sysctl.d file.',
       ogTitle: 'Filesystem & file descriptors tuner',
       priority: 0.9,
       changefreq: 'monthly',
@@ -126,7 +126,7 @@ export const TUNERS = [
     route: {
       title: 'Huge pages & memory layout tuner | linux-tuners.dev',
       description:
-        'Workload-aware tuner for Linux huge pages: vm.nr_hugepages and overcommit pools, Transparent Huge Pages enabled and defrag, KSM page merging for KVM hosts, vm.max_map_count and zone_reclaim_mode. Shows the RAM a pool takes, knows what each distribution starts with, and writes sysctl.d and tmpfiles.d files.',
+        'Size Linux huge pages for your workload: nr_hugepages, Transparent Huge Pages, KSM for KVM hosts and max_map_count, with sysctl.d and tmpfiles.d files.',
       ogTitle: 'Huge pages & memory layout tuner',
       priority: 0.9,
       changefreq: 'monthly',
@@ -144,7 +144,7 @@ export const TUNERS = [
     route: {
       title: 'System V IPC & shared memory tuner | linux-tuners.dev',
       description:
-        'Workload-aware tuner for Linux System V IPC sysctls: kernel.shmmni, shm_rmid_forced, kernel.sem, msgmni, msgmax and msgmnb. Knows the kernel defaults that already pass the Oracle minimums, sizes the Db2 minimums from RAM, shows the kernel memory full message queues can hold, and writes a commented sysctl.d file.',
+        'Tune Linux System V IPC limits: shmmni, kernel.sem, msgmni, msgmax and msgmnb, checked against the Oracle and Db2 minimums, with a commented sysctl.d file.',
       ogTitle: 'System V IPC & shared memory tuner',
       priority: 0.9,
       changefreq: 'monthly',
@@ -162,7 +162,7 @@ export const TUNERS = [
     route: {
       title: 'Kernel limits & panics tuner | linux-tuners.dev',
       description:
-        'Workload-aware tuner for Linux kernel.* sysctls: kernel.pid_max, threads-max, kernel.keys.maxkeys and maxbytes, kernel.panic, panic_on_oops, softlockup_panic, kernel.sysrq and the printk console loglevel. Knows what systemd sets at boot, shows the TasksMax systemd derives from threads-max, and writes a commented sysctl.d file.',
+        'Tune Linux kernel.* sysctls: pid_max, threads-max, key quotas, panic and oops handling, SysRq and the console loglevel, with a commented sysctl.d file.',
       ogTitle: 'Kernel limits & panics tuner',
       priority: 0.9,
       changefreq: 'monthly',
@@ -180,7 +180,7 @@ export const TUNERS = [
     route: {
       title: 'Block I/O & storage tuner | linux-tuners.dev',
       description:
-        'Disk- and workload-aware tuner for Linux block queue settings: the I/O scheduler (none, mq-deadline, BFQ, Kyber), nr_requests, read_ahead_kb, nomerges and rotational for NVMe, SATA SSDs, hard disks and virtio disks. Knows which kernels lack BFQ and what Fedora sets, and writes a commented udev rules file.',
+        'Tune Linux block I/O for your disks: I/O scheduler, nr_requests, read_ahead_kb and nomerges for NVMe, SSDs, hard disks and virtio, as a udev rules file.',
       ogTitle: 'Block I/O & storage tuner',
       priority: 0.9,
       changefreq: 'monthly',

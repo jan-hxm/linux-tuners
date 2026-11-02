@@ -68,4 +68,10 @@ describe('tuner registry', () => {
       expect(router.hasRoute(t.id), t.id).toBe(false)
     }
   })
+
+  // Search results cut descriptions at about 155 characters, and link
+  // checkers warn above that.
+  it('keeps every page description short enough for search results', () => {
+    for (const r of ROUTES_META) expect(r.description.length, r.path).toBeLessThanOrEqual(155)
+  })
 })

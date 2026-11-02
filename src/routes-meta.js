@@ -37,7 +37,7 @@ export const ROUTES_META = [
     name: 'landing',
     title: 'linux-tuners.dev | hardware-aware Linux config tuners',
     description:
-      'Interactive Linux configuration tuners with hardware-aware defaults, live impact graphs, and copy-pasteable configs. Tune swap, memory reclaim, dirty-page writeback, and more.',
+      'Interactive Linux config tuners with hardware-aware defaults, live impact graphs and copy-paste configs for sysctl, systemd and udev.',
     ogTitle: 'Hardware-aware Linux config tuners',
     priority: 1.0,
     changefreq: 'monthly',

@@ -16,10 +16,9 @@ Cheap, and nothing else pays off until people can find the site and shared links
 
 The next big feature, now that nine tuners exist: it turns separate tools into one path through a whole machine. Designed in [Design.md §5 Guided setup](Design.md#guided-setup); build in this order, each step shippable on its own.
 
-- [ ] Landing page: the role picker that reorders the cards, shows the `why` lines and moves the rest under "Optional for this machine", plus the "Start guided setup" button once `/setup` exists.
 - [ ] `core/machine.js` and the mapping: the machine field list, each tuner's `machine` declarations, and the contract test that every machine option maps to a value the tuner accepts.
 - [ ] Facts: the `facts` hook and the facts argument of `validate`, the systemd warnings against `nrOpen`, `pidMax` and `threadsMax`, and the order test.
-- [ ] `/setup`: the store option `urlSync: false`, the steps, the link envelope with its hostile-link tests, the output step with per-file download (which closes the `ConfigOutput` item in §3), the no-shared-key test, the route and the sitemap sources, and the `src/setup/` import rule.
+- [ ] `/setup`: the store option `urlSync: false`, the steps, the link envelope with its hostile-link tests, the output step with per-file download (which closes the `ConfigOutput` item in §3), the no-shared-key test, the route and the sitemap sources, the `src/setup/` import rule, and the landing page's "Start guided setup" button, which passes the picked role.
 
 ## 3. Quality
 
@@ -33,7 +32,6 @@ The next big feature, now that nine tuners exist: it turns separate tools into o
 Act only when they happen again.
 
 - [ ] VM suite: in a full parallel run the Ubuntu 24.04 guest sometimes drops off (SSH refused) at the first systemd drop-in case, right after the sysctl sweep; it comes back at the next reboot, and alone it always passes. Seen in two of three full runs, cause unknown (the panic switches are already reset after the kernel cases, and no other file sets them). Run with `VM_KEEP=1` and read `vm/.cache/run/lt-ubuntu2404/console-*.log` when it happens again.
-- [ ] Tests: `ChartFrame.test.js` once failed in a full `npm test` run with "document is not defined" (happy-dom missing), then passed alone and in three full runs. Possibly the node-environment override in `src/ui/theme.test.js` sharing a worker with the happy-dom files under `src/ui/**`; if it recurs, move the node-only tests out of `src/ui` or give `ChartFrame.test.js` an explicit `@vitest-environment happy-dom`.
 
 ## 5. Parked
 

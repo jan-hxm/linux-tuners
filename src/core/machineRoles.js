@@ -16,3 +16,22 @@ export const MACHINE_ROLES = Object.freeze([
   { value: 'router', label: 'Router or firewall' },
   { value: 'desktop', label: 'Desktop or workstation' },
 ])
+
+/** True for a known role id; anything else (an array, a typo) is false. */
+export function isMachineRole(value) {
+  return MACHINE_ROLES.some((r) => r.value === value)
+}
+
+/**
+ * Splits tuners into those recommended for a role and the rest, each kept in
+ * the given (setup) order. A tuner without a `setup` block is optional.
+ */
+export function tunersForRole(tuners, role) {
+  const recommended = []
+  const optional = []
+  for (const t of tuners) {
+    const roles = t.setup?.roles
+    ;(roles === 'all' || roles?.includes(role) ? recommended : optional).push(t)
+  }
+  return { recommended, optional }
+}

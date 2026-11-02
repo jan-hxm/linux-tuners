@@ -69,6 +69,8 @@ export const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition
     if (to.hash) return { el: to.hash, behavior: 'smooth' }
+    // A query change on the same page (the landing role picker) stays put.
+    if (to.path === from.path) return false
     return { top: 0 }
   },
 })

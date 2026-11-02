@@ -224,7 +224,8 @@ and the CMP load from a changing set of Google domains.
 
 ### Guided setup
 
-> **Status: designed, not built.** The build steps are in [TODO.md](TODO.md) §2.
+> **Status: the landing role picker is built; the rest is designed, not
+> built.** The build steps are in [TODO.md](TODO.md) §2.
 
 The tuners answer "what should this one setting be". The guided setup answers
 "what should I set on this machine, and in what order". It has two parts:
@@ -235,7 +236,11 @@ The tuners answer "what should this one setting be". The guided setup answers
   that don't apply to the role move under "Optional for this machine" and are
   not hidden. A "Start guided setup" button opens `/setup` with the role already
   chosen. The page is still prerendered with every card, so crawlers and
-  no-JS visitors see the same content as before.
+  no-JS visitors see the same content as before. The picked role lives in the
+  query (`/?role=database`), so Back and a shared link keep it; a value that
+  isn't a known role (`isMachineRole`) reads as no role, which shows every
+  card. `tunersForRole` in `core/machineRoles.js` does the split. The router
+  keeps the scroll position when only the query changes.
 - **`/setup` walks through a whole machine.** The user enters the machine
   profile once. Then each tuner is a step, and the last step shows every file
   for the system.

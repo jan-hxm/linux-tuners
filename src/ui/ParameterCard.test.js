@@ -233,3 +233,37 @@ describe('ParameterCard layers (Design.md §7)', () => {
     expect(headings).toEqual(['What it does', 'When to change it'])
   })
 })
+
+describe('ParameterCard value source (Design.md §7)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  const resetButton = (wrapper) => wrapper.findAll('button').find((b) => b.text() === 'Reset')
+
+  it('names the kernel default beside the profile default, and resets to the profile default', async () => {
+    const store = useTunerStoreFor(swapDomain)
+    store.setHardware({ ...store.hardware, workload: 'k8s' })
+    const wrapper = mountCard('swappiness')
+    await nextTick()
+    expect(wrapper.text()).toContain('Kernel default 60 · for your profile 10')
+    expect(resetButton(wrapper)).toBeUndefined()
+
+    store.setParam('swappiness', 35)
+    await nextTick()
+    const reset = resetButton(wrapper)
+    expect(reset.attributes('aria-label')).toBe('Reset Swap aggressiveness to 10')
+    await reset.trigger('click')
+    expect(store.params.swappiness).toBe(10)
+    expect(resetButton(wrapper)).toBeUndefined()
+  })
+
+  it('marks the kernel default on the track and emphasises the zone holding the value', async () => {
+    const store = useTunerStoreFor(swapDomain)
+    store.setHardware({ ...store.hardware, workload: 'k8s' })
+    const wrapper = mountCard('swappiness')
+    await nextTick()
+    expect(wrapper.find('span[aria-hidden="true"].absolute').exists()).toBe(true)
+    expect(wrapper.find('li.font-semibold').text()).toBe('0–10: latency-sensitive')
+  })
+})

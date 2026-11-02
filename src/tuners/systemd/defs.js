@@ -312,7 +312,12 @@ export const SYSTEMD_DEFS = [
     kernelMax: 10000,
     step: 1,
     unit: 'weight',
-    zones: ['1–50: yields', '100: default', '200–1000: prioritised', '10000: max'],
+    zones: [
+      { label: '1–50: yields', min: 1, max: 50 },
+      { label: '100: default', min: 100, max: 100 },
+      { label: '200–1000: prioritised', min: 200, max: 1000 },
+      { label: '10000: max', min: 10000, max: 10000 },
+    ],
   },
   {
     key: 'cpu_quota',
@@ -367,7 +372,10 @@ export const SYSTEMD_DEFS = [
     kernelMax: 100,
     step: 1,
     unit: 'pct',
-    zones: ['below MemoryMax: throttle band', '100%: no soft limit'],
+    zones: [
+      { label: 'below MemoryMax: throttle band' },
+      { label: '100%: no soft limit', min: 100, max: 100 },
+    ],
   },
   {
     key: 'memory_max',
@@ -396,7 +404,10 @@ export const SYSTEMD_DEFS = [
     kernelMax: 100,
     step: 1,
     unit: 'pct',
-    zones: ['≥ MemoryHigh: safety cap', '100%: no hard limit'],
+    zones: [
+      { label: '≥ MemoryHigh: safety cap' },
+      { label: '100%: no hard limit', min: 100, max: 100 },
+    ],
   },
   {
     key: 'memory_swap_max',
@@ -422,7 +433,10 @@ export const SYSTEMD_DEFS = [
     kernelMax: 100,
     step: 1,
     unit: 'pct',
-    zones: ['0%: no swap for slice', '100%: unlimited swap'],
+    zones: [
+      { label: '0%: no swap for slice', min: 0, max: 0 },
+      { label: '100%: unlimited swap', min: 100, max: 100 },
+    ],
   },
   {
     key: 'io_weight',
@@ -451,7 +465,12 @@ export const SYSTEMD_DEFS = [
     kernelMax: 10000,
     step: 1,
     unit: 'weight',
-    zones: ['1–50: yields', '100: default', '200–1000: prioritised', '10000: max'],
+    zones: [
+      { label: '1–50: yields', min: 1, max: 50 },
+      { label: '100: default', min: 100, max: 100 },
+      { label: '200–1000: prioritised', min: 200, max: 1000 },
+      { label: '10000: max', min: 10000, max: 10000 },
+    ],
   },
   {
     key: 'tasks_max',

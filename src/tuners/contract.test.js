@@ -317,6 +317,22 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
       }
     })
 
+    // Design.md §7 "Where a value comes from".
+    it('formats every default for the card and bounds every zone inside the kernel range', () => {
+      for (const hw of profilesFor(domain)) {
+        for (const def of Object.values(domain.defsByKey)) {
+          expect(domain.formatValue(def.kernelDefault, def, hw), def.key).toEqual(expect.any(String))
+        }
+      }
+      for (const def of Object.values(domain.defsByKey)) {
+        for (const zone of def.zones ?? []) {
+          expect(typeof zone.label, def.key).toBe('string')
+          if (zone.min === undefined && zone.max === undefined) continue
+          expect(def.kernelMin <= zone.min && zone.min <= zone.max && zone.max <= def.kernelMax, `${def.key} ${zone.label}`).toBe(true)
+        }
+      }
+    })
+
     it('summarises every profile as rich text with no stray markup', () => {
       const label = (key, value) => domain.profile.fields.find((f) => f.key === key).options.find((o) => o.value === value).label
       for (const hw of profilesFor(domain)) {
@@ -651,6 +667,7 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         domain.context.label,
         domain.context.badge,
         domain.docsLabel,
+        domain.defaultLabel,
         ...strings(domain.page),
         ...strings(domain.about),
         ...strings(domain.profile),

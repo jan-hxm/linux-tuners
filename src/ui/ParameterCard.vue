@@ -33,12 +33,21 @@ const labelId = computed(() => `${titleId.value} ${nameId.value}`)
 /** The parts of longDesc this parameter has, each with its label. */
 const descParts = computed(() => DESC_PARTS.filter(({ key }) => def.value.longDesc[key]?.length))
 
-const isWorkloadTuned = computed(() => {
-  // True when the workload's hardware-derived default differs from the stock default.
-  // Surfaces e.g. "Workload-specific" on swappiness when workload=k8s.
-  const derived = domain.deriveDefaults(tuner.hardware)[props.paramKey]
-  return !valueTypeOf(def.value).equals(derived, def.value.kernelDefault)
+// Where the value comes from: the stock default, the profile's default when
+// it differs, and a Reset back to the profile's when the value moved off it.
+const profileDefault = computed(() => tuner.profileDefaults[props.paramKey])
+const profileDiffers = computed(() => !valueTypeOf(def.value).equals(profileDefault.value, def.value.kernelDefault))
+const changed = computed(() => !valueTypeOf(def.value).equals(value.value, profileDefault.value))
+const sourceLine = computed(() => {
+  if (!profileDiffers.value && !changed.value) return null
+  const stock = `${domain.defaultLabel} ${domain.formatValue(def.value.kernelDefault, def.value, tuner.hardware)}`
+  if (!profileDiffers.value) return stock
+  return `${stock} · for your profile ${domain.formatValue(profileDefault.value, def.value, tuner.hardware)}`
 })
+
+function resetValue() {
+  tuner.setParam(props.paramKey, profileDefault.value)
+}
 
 // Contextual ("K8s" on the swap tuner, "container host" on systemd) note + its
 // "Source" link, both supplied by the active domain so the card stays generic.
@@ -136,11 +145,6 @@ function openInDrawer() {
             :title="`Has ${domain.context.label}-specific guidance`"
           >{{ domain.context.badge }}</li>
           <li
-            v-if="isWorkloadTuned"
-            class="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-violet-800"
-            :title="`Tuned by workload=${tuner.hardware.workload}`"
-          >workload</li>
-          <li
             v-if="def.dangerousIfZero"
             class="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-red-800"
             title="Setting to 0 is documented as dangerous"
@@ -149,6 +153,10 @@ function openInDrawer() {
 
         <p v-if="def.alsoSets" class="mt-1 break-all font-mono text-xs text-slate-500">also sets {{ def.alsoSets.join(', ') }}</p>
         <p class="mt-1.5 text-xs text-slate-600">{{ def.shortDesc }}</p>
+        <template v-if="sourceLine">
+          <p class="mt-1 text-xs text-slate-500">{{ sourceLine }}</p>
+          <p v-if="def.kernelDefaultNote" class="text-xs text-slate-500">{{ def.kernelDefaultNote }}</p>
+        </template>
       </div>
 
       <div class="ml-auto shrink-0 text-right">
@@ -176,6 +184,13 @@ function openInDrawer() {
         >{{ formatted }}<span aria-hidden="true" class="text-[11px] text-slate-400">✎</span></button>
         <div v-else class="font-mono text-sm font-semibold text-slate-900">{{ formatted }}</div>
         <div v-if="control.showsRange && !range.elements" class="text-[11px] text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
+        <button
+          v-if="changed"
+          type="button"
+          class="mt-1 min-h-6 rounded border border-slate-300 px-2 text-xs text-slate-700 hover:bg-slate-50"
+          :aria-label="`Reset ${def.title} to ${domain.formatValue(profileDefault, def, tuner.hardware)}`"
+          @click="resetValue"
+        >Reset</button>
       </div>
     </header>
 

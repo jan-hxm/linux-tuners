@@ -66,6 +66,7 @@
  * @property {(hw:Object)=>boolean} [contextApplies]  Gate the contextual badge/note on hardware (e.g. only show K8s guidance when workload is k8s). Omitted in the spec = always show.
  * @property {string}   docsLabel        Label for the per-parameter docs link
  * @property {string}   noteKey          Def field holding the contextual note
+ * @property {string}   [defaultLabel]   Whose default def.kernelDefault is ("systemd default"). Omitted in the spec = 'Kernel default'.
  * @property {(def:Object, ctx:{hardware:Object,params:Object})=>(TunerFormula|null)} [formula]
  * @property {(def:Object, text:string)=>(string|null)} [tryCommand]  The drawer's command that sets the value until reboot (core/output sysctlTryCommand, sysfsTryCommand). Omitted in the spec = none.
  * @property {Object}   page    Page copy for TunerPage (hero, step titles, ad slot), from about.js

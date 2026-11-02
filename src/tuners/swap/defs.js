@@ -46,7 +46,8 @@
  * @property {number}         kernelMax      Highest value the kernel accepts
  * @property {number}         step           Slider step granularity
  * @property {string}         unit           Display unit (' ', 'kB', '%', 'cs', 'mode')
- * @property {string[]}       [zones]        Optional zone annotations for the slider track
+ * @property {{label:string, min?:number, max?:number}[]} [zones]  Optional zone annotations under the slider;
+ *                                           the first zone whose min..max holds the value is emphasised
  * @property {boolean}        [dangerousIfZero] Highlight zero as a danger value
  */
 
@@ -84,7 +85,12 @@ export const PARAMETER_DEFS = [
     kernelMax: 200,
     step: 1,
     unit: '',
-    zones: ['0–10: latency-sensitive', '10–60: balanced', '60–100: swap-friendly', '100–200: fast swap only'],
+    zones: [
+      { label: '0–10: latency-sensitive', min: 0, max: 10 },
+      { label: '10–60: balanced', min: 10, max: 60 },
+      { label: '60–100: swap-friendly', min: 60, max: 100 },
+      { label: '100–200: fast swap only', min: 100, max: 200 },
+    ],
   },
   {
     key: 'min_free_kbytes',
@@ -168,7 +174,11 @@ export const PARAMETER_DEFS = [
     kernelMax: 500,
     step: 1,
     unit: '',
-    zones: ['below 100: keep metadata', '100: balanced', 'above 100: reclaim aggressively'],
+    zones: [
+      { label: 'below 100: keep metadata', min: 0, max: 99 },
+      { label: '100: balanced', min: 100, max: 100 },
+      { label: 'above 100: reclaim aggressively', min: 101, max: 500 },
+    ],
     dangerousIfZero: true,
   },
   {

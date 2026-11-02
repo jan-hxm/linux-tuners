@@ -568,6 +568,24 @@ must follow them, and existing UI must not regress.
   def has a tier and every section an essential parameter. Essential means
   what most readers of that tuner should look at; the rest is for a reason
   the reader already has.
+- **Where a value comes from.** A card whose profile default differs from
+  `def.kernelDefault` says so in a line under its description ("Kernel
+  default 60 · for your profile 10"; the domain's `defaultLabel` names whose
+  default it is, "systemd default" for systemd, and the drawer uses it too),
+  with the def's `kernelDefaultNote` under it, since many defaults scale with
+  RAM or differ by distribution and the number alone would claim too much.
+  The line also shows, without the profile part, once the value moves off a
+  default that equals the kernel's. When the value differs from the profile's
+  default (the store's `profileDefaults`), a "Reset" button under the value
+  sets it back; it is an ordinary edit, so it needs no undo. A slider marks
+  the kernel default with a tick under its track when it is inside the range,
+  and emphasises the zone that holds the value: `def.zones` are
+  `{ label, min, max }`, and a zone that depends on another parameter
+  ("below MemoryMax") has no bounds. The zone labels stay a list under the
+  track rather than sitting under their stretch: most stretches are too
+  narrow for their label (swappiness 0–10 is 5 % of the track, a weight's
+  1–50 under 1 %). The old violet "workload" badge said only that the
+  profile moved the default, which the line now says with numbers.
 - **Reset needs no confirmation.** It only recomputes the defaults, and
   `UndoToast` offers to put back what a reset or a preset snap replaced (the
   store's `undoState`, one step deep; any other edit clears it, and it is never
@@ -691,7 +709,7 @@ so that a new variant is an addition rather than an edit to shared code.
   - `format`: the emitted text, which throws on a value of the wrong shape.
     The card's display text stays the tuner's `formatValue`.
   - `equals`: used by `differingKeys` for the preset diff, the "customised"
-    flag and the card's "workload" badge.
+    flag and the card's source line and Reset.
 
   Serialization, the store, the preset logic and the config writers call the
   type and never assume a number. This keeps the

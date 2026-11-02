@@ -136,10 +136,25 @@ const pct = computed(() => {
   const clamped = Math.max(min, Math.min(max, props.value))
   return ((clamped - min) / (max - min)) * 100
 })
+
+// A tick under the track where the default sits, when it's inside the range.
+// The 16px thumb's centre travels from 8px to 100% - 8px, so the tick uses
+// the same inset to line up with the thumb at that value.
+const defaultPct = computed(() => {
+  const { min, max } = props.range
+  const d = props.def.kernelDefault
+  if (typeof d !== 'number' || max <= min || d < min || d > max) return null
+  return ((d - min) / (max - min)) * 100
+})
+
+/** The zone holding the value: the first whose min..max does. */
+const currentZone = computed(() =>
+  props.def.zones?.find((z) => z.min !== undefined && z.min <= props.value && props.value <= z.max) ?? null,
+)
 </script>
 
 <template>
-  <div class="mt-3">
+  <div class="relative mt-3">
     <input
       ref="sliderEl"
       type="range"
@@ -156,8 +171,18 @@ const pct = computed(() => {
       @touchend="onTouchEnd"
       @touchcancel="onTouchEnd"
     />
-    <ul v-if="def.zones" class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-slate-600">
-      <li v-for="z in def.zones" :key="z">{{ z }}</li>
+    <span
+      v-if="defaultPct !== null"
+      aria-hidden="true"
+      class="pointer-events-none absolute top-[15px] h-1.5 w-0.5 -translate-x-1/2 rounded-full bg-slate-400"
+      :style="{ left: `calc(8px + (100% - 16px) * ${defaultPct / 100})` }"
+    />
+    <ul v-if="def.zones" class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+      <li
+        v-for="z in def.zones"
+        :key="z.label"
+        :class="z === currentZone ? 'font-semibold text-slate-900' : 'font-medium text-slate-500'"
+      >{{ z.label }}</li>
     </ul>
   </div>
 </template>

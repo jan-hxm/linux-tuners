@@ -77,13 +77,17 @@ export function defineTunerStore(id, domain, { urlSync = true } = {}) {
           customised: preset ? differingKeys(domain.defsByKey, preset.values, state.params).length > 0 : false,
         })
       },
+      /** The values the profile derives, which a card's Reset returns to. */
+      profileDefaults(state) {
+        return domain.deriveDefaults(state.hardware)
+      },
       /**
        * Keys whose value differs from the profile's default: what a preset or
        * the user changed. ParameterPanel never hides these.
        * @returns {string[]}
        */
       changedKeys(state) {
-        return differingKeys(domain.defsByKey, domain.deriveDefaults(state.hardware), state.params)
+        return differingKeys(domain.defsByKey, this.profileDefaults, state.params)
       },
       /** {[paramKey]: ValidationIssue[]} for fast per-card lookup */
       issuesByParam() {

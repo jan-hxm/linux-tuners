@@ -55,6 +55,8 @@ const DEFAULTS = {
   facts: () => ({}),
   /** validate reads no facts. */
   readsFacts: [],
+  /** Whose default def.kernelDefault is, as the card and drawer name it. */
+  defaultLabel: 'Kernel default',
 }
 
 /**

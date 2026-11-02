@@ -152,7 +152,7 @@ watch(isOpen, async (open) => {
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Range</h3>
           <p class="mt-1 text-xs text-slate-700">
             {{ rangeText.accepts }}
-            Kernel default: <span class="font-mono">{{ rangeText.kernelDefault }}</span>.
+            {{ domain.defaultLabel }}: <span class="font-mono">{{ rangeText.kernelDefault }}</span>.
             <template v-if="def.kernelDefaultNote">{{ def.kernelDefaultNote }}</template>
           </p>
         </section>

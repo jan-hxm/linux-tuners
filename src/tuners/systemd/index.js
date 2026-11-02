@@ -135,6 +135,7 @@ export const systemdDomain = defineTuner({
   workloadField: 'workload',
   context: { badge: 'host', label: 'Container host', url: SYSTEMD_RESOURCE_DOCS },
   docsLabel: 'systemd docs',
+  defaultLabel: 'systemd default',
   noteKey: 'contextNote',
   formula,
   page: PAGE,

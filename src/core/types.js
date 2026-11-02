@@ -44,7 +44,9 @@
  * @property {Record<string, Object>} defsByKey
  * @property {(hw:Object)=>Object} deriveDefaults
  * @property {(key:string, hw:Object)=>{min:number,max:number}} rangeFor
- * @property {(hw:Object, params:Object)=>any[]} validate
+ * @property {(hw:Object, params:Object, facts?:Record<string, number>)=>any[]} validate  Facts from earlier setup steps; none on the tuner's own page
+ * @property {(hw:Object, params:Object)=>Record<string, number>} [facts]  Values for later setup steps (core/machine.js MACHINE_FACTS). Omitted in the spec = none.
+ * @property {string[]} [readsFacts]  Facts validate reads. Omitted in the spec = none.
  * @property {(issues:any[])=>boolean} hasBlockingIssue
  * @property {(value:number, def:Object, hw:Object)=>string} formatValue
  * @property {TunerSection[]} sections

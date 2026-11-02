@@ -312,24 +312,35 @@ every RAM and cgroup field copies its machine field.
 
 **Facts link the steps.** Some limits come from another tuner's *values*, not
 from the machine profile. A domain may provide facts through an optional hook
-`facts(hardware, params)`. It returns values named in a fixed vocabulary in
-`core/machine.js`: `pidMax` and `threadsMax` (the kernel tuner's effective
-values, so systemd 243's boot-time `pid_max` counts) and `nrOpen` (filesystem).
-A domain reads facts in two ways, and both default to none:
+`facts(hardware, params)`. It returns values named in a fixed vocabulary,
+`MACHINE_FACTS` in `core/machine.js`: `pidMax` and `threadsMax` (the kernel
+tuner's effective values, so systemd 243's boot-time `pid_max` counts) and
+`nrOpen` (filesystem). `fs.nr_open` is left out at 1048576, where Debian 13
+and Fedora start higher, so `nrOpen` is the least the machine runs with. A
+domain reads facts in two ways, and both default to none:
 
-- A profile field's `machine` may name a fact, so the systemd step's `pidMax`
-  field comes from the kernel step.
+- A profile field's `machine` may name a fact, which it copies (a fact is
+  never mapped). The systemd step's `pidMax` field comes from the kernel step
+  this way. `machineValues` skips these fields, and `factValues(fields,
+  facts)` fills them.
 - `validate(hardware, params, facts)` gets the facts as an optional third
-  argument. The systemd tuner warns when the `DefaultLimitNOFILE` hard limit
-  passes `nrOpen`, since systemd then sets the closest value the kernel
-  allows. It also warns when `DefaultTasksMax` or `TasksMax` passes the
-  smaller of `pidMax` and `threadsMax`.
+  argument, and the domain lists the ones it reads in `readsFacts`. The
+  systemd tuner warns when the `DefaultLimitNOFILE` hard limit passes
+  `nrOpen`, since units then get `fs.nr_open` instead. Today's ranges can't
+  get there (the hard limit stops at 1048576, `fs.nr_open` starts there),
+  so the rule guards against a range change. It also warns when
+  `DefaultTasksMax` or `TasksMax` passes the smaller of `pidMax` and
+  `threadsMax`.
 
 On a tuner's own page there are no facts, so it behaves as it does today.
 The rule stays with the tuner that owns the setting, written against the
 shared vocabulary, so no tuner imports another and shared code never names a
-tuner. A contract test checks that every fact a tuner reads is provided by a
-tuner earlier in the setup order.
+tuner. The contract suite checks that every fact is provided by exactly one
+tuner, earlier in the setup order than every tuner reading it
+(`factsReadBy`). It also checks that a provider returns the same facts as
+numbers in every state, and that `validate` reads only the facts it declares,
+by handing it a guard that throws on any other. Finally, every value a
+provider gives a fact-fed field must restore unchanged from a link.
 
 **Steps reuse the tuner UI.** The step's store comes from
 `defineTunerStore('setup/<id>', domain, { urlSync: false })`, a new factory

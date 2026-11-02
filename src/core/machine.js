@@ -112,6 +112,23 @@ export const DEFAULT_MACHINE = Object.freeze(profileDefaults(MACHINE_FIELDS))
 
 export const MACHINE_SCHEMA = Object.freeze(profileSchema(MACHINE_FIELDS))
 
+/**
+ * The facts a setup step passes to the later ones: values another tuner sets,
+ * which a tuner's limits depend on. A domain's `facts(hardware, params)`
+ * returns some of these, and a later domain reads them through a profile
+ * field (`machine: 'pidMax'`) or the third argument of `validate`.
+ *
+ * - `pidMax`: kernel.pid_max the machine runs with (kernel tuner).
+ * - `threadsMax`: kernel.threads-max (kernel tuner).
+ * - `nrOpen`: fs.nr_open (filesystem tuner).
+ */
+export const MACHINE_FACTS = Object.freeze(['pidMax', 'threadsMax', 'nrOpen'])
+
+/** Whether a tuner field copies a fact rather than a machine field. */
+function readsFact(field) {
+  return typeof field.machine === 'string' && MACHINE_FACTS.includes(field.machine)
+}
+
 /** The machine field a tuner field reads, or undefined when it reads none. */
 function sourceOf(field) {
   return typeof field.machine === 'string' ? field.machine : field.machine?.from
@@ -119,8 +136,9 @@ function sourceOf(field) {
 
 /**
  * The values a machine profile gives a tuner's profile fields, keyed by the
- * tuner's field keys. Fields without a `machine` declaration are left out, so
- * the caller overlays this on the tuner's own defaults.
+ * tuner's field keys. Fields without a `machine` declaration, and fields that
+ * read a fact, are left out, so the caller overlays this on the tuner's own
+ * defaults.
  *
  * @param {import('./profile.js').ProfileField[]} fields  A tuner's profile fields
  * @param {Record<string, *>} machine
@@ -129,7 +147,7 @@ export function machineValues(fields, machine) {
   const values = {}
   for (const field of fields) {
     const from = sourceOf(field)
-    if (from === undefined) continue
+    if (from === undefined || readsFact(field)) continue
     if (typeof field.machine === 'string') values[field.key] = machine[from]
     // Own entries only, so a value such as 'constructor' maps to nothing.
     else values[field.key] = Object.hasOwn(field.machine.map, machine[from]) ? field.machine.map[machine[from]] : undefined
@@ -138,9 +156,37 @@ export function machineValues(fields, machine) {
 }
 
 /**
+ * The values earlier steps' facts give a tuner's profile fields, keyed by the
+ * tuner's field keys. A fact no earlier step provided is left out.
+ *
+ * @param {import('./profile.js').ProfileField[]} fields  A tuner's profile fields
+ * @param {Record<string, number>} facts
+ */
+export function factValues(fields, facts) {
+  const values = {}
+  for (const field of fields) {
+    if (readsFact(field) && Object.hasOwn(facts, field.machine)) values[field.key] = facts[field.machine]
+  }
+  return values
+}
+
+/**
+ * The facts a domain reads: those its profile fields copy, and those its
+ * `validate` declares in `readsFacts`.
+ *
+ * @param {import('./types.js').TunerDomain} domain
+ * @returns {string[]}
+ */
+export function factsReadBy(domain) {
+  const fromFields = domain.profile.fields.filter(readsFact).map((f) => f.machine)
+  return [...new Set([...fromFields, ...domain.readsFacts])]
+}
+
+/**
  * Structural checks for a tuner's `machine` declarations: a known machine
- * field, and a map with exactly one entry per option. Whether each mapped
- * value is one the tuner field accepts is the contract suite's check.
+ * field or fact, and a map with exactly one entry per option. A fact is only
+ * copied, never mapped. Whether each mapped value is one the tuner field
+ * accepts is the contract suite's check.
  *
  * @param {import('./profile.js').ProfileField[]} fields
  * @returns {string[]} problems, empty when the declarations are sound
@@ -148,7 +194,7 @@ export function machineValues(fields, machine) {
 export function machineProblems(fields) {
   const problems = []
   for (const field of fields) {
-    if (field.machine === undefined) continue
+    if (field.machine === undefined || readsFact(field)) continue
     const source = MACHINE_FIELDS_BY_KEY[sourceOf(field)]
     if (!source) {
       problems.push(`profile field "${field.key}" reads an unknown machine field`)

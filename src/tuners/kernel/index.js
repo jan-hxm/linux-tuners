@@ -7,7 +7,7 @@
 import { defineTuner } from '@/core/defineTuner.js'
 import { PROFILE } from './profile.js'
 import { PARAMETER_KEYS, PARAMETER_DEFS_BY_KEY, LXD_SERVER_SETTINGS } from './defs.js'
-import { deriveDefaults, rangeFor, isApplicable, defaultTasksMax, kernelThreads, threadStackRamShare } from './calculations.js'
+import { deriveDefaults, rangeFor, isApplicable, defaultTasksMax, effectivePidMax, kernelThreads, threadStackRamShare } from './calculations.js'
 import { validate, hasBlockingIssue } from './validation.js'
 import { generateConfig } from './config.js'
 import { PRESETS, PRESETS_BY_ID } from './presets.js'
@@ -82,6 +82,9 @@ export const kernelDomain = defineTuner({
   generateConfig,
   outputFilename: '99-kernel-tuning.conf',
   formula,
+  // The values the machine runs with: systemd 243+ sets pid_max at boot, and
+  // threads-max is never below the kernel's own value.
+  facts: (hw, p) => ({ pidMax: effectivePidMax(hw, p), threadsMax: p.threads_max }),
   workloads: ['server', 'container', 'desktop'],
   workloadField: 'workload',
   context: { badge: 'LXD', label: 'Container hosts', url: LXD_SERVER_SETTINGS },

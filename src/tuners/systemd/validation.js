@@ -12,12 +12,17 @@
  * @property {boolean}         blocking
  */
 
+import { SYSTEMD_DEFS_BY_KEY } from './defs.js'
+
 /**
  * @param {import('./profile.js').SystemdSpec} hw
  * @param {import('./defs.js').SystemdValues} p
+ * @param {{ nrOpen?: number, pidMax?: number, threadsMax?: number }} [facts]
+ *   From the filesystem and kernel steps of the guided setup; none on this
+ *   tuner's own page.
  * @returns {ValidationIssue[]}
  */
-export function validate(hw, p) {
+export function validate(hw, p, facts = {}) {
   /** @type {ValidationIssue[]} */
   const issues = []
 
@@ -88,6 +93,30 @@ export function validate(hw, p) {
       blocking: false,
       params: ['default_tasks_accounting', 'tasks_max', 'default_tasks_max'],
       message: 'TasksMax/DefaultTasksMax are only enforced when tasks accounting is enabled.',
+    })
+  }
+
+  // No limit can pass fs.nr_open: units asking for more get fs.nr_open.
+  if (facts.nrOpen !== undefined && p.default_limit_nofile_hard > facts.nrOpen) {
+    issues.push({
+      id: 'nofile-above-nr-open',
+      level: 'warn',
+      blocking: false,
+      params: ['default_limit_nofile_hard'],
+      message: `The DefaultLimitNOFILE hard limit is above fs.nr_open from the filesystem step (${facts.nrOpen}), so units get ${facts.nrOpen} instead.`,
+    })
+  }
+
+  // The kernel runs out of PIDs or threads before a task cap above both binds.
+  const kernelTasks = Math.min(facts.pidMax ?? Infinity, facts.threadsMax ?? Infinity)
+  const tasksAbove = ['default_tasks_max', 'tasks_max'].filter((k) => p[k] > kernelTasks)
+  if (tasksAbove.length > 0) {
+    issues.push({
+      id: 'tasks-above-kernel-limit',
+      level: 'warn',
+      blocking: false,
+      params: tasksAbove,
+      message: `${tasksAbove.map((k) => SYSTEMD_DEFS_BY_KEY[k].sysctlName).join(' and ')} ${tasksAbove.length > 1 ? 'are' : 'is'} above the smaller of kernel.pid_max and kernel.threads-max from the kernel step (${kernelTasks}), so the kernel stops new tasks first.`,
     })
   }
 

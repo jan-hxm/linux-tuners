@@ -8,7 +8,7 @@
 
 import { makeSerialization } from './serialization.js'
 import { profileDefaults, profileSchema, profileProblems } from './profile.js'
-import { machineProblems } from './machine.js'
+import { MACHINE_FACTS, machineProblems } from './machine.js'
 
 const REQUIRED = [
   'id',
@@ -50,6 +50,10 @@ const DEFAULTS = {
   graphTabs: [],
   /** Shared links carry envelope version 1. */
   linkVersion: 1,
+  /** Provides no facts to later setup steps (core/machine.js MACHINE_FACTS). */
+  facts: () => ({}),
+  /** validate reads no facts. */
+  readsFacts: [],
 }
 
 /**
@@ -121,6 +125,11 @@ export function assertTuner(domain) {
   if (!profile.title || !profile.applyLabel || typeof profile.summary !== 'function') fail('profile needs a title, an applyLabel and a summary')
   for (const problem of profileProblems(profile.fields)) fail(problem)
   for (const problem of machineProblems(profile.fields)) fail(problem)
+  if (typeof domain.facts !== 'function') fail('facts must be a function')
+  if (!Array.isArray(domain.readsFacts)) fail('readsFacts must be an array')
+  for (const fact of domain.readsFacts) {
+    if (!MACHINE_FACTS.includes(fact)) fail(`readsFacts names unknown fact "${fact}"`)
+  }
 
   if (!Array.isArray(domain.graphTabs)) fail('graphTabs must be an array')
   for (const tab of domain.graphTabs) {

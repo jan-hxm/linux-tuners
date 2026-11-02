@@ -58,4 +58,31 @@ describe('systemd validate', () => {
     const { hw, params } = setup('general', { cpu_quota: 10 })
     expect(ids(validate(hw, params))).toContain('cpuquota-starves-system')
   })
+
+  describe('facts from earlier setup steps', () => {
+    const FACT_IDS = ['nofile-above-nr-open', 'tasks-above-kernel-limit']
+
+    it('raises nothing on the tuner page, where there are no facts', () => {
+      const { hw, params } = setup('general', { default_limit_nofile_hard: 1048576, tasks_max: DEFAULT_SYSTEMD_SPEC.pidMax })
+      expect(ids(validate(hw, params)).filter((id) => FACT_IDS.includes(id))).toEqual([])
+    })
+
+    it('warns when the NOFILE hard limit passes fs.nr_open', () => {
+      const { hw, params } = setup('general', { default_limit_nofile_hard: 1048576 })
+      expect(ids(validate(hw, params, { nrOpen: 1048576 }))).not.toContain('nofile-above-nr-open')
+      const issue = validate(hw, params, { nrOpen: 524288 }).find((i) => i.id === 'nofile-above-nr-open')
+      expect(issue).toMatchObject({ level: 'warn', blocking: false, params: ['default_limit_nofile_hard'] })
+    })
+
+    it('warns when a task cap passes the smaller of pid_max and threads-max, naming only those above', () => {
+      const { hw, params } = setup('general', { default_tasks_max: 100000, tasks_max: 20000 })
+      const facts = { pidMax: 4194304, threadsMax: 131072 }
+      expect(ids(validate(hw, params, facts))).not.toContain('tasks-above-kernel-limit')
+      const issue = validate(hw, params, { ...facts, threadsMax: 65536 }).find((i) => i.id === 'tasks-above-kernel-limit')
+      expect(issue).toMatchObject({ level: 'warn', blocking: false, params: ['default_tasks_max'] })
+      expect(issue.message).toContain('65536')
+      expect(validate(hw, params, { pidMax: 16384 }).find((i) => i.id === 'tasks-above-kernel-limit').params)
+        .toEqual(['default_tasks_max', 'tasks_max'])
+    })
+  })
 })

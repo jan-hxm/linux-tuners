@@ -13,7 +13,8 @@ import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
 import { differingKeys, elementRange, valueTypeOf } from '@/core/valueTypes.js'
 import { CONTROLS } from '@/ui/controls/index.js'
 import { normalizeField } from '@/core/profile.js'
-import { MACHINE_FIELDS, DEFAULT_MACHINE, RAM_FIELD, machineValues } from '@/core/machine.js'
+import { MACHINE_FIELDS, MACHINE_FACTS, DEFAULT_MACHINE, RAM_FIELD, machineValues, factValues, factsReadBy } from '@/core/machine.js'
+import { LIVE_TUNERS } from './registry.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
 const EM_DASH = '—'
@@ -55,6 +56,9 @@ function machineProfiles() {
   }
   return [...profiles, { ...DEFAULT_MACHINE, ramGiB: RAM_FIELD.min }, { ...DEFAULT_MACHINE, ramGiB: RAM_FIELD.max }]
 }
+
+/** Facts low enough that every rule reading them fires. */
+const LOW_FACTS = Object.freeze(Object.fromEntries(MACHINE_FACTS.map((f) => [f, 1024])))
 
 // ── State builders ──────────────────────────────────────────────────────────
 
@@ -421,6 +425,44 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         expect(domain.validate(hardware, state.params).filter((i) => i.blocking).map((i) => i.id), label).toEqual([])
       }
     })
+
+    it('provides only known facts, as numbers, and the same facts in every state', () => {
+      const keys = Object.keys(domain.facts(domain.defaultHardware, domain.deriveDefaults(domain.defaultHardware))).sort()
+      for (const state of legitimateStates(domain)) {
+        const facts = domain.facts(state.hardware, state.params)
+        expect(Object.keys(facts).sort()).toEqual(keys)
+        for (const [fact, value] of Object.entries(facts)) {
+          expect(MACHINE_FACTS).toContain(fact)
+          expect(Number.isFinite(value), `${fact} = ${value}`).toBe(true)
+        }
+      }
+    })
+
+    it('reads in validate only the facts it declares', () => {
+      const facts = new Proxy(LOW_FACTS, {
+        get(target, key) {
+          if (typeof key === 'string' && !domain.readsFacts.includes(key)) throw new Error(`validate reads undeclared fact "${key}"`)
+          return target[key]
+        },
+      })
+      for (const state of legitimateStates(domain)) domain.validate(state.hardware, state.params, facts)
+    })
+
+    it('restores every value another tuner gives a fact-fed field unchanged, with no blocking issue', () => {
+      for (const provider of TUNER_DOMAINS) {
+        for (const state of legitimateStates(provider)) {
+          const facts = provider.facts(state.hardware, state.params)
+          const fed = factValues(domain.profile.fields, facts)
+          if (Object.keys(fed).length === 0) continue
+          const hardware = { ...domain.defaultHardware, ...fed }
+          const params = domain.deriveDefaults(hardware)
+          const label = `${provider.id}: ${JSON.stringify(facts)}`
+          const restored = restoreState(domain, domain.encodeState({ hardware, params, activePreset: null, activeTab: domain.defaultTab }))
+          expect(restored?.hardware, label).toEqual(hardware)
+          expect(domain.validate(hardware, params, facts).filter((i) => i.blocking).map((i) => i.id), label).toEqual([])
+        }
+      }
+    })
   })
 
   describe('shared-link state', () => {
@@ -568,9 +610,28 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
       ]
       for (const state of legitimateStates(domain)) {
         shown.push(...domain.validate(state.hardware, state.params).map((i) => i.message))
+        shown.push(...domain.validate(state.hardware, state.params, LOW_FACTS).map((i) => i.message))
         shown.push(combineFiles(configFor(domain, state)))
       }
       expect(shown.filter((s) => s.includes(EM_DASH))).toEqual([])
     })
+  })
+})
+
+// Design.md §5 "Guided setup": a fact flows forward through the setup order,
+// which is the registry's order.
+describe('guided setup facts', () => {
+  it('has every fact provided by one tuner, earlier in the setup order than every tuner reading it', () => {
+    const byId = Object.fromEntries(TUNER_DOMAINS.map((d) => [d.id, d]))
+    const providedBy = {}
+    for (const { id } of LIVE_TUNERS) {
+      const domain = byId[id]
+      for (const fact of factsReadBy(domain)) expect(providedBy[fact], `${id} reads ${fact}`).toBeDefined()
+      for (const fact of Object.keys(domain.facts(domain.defaultHardware, domain.deriveDefaults(domain.defaultHardware)))) {
+        expect(providedBy[fact], `${fact} from ${id} and ${providedBy[fact]}`).toBeUndefined()
+        providedBy[fact] = id
+      }
+    }
+    expect(Object.keys(providedBy).sort()).toEqual([...MACHINE_FACTS].sort())
   })
 })

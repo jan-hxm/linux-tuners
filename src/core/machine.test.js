@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { MACHINE_FIELDS, DEFAULT_MACHINE, machineValues, machineProblems } from './machine.js'
+import { MACHINE_FIELDS, MACHINE_FACTS, DEFAULT_MACHINE, machineValues, machineProblems, factValues, factsReadBy } from './machine.js'
 import { profileProblems } from './profile.js'
 import { MACHINE_ROLES } from './machineRoles.js'
 
@@ -41,5 +41,26 @@ describe('machine profile', () => {
     expect(machineProblems([{ ...RAM, machine: { from: 'ramGiB', map: {} } }])).toHaveLength(1)
     expect(machineProblems([{ ...WORKLOAD, machine: { from: 'role', map: partial } }])).toHaveLength(1)
     expect(machineProblems([{ ...WORKLOAD, machine: { from: 'role', map: { ...partial, typo: 'db' } } }])).toHaveLength(1)
+  })
+})
+
+describe('facts', () => {
+  const PID = { key: 'pidMax', type: 'number', label: 'pid_max', min: 1024, max: 4194304, step: 1, default: 4194304, machine: 'pidMax' }
+
+  it('accepts a field that copies a fact, but not one that maps it', () => {
+    expect(machineProblems([PID])).toEqual([])
+    expect(machineProblems([{ ...PID, machine: { from: 'pidMax', map: {} } }])).toHaveLength(1)
+  })
+
+  it('fills fact-fed fields from the facts, and leaves them out of the machine values', () => {
+    expect(machineValues([RAM, PID], DEFAULT_MACHINE)).toEqual({ ramGiB: DEFAULT_MACHINE.ramGiB })
+    expect(factValues([RAM, PID], { pidMax: 32768, nrOpen: 1048576 })).toEqual({ pidMax: 32768 })
+    expect(factValues([RAM, PID], {})).toEqual({})
+  })
+
+  it('lists the facts a domain reads through its fields and its validate', () => {
+    const domain = { profile: { fields: [RAM, PID] }, readsFacts: ['nrOpen', 'pidMax'] }
+    expect(factsReadBy(domain).sort()).toEqual(['nrOpen', 'pidMax'])
+    expect(MACHINE_FACTS).toEqual(expect.arrayContaining(factsReadBy(domain)))
   })
 })

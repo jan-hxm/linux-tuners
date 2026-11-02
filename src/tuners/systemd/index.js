@@ -111,6 +111,7 @@ export const systemdDomain = defineTuner({
   deriveDefaults,
   rangeFor,
   validate,
+  readsFacts: ['nrOpen', 'pidMax', 'threadsMax'],
   hasBlockingIssue,
   formatValue,
   sections: SECTIONS,

@@ -105,6 +105,7 @@ export const PROFILE = {
         'Run `sysctl kernel.pid_max` to find yours.',
       ],
       default: DEFAULT_PID_MAX,
+      machine: 'pidMax',
       half: true,
     },
     cgroupField({

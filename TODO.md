@@ -15,7 +15,6 @@ sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages t
 
 ## 2. UX
 
-- [ ] Use one grid for the landing page's available and coming-soon cards (currently 2 vs 3 columns).
 - [ ] Give the top nav an active state on the landing page.
 
 ## 3. Engineering

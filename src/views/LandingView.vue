@@ -27,7 +27,7 @@ import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
     <!-- Available tuners -->
     <section class="space-y-4">
       <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Tuners</h2>
-      <ul class="grid gap-4 sm:grid-cols-2">
+      <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <li v-for="tuner in LIVE_TUNERS" :key="tuner.id">
           <RouterLink
             :to="tuner.path"

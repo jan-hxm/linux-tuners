@@ -105,7 +105,7 @@ watch(isOpen, async (open) => {
   <Teleport to="body">
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-40 bg-slate-900/30"
+      class="light-palette fixed inset-0 z-40 bg-slate-900/30"
       aria-hidden="true"
       @click="close"
     />

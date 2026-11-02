@@ -11,6 +11,14 @@
     --step-chain-h: 53px;
   }
 
+  /* Text fields and selects take the card colour, so they follow dark mode
+   * instead of the browser's grey dark controls. A bg-* class still wins. */
+  input:not([type='range'], [type='checkbox'], [type='radio']),
+  select,
+  textarea {
+    background-color: rgb(var(--c-white));
+  }
+
   /* Smooth anchor scrolling for the step-chain links. */
   html {
     scroll-behavior: smooth;
@@ -27,7 +35,7 @@
   select:focus-visible,
   textarea:focus-visible,
   summary:focus-visible {
-    outline: 2px solid rgb(15 23 42);
+    outline: 2px solid rgb(var(--c-slate-900));
     outline-offset: 2px;
     border-radius: 0.25rem;
   }

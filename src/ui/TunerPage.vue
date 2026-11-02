@@ -65,7 +65,7 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
 
 <template>
   <section class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-    <header class="overflow-hidden rounded-t-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-white shadow-sm">
+    <header class="light-palette overflow-hidden rounded-t-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-white shadow-sm">
       <div class="flex flex-wrap items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6">
         <div class="max-w-2xl">
           <p class="text-xs uppercase tracking-widest text-slate-400">Tuner</p>
@@ -85,7 +85,7 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
          stick under the site header for the whole page. -->
     <nav
       aria-label="Steps"
-      class="!mt-0 rounded-b-lg bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-xs shadow-sm lg:sticky lg:top-[var(--site-header-h)] lg:z-20"
+      class="light-palette !mt-0 rounded-b-lg bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-xs shadow-sm lg:sticky lg:top-[var(--site-header-h)] lg:z-20"
     >
       <ol class="flex flex-wrap items-center gap-x-0.5 gap-y-1 border-t border-white/10 bg-black/10 px-5 py-3 sm:px-6">
         <li class="mr-1 text-slate-400">Jump to:</li>

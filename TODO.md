@@ -15,7 +15,6 @@ sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages t
 
 ## 2. UX
 
-- [ ] Dark mode. The range-slider colours are hardcoded hex in `ui/controls/SliderControl.vue` scoped styles and need theming first.
 - [ ] Use one restrained accent colour (sky-500, already used for links and charts) for primary CTAs and active states.
 - [ ] Use one grid for the landing page's available and coming-soon cards (currently 2 vs 3 columns).
 - [ ] Give the top nav an active state on the landing page.

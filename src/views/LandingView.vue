@@ -7,7 +7,7 @@ import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
 <template>
   <section class="mx-auto max-w-6xl space-y-10 p-4 sm:p-6">
     <!-- Hero -->
-    <header class="overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-6 py-10 text-white shadow-sm sm:px-10 sm:py-14">
+    <header class="light-palette overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-6 py-10 text-white shadow-sm sm:px-10 sm:py-14">
       <div class="max-w-3xl">
         <p class="text-xs uppercase tracking-widest text-slate-400">linux-tuners.dev</p>
         <h1 class="mt-2 text-2xl font-semibold leading-tight tracking-tight sm:text-4xl">

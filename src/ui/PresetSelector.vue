@@ -89,7 +89,7 @@ function apply(preset) {
           </span>
           <span
             v-if="isCustomised(preset)"
-            class="shrink-0 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900"
+            class="light-palette shrink-0 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900"
           >
             customised
           </span>

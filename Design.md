@@ -286,6 +286,21 @@ must follow them, and existing UI must not regress.
   (12px) and at least `text-slate-500` on white. `text-[10px]`/`text-[11px]`
   and `text-slate-400` are only for decorative chrome (status pills, the
   `.dev` logo tail, hero eyebrows on dark backgrounds).
+- **Dark mode follows the system** (`prefers-color-scheme`; there is no
+  toggle). Components keep their light-mode classes and use no `dark:`
+  variants: `tailwind.config.js` points `white` and the slate, amber, red,
+  emerald, green, sky and violet families at CSS variables, and under the dark
+  scheme each takes the colour `ui/theme.js` maps it to. Slate is mapped for
+  surfaces and text (white cards turn slate-900 on a slate-950 page, and
+  `text-slate-500` turns slate-400, so the contrast floor above holds; see
+  `theme.test.js`). The tints mirror (`-100` to `-900`), so a `bg-slate-800
+  text-white` button turns light with dark text. A colour outside those
+  families doesn't follow the scheme, so use them. Surfaces that are dark by
+  design (the hero and step chain, the drawer backdrop, the amber "customised"
+  badge) carry `light-palette`, which brings the light values back for that
+  subtree. Scoped CSS uses the variables too (`rgb(var(--c-slate-900))`, as the
+  range slider does), and text fields and selects get the card colour from a
+  base rule in `main.css`.
 - **Segmented or radio-style button groups** use `role="radiogroup"` plus
   `role="radio"` and `aria-checked` on each option.
 - **Profile forms auto-collapse only after the first apply.** Re-tuning after
@@ -464,10 +479,13 @@ so that a new variant is an addition rather than an edit to shared code.
   `defineTuner` rejects a `defaultTab` that names no tab. Charts render
   inside `ui/charts/ChartFrame.vue`, which takes a required `ariaLabel` and the
   height, and they take colours from `ui/charts/palette.js`. Simulations name
-  a palette `tone` (such as `'danger'`) rather than a colour. The palette also
-  prepares for dark mode, since no hex values are scattered across chart files;
-  `palette.test.js` fails on a colour literal in a tuner's charts or
-  `simulation.js`.
+  a palette `tone` (such as `'danger'`) rather than a colour. The palette is
+  reactive and switches to its dark set with the system scheme, following the
+  same mapping as the classes so the legends match (`palette.test.js` checks
+  both sets against Tailwind). Chart.js copies its defaults into a chart when it
+  builds it, so `ChartFrame` rebuilds its chart when the scheme changes, after
+  `chartSetup.js` has set the tick and grid colours. `palette.test.js` also
+  fails on a colour literal in a tuner's charts or `simulation.js`.
 - **Simulation** binding. A tuner exports pure functions from
   `simulation.js`, and one generic `ui/useTunerSimulation(store, simulation)`
   turns them into computeds keyed by function name. Callers pass the module

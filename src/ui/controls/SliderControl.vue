@@ -166,8 +166,8 @@ const pct = computed(() => {
 /* Custom range slider in the page's slate palette. Native `accent-color` only
  * tints the control; here we shape the track and thumb and draw a filled
  * progress portion up to --range-pct (set inline from the reactive `pct`).
- * Colours are literal slate hexes so they don't depend on theme() resolution:
- *   slate-200 #e2e8f0 · slate-300 #cbd5e1 · slate-700 #334155 · slate-900 #0f172a
+ * Colours are the themed slate variables from tailwind.config.js, so the
+ * slider follows dark mode like the classes around it (Design.md §7).
  */
 .range-slider {
   -webkit-appearance: none;
@@ -192,22 +192,22 @@ const pct = computed(() => {
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    #0f172a 0%,
-    #0f172a var(--range-pct, 0%),
-    #e2e8f0 var(--range-pct, 0%),
-    #e2e8f0 100%
+    rgb(var(--c-slate-900)) 0%,
+    rgb(var(--c-slate-900)) var(--range-pct, 0%),
+    rgb(var(--c-slate-200)) var(--range-pct, 0%),
+    rgb(var(--c-slate-200)) 100%
   );
 }
 /* Track + progress — Firefox draws the fill for us via ::-moz-range-progress. */
 .range-slider::-moz-range-track {
   height: 6px;
   border-radius: 9999px;
-  background: #e2e8f0;
+  background: rgb(var(--c-slate-200));
 }
 .range-slider::-moz-range-progress {
   height: 6px;
   border-radius: 9999px;
-  background: #0f172a;
+  background: rgb(var(--c-slate-900));
 }
 
 /* Thumb */
@@ -217,18 +217,18 @@ const pct = computed(() => {
   width: 16px;
   margin-top: -5px; /* centre the 16px thumb on the 6px track */
   border-radius: 9999px;
-  background: #0f172a;
-  border: 2px solid #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px #cbd5e1;
+  background: rgb(var(--c-slate-900));
+  border: 2px solid rgb(var(--c-white));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px rgb(var(--c-slate-300));
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 .range-slider::-moz-range-thumb {
   height: 16px;
   width: 16px;
   border-radius: 9999px;
-  background: #0f172a;
-  border: 2px solid #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px #cbd5e1;
+  background: rgb(var(--c-slate-900));
+  border: 2px solid rgb(var(--c-white));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px rgb(var(--c-slate-300));
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 

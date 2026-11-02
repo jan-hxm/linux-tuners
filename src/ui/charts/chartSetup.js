@@ -13,6 +13,8 @@ import {
   Legend,
   Filler,
 } from 'chart.js'
+import { watch } from 'vue'
+import { PALETTE } from './palette.js'
 
 Chart.register(
   CategoryScale,
@@ -31,3 +33,14 @@ Chart.defaults.font.family =
   'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
 Chart.defaults.font.size = 11
 Chart.defaults.plugins.legend.display = false
+
+// Tick, title and grid colours follow the scheme. Synchronous, so the defaults
+// change before ChartFrame rebuilds its chart.
+watch(
+  () => [PALETTE.text, PALETTE.grid],
+  ([text, grid]) => {
+    Chart.defaults.color = text
+    Chart.defaults.borderColor = grid
+  },
+  { immediate: true, flush: 'sync' },
+)

@@ -6,6 +6,7 @@ import { TUNERS, LIVE_TUNERS, PLANNED_TUNERS } from './registry.js'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { TUNER_VIEWS, router } from '@/router.js'
 import { ROUTES_META } from '@/routes-meta.js'
+import { MACHINE_ROLES } from '@/core/machineRoles.js'
 
 const EM_DASH = String.fromCharCode(0x2014)
 const ROUTE_FIELDS = ['title', 'description', 'ogTitle', 'priority', 'changefreq', 'jsonLdType']
@@ -26,7 +27,7 @@ describe('tuner registry', () => {
       expect(t.title, t.id).toBeTruthy()
       expect(t.blurb, t.id).toBeTruthy()
       expect(t.keys.length, t.id).toBeGreaterThan(0)
-      const shown = [t.title, t.blurb, t.navLabel, ...t.keys, ...Object.values(t.route ?? {})]
+      const shown = [t.title, t.blurb, t.navLabel, ...t.keys, ...Object.values(t.route ?? {}), t.setup?.why]
       expect(shown.join(' '), t.id).not.toContain(EM_DASH)
     }
   })
@@ -45,6 +46,20 @@ describe('tuner registry', () => {
       expect(t.path, t.id).toBeUndefined()
       expect(t.navLabel, t.id).toBeUndefined()
       expect(t.route, t.id).toBeUndefined()
+      expect(t.setup, t.id).toBeUndefined()
+    }
+  })
+
+  it('recommends every live tuner for a list of known machine roles, or all of them', () => {
+    const roles = MACHINE_ROLES.map((r) => r.value)
+    for (const t of LIVE_TUNERS) {
+      expect(t.setup?.why, t.id).toBeTruthy()
+      if (t.setup.roles === 'all') continue
+      expect(t.setup.roles.length, t.id).toBeGreaterThan(0)
+      expect(new Set(t.setup.roles).size, t.id).toBe(t.setup.roles.length)
+      // A list naming every role should say 'all', so a new role reaches it.
+      expect(t.setup.roles.length, t.id).toBeLessThan(roles.length)
+      for (const role of t.setup.roles) expect(roles, t.id).toContain(role)
     }
   })
 

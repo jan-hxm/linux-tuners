@@ -3,7 +3,9 @@
  * the landing cards, the header nav and the sitemap all derive from it.
  *
  * Plain data with no Vue imports: scripts/generate-static-routes.mjs reads it
- * under Node. Array order is the landing-card and header-nav order.
+ * under Node. Array order is the landing-card, header-nav and guided-setup
+ * order: the settings every machine needs first, and each limit before the
+ * settings it bounds (systemd after filesystem and kernel).
  *
  * A `planned` entry gets only a "Coming soon" card: no path, no route, no
  * sitemap entry. Flip it to `live` only once the tuner works (Design.md §6),
@@ -21,6 +23,10 @@
  * @property {string}  [navLabel] Header nav label (live only)
  * @property {Object}  [route]   Route metadata (live only): title, description,
  *                               ogTitle, priority, changefreq, jsonLdType
+
+ * @property {{ roles: 'all' | string[], why: string }} [setup] Guided setup (live
+ *                               only): the MACHINE_ROLES it is recommended for,
+ *                               and the line the landing card shows for them
  */
 
 /** @type {TunerEntry[]} */
@@ -42,23 +48,9 @@ export const TUNERS = [
       changefreq: 'monthly',
       jsonLdType: 'SoftwareApplication',
     },
-  },
-  {
-    id: 'systemd',
-    status: 'live',
-    path: '/systemd',
-    navLabel: 'systemd',
-    title: 'systemd & resource limits',
-    blurb: 'Tune systemd manager defaults and per-slice cgroup v2 resource control: accounting, task and FD limits, and CPU/memory/IO weights and caps for clustered and containerised Linux workloads.',
-    keys: ['CPUWeight', 'MemoryMax', 'DefaultTasksMax', 'DefaultLimitNOFILE', '…'],
-    route: {
-      title: 'systemd & resource limits tuner | linux-tuners.dev',
-      description:
-        'Tune systemd resource control from your hardware: DefaultTasksMax, DefaultLimitNOFILE and per-slice CPU, memory and IO caps, with live graphs and drop-ins.',
-      ogTitle: 'systemd & resource limits tuner',
-      priority: 0.9,
-      changefreq: 'monthly',
-      jsonLdType: 'SoftwareApplication',
+    setup: {
+      roles: 'all',
+      why: 'How eagerly the kernel swaps, how much memory it keeps free, and when dirty pages reach the disk. Every machine has these, and the defaults ignore its RAM.',
     },
   },
   {
@@ -78,23 +70,9 @@ export const TUNERS = [
       changefreq: 'monthly',
       jsonLdType: 'SoftwareApplication',
     },
-  },
-  {
-    id: 'network',
-    status: 'live',
-    path: '/network',
-    navLabel: 'Network',
-    title: 'Network stack',
-    blurb: 'Tune net.core and net.ipv4 sysctls for throughput and latency, covering socket buffer sizes, the listen backlog, congestion control, TIME_WAIT reuse, and netfilter connection tracking.',
-    keys: ['net.ipv4.tcp_rmem', 'net.ipv4.tcp_congestion_control', 'net.core.somaxconn', 'net.netfilter.nf_conntrack_max', '…'],
-    route: {
-      title: 'Network stack tuner | linux-tuners.dev',
-      description:
-        'Tune Linux network sysctls for your link: TCP buffers sized from the bandwidth-delay product, somaxconn, BBR with fq and conntrack, as a sysctl.d file.',
-      ogTitle: 'Network stack tuner',
-      priority: 0.9,
-      changefreq: 'monthly',
-      jsonLdType: 'SoftwareApplication',
+    setup: {
+      roles: 'all',
+      why: 'Kernel pointer, ptrace and BPF restrictions plus network spoofing protections. Cheap, and most distributions leave some of them open.',
     },
   },
   {
@@ -114,41 +92,9 @@ export const TUNERS = [
       changefreq: 'monthly',
       jsonLdType: 'SoftwareApplication',
     },
-  },
-  {
-    id: 'hugepages',
-    status: 'live',
-    path: '/hugepages',
-    navLabel: 'Huge pages',
-    title: 'Huge pages & memory layout',
-    blurb: 'Tune huge page pools, Transparent Huge Pages and KSM for databases and VM hosts, plus the per-process memory map limit and NUMA zone reclaim. Writes a sysctl.d file and a tmpfiles.d file for the /sys settings.',
-    keys: ['vm.nr_hugepages', 'transparent_hugepage/enabled', 'ksm/run', 'vm.max_map_count', '…'],
-    route: {
-      title: 'Huge pages & memory layout tuner | linux-tuners.dev',
-      description:
-        'Size Linux huge pages for your workload: nr_hugepages, Transparent Huge Pages, KSM for KVM hosts and max_map_count, with sysctl.d and tmpfiles.d files.',
-      ogTitle: 'Huge pages & memory layout tuner',
-      priority: 0.9,
-      changefreq: 'monthly',
-      jsonLdType: 'SoftwareApplication',
-    },
-  },
-  {
-    id: 'sysv-ipc',
-    status: 'live',
-    path: '/sysv-ipc',
-    navLabel: 'IPC',
-    title: 'System V IPC & shared memory',
-    blurb: 'Set the System V shared memory, semaphore and message queue limits that Oracle, Db2 and older middleware check, without values from old guides lowering the kernel defaults.',
-    keys: ['kernel.sem', 'kernel.shmmni', 'kernel.msgmnb', 'kernel.msgmax', '…'],
-    route: {
-      title: 'System V IPC & shared memory tuner | linux-tuners.dev',
-      description:
-        'Tune Linux System V IPC limits: shmmni, kernel.sem, msgmni, msgmax and msgmnb, checked against the Oracle and Db2 minimums, with a commented sysctl.d file.',
-      ogTitle: 'System V IPC & shared memory tuner',
-      priority: 0.9,
-      changefreq: 'monthly',
-      jsonLdType: 'SoftwareApplication',
+    setup: {
+      roles: 'all',
+      why: "The open-file and inotify ceilings that file watchers, databases and container nodes hit first. It sets fs.nr_open, which bounds systemd's file limit.",
     },
   },
   {
@@ -168,6 +114,54 @@ export const TUNERS = [
       changefreq: 'monthly',
       jsonLdType: 'SoftwareApplication',
     },
+    setup: {
+      roles: 'all',
+      why: "The process and thread ceilings, key quotas, and whether a crashed machine reboots. It sets the limits that bound systemd's task caps.",
+    },
+  },
+  {
+    id: 'systemd',
+    status: 'live',
+    path: '/systemd',
+    navLabel: 'systemd',
+    title: 'systemd & resource limits',
+    blurb: 'Tune systemd manager defaults and per-slice cgroup v2 resource control: accounting, task and FD limits, and CPU/memory/IO weights and caps for clustered and containerised Linux workloads.',
+    keys: ['CPUWeight', 'MemoryMax', 'DefaultTasksMax', 'DefaultLimitNOFILE', '…'],
+    route: {
+      title: 'systemd & resource limits tuner | linux-tuners.dev',
+      description:
+        'Tune systemd resource control from your hardware: DefaultTasksMax, DefaultLimitNOFILE and per-slice CPU, memory and IO caps, with live graphs and drop-ins.',
+      ogTitle: 'systemd & resource limits tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+    setup: {
+      roles: 'all',
+      why: 'Default task and file limits for every service, and CPU, memory and IO caps per slice. Comes after the filesystem and kernel limits it must stay under.',
+    },
+  },
+  {
+    id: 'network',
+    status: 'live',
+    path: '/network',
+    navLabel: 'Network',
+    title: 'Network stack',
+    blurb: 'Tune net.core and net.ipv4 sysctls for throughput and latency, covering socket buffer sizes, the listen backlog, congestion control, TIME_WAIT reuse, and netfilter connection tracking.',
+    keys: ['net.ipv4.tcp_rmem', 'net.ipv4.tcp_congestion_control', 'net.core.somaxconn', 'net.netfilter.nf_conntrack_max', '…'],
+    route: {
+      title: 'Network stack tuner | linux-tuners.dev',
+      description:
+        'Tune Linux network sysctls for your link: TCP buffers sized from the bandwidth-delay product, somaxconn, BBR with fq and conntrack, as a sysctl.d file.',
+      ogTitle: 'Network stack tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+    setup: {
+      roles: ['server', 'web', 'database', 'container-host', 'vm-host', 'router'],
+      why: 'Socket buffers sized for the link, listen backlogs, congestion control and connection tracking, for machines that serve or forward traffic.',
+    },
   },
   {
     id: 'block-io',
@@ -185,6 +179,54 @@ export const TUNERS = [
       priority: 0.9,
       changefreq: 'monthly',
       jsonLdType: 'SoftwareApplication',
+    },
+    setup: {
+      roles: 'all',
+      why: 'The I/O scheduler and read-ahead for each kind of disk, where the kernel picks one default for all of them.',
+    },
+  },
+  {
+    id: 'hugepages',
+    status: 'live',
+    path: '/hugepages',
+    navLabel: 'Huge pages',
+    title: 'Huge pages & memory layout',
+    blurb: 'Tune huge page pools, Transparent Huge Pages and KSM for databases and VM hosts, plus the per-process memory map limit and NUMA zone reclaim. Writes a sysctl.d file and a tmpfiles.d file for the /sys settings.',
+    keys: ['vm.nr_hugepages', 'transparent_hugepage/enabled', 'ksm/run', 'vm.max_map_count', '…'],
+    route: {
+      title: 'Huge pages & memory layout tuner | linux-tuners.dev',
+      description:
+        'Size Linux huge pages for your workload: nr_hugepages, Transparent Huge Pages, KSM for KVM hosts and max_map_count, with sysctl.d and tmpfiles.d files.',
+      ogTitle: 'Huge pages & memory layout tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+    setup: {
+      roles: ['database', 'vm-host'],
+      why: 'Huge page pools, Transparent Huge Pages and KSM, which databases and VM hosts depend on and other machines are better off leaving alone.',
+    },
+  },
+  {
+    id: 'sysv-ipc',
+    status: 'live',
+    path: '/sysv-ipc',
+    navLabel: 'IPC',
+    title: 'System V IPC & shared memory',
+    blurb: 'Set the System V shared memory, semaphore and message queue limits that Oracle, Db2 and older middleware check, without values from old guides lowering the kernel defaults.',
+    keys: ['kernel.sem', 'kernel.shmmni', 'kernel.msgmnb', 'kernel.msgmax', '…'],
+    route: {
+      title: 'System V IPC & shared memory tuner | linux-tuners.dev',
+      description:
+        'Tune Linux System V IPC limits: shmmni, kernel.sem, msgmni, msgmax and msgmnb, checked against the Oracle and Db2 minimums, with a commented sysctl.d file.',
+      ogTitle: 'System V IPC & shared memory tuner',
+      priority: 0.9,
+      changefreq: 'monthly',
+      jsonLdType: 'SoftwareApplication',
+    },
+    setup: {
+      roles: ['database'],
+      why: 'The shared memory and semaphore limits that Oracle, Db2 and older middleware check before they install.',
     },
   },
   // Roadmap toward the whole sysctl tree plus the key sysfs runtime tunables,

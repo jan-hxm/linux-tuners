@@ -247,12 +247,14 @@ it bounds: swap and memory, security, filesystem, kernel, systemd, network,
 block I/O, huge pages, SysV IPC. systemd comes after filesystem and kernel
 because `DefaultLimitNOFILE` is bounded by `fs.nr_open`, and `DefaultTasksMax`
 by `kernel.pid_max` and `kernel.threads-max`. A contract test checks this
-order (see "Facts" below). Today's order differs, so the build reorders the
-registry.
+order (see "Facts" below).
 
-**Relevance per role.** Each registry entry gets a `setup` block of plain
+**Relevance per role.** Each live registry entry has a `setup` block of plain
 data: `roles`, the roles it is recommended for (or `'all'`), and `why`, the one
-line the landing card shows for those roles. The step for a tuner outside
+line the landing card shows for those roles. The role ids are listed in
+`core/machineRoles.js`, a module with no imports, since the registry is read
+under Node; `registry.test.js` checks every entry against it, and a list
+naming every role must say `'all'` instead, so a new role reaches it. The step for a tuner outside
 the role starts skipped, and the user can include it. To begin with: huge
 pages for database and VM hosts, SysV IPC for databases, network for every
 role except desktop, and the rest for all roles.
@@ -697,9 +699,10 @@ so that a new variant is an addition rather than an edit to shared code.
 - `id`
 - `status`: `live` or `planned`
 - landing-card text (`title`, `blurb`, `keys`)
-- for live entries: `path` (`/<id>`), `navLabel` and `route` metadata
+- for live entries: `path` (`/<id>`), `navLabel`, `route` metadata and the
+  `setup` block ([§5 Guided setup](#guided-setup))
 
-Array order is the landing and nav order. It must stay plain data with no Vue
+Array order is the landing, nav and guided-setup order. It must stay plain data with no Vue
 or `@/` imports, because the postbuild script reads it under Node. The router,
 `routes-meta.js`, the landing cards, the header nav and the sitemap all derive
 from it. `registry.test.js` checks the shape and that the live ids match

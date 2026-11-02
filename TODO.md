@@ -16,7 +16,6 @@ Cheap, and nothing else pays off until people can find the site and shared links
 
 The next big feature, now that nine tuners exist: it turns separate tools into one path through a whole machine. Designed in [Design.md §5 Guided setup](Design.md#guided-setup); build in this order, each step shippable on its own.
 
-- [ ] Registry: reorder to the setup order and add each entry's `setup` block (`roles`, `why`), with the registry test checking the roles.
 - [ ] Landing page: the role picker that reorders the cards, shows the `why` lines and moves the rest under "Optional for this machine", plus the "Start guided setup" button once `/setup` exists.
 - [ ] `core/machine.js` and the mapping: the machine field list, each tuner's `machine` declarations, and the contract test that every machine option maps to a value the tuner accepts.
 - [ ] Facts: the `facts` hook and the facts argument of `validate`, the systemd warnings against `nrOpen`, `pidMax` and `threadsMax`, and the order test.

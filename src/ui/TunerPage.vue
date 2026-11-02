@@ -1,6 +1,7 @@
 <script setup>
 /**
- * The page shell every tuner renders through: hero with the step chain, the
+ * The page shell every tuner renders through: hero, the step chain (sticky
+ * from lg up, highlighting the step in view), the
  * four steps (profile, preset, tune, export), ad slot, About section, info
  * drawer, the undo toast, and the mobile impact bar with its spacer
  * (Design.md §7). It
@@ -28,6 +29,7 @@ import MobileImpactBar from '@/ui/MobileImpactBar.vue'
 import UndoToast from '@/ui/UndoToast.vue'
 import AdSlot from '@/ui/AdSlot.vue'
 import RichText from '@/ui/RichText.vue'
+import { useScrollSpy } from '@/ui/useScrollSpy.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
 
 const props = defineProps({
@@ -48,18 +50,20 @@ const impact = computed(() => (hasGraphs ? simulation.impactSummary?.value ?? []
 const page = props.domain.page
 
 const STEPS = [
-  { num: 1, label: page.profileStep.label, href: `#${page.profileStep.id}` },
-  { num: 2, label: 'Preset', href: '#preset' },
-  { num: 3, label: 'Tune', href: '#tune' },
-  { num: 4, label: 'Export', href: '#export' },
-]
+  { num: 1, label: page.profileStep.label, id: page.profileStep.id },
+  { num: 2, label: 'Preset', id: 'preset' },
+  { num: 3, label: 'Tune', id: 'tune' },
+  { num: 4, label: 'Export', id: 'export' },
+].map((step) => ({ ...step, href: `#${step.id}` }))
+/** The step the reader is in, highlighted in the step chain. */
+const activeStep = useScrollSpy(STEPS.map((step) => step.id))
 
 const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
 </script>
 
 <template>
   <section class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-    <header class="overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-white shadow-sm">
+    <header class="overflow-hidden rounded-t-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-white shadow-sm">
       <div class="flex flex-wrap items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6">
         <div class="max-w-2xl">
           <p class="text-xs uppercase tracking-widest text-slate-400">Tuner</p>
@@ -73,45 +77,60 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
         </nav>
       </div>
 
-      <!-- Step preview chain -->
-      <ol class="mt-5 flex flex-wrap items-center gap-x-0.5 gap-y-1 border-t border-white/10 bg-black/10 px-5 py-3 text-xs sm:px-6">
+    </header>
+
+    <!-- Step chain: a sibling of the hero, not inside it, so from lg up it can
+         stick under the site header for the whole page. -->
+    <nav
+      aria-label="Steps"
+      class="!mt-0 rounded-b-lg bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-xs shadow-sm lg:sticky lg:top-[var(--site-header-h)] lg:z-20"
+    >
+      <ol class="flex flex-wrap items-center gap-x-0.5 gap-y-1 border-t border-white/10 bg-black/10 px-5 py-3 sm:px-6">
         <li class="mr-1 text-slate-400">Jump to:</li>
         <template v-for="(step, i) in STEPS" :key="step.label">
           <li>
-            <a :href="step.href" class="inline-flex items-center gap-1.5 rounded px-2 py-1 transition hover:bg-white/10">
-              <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[10px] font-semibold text-white">{{ step.num }}</span>
-              <span class="text-slate-200">{{ step.label }}</span>
+            <a
+              :href="step.href"
+              :aria-current="activeStep === step.id ? 'location' : undefined"
+              class="inline-flex items-center gap-1.5 rounded px-2 py-1 transition"
+              :class="activeStep === step.id ? 'bg-white/15' : 'hover:bg-white/10'"
+            >
+              <span
+                class="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold"
+                :class="activeStep === step.id ? 'bg-white text-slate-900' : 'bg-white/20 text-white'"
+              >{{ step.num }}</span>
+              <span :class="activeStep === step.id ? 'text-white' : 'text-slate-200'">{{ step.label }}</span>
             </a>
           </li>
           <li v-if="i < STEPS.length - 1" class="text-slate-500" aria-hidden="true">→</li>
         </template>
       </ol>
-    </header>
+    </nav>
 
-    <section :id="page.profileStep.id" class="space-y-3 scroll-mt-16">
+    <section :id="page.profileStep.id" class="space-y-3 scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)]">
       <StepHeader :num="1" :title="page.profileStep.title" :subtitle="page.profileStep.subtitle" />
       <slot name="profile"><ProfileForm /></slot>
     </section>
 
-    <section id="preset" class="space-y-3 scroll-mt-16">
+    <section id="preset" class="space-y-3 scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)]">
       <StepHeader :num="2" title="Pick a starting point" subtitle="Optional: jump to a tuned baseline for your workload, then fine-tune." />
       <PresetSelector />
     </section>
 
-    <section id="tune" class="space-y-3 scroll-mt-16">
+    <section id="tune" class="space-y-3 scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)]">
       <StepHeader :num="3" title="Tune and preview" :subtitle="page.tuneSubtitle" />
       <div v-if="hasGraphs" class="grid gap-4 lg:grid-cols-5 lg:items-start">
         <div class="lg:col-span-3">
           <ParameterPanel />
         </div>
-        <div class="lg:sticky lg:top-14 lg:col-span-2 lg:self-start">
+        <div class="lg:sticky lg:top-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)] lg:col-span-2 lg:self-start">
           <GraphPanel :tabs="graphTabs" :impact="impact" />
         </div>
       </div>
       <ParameterPanel v-else />
     </section>
 
-    <section id="export" class="space-y-3 scroll-mt-16">
+    <section id="export" class="space-y-3 scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)]">
       <StepHeader :num="4" :title="page.exportStep.title" :subtitle="page.exportStep.subtitle" />
       <ConfigOutput />
     </section>

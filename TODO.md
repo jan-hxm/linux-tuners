@@ -15,7 +15,6 @@ sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages t
 
 ## 2. UX
 
-- [ ] Make the "Jump to" step chain highlight the active section (scroll-spy).
 - [ ] Add a way to jump from the mobile impact bar to the full `GraphPanel`.
 - [ ] Dark mode. The range-slider colours are hardcoded hex in `ui/controls/SliderControl.vue` scoped styles and need theming first.
 - [ ] Use one restrained accent colour (sky-500, already used for links and charts) for primary CTAs and active states.

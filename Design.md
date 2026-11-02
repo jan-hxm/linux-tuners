@@ -260,6 +260,13 @@ must follow them, and existing UI must not regress.
   keeps the current tuner in view), selects are capped at `max-w-full`,
   segmented controls wrap with growing segments, a card's value wraps under
   its name, and parameter names break after `.`, `_`, `-` or `/` (`<wbr>`).
+- **The "Jump to" step chain shows where you are.** `useScrollSpy` marks the
+  step in view with `aria-current="location"` at every width. From `lg` up the
+  chain sticks under the site header (it's a sibling of the hero, not inside
+  it, so it can); on phones it stays put, since the impact bar already takes
+  space. The sticky offsets and anchor `scroll-mt` are built from
+  `--site-header-h` and `--step-chain-h` in `assets/main.css`, measured values
+  to update whenever either bar's height changes.
 - **Tablists need roving tabindex *and* arrow-key handling**
   (Left/Right/Home/End), as in `GraphPanel`'s `onTabKeydown`.
 - **Modals and drawers trap focus, close on Escape, and restore focus to the

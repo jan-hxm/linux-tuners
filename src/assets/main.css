@@ -3,7 +3,15 @@
 @tailwind utilities;
 
 @layer base {
-  /* Smooth anchor scrolling for the step-chain links in the hero. */
+  /* Heights of the sticky site header and, from lg up, the sticky tuner step
+   * chain, as measured in the browser. Sticky offsets and anchor scroll margins
+   * below them are built from these, so update them if either bar changes. */
+  :root {
+    --site-header-h: 41px;
+    --step-chain-h: 53px;
+  }
+
+  /* Smooth anchor scrolling for the step-chain links. */
   html {
     scroll-behavior: smooth;
   }

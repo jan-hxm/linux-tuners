@@ -248,7 +248,8 @@ must follow them, and existing UI must not regress.
 - **The live simulation must stay usable on mobile.** `GraphPanel` sits beside
   the parameters only at `lg+`. Below that, views render `MobileImpactBar` (a
   `lg:hidden` fixed bottom bar fed the same `impact` array) plus a
-  `h-16 lg:hidden` spacer.
+  `h-16 lg:hidden` spacer. The bar ends in a "Graphs" link to the panel's
+  `#graphs` anchor, outside its `aria-live` list so it isn't re-announced.
 - **Every disclosure or toggle is a real `<button>`** with `aria-expanded` and
   `aria-controls`. Never put click handlers on bare `<div>` or `<header>`
   elements.
@@ -260,6 +261,9 @@ must follow them, and existing UI must not regress.
   keeps the current tuner in view), selects are capped at `max-w-full`,
   segmented controls wrap with growing segments, a card's value wraps under
   its name, and parameter names break after `.`, `_`, `-` or `/` (`<wbr>`).
+  A one-column grid says `grid-cols-1` (`minmax(0, 1fr)`): an implicit `auto`
+  column grows to its widest child's min-content, as the tune step's did with
+  `GraphPanel`.
 - **The "Jump to" step chain shows where you are.** `useScrollSpy` marks the
   step in view with `aria-current="location"` at every width. From `lg` up the
   chain sticks under the site header (it's a sibling of the hero, not inside

@@ -48,6 +48,8 @@ const simulation = useTunerSimulation(store, props.domain.simulation)
 const impact = computed(() => (hasGraphs ? simulation.impactSummary?.value ?? [] : []))
 
 const page = props.domain.page
+/** The graph panel's anchor, the mobile impact bar's jump target. */
+const GRAPHS_ID = 'graphs'
 
 const STEPS = [
   { num: 1, label: page.profileStep.label, id: page.profileStep.id },
@@ -119,11 +121,11 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
 
     <section id="tune" class="space-y-3 scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)]">
       <StepHeader :num="3" title="Tune and preview" :subtitle="page.tuneSubtitle" />
-      <div v-if="hasGraphs" class="grid gap-4 lg:grid-cols-5 lg:items-start">
+      <div v-if="hasGraphs" class="grid grid-cols-1 gap-4 lg:grid-cols-5 lg:items-start">
         <div class="lg:col-span-3">
           <ParameterPanel />
         </div>
-        <div class="lg:sticky lg:top-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)] lg:col-span-2 lg:self-start">
+        <div :id="GRAPHS_ID" class="scroll-mt-16 lg:sticky lg:top-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)] lg:col-span-2 lg:self-start">
           <GraphPanel :tabs="graphTabs" :impact="impact" />
         </div>
       </div>
@@ -142,7 +144,7 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
 
     <!-- Spacer so the mobile impact bar never covers page content. -->
     <div v-if="impact.length" class="h-16 lg:hidden" aria-hidden="true" />
-    <MobileImpactBar :impact="impact" />
+    <MobileImpactBar :impact="impact" :graphs-id="GRAPHS_ID" />
     <UndoToast :raised="impact.length > 0" />
   </section>
 </template>

@@ -53,6 +53,13 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('%s view', (id, domain) => {
     wrapper.unmount()
   })
 
+  it.runIf(domain.graphTabs.length)('links the mobile impact bar to the graph panel', () => {
+    const wrapper = mount(View, { global: { stubs } })
+    const href = wrapper.find('[aria-label="Live impact summary"] a').attributes('href')
+    expect(wrapper.find(`#tune ${href}`).find('[role="tablist"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
   it('renders the profile form from the field list', () => {
     const wrapper = mount(View, { global: { stubs } })
     const step = wrapper.find(`#${domain.page.profileStep.id}`)

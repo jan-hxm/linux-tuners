@@ -6,11 +6,14 @@
  * below the entire parameter list, so a phone user can't see the simulation
  * react while tuning. This bar pins the same `impact` metrics to the bottom of
  * the viewport on small screens, restoring live feedback. Hidden at `lg` where
- * the real graph panel is visible. See CLAUDE.md "UI/UX & accessibility".
+ * the real graph panel is visible. A link at its end jumps down to the full
+ * graphs. See Design.md §7.
  */
 defineProps({
   /** @type {{id:string,label:string,value:string,band:string}[]} */
   impact: { type: Array, default: () => [] },
+  /** Id of the graph panel the "Graphs" link jumps to. */
+  graphsId: { type: String, required: true },
 })
 
 function bandClass(band) {
@@ -30,18 +33,25 @@ function bandClass(band) {
     role="region"
     aria-label="Live impact summary"
   >
-    <ul class="flex items-center gap-3 overflow-x-auto" aria-live="polite">
-      <li
-        v-for="metric in impact"
-        :key="metric.id"
-        class="flex shrink-0 items-center gap-1.5"
-      >
-        <span class="text-[11px] uppercase tracking-wide text-slate-500">{{ metric.label }}</span>
-        <span
-          class="rounded px-1.5 py-0.5 text-xs font-medium"
-          :class="bandClass(metric.band)"
-        >{{ metric.value }}</span>
-      </li>
-    </ul>
+    <div class="flex items-center gap-2">
+      <ul class="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto" aria-live="polite">
+        <li
+          v-for="metric in impact"
+          :key="metric.id"
+          class="flex shrink-0 items-center gap-1.5"
+        >
+          <span class="text-[11px] uppercase tracking-wide text-slate-500">{{ metric.label }}</span>
+          <span
+            class="rounded px-1.5 py-0.5 text-xs font-medium"
+            :class="bandClass(metric.band)"
+          >{{ metric.value }}</span>
+        </li>
+      </ul>
+      <!-- Outside the live list, so it isn't re-announced on every change. -->
+      <a
+        :href="`#${graphsId}`"
+        class="shrink-0 rounded border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+      >Graphs <span aria-hidden="true">↓</span></a>
+    </div>
   </div>
 </template>

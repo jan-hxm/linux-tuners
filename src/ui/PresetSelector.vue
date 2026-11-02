@@ -73,7 +73,7 @@ function apply(preset) {
           class="group flex flex-1 items-start gap-2 rounded border px-3 py-2 text-left text-sm transition"
           :class="[
             isActive(preset)
-              ? 'border-slate-800 bg-slate-800 text-white'
+              ? 'border-sky-700 bg-sky-700 text-white'
               : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50',
           ]"
           @click="apply(preset)"
@@ -82,7 +82,7 @@ function apply(preset) {
             <span class="font-medium">{{ preset.label }}</span>
             <span
               class="block text-xs"
-              :class="isActive(preset) ? 'text-slate-300' : 'text-slate-500'"
+              :class="isActive(preset) ? 'text-sky-100' : 'text-slate-500'"
             >
               {{ preset.description }}
             </span>

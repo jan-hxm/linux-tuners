@@ -174,7 +174,7 @@ watch(
                 role="radio"
                 :aria-checked="draft[f.key] === o.value"
                 class="px-3 py-1 text-sm"
-                :class="draft[f.key] === o.value ? 'bg-slate-800 text-white' : 'bg-white hover:bg-slate-50'"
+                :class="draft[f.key] === o.value ? 'bg-sky-700 text-white' : 'bg-white hover:bg-slate-50'"
                 @click="draft[f.key] = o.value"
               >
                 {{ o.label }}
@@ -207,7 +207,7 @@ watch(
         <span v-if="dirty" class="text-xs text-amber-600">Unsaved changes</span>
         <button
           type="submit"
-          class="rounded bg-slate-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+          class="rounded bg-sky-700 px-4 py-1.5 text-sm font-medium text-white hover:bg-sky-800"
         >
           {{ profile.applyLabel }}
         </button>

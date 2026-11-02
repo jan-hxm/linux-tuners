@@ -125,7 +125,7 @@ function reset() {
         <button
           type="button"
           class="rounded px-4 py-1.5 text-sm font-medium text-white transition"
-          :class="copyStatus === 'ok' ? 'bg-emerald-600' : 'bg-slate-800 hover:bg-slate-700'"
+          :class="copyStatus === 'ok' ? 'bg-emerald-600' : 'bg-sky-700 hover:bg-sky-800'"
           @click="copy"
         >{{ copyStatus === 'ok' ? 'Copied ✓' : 'Copy to clipboard' }}</button>
         <button

@@ -77,7 +77,7 @@ function bandClass(band) {
         class="rounded-t border-b-2 px-3 py-1.5 text-sm transition"
         :class="
           activeTab === tab.id
-            ? 'border-slate-800 text-slate-900'
+            ? 'border-sky-600 text-slate-900'
             : 'border-transparent text-slate-500 hover:text-slate-800'
         "
         @click="tuner.setActiveTab(tab.id)"

@@ -55,7 +55,7 @@ function set(value) {
         :key="pick.value"
         type="button"
         class="rounded-full border px-3 py-0.5 text-xs"
-        :class="Number(modelValue) === pick.value ? 'border-slate-800 bg-slate-800 text-white' : 'border-slate-300 hover:bg-slate-50'"
+        :class="Number(modelValue) === pick.value ? 'border-sky-700 bg-sky-700 text-white' : 'border-slate-300 hover:bg-slate-50'"
         @click="set(pick.value)"
       >
         {{ pick.label }}

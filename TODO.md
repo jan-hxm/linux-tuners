@@ -15,13 +15,13 @@ sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages t
 
 ## 2. UX
 
-- [ ] Use one restrained accent colour (sky-500, already used for links and charts) for primary CTAs and active states.
 - [ ] Use one grid for the landing page's available and coming-soon cards (currently 2 vs 3 columns).
 - [ ] Give the top nav an active state on the landing page.
 
 ## 3. Engineering
 
 - [ ] VM suite: in a full parallel run the Ubuntu 24.04 guest sometimes drops off (SSH refused) at the first systemd drop-in case, right after the sysctl sweep; it comes back at the next reboot, and alone it always passes. Seen in two of three full runs, cause unknown (the panic switches are already reset after the kernel cases, and no other file sets them). Run with `VM_KEEP=1` and read `vm/.cache/run/lt-ubuntu2404/console-*.log` when it happens again.
+- [ ] Tests: `ChartFrame.test.js` once failed in a full `npm test` run with "document is not defined" (happy-dom missing), then passed alone and in three full runs. Possibly the node-environment override in `src/ui/theme.test.js` sharing a worker with the happy-dom files under `src/ui/**`; if it recurs, move the node-only tests out of `src/ui` or give `ChartFrame.test.js` an explicit `@vitest-environment happy-dom`.
 - [ ] `ConfigOutput`: a download per file for multi-file tuners (systemd), instead of one combined `.conf`.
 - [ ] Tests: `ConfigOutput` flow (textarea matches the generator, copy calls the clipboard API, blocked state).
 - [ ] Automated accessibility sweep (axe-core / Lighthouse): focus visibility on the dark hero, a live-region announcement when a preset is applied or validation fires, and a full WCAG AA contrast pass.

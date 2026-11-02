@@ -36,7 +36,7 @@ const segments = computed(() =>
       role="radio"
       :aria-checked="value === seg.value"
       class="flex-auto px-3 py-1 text-xs"
-      :class="value === seg.value ? 'bg-slate-800 text-white' : 'bg-white hover:bg-slate-50'"
+      :class="value === seg.value ? 'bg-sky-700 text-white' : 'bg-white hover:bg-slate-50'"
       @click="emit('update', seg.value)"
     >
       {{ seg.label }}

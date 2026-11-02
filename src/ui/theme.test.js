@@ -36,6 +36,18 @@ describe('dark-mode shade mapping', () => {
     }
   })
 
+  it('keeps text on the sky accent fill above AA in both schemes', () => {
+    // Primary buttons and active states: text-white (or the active preset's
+    // text-sky-100 description) on bg-sky-700, hover bg-sky-800.
+    for (const bg of [700, 800]) {
+      for (const text of ['white', ['sky', 100]]) {
+        const label = `${text === 'white' ? 'white' : 'sky-100'} on sky-${bg}`
+        expect(contrast(hexOf(text), hexOf(['sky', bg])), `${label}, light`).toBeGreaterThanOrEqual(4.5)
+        expect(contrast(hexOf(darkColour(...[text].flat())), hexOf(darkColour('sky', bg))), `${label}, dark`).toBeGreaterThanOrEqual(4.5)
+      }
+    }
+  })
+
   it('keeps the tinted badge text readable on its tinted background', () => {
     // The impact bands and callouts: text-<tint>-800 on bg-<tint>-100 or -50.
     for (const family of ['amber', 'red', 'emerald', 'sky']) {

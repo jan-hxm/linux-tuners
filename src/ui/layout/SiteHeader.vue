@@ -29,7 +29,7 @@ watch(() => route.path, revealActive)
           :key="tuner.id"
           :to="tuner.path"
           class="shrink-0 whitespace-nowrap rounded px-2 py-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-          active-class="bg-slate-900 text-white hover:bg-slate-900 hover:text-white"
+          active-class="bg-sky-700 text-white hover:bg-sky-700 hover:text-white"
         >{{ tuner.navLabel }}</RouterLink>
         <a
           href="https://github.com/jan-hxm/linux-tuners"

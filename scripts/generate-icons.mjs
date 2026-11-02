@@ -1,4 +1,4 @@
-// Rasterize public/favicon.svg and public/logo.svg into PNG fallbacks.
+// Rasterize public/favicon.svg, public/logo.svg and public/og-image.svg into PNGs.
 // Run with: npm run gen:icons
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
@@ -18,6 +18,8 @@ const targets = [
   // Wordmark — AdSense consent banners, footers (2x for retina)
   { src: 'logo.svg', out: 'logo.png', width: 720, height: 160 },
   { src: 'logo.svg', out: 'logo@2x.png', width: 1440, height: 320 },
+  // Share card: X, LinkedIn and Facebook don't show SVG previews
+  { src: 'og-image.svg', out: 'og-image.png', width: 1200, height: 630 },
 ]
 
 for (const t of targets) {

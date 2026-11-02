@@ -14,7 +14,7 @@ import { LIVE_TUNERS } from './tuners/registry.js'
 
 export const SITE_ORIGIN = 'https://linux-tuners.dev'
 export const SITE_NAME = 'linux-tuners.dev'
-export const OG_IMAGE_PATH = '/og-image.svg'
+export const OG_IMAGE_PATH = '/og-image.png'
 export const DEFAULT_LOCALE = 'en_US'
 
 /**

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Placeholder Open Graph image for linux-tuners.dev. 1200x630 to match the
-  Twitter/Facebook recommended aspect ratio. SVG works on most crawlers; if a
-  social platform refuses to unfurl, convert to PNG and replace this file.
+  Source of the Open Graph image for linux-tuners.dev, 1200x630. Pages link
+  og-image.png, rendered from this file by `npm run gen:icons`, because X,
+  LinkedIn and Facebook don't show SVG previews.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="linux-tuners.dev | hardware-aware Linux config tuners">
   <defs>

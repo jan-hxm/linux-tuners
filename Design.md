@@ -351,7 +351,7 @@ the step list.
 
 **Output.** The last step lists each included step's files, from that tuner's
 own `generateConfig`, unchanged. Each file has its own copy and download
-buttons, which are the per-file download from TODO §3. A combined copy uses
+buttons, which are the per-file download from TODO §4. A combined copy uses
 `combineFiles`, with one header for the machine profile. A blocked step's
 files are left out, and the step is named in their place. There is no
 install script and no archive. A script would put executable directives in

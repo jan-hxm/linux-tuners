@@ -10,7 +10,7 @@ details are kept in the local, gitignored `PRIVATE.md`, not here.
 Cheap, and nothing else pays off until people can find the site and shared links look right.
 
 - [ ] Verify the site in Google Search Console and submit `https://linux-tuners.dev/sitemap.xml`; optionally Bing Webmaster Tools.
-- [ ] Replace the SVG share image with a 1200×630 PNG (X, LinkedIn and Facebook don't show SVG previews); update `OG_IMAGE_PATH` in `src/routes-meta.js`, then check the cards in an Open Graph preview tester (opengraph.xyz or metatags.io). No social accounts needed.
+- [ ] After the next deploy, check the link cards in an Open Graph preview tester (opengraph.xyz or metatags.io) for `/` and one tuner page. No social accounts needed.
 - [ ] Per-route `<lastmod>` in the sitemap from `git log -1 --format=%cI -- <view file>` instead of the build date, which marks every page as changed on every deploy. `scripts/generate-static-routes.mjs`
 
 ## 2. Guided system setup

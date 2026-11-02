@@ -83,6 +83,15 @@ describe('kernel validation', () => {
     expect(ids({ ...DEFAULT_KERNEL_SPEC, ramGiB: 2 }, { threads_max: 4194304 })).toContain('thread-memory')
   })
 
+  it('warns when the written threads-max is low enough to stop a bigger machine forking', () => {
+    // A shared link can claim any RAM: 0.25 GiB lets the file write 3072.
+    const tiny = { ...DEFAULT_KERNEL_SPEC, ramGiB: 0.25 }
+    expect(ids(tiny, { threads_max: 3072 })).toContain('threads-low')
+    expect(validate(tiny, { ...deriveDefaults(tiny), threads_max: 3072 }).find((i) => i.id === 'threads-low').message).toContain('256 MiB of RAM or less')
+    expect(ids(tiny)).not.toContain('threads-low') // left at the kernel value, nothing written
+    expect(ids(DEFAULT_KERNEL_SPEC, { threads_max: 200704 })).not.toContain('threads-low')
+  })
+
   it('notes a byte quota too small for the key count, and SysRq open to everything', () => {
     expect(ids(DEFAULT_KERNEL_SPEC, { maxkeys: 2000 })).toContain('keys-bytes')
     expect(ids(DEFAULT_KERNEL_SPEC, { sysrq: 'all' })).toContain('sysrq-all')

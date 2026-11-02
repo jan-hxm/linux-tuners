@@ -12,7 +12,8 @@
  * @property {boolean}  blocking  Always false here
  */
 
-import { defaultTasksMax, effectivePidMax, isEmitted, threadStackRamShare, THREAD_RAM_WARN } from './calculations.js'
+import { formatSizeGiB } from '@/core/formatting.js'
+import { defaultTasksMax, effectivePidMax, isEmitted, threadStackRamShare, THREAD_RAM_WARN, THREADS_LOW_WARN } from './calculations.js'
 
 /** Bytes per key below which the byte quota runs out before the count. */
 const BYTES_PER_KEY = 100
@@ -53,6 +54,10 @@ export function validate(hw, p) {
     if (p.threads_max > pids) {
       info('threads-above-pids', ['threads_max', 'pid_max'],
         `Each thread needs a PID, so kernel.pid_max stops new threads first, at ${pids.toLocaleString()}.`)
+    }
+    if (p.threads_max < THREADS_LOW_WARN) {
+      warn('threads-low', ['threads_max'],
+        `This is only right on a machine with ${formatSizeGiB(hw.ramGiB)} of RAM or less. On a bigger one the kernel's own limit is higher, and once more than ${p.threads_max.toLocaleString()} threads run nothing can fork, SSH logins included. Check the RAM in the profile, and that ps -eLf | wc -l shows far fewer threads.`)
     }
     if (threadStackRamShare(hw, p) > THREAD_RAM_WARN) {
       warn('thread-memory', ['threads_max'],

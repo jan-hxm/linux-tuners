@@ -213,8 +213,8 @@ dashed placeholder.
 
 Static site on Cloudflare Pages. GitHub Actions runs the tests and the build
 on every push and PR, and deploys `main`. `public/_redirects` provides the SPA
-fallback. `public/_headers` sets frame blocking, `base-uri`, `object-src` and a
-Permissions-Policy. There is deliberately no `script-src` CSP, because AdSense
+fallback. `public/_headers` sets frame blocking, `nosniff`, `base-uri`,
+`object-src` and a Permissions-Policy. There is deliberately no `script-src` CSP, because AdSense
 and the CMP load from a changing set of Google domains.
 
 ## 6. Adding a tuner
@@ -814,8 +814,9 @@ These hold for every tuner and every output writer (§9 `core/output`):
   Check maintenance, install scripts and transitive weight; `package-lock.json`
   is committed with the change.
 - Workflows keep least-privilege `permissions`. Secrets are referenced only
-  in the step that needs them and are never echoed. Third-party actions are
-  pinned to a commit SHA.
+  in the step that needs them and are never echoed. Actions are pinned to a
+  commit SHA with the tag in a comment; Dependabot (`.github/dependabot.yml`)
+  opens the PRs that bump them.
 
 ### The audit
 

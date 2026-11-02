@@ -9,6 +9,13 @@ export const TASKS_MAX_SHARE = 0.15
 export const THREAD_RAM_WARN = 0.5
 
 /**
+ * A written threads-max below this is worth a warning: it is only right on a
+ * machine as small as the profile claims, and a shared link can claim any RAM.
+ * Pasted on a bigger host already running more threads, nothing can fork.
+ */
+export const THREADS_LOW_WARN = 32768
+
+/**
  * kernel.threads-max as the kernel sizes it at boot, rounded up to the
  * slider's step: thread stacks in an eighth of RAM. Measured on the VM
  * images at about 1% below this, since the kernel counts RAM before freeing

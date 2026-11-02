@@ -10,6 +10,7 @@ import { isEmitted, watchMemoryBytes } from './calculations.js'
 import { formatBytes } from '@/core/formatting.js'
 import { configFile } from '@/core/output/files.js'
 import { isoDate, presetSummary, rule } from '@/core/output/comments.js'
+import { undoComment } from '@/core/output/installSteps.js'
 import { sysctlConfig } from '@/core/output/sysctlFile.js'
 
 const PATH = '/etc/sysctl.d/99-filesystem-tuning.conf'
@@ -51,6 +52,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('# 3. Verify a value took effect:')
   lines.push('#      sysctl fs.inotify.max_user_watches')
   lines.push('#')
+  lines.push(...undoComment([PATH]), '#')
   lines.push(...noteBlock(hardware, params))
   lines.push('# Sources:')
   lines.push('#   fs sysctls: https://docs.kernel.org/admin-guide/sysctl/fs.html')

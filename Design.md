@@ -404,7 +404,8 @@ files share it (`downloadNames` in `ui/fileActions.js`: systemd's two slice
 drop-ins, the huge pages sysctl.d and tmpfiles.d files). A combined copy uses
 `combineFiles`, with one header for the machine profile, built from the
 machine fields' option labels. A blocked step's
-files are left out, and the step is named in their place. There is no
+files are left out, and the step is named in their place. Under the files,
+the shared export steps (§7) cover every included file at once. There is no
 install script and no archive. A script would put executable directives in
 the output (§10). An archive would need a zip writer to save four clicks.
 A contract test checks that no two tuners write the same sysctl key, sysfs
@@ -586,6 +587,22 @@ must follow them, and existing UI must not regress.
   narrow for their label (swappiness 0–10 is 5 % of the track, a weight's
   1–50 under 1 %). The old violet "workload" badge said only that the
   profile moved the default, which the line now says with numbers.
+- **Export steps.** Above the output, `InstallSteps` numbers what to do
+  with it: save the file (with `mkdir -p` for the systemd drop-in folders,
+  which may not exist yet), apply it now, check one value, and, set apart,
+  "If something goes wrong": delete the file, then reload systemd or reboot,
+  since the kernel keeps values already applied until it restarts. Each
+  command has its own copy button. The guided setup shows the same steps for
+  every included file at once. Under the steps a toggle lists the values that
+  differ from the stock defaults (`def.kernelDefault`), with both values, for
+  a pro to review the change before it goes on a machine. The commands come
+  from `installSteps` in `core/output/installSteps.js`, which works from the
+  files alone: the install folder says which kind of file it is (sysctl.d,
+  tmpfiles.d, udev rules, a systemd manager or unit drop-in), and the check
+  command takes the first name the file sets (a sysctl key, a `/sys` path, a
+  udev attribute, a systemd directive), so no tuner supplies steps of its own.
+  `undoComment` prints the same undo steps into each file's how-to block, so
+  every file says how to undo it, not only the security tuner's.
 - **Reset needs no confirmation.** It only recomputes the defaults, and
   `UndoToast` offers to put back what a reset or a preset snap replaced (the
   store's `undoState`, one step deep; any other edit clears it, and it is never
@@ -800,6 +817,9 @@ so that a new variant is an addition rather than an edit to shared code.
     quote, `$` or `%`) and one `ATTR{<attr>}="<value>"` write. The match
     clauses are constants per device class and the attribute a def's
     `udevAttr`; no other assignment key can be written.
+  - `installSteps.js`: `installSteps(files)` for the export steps and
+    `undoComment(paths)` for each file's undo note ([§7 Export
+    steps](#7-uiux-and-accessibility-conventions)).
 
   A writer throws rather than emit a malformed line, so a bad value fails the
   contract fuzz tests instead of reaching a file. Each file of a multi-file
@@ -1073,7 +1093,11 @@ These hold for every tuner and every output writer (§9 `core/output`):
   output is `==` matches plus one `ATTR{}` write per rule, nothing else.
 - **Paths are constants.** Output file paths and download names are fixed per
   tuner, match `^/etc/[a-z0-9._/-]+$` and contain no `..`. Apply commands are
-  fixed text with only those paths interpolated.
+  fixed text with only those paths interpolated. The export steps'
+  check commands also name what a file sets, read back out of its content
+  against a strict pattern (a sysctl key, a `/sys` path, a udev attribute or
+  subsystem, a systemd directive or unit) and never a value; the contract
+  suite holds every step to a program and plain arguments.
 - **The drawer's "Try it now" command** is the one place a value from state
   appears in a shell command. `sysctlTryCommand` and `sysfsTryCommand` (in
   `core/output`) build it from the def's name or constant `/sys` path and the

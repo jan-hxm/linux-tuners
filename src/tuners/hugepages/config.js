@@ -11,6 +11,7 @@ import { isEmitted, poolBytes } from './calculations.js'
 import { formatBytes } from '@/core/formatting.js'
 import { configFile } from '@/core/output/files.js'
 import { fileBanner, isoDate, presetSummary, rule } from '@/core/output/comments.js'
+import { undoComment } from '@/core/output/installSteps.js'
 import { sysctlConfig } from '@/core/output/sysctlFile.js'
 import { tmpfilesConfig } from '@/core/output/tmpfilesFile.js'
 
@@ -68,6 +69,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   sysctl.push('#      grep HugePages_ /proc/meminfo')
   sysctl.push('#      cat /sys/kernel/mm/transparent_hugepage/enabled')
   sysctl.push('#')
+  sysctl.push(...undoComment([SYSCTL_PATH, TMPFILES_PATH]), '#')
   sysctl.push(...noteBlock(hardware, params))
   sysctl.push('# Sources:')
   sysctl.push('#   vm sysctls: https://docs.kernel.org/admin-guide/sysctl/vm.html')

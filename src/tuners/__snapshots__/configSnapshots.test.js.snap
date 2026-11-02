@@ -25,6 +25,10 @@ exports[`generated config: block-io > database / defaults 1`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -74,6 +78,10 @@ exports[`generated config: block-io > database / interactive 1`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -122,6 +130,10 @@ exports[`generated config: block-io > database / sequential 1`] = `
 # 3. Verify they took effect, and that udev wrote every value:
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
 #
 # NOTES
 #
@@ -173,6 +185,10 @@ exports[`generated config: block-io > desktop / defaults 1`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -222,6 +238,10 @@ exports[`generated config: block-io > desktop / interactive 1`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -270,6 +290,10 @@ exports[`generated config: block-io > desktop / sequential 1`] = `
 # 3. Verify they took effect, and that udev wrote every value:
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
 #
 # NOTES
 #
@@ -321,6 +345,10 @@ exports[`generated config: block-io > server / defaults 1`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -369,6 +397,10 @@ exports[`generated config: block-io > server / defaults 2`] = `
 # 3. Verify they took effect, and that udev wrote every value:
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
 #
 # NOTES
 #
@@ -419,6 +451,10 @@ exports[`generated config: block-io > server / interactive 1`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -468,6 +504,10 @@ exports[`generated config: block-io > server / interactive 2`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -516,6 +556,10 @@ exports[`generated config: block-io > server / sequential 1`] = `
 # 3. Verify they took effect, and that udev wrote every value:
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
 #
 # NOTES
 #
@@ -567,6 +611,10 @@ exports[`generated config: block-io > server / sequential 2`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -616,6 +664,10 @@ exports[`generated config: block-io > streaming / defaults 1`] = `
 # 3. Verify they took effect, and that udev wrote every value:
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
 #
 # NOTES
 #
@@ -667,6 +719,10 @@ exports[`generated config: block-io > streaming / interactive 1`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -716,6 +772,10 @@ exports[`generated config: block-io > streaming / sequential 1`] = `
 #      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA
 #      journalctl -b -u systemd-udevd | grep "Failed to write"
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/udev/rules.d/99-block-tuning-nvme.rules
+#
 # NOTES
 #
 # udev writes each value when the rule runs. A value the kernel refuses,
@@ -760,6 +820,10 @@ exports[`generated config: filesystem > container / defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
 #
 # NOTES
 #
@@ -814,6 +878,10 @@ exports[`generated config: filesystem > container / file-watching 1`] = `
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
+#
 # NOTES
 #
 # fs.file-max is left out: systemd 240 and newer raise it to
@@ -866,6 +934,10 @@ exports[`generated config: filesystem > container / kernel-defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
 #
 # NOTES
 #
@@ -920,6 +992,10 @@ exports[`generated config: filesystem > database / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
+#
 # NOTES
 #
 # fs.file-max is left out: systemd 240 and newer raise it to
@@ -972,6 +1048,10 @@ exports[`generated config: filesystem > database / file-watching 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
 #
 # NOTES
 #
@@ -1026,6 +1106,10 @@ exports[`generated config: filesystem > database / kernel-defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
+#
 # NOTES
 #
 # fs.file-max is left out: systemd 240 and newer raise it to
@@ -1078,6 +1162,10 @@ exports[`generated config: filesystem > desktop / defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
 #
 # NOTES
 #
@@ -1132,6 +1220,10 @@ exports[`generated config: filesystem > desktop / file-watching 1`] = `
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
+#
 # NOTES
 #
 # fs.file-max is left out: systemd 240 and newer raise it to
@@ -1184,6 +1276,10 @@ exports[`generated config: filesystem > desktop / kernel-defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
 #
 # NOTES
 #
@@ -1238,6 +1334,10 @@ exports[`generated config: filesystem > server / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
+#
 # NOTES
 #
 # fs.file-max is left out: systemd 240 and newer raise it to
@@ -1290,6 +1390,10 @@ exports[`generated config: filesystem > server / defaults 2`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
 #
 # NOTES
 #
@@ -1344,6 +1448,10 @@ exports[`generated config: filesystem > server / file-watching 1`] = `
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
+#
 # NOTES
 #
 # fs.file-max is left out: systemd 240 and newer raise it to
@@ -1396,6 +1504,10 @@ exports[`generated config: filesystem > server / file-watching 2`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
 #
 # NOTES
 #
@@ -1450,6 +1562,10 @@ exports[`generated config: filesystem > server / kernel-defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
+#
 # NOTES
 #
 # fs.file-max is left out: systemd 240 and newer raise it to
@@ -1502,6 +1618,10 @@ exports[`generated config: filesystem > server / kernel-defaults 2`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl fs.inotify.max_user_watches
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-filesystem-tuning.conf
 #
 # NOTES
 #
@@ -1561,6 +1681,11 @@ exports[`generated config: hugepages > database / defaults 1`] = `
 # 3. Verify they took effect:
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
 #
 # NOTES
 #
@@ -1629,6 +1754,11 @@ exports[`generated config: hugepages > database / thp-always 1`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -1696,6 +1826,11 @@ exports[`generated config: hugepages > database / thp-off 1`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -1757,6 +1892,11 @@ exports[`generated config: hugepages > desktop / defaults 1`] = `
 # 3. Verify they took effect:
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
 #
 # NOTES
 #
@@ -1825,6 +1965,11 @@ exports[`generated config: hugepages > desktop / thp-always 1`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -1892,6 +2037,11 @@ exports[`generated config: hugepages > desktop / thp-off 1`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -1953,6 +2103,11 @@ exports[`generated config: hugepages > server / defaults 1`] = `
 # 3. Verify they took effect:
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
 #
 # NOTES
 #
@@ -2021,6 +2176,11 @@ exports[`generated config: hugepages > server / defaults 2`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -2087,6 +2247,11 @@ exports[`generated config: hugepages > server / thp-always 1`] = `
 # 3. Verify they took effect:
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
 #
 # NOTES
 #
@@ -2155,6 +2320,11 @@ exports[`generated config: hugepages > server / thp-always 2`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -2222,6 +2392,11 @@ exports[`generated config: hugepages > server / thp-off 1`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -2284,6 +2459,11 @@ exports[`generated config: hugepages > server / thp-off 2`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -2345,6 +2525,11 @@ exports[`generated config: hugepages > vm-host / defaults 1`] = `
 # 3. Verify they took effect:
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
+#
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
 #
 # NOTES
 #
@@ -2420,6 +2605,11 @@ exports[`generated config: hugepages > vm-host / thp-always 1`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -2494,6 +2684,11 @@ exports[`generated config: hugepages > vm-host / thp-off 1`] = `
 #      grep HugePages_ /proc/meminfo
 #      cat /sys/kernel/mm/transparent_hugepage/enabled
 #
+# To undo, delete these files and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-hugepages-tuning.conf
+#      sudo rm /etc/tmpfiles.d/99-hugepages-tuning.conf
+#
 # NOTES
 #
 # vm.nr_hugepages is left out at 0, so a pool set elsewhere (another
@@ -2556,6 +2751,10 @@ exports[`generated config: kernel > container / defaults 1`] = `
 #
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
 #
 # NOTES
 #
@@ -2625,6 +2824,10 @@ exports[`generated config: kernel > container / kernel-defaults 1`] = `
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
+#
 # NOTES
 #
 # kernel.pid_max is left out: systemd 243 and newer raise it to
@@ -2692,6 +2895,10 @@ exports[`generated config: kernel > container / reboot-on-failure 1`] = `
 #
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
 #
 # NOTES
 #
@@ -2761,6 +2968,10 @@ exports[`generated config: kernel > desktop / defaults 1`] = `
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
+#
 # NOTES
 #
 # kernel.pid_max is left out: systemd 243 and newer raise it to
@@ -2828,6 +3039,10 @@ exports[`generated config: kernel > desktop / kernel-defaults 1`] = `
 #
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
 #
 # NOTES
 #
@@ -2897,6 +3112,10 @@ exports[`generated config: kernel > desktop / reboot-on-failure 1`] = `
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
+#
 # NOTES
 #
 # kernel.pid_max is left out: systemd 243 and newer raise it to
@@ -2964,6 +3183,10 @@ exports[`generated config: kernel > server / defaults 1`] = `
 #
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
 #
 # NOTES
 #
@@ -3033,6 +3256,10 @@ exports[`generated config: kernel > server / defaults 2`] = `
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
+#
 # NOTES
 #
 # kernel.pid_max is left out: systemd 243 and newer raise it to
@@ -3100,6 +3327,10 @@ exports[`generated config: kernel > server / kernel-defaults 1`] = `
 #
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
 #
 # NOTES
 #
@@ -3169,6 +3400,10 @@ exports[`generated config: kernel > server / kernel-defaults 2`] = `
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
+#
 # NOTES
 #
 # kernel.pid_max is left out: systemd 243 and newer raise it to
@@ -3236,6 +3471,10 @@ exports[`generated config: kernel > server / reboot-on-failure 1`] = `
 #
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
 #
 # NOTES
 #
@@ -3305,6 +3544,10 @@ exports[`generated config: kernel > server / reboot-on-failure 2`] = `
 # 3. Verify they took effect:
 #      sysctl kernel.keys.maxkeys kernel.keys.maxbytes kernel.panic kernel.panic_on_oops kernel.softlockup_panic kernel.sysrq kernel.printk
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-kernel-tuning.conf
+#
 # NOTES
 #
 # kernel.pid_max is left out: systemd 243 and newer raise it to
@@ -3372,6 +3615,10 @@ exports[`generated config: network > bulk / bbr 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -3477,6 +3724,10 @@ exports[`generated config: network > bulk / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -3581,6 +3832,10 @@ exports[`generated config: network > bulk / kernel-defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -3680,6 +3935,10 @@ exports[`generated config: network > bulk / proxy 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -3785,6 +4044,10 @@ exports[`generated config: network > container / bbr 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -3889,6 +4152,10 @@ exports[`generated config: network > container / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -3988,6 +4255,10 @@ exports[`generated config: network > container / kernel-defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -4089,6 +4360,10 @@ exports[`generated config: network > container / proxy 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -4188,6 +4463,10 @@ exports[`generated config: network > desktop / bbr 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -4293,6 +4572,10 @@ exports[`generated config: network > desktop / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -4392,6 +4675,10 @@ exports[`generated config: network > desktop / kernel-defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -4493,6 +4780,10 @@ exports[`generated config: network > desktop / proxy 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -4592,6 +4883,10 @@ exports[`generated config: network > router / bbr 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -4697,6 +4992,10 @@ exports[`generated config: network > router / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -4796,6 +5095,10 @@ exports[`generated config: network > router / kernel-defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -4897,6 +5200,10 @@ exports[`generated config: network > router / proxy 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -4996,6 +5303,10 @@ exports[`generated config: network > web / bbr 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -5101,6 +5412,10 @@ exports[`generated config: network > web / bbr 2`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -5205,6 +5520,10 @@ exports[`generated config: network > web / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -5304,6 +5623,10 @@ exports[`generated config: network > web / defaults 2`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -5405,6 +5728,10 @@ exports[`generated config: network > web / kernel-defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -5504,6 +5831,10 @@ exports[`generated config: network > web / kernel-defaults 2`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -5605,6 +5936,10 @@ exports[`generated config: network > web / proxy 1`] = `
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
+#
 # NOTES
 #
 # default_qdisc reaches interfaces created after it is set. Existing
@@ -5704,6 +6039,10 @@ exports[`generated config: network > web / proxy 2`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl net.ipv4.tcp_rmem
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-network-tuning.conf
 #
 # NOTES
 #
@@ -5806,6 +6145,10 @@ exports[`generated config: security > container / cis 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
 #
 # NETWORK INTERFACES
 #
@@ -5930,6 +6273,10 @@ exports[`generated config: security > container / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
+#
 # NETWORK INTERFACES
 #
 # The conf.all and conf.default keys below don't reach every interface
@@ -6046,6 +6393,10 @@ exports[`generated config: security > container / kspp 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
 #
 # ONE-WAY SETTINGS
 #
@@ -6176,6 +6527,10 @@ exports[`generated config: security > desktop / cis 1`] = `
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
+#
 # NETWORK INTERFACES
 #
 # The conf.all and conf.default keys below don't reach every interface
@@ -6299,6 +6654,10 @@ exports[`generated config: security > desktop / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
+#
 # NETWORK INTERFACES
 #
 # The conf.all and conf.default keys below don't reach every interface
@@ -6415,6 +6774,10 @@ exports[`generated config: security > desktop / kspp 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
 #
 # ONE-WAY SETTINGS
 #
@@ -6545,6 +6908,10 @@ exports[`generated config: security > router / cis 1`] = `
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
+#
 # NETWORK INTERFACES
 #
 # The conf.all and conf.default keys below don't reach every interface
@@ -6671,6 +7038,10 @@ exports[`generated config: security > router / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
+#
 # NETWORK INTERFACES
 #
 # The conf.all and conf.default keys below don't reach every interface
@@ -6790,6 +7161,10 @@ exports[`generated config: security > router / kspp 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
 #
 # ONE-WAY SETTINGS
 #
@@ -6920,6 +7295,10 @@ exports[`generated config: security > server / cis 1`] = `
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
+#
 # NETWORK INTERFACES
 #
 # The conf.all and conf.default keys below don't reach every interface
@@ -7045,6 +7424,10 @@ exports[`generated config: security > server / cis 2`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
 #
 # NETWORK INTERFACES
 #
@@ -7172,6 +7555,10 @@ exports[`generated config: security > server / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
+#
 # NETWORK INTERFACES
 #
 # The conf.all and conf.default keys below don't reach every interface
@@ -7298,6 +7685,10 @@ exports[`generated config: security > server / defaults 2`] = `
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
+#
 # NETWORK INTERFACES
 #
 # The conf.all and conf.default keys below don't reach every interface
@@ -7423,6 +7814,10 @@ exports[`generated config: security > server / kspp 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
 #
 # ONE-WAY SETTINGS
 #
@@ -7559,6 +7954,10 @@ exports[`generated config: security > server / kspp 2`] = `
 # 3. Verify a value took effect:
 #      sysctl kernel.kptr_restrict
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-security-hardening.conf
+#
 # ONE-WAY SETTINGS
 #
 # These can't be changed again until the next reboot once applied:
@@ -7692,6 +8091,10 @@ exports[`generated config: swap > database / database 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -7766,6 +8169,10 @@ exports[`generated config: swap > database / defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -7842,6 +8249,10 @@ exports[`generated config: swap > database / desktop 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -7916,6 +8327,10 @@ exports[`generated config: swap > database / k8s-node 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -7992,6 +8407,10 @@ exports[`generated config: swap > database / k8s-zram 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -8066,6 +8485,10 @@ exports[`generated config: swap > database / kernel-defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -8142,6 +8565,10 @@ exports[`generated config: swap > database / memory-constrained 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -8216,6 +8643,10 @@ exports[`generated config: swap > desktop / database 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -8292,6 +8723,10 @@ exports[`generated config: swap > desktop / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -8366,6 +8801,10 @@ exports[`generated config: swap > desktop / desktop 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -8442,6 +8881,10 @@ exports[`generated config: swap > desktop / k8s-node 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -8516,6 +8959,10 @@ exports[`generated config: swap > desktop / k8s-zram 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -8592,6 +9039,10 @@ exports[`generated config: swap > desktop / kernel-defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -8666,6 +9117,10 @@ exports[`generated config: swap > desktop / memory-constrained 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -8742,6 +9197,10 @@ exports[`generated config: swap > embedded / database 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -8816,6 +9275,10 @@ exports[`generated config: swap > embedded / defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -8892,6 +9355,10 @@ exports[`generated config: swap > embedded / desktop 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -8966,6 +9433,10 @@ exports[`generated config: swap > embedded / k8s-node 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -9042,6 +9513,10 @@ exports[`generated config: swap > embedded / k8s-zram 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -9116,6 +9591,10 @@ exports[`generated config: swap > embedded / kernel-defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -9192,6 +9671,10 @@ exports[`generated config: swap > embedded / memory-constrained 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -9266,6 +9749,10 @@ exports[`generated config: swap > general / database 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -9342,6 +9829,10 @@ exports[`generated config: swap > general / database 2`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -9416,6 +9907,10 @@ exports[`generated config: swap > general / defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -9492,6 +9987,10 @@ exports[`generated config: swap > general / defaults 2`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -9566,6 +10065,10 @@ exports[`generated config: swap > general / desktop 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -9642,6 +10145,10 @@ exports[`generated config: swap > general / desktop 2`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -9716,6 +10223,10 @@ exports[`generated config: swap > general / k8s-node 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -9792,6 +10303,10 @@ exports[`generated config: swap > general / k8s-node 2`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -9866,6 +10381,10 @@ exports[`generated config: swap > general / k8s-zram 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -9942,6 +10461,10 @@ exports[`generated config: swap > general / k8s-zram 2`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -10016,6 +10539,10 @@ exports[`generated config: swap > general / kernel-defaults 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -10092,6 +10619,10 @@ exports[`generated config: swap > general / kernel-defaults 2`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -10166,6 +10697,10 @@ exports[`generated config: swap > general / memory-constrained 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -10242,6 +10777,10 @@ exports[`generated config: swap > general / memory-constrained 2`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -10316,6 +10855,10 @@ exports[`generated config: swap > k8s / database 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -10393,6 +10936,10 @@ exports[`generated config: swap > k8s / defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -10468,6 +11015,10 @@ exports[`generated config: swap > k8s / desktop 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -10545,6 +11096,10 @@ exports[`generated config: swap > k8s / k8s-node 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -10620,6 +11175,10 @@ exports[`generated config: swap > k8s / k8s-zram 1`] = `
 #
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
 #
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
@@ -10697,6 +11256,10 @@ exports[`generated config: swap > k8s / kernel-defaults 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -10773,6 +11336,10 @@ exports[`generated config: swap > k8s / memory-constrained 1`] = `
 # 3. Verify a value took effect:
 #      sysctl vm.swappiness
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-swap-tuning.conf
+#
 # ACTIVATING SWAP: 8 GiB on NVMe
 #
 # If you do not have swap yet, a swap file is the simplest option:
@@ -10835,6 +11402,10 @@ exports[`generated config: systemd > container-host / container-host 1`] = `
 # Preset: Container host
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -10879,6 +11450,10 @@ exports[`generated config: systemd > container-host / database-server 1`] = `
 # Preset: Database server
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -10924,6 +11499,10 @@ exports[`generated config: systemd > container-host / defaults 1`] = `
 # Preset: custom
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -10968,6 +11547,10 @@ exports[`generated config: systemd > container-host / desktop 1`] = `
 # Preset: Desktop workstation
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11011,6 +11594,10 @@ exports[`generated config: systemd > container-host / hardened-multitenant 1`] =
 # Preset: Hardened multi-tenant
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11055,6 +11642,10 @@ exports[`generated config: systemd > container-host / kubernetes-node 1`] = `
 # Preset: Kubernetes node
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11099,6 +11690,10 @@ exports[`generated config: systemd > container-host / systemd-defaults 1`] = `
 # Preset: systemd defaults
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11141,6 +11736,10 @@ exports[`generated config: systemd > database / container-host 1`] = `
 # Preset: Container host
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11186,6 +11785,10 @@ exports[`generated config: systemd > database / database-server 1`] = `
 # Preset: Database server
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11231,6 +11834,10 @@ exports[`generated config: systemd > database / defaults 1`] = `
 # Preset: custom
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11276,6 +11883,10 @@ exports[`generated config: systemd > database / desktop 1`] = `
 # Preset: Desktop workstation
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11320,6 +11931,10 @@ exports[`generated config: systemd > database / hardened-multitenant 1`] = `
 # Preset: Hardened multi-tenant
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11365,6 +11980,10 @@ exports[`generated config: systemd > database / kubernetes-node 1`] = `
 # Preset: Kubernetes node
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11410,6 +12029,10 @@ exports[`generated config: systemd > database / systemd-defaults 1`] = `
 # Preset: systemd defaults
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11452,6 +12075,10 @@ exports[`generated config: systemd > desktop / container-host 1`] = `
 # Preset: Container host
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11496,6 +12123,10 @@ exports[`generated config: systemd > desktop / database-server 1`] = `
 # Preset: Database server
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11541,6 +12172,10 @@ exports[`generated config: systemd > desktop / defaults 1`] = `
 # Preset: custom
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11583,6 +12218,10 @@ exports[`generated config: systemd > desktop / desktop 1`] = `
 # Preset: Desktop workstation
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11626,6 +12265,10 @@ exports[`generated config: systemd > desktop / hardened-multitenant 1`] = `
 # Preset: Hardened multi-tenant
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11670,6 +12313,10 @@ exports[`generated config: systemd > desktop / kubernetes-node 1`] = `
 # Preset: Kubernetes node
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11714,6 +12361,10 @@ exports[`generated config: systemd > desktop / systemd-defaults 1`] = `
 # Preset: systemd defaults
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11756,6 +12407,10 @@ exports[`generated config: systemd > general / container-host 1`] = `
 # Preset: Container host
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11800,6 +12455,10 @@ exports[`generated config: systemd > general / container-host 2`] = `
 # Preset: Container host
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11844,6 +12503,10 @@ exports[`generated config: systemd > general / database-server 1`] = `
 # Preset: Database server
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11889,6 +12552,10 @@ exports[`generated config: systemd > general / database-server 2`] = `
 # Preset: Database server
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11934,6 +12601,10 @@ exports[`generated config: systemd > general / defaults 1`] = `
 # Preset: custom
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -11976,6 +12647,10 @@ exports[`generated config: systemd > general / defaults 2`] = `
 # Preset: custom
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12018,6 +12693,10 @@ exports[`generated config: systemd > general / desktop 1`] = `
 # Preset: Desktop workstation
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12061,6 +12740,10 @@ exports[`generated config: systemd > general / desktop 2`] = `
 # Preset: Desktop workstation
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12104,6 +12787,10 @@ exports[`generated config: systemd > general / hardened-multitenant 1`] = `
 # Preset: Hardened multi-tenant
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12148,6 +12835,10 @@ exports[`generated config: systemd > general / hardened-multitenant 2`] = `
 # Preset: Hardened multi-tenant
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12192,6 +12883,10 @@ exports[`generated config: systemd > general / kubernetes-node 1`] = `
 # Preset: Kubernetes node
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12236,6 +12931,10 @@ exports[`generated config: systemd > general / kubernetes-node 2`] = `
 # Preset: Kubernetes node
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12280,6 +12979,10 @@ exports[`generated config: systemd > general / systemd-defaults 1`] = `
 # Preset: systemd defaults
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12322,6 +13025,10 @@ exports[`generated config: systemd > general / systemd-defaults 2`] = `
 # Preset: systemd defaults
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12364,6 +13071,10 @@ exports[`generated config: systemd > kubernetes / container-host 1`] = `
 # Preset: Container host
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12408,6 +13119,10 @@ exports[`generated config: systemd > kubernetes / database-server 1`] = `
 # Preset: Database server
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12453,6 +13168,10 @@ exports[`generated config: systemd > kubernetes / defaults 1`] = `
 # Preset: custom
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12497,6 +13216,10 @@ exports[`generated config: systemd > kubernetes / desktop 1`] = `
 # Preset: Desktop workstation
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12540,6 +13263,10 @@ exports[`generated config: systemd > kubernetes / hardened-multitenant 1`] = `
 # Preset: Hardened multi-tenant
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12584,6 +13311,10 @@ exports[`generated config: systemd > kubernetes / kubernetes-node 1`] = `
 # Preset: Kubernetes node
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12628,6 +13359,10 @@ exports[`generated config: systemd > kubernetes / systemd-defaults 1`] = `
 # Preset: systemd defaults
 # Apply: sudo systemctl daemon-reload
 #        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)
+# To undo, delete these files and reload systemd:
+#      sudo rm /etc/systemd/system.conf.d/99-resource-tuning.conf
+#      sudo rm /etc/systemd/system/system.slice.d/50-resources.conf
+#      sudo systemctl daemon-reexec
 # Sources:
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html
 #   https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
@@ -12683,6 +13418,10 @@ exports[`generated config: sysv-ipc > container / defaults 1`] = `
 #
 # 3. Verify they took effect:
 #      ipcs -l
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
 #
 # NOTES
 #
@@ -12745,6 +13484,10 @@ exports[`generated config: sysv-ipc > container / kernel-defaults 1`] = `
 # 3. Verify they took effect:
 #      ipcs -l
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
+#
 # NOTES
 #
 # kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
@@ -12806,6 +13549,10 @@ exports[`generated config: sysv-ipc > container / most-ids 1`] = `
 # 3. Verify they took effect:
 #      ipcs -l
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
+#
 # NOTES
 #
 # kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
@@ -12866,6 +13613,10 @@ exports[`generated config: sysv-ipc > db2 / defaults 1`] = `
 #
 # 3. Verify they took effect:
 #      ipcs -l
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
 #
 # NOTES
 #
@@ -12931,6 +13682,10 @@ exports[`generated config: sysv-ipc > db2 / kernel-defaults 1`] = `
 # 3. Verify they took effect:
 #      ipcs -l
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
+#
 # NOTES
 #
 # kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
@@ -12994,6 +13749,10 @@ exports[`generated config: sysv-ipc > db2 / most-ids 1`] = `
 #
 # 3. Verify they took effect:
 #      ipcs -l
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
 #
 # NOTES
 #
@@ -13059,6 +13818,10 @@ exports[`generated config: sysv-ipc > general / defaults 1`] = `
 # 3. Verify they took effect:
 #      ipcs -l
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
+#
 # NOTES
 #
 # kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
@@ -13119,6 +13882,10 @@ exports[`generated config: sysv-ipc > general / defaults 2`] = `
 #
 # 3. Verify they took effect:
 #      ipcs -l
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
 #
 # NOTES
 #
@@ -13181,6 +13948,10 @@ exports[`generated config: sysv-ipc > general / kernel-defaults 1`] = `
 # 3. Verify they took effect:
 #      ipcs -l
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
+#
 # NOTES
 #
 # kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
@@ -13241,6 +14012,10 @@ exports[`generated config: sysv-ipc > general / kernel-defaults 2`] = `
 #
 # 3. Verify they took effect:
 #      ipcs -l
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
 #
 # NOTES
 #
@@ -13303,6 +14078,10 @@ exports[`generated config: sysv-ipc > general / most-ids 1`] = `
 # 3. Verify they took effect:
 #      ipcs -l
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
+#
 # NOTES
 #
 # kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
@@ -13364,6 +14143,10 @@ exports[`generated config: sysv-ipc > general / most-ids 2`] = `
 # 3. Verify they took effect:
 #      ipcs -l
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
+#
 # NOTES
 #
 # kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
@@ -13424,6 +14207,10 @@ exports[`generated config: sysv-ipc > oracle / defaults 1`] = `
 #
 # 3. Verify they took effect:
 #      ipcs -l
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
 #
 # NOTES
 #
@@ -13489,6 +14276,10 @@ exports[`generated config: sysv-ipc > oracle / kernel-defaults 1`] = `
 # 3. Verify they took effect:
 #      ipcs -l
 #
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
+#
 # NOTES
 #
 # kernel.shmmax and kernel.shmall are left out: since kernel 3.16 both
@@ -13552,6 +14343,10 @@ exports[`generated config: sysv-ipc > oracle / most-ids 1`] = `
 #
 # 3. Verify they took effect:
 #      ipcs -l
+#
+# To undo, delete this file and reboot. The values already applied stay
+# set until the reboot:
+#      sudo rm /etc/sysctl.d/99-sysv-ipc-tuning.conf
 #
 # NOTES
 #

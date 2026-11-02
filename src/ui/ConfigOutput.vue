@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { combineFiles } from '@/core/output/files.js'
 import { copyText, downloadText, downloadNames } from '@/ui/fileActions.js'
+import { differingKeys } from '@/core/valueTypes.js'
+import InstallSteps from '@/ui/InstallSteps.vue'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
@@ -16,6 +18,23 @@ const blocked = computed(() => blockingIssues.value.length > 0)
 const files = computed(() => tuner.configFiles)
 const output = computed(() => combineFiles(files.value))
 const names = computed(() => downloadNames(files.value.map((f) => f.path)))
+
+// What the output changes: every value off its stock default, for review
+// before the file goes on a machine.
+const stockDefaults = Object.fromEntries(domain.parameterKeys.map((k) => [k, domain.defsByKey[k].kernelDefault]))
+const differing = computed(() =>
+  differingKeys(domain.defsByKey, stockDefaults, tuner.params).map((key) => {
+    const def = domain.defsByKey[key]
+    return {
+      key,
+      def,
+      stock: domain.formatValue(def.kernelDefault, def, tuner.hardware),
+      value: domain.formatValue(tuner.params[key], def, tuner.hardware),
+    }
+  }),
+)
+const showDiffering = ref(false)
+const defaultsLabel = `${domain.defaultLabel.toLowerCase()}s`
 
 const copyStatus = ref('idle') // 'idle' | 'ok' | 'fail'
 const shareStatus = ref('idle')
@@ -77,8 +96,30 @@ function reset() {
       </div>
     </div>
 
-    <!-- Normal state: textarea + actions -->
+    <!-- Normal state: steps, the diff, textarea + actions -->
     <div v-else class="space-y-3 p-4">
+      <InstallSteps :files="files" :combined="files.length > 1" />
+
+      <div class="border-t border-slate-100 pt-3 text-sm">
+        <p v-if="!differing.length" class="text-slate-600">Every value is at the {{ domain.defaultLabel.toLowerCase() }}.</p>
+        <template v-else>
+          <button
+            type="button"
+            class="min-h-6 text-left text-slate-700 hover:text-slate-900"
+            :aria-expanded="showDiffering"
+            aria-controls="output-differing"
+            @click="showDiffering = !showDiffering"
+          >{{ showDiffering ? '▾' : '▸' }} {{ differing.length }} {{ differing.length === 1 ? 'value differs' : 'values differ' }} from the {{ defaultsLabel }}</button>
+          <ul v-if="showDiffering" id="output-differing" class="mt-2 space-y-1 text-xs">
+            <li v-for="d in differing" :key="d.key" class="flex flex-wrap items-baseline gap-x-2">
+              <span class="font-medium text-slate-900">{{ d.def.title }}</span>
+              <code class="break-all font-mono text-slate-600">{{ d.def.sysctlName }}</code>
+              <span class="font-mono text-slate-700">{{ d.stock }} → {{ d.value }}</span>
+            </li>
+          </ul>
+        </template>
+      </div>
+
       <textarea
         :value="output"
         readonly

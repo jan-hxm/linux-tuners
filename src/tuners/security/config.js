@@ -9,6 +9,7 @@ import { PROFILE } from './profile.js'
 import { isEmitted } from './calculations.js'
 import { configFile } from '@/core/output/files.js'
 import { isoDate, presetSummary, rule } from '@/core/output/comments.js'
+import { undoComment } from '@/core/output/installSteps.js'
 import { sysctlConfig } from '@/core/output/sysctlFile.js'
 
 const PATH = '/etc/sysctl.d/99-security-hardening.conf'
@@ -52,6 +53,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('# 3. Verify a value took effect:')
   lines.push('#      sysctl kernel.kptr_restrict')
   lines.push('#')
+  lines.push(...undoComment([PATH]), '#')
   lines.push(...oneWayBlock(hardware, params))
   lines.push(...interfaceBlock(hardware, params))
   lines.push(...apportBlock(params))

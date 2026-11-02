@@ -9,6 +9,7 @@ import { watermarkLevelsMiB } from './calculations.js'
 import { formatSizeGiB } from '@/core/formatting.js'
 import { configFile } from '@/core/output/files.js'
 import { isoDate, presetSummary, rule } from '@/core/output/comments.js'
+import { undoComment } from '@/core/output/installSteps.js'
 import { sysctlConfig } from '@/core/output/sysctlFile.js'
 
 const PATH = '/etc/sysctl.d/99-swap-tuning.conf'
@@ -55,6 +56,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('# 3. Verify a value took effect:')
   lines.push('#      sysctl vm.swappiness')
   lines.push('#')
+  lines.push(...undoComment([PATH]), '#')
 
   // ── How to create / activate the swap device (device-aware) ─────────────────
   lines.push(...swapSetupBlock(hardware))

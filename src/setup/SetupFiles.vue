@@ -9,6 +9,7 @@
 import { computed, ref } from 'vue'
 import { combineFiles } from '@/core/output/files.js'
 import { copyText, downloadText, downloadNames } from '@/ui/fileActions.js'
+import InstallSteps from '@/ui/InstallSteps.vue'
 import { machineHeader } from './machineProfile.js'
 import { SETUP_STEPS } from './steps.js'
 import { useSetupStore, useStepStore } from './useSetupStore.js'
@@ -51,7 +52,7 @@ const copyLabel = (key, idle) => ({ ok: 'Copied ✓', fail: 'Copy failed' })[sta
 <template>
   <div class="space-y-4">
     <p class="text-sm text-slate-700">
-      Save each file at the path it names, then apply it as its comments say. Each file comes from its tuner unchanged, and no two tuners write the same setting.
+      Each file comes from its tuner unchanged, and no two tuners write the same setting.
     </p>
 
     <div class="flex flex-wrap items-center gap-2">
@@ -117,6 +118,11 @@ const copyLabel = (key, idle) => ({ ok: 'Copied ✓', fail: 'Copy failed' })[sta
           :aria-label="`Contents of ${file.path}`"
         ></textarea>
       </article>
+    </section>
+
+    <section v-if="allFiles.length" class="space-y-2 border-t border-slate-200 pt-4">
+      <h3 class="text-sm font-semibold text-slate-900">Install them</h3>
+      <InstallSteps :files="allFiles" />
     </section>
 
     <p class="sr-only" aria-live="polite">

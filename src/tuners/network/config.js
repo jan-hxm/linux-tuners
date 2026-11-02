@@ -10,6 +10,7 @@ import { isApplicable, CONNTRACK_ENTRY_BYTES } from './calculations.js'
 import { formatBytes } from './formatting.js'
 import { configFile } from '@/core/output/files.js'
 import { isoDate, presetSummary, rule } from '@/core/output/comments.js'
+import { undoComment } from '@/core/output/installSteps.js'
 import { sysctlConfig } from '@/core/output/sysctlFile.js'
 
 const PATH = '/etc/sysctl.d/99-network-tuning.conf'
@@ -53,6 +54,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('# 3. Verify a value took effect:')
   lines.push('#      sysctl net.ipv4.tcp_rmem')
   lines.push('#')
+  lines.push(...undoComment([PATH]), '#')
   lines.push(...noteBlock(hardware, params))
   lines.push('# Sources:')
   lines.push('#   IP sysctls: https://docs.kernel.org/networking/ip-sysctl.html')

@@ -10,6 +10,7 @@ import { queueMemoryBytes } from './calculations.js'
 import { formatBytes } from '@/core/formatting.js'
 import { configFile } from '@/core/output/files.js'
 import { isoDate, presetSummary, rule } from '@/core/output/comments.js'
+import { undoComment } from '@/core/output/installSteps.js'
 import { sysctlConfig } from '@/core/output/sysctlFile.js'
 
 const PATH = '/etc/sysctl.d/99-sysv-ipc-tuning.conf'
@@ -51,6 +52,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('# 3. Verify they took effect:')
   lines.push('#      ipcs -l')
   lines.push('#')
+  lines.push(...undoComment([PATH]), '#')
   lines.push(...noteBlock(hardware))
   lines.push('# Sources:')
   lines.push('#   kernel sysctls: https://docs.kernel.org/admin-guide/sysctl/kernel.html')

@@ -10,6 +10,7 @@ import { PROFILE } from './profile.js'
 import { isEmitted } from './calculations.js'
 import { configFile } from '@/core/output/files.js'
 import { isoDate, presetSummary, rule } from '@/core/output/comments.js'
+import { undoComment } from '@/core/output/installSteps.js'
 import { udevConfig } from '@/core/output/udevRules.js'
 
 const BLOCK_DISK = [['ACTION', 'add|change'], ['SUBSYSTEM', 'block']]
@@ -86,6 +87,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   lines.push('#      lsblk -d -o NAME,ROTA,SCHED,RQ-SIZE,RA')
   lines.push('#      journalctl -b -u systemd-udevd | grep "Failed to write"')
   lines.push('#')
+  lines.push(...undoComment([device.path]), '#')
   lines.push(...noteBlock(hardware, params))
   lines.push('# Sources:')
   lines.push('#   queue attributes: https://docs.kernel.org/admin-guide/abi-stable.html')

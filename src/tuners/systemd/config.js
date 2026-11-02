@@ -10,6 +10,7 @@ import { cpuQuotaNoLimit, hasCpuAccountingOption, hasSwapControl } from './calcu
 import { configFile } from '@/core/output/files.js'
 import { commentLine, fileBanner, isoDate, presetSummary } from '@/core/output/comments.js'
 import { iniDirective, iniSection } from '@/core/output/iniDropIn.js'
+import { undoComment } from '@/core/output/installSteps.js'
 import { formatParams } from '@/core/valueTypes.js'
 import { SYSTEMD_DEFS_BY_KEY } from './defs.js'
 
@@ -34,6 +35,7 @@ function slicePath(slice) {
 export function generateConfig({ hardware, params, presetLabel, customised, now }) {
   // Every value as its type prints it; the ini syntax around it is added here.
   const t = formatParams(SYSTEMD_DEFS_BY_KEY, params)
+  const path = slicePath(hardware.targetSlice)
 
   // ── File 1: shared header + manager defaults ──────────────────────────────
   const manager = []
@@ -42,6 +44,7 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   manager.push(`# Preset: ${presetSummary(presetLabel, customised)}`)
   manager.push('# Apply: sudo systemctl daemon-reload')
   manager.push('#        manager defaults also need: sudo systemctl daemon-reexec (or a reboot)')
+  manager.push(...undoComment([MANAGER_PATH, path]))
   manager.push('# Sources:')
   manager.push(`#   ${SYSTEM_CONF_DOC}`)
   manager.push(`#   ${RESOURCE_DOC}`)
@@ -62,7 +65,6 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   manager.push(...iniDirective('DefaultLimitMEMLOCK', systemdSize(params.default_limit_memlock), 'default locked-in-memory ceiling'))
 
   // ── File 2: slice resource control ────────────────────────────────────────
-  const path = slicePath(hardware.targetSlice)
   const slice = []
   slice.push(fileBanner(path))
   slice.push(iniSection('Slice'))

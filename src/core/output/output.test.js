@@ -5,6 +5,7 @@ import { sysctlConfig, sysctlLine, sysctlTryCommand } from './sysctlFile.js'
 import { iniDirective, iniSection } from './iniDropIn.js'
 import { sysfsTryCommand, tmpfilesConfig, tmpfilesWrite } from './tmpfilesFile.js'
 import { udevAttrRule, udevConfig, udevMatch } from './udevRules.js'
+import { installSteps, undoComment } from './installSteps.js'
 
 const LS = String.fromCharCode(0x2028)
 
@@ -193,5 +194,63 @@ describe('try-it commands', () => {
   it('refuses a value the file would refuse', () => {
     expect(() => sysctlTryCommand({ sysctlName: 'vm.swappiness' }, '1; reboot')).toThrow()
     expect(() => sysfsTryCommand({ sysfsPath: '/sys/kernel/mm/ksm/run' }, '1 && reboot')).toThrow()
+  })
+})
+
+describe('installSteps', () => {
+  const sysctl = { path: '/etc/sysctl.d/99-a.conf', content: '# vm.swappiness: 10 - low\nvm.swappiness = 10' }
+  const manager = { path: '/etc/systemd/system.conf.d/99-a.conf', content: '[Manager]\n# DefaultCPUAccounting: left out\nDefaultTasksMax=4915' }
+  const slice = { path: '/etc/systemd/system/user.slice.d/50-a.conf', content: '[Slice]\nCPUWeight=100' }
+
+  it('saves, applies and checks a sysctl file, and undoes it with a reboot', () => {
+    expect(installSteps([sysctl])).toEqual({
+      save: ['sudo nano /etc/sysctl.d/99-a.conf'],
+      apply: ['sudo sysctl --system'],
+      check: ['sysctl vm.swappiness'],
+      undo: ['sudo rm /etc/sysctl.d/99-a.conf'],
+      reboot: true,
+    })
+  })
+
+  it('creates the systemd drop-in folders and lets daemon-reexec cover daemon-reload', () => {
+    const steps = installSteps([manager, slice])
+    expect(steps.save).toEqual([
+      'sudo mkdir -p /etc/systemd/system.conf.d',
+      'sudo nano /etc/systemd/system.conf.d/99-a.conf',
+      'sudo mkdir -p /etc/systemd/system/user.slice.d',
+      'sudo nano /etc/systemd/system/user.slice.d/50-a.conf',
+    ])
+    expect(steps.apply).toEqual(['sudo systemctl daemon-reexec'])
+    expect(steps.check).toEqual(['systemctl show -p DefaultTasksMax', 'systemctl show user.slice -p CPUWeight'])
+    expect(steps.undo.at(-1)).toBe('sudo systemctl daemon-reexec')
+    expect(steps.reboot).toBe(false)
+    expect(installSteps([slice]).apply).toEqual(['sudo systemctl daemon-reload'])
+  })
+
+  it('applies each command once across files', () => {
+    const other = { path: '/etc/sysctl.d/99-b.conf', content: 'fs.file-max = 1' }
+    expect(installSteps([sysctl, other]).apply).toEqual(['sudo sysctl --system'])
+  })
+
+  it('reads only names back out of the content, never a value or a line it cannot match', () => {
+    const hostile = { path: '/etc/sysctl.d/99-a.conf', content: 'vm.swappiness = 10; rm -rf /\n$(id) = 1' }
+    expect(installSteps([hostile]).check).toEqual(['sysctl vm.swappiness'])
+    expect(installSteps([{ path: '/etc/sysctl.d/99-a.conf', content: '# sets nothing' }]).check).toEqual([])
+    const udev = { path: '/etc/udev/rules.d/99-a.rules', content: 'ACTION=="add|change", SUBSYSTEM=="block", ATTR{queue/scheduler}="none"' }
+    expect(installSteps([udev]).check).toEqual(['grep . /sys/class/block/*/queue/scheduler'])
+    expect(installSteps([udev]).apply).toContain('sudo udevadm trigger --action=change --subsystem-match=block')
+  })
+
+  it('refuses a path it has no steps for', () => {
+    expect(() => installSteps([{ path: '/etc/fstab', content: '' }])).toThrow()
+  })
+
+  it('writes the undo note as comment lines', () => {
+    expect(undoComment(['/etc/sysctl.d/99-a.conf'])).toEqual([
+      '# To undo, delete this file and reboot. The values already applied stay',
+      '# set until the reboot:',
+      '#      sudo rm /etc/sysctl.d/99-a.conf',
+    ])
+    expect(undoComment([manager.path, slice.path])[0]).toBe('# To undo, delete these files and reload systemd:')
   })
 })

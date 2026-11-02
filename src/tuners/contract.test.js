@@ -11,6 +11,7 @@ import { restoreState, presetParams } from '@/core/createTunerStore.js'
 import { parseRichText } from '@/ui/richText.js'
 import { downloadNames } from '@/ui/fileActions.js'
 import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
+import { installSteps } from '@/core/output/installSteps.js'
 import { differingKeys, elementRange, valueTypeOf } from '@/core/valueTypes.js'
 import { CONTROLS } from '@/ui/controls/index.js'
 import { DESC_PARTS } from '@/ui/descParts.js'
@@ -104,6 +105,9 @@ const TMPFILES_WRITE = /^w (\/sys\/\S+) - - - - ([A-Za-z0-9_+.-]+)$/
  * device property or a sysfs attribute, then one `ATTR{<attr>}="<value>"`.
  * Captures the attribute and the value.
  */
+/** An install-step command: a program and plain arguments, no shell syntax. */
+const PLAIN_COMMAND = /^(?:sudo )?[a-z][a-z-]*(?: [A-Za-z0-9_./*@=-]+)*$/
+
 const UDEV_ATTR_RULE = /^(?:(?:ACTION|SUBSYSTEM|KERNEL|ENV\{[A-Z_]+\}|ATTR\{[a-z_/]+\})=="[A-Za-z0-9_|*?[\]-]+", )+ATTR\{([a-z_/]+)\}="([A-Za-z0-9_+.-]+)"$/
 
 
@@ -466,6 +470,22 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         const blocking = domain.validate(state.hardware, state.params).filter((i) => i.blocking)
         expect(blocking.map((i) => i.id), label).toEqual([])
         expectSafeConfig(domain, configFor(domain, state), state.params)
+      }
+    })
+
+    // Design.md §7 "Export steps": the steps follow from the files alone.
+    it('gives every config plain install, check and undo commands', () => {
+      for (const state of legitimateStates(domain)) {
+        const label = `${profileLabel(domain, state.hardware)} / ${state.activePreset ?? 'defaults'}`
+        const files = configFor(domain, state)
+        const steps = installSteps(files)
+        for (const command of [...steps.save, ...steps.apply, ...steps.check, ...steps.undo]) {
+          expect(command, label).toMatch(PLAIN_COMMAND)
+        }
+        expect(steps.save, label).toEqual(expect.arrayContaining(files.map((f) => `sudo nano ${f.path}`)))
+        expect(steps.undo, label).toEqual(expect.arrayContaining(files.map((f) => `sudo rm ${f.path}`)))
+        expect(steps.apply.length, label).toBeGreaterThan(0)
+        expect(steps.check.length, label).toBeGreaterThan(0)
       }
     })
   })

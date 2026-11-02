@@ -11,7 +11,6 @@ Cheap, and nothing else pays off until people can find the site and shared links
 
 - [ ] Verify the site in Google Search Console and submit `https://linux-tuners.dev/sitemap.xml`; optionally Bing Webmaster Tools.
 - [ ] After the next deploy, check the link cards in an Open Graph preview tester (opengraph.xyz or metatags.io) for `/` and one tuner page. No social accounts needed.
-- [ ] Per-route `<lastmod>` in the sitemap from `git log -1 --format=%cI -- <view file>` instead of the build date, which marks every page as changed on every deploy. `scripts/generate-static-routes.mjs`
 
 ## 2. Guided system setup
 

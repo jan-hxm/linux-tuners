@@ -14,6 +14,7 @@
  * Run automatically via `npm run build` (postbuild hook in package.json).
  */
 
+import { execFileSync } from 'node:child_process'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -28,7 +29,32 @@ import {
 } from '../src/routes-meta.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const DIST_DIR = path.resolve(__dirname, '..', 'dist')
+const ROOT_DIR = path.resolve(__dirname, '..')
+const DIST_DIR = path.join(ROOT_DIR, 'dist')
+
+// The files a page's content comes from, for its sitemap <lastmod>. A tuner
+// page is its own src/tuners/<id>/ folder; the landing cards come from the
+// registry. Shared UI is left out, or every tweak would mark every page changed.
+const PAGE_SOURCES = { '/': ['src/views/LandingView.vue', 'src/tuners/registry.js'] }
+const sourcesFor = (route) => PAGE_SOURCES[route.path] ?? [`src/tuners/${route.name}`]
+
+function git(...args) {
+  return execFileSync('git', args, { cwd: ROOT_DIR, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+}
+
+/**
+ * The date of the last commit touching the page's sources, or null when git
+ * can't tell: no git, or a shallow clone, where every file looks changed in
+ * the one commit it has.
+ */
+function lastCommitDate(route) {
+  try {
+    if (git('rev-parse', '--is-shallow-repository') !== 'false') return null
+    return git('log', '-1', '--format=%cs', '--', ...sourcesFor(route)) || null
+  } catch {
+    return null
+  }
+}
 
 async function main() {
   const templatePath = path.join(DIST_DIR, 'index.html')
@@ -123,7 +149,7 @@ function renderSitemap(routes) {
     .map(
       (r) => `  <url>
     <loc>${SITE_ORIGIN}${r.path === '/' ? '/' : r.path}</loc>
-    <lastmod>${today}</lastmod>
+    <lastmod>${lastCommitDate(r) ?? today}</lastmod>
     <changefreq>${r.changefreq ?? 'monthly'}</changefreq>
     <priority>${r.priority?.toFixed?.(1) ?? '0.5'}</priority>
   </url>`,

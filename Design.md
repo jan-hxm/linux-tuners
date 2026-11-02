@@ -197,7 +197,10 @@ the head tags client-side, and `npm run build` runs a postbuild step
 (`scripts/generate-static-routes.mjs`) that writes `dist/<route>/index.html`
 with the route's title, OG/Twitter tags, JSON-LD and canonical URL baked in,
 plus `sitemap.xml`. Crawlers that don't run JavaScript therefore see the
-correct link previews. Every page shares one card image, `og-image.png`
+correct link previews. Each sitemap `<lastmod>` is the last commit to that
+page's own sources (a tuner's `src/tuners/<id>/` folder; the landing view and
+the registry for `/`), so a deploy doesn't mark every page changed. CI checks
+out the full history for this; in a shallow clone the build date is used. Every page shares one card image, `og-image.png`
 (1200×630), which `npm run gen:icons` renders from `public/og-image.svg`: X,
 LinkedIn and Facebook don't show SVG previews. Edit the SVG, then regenerate.
 

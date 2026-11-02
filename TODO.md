@@ -16,7 +16,6 @@ Cheap, and nothing else pays off until people can find the site and shared links
 
 The next big feature, now that nine tuners exist: it turns separate tools into one path through a whole machine. Designed in [Design.md §5 Guided setup](Design.md#guided-setup); build in this order, each step shippable on its own.
 
-- [ ] `core/machine.js` and the mapping: the machine field list, each tuner's `machine` declarations, and the contract test that every machine option maps to a value the tuner accepts.
 - [ ] Facts: the `facts` hook and the facts argument of `validate`, the systemd warnings against `nrOpen`, `pidMax` and `threadsMax`, and the order test.
 - [ ] `/setup`: the store option `urlSync: false`, the steps, the link envelope with its hostile-link tests, the output step with per-file download (which closes the `ConfigOutput` item in §3), the no-shared-key test, the route and the sitemap sources, the `src/setup/` import rule, and the landing page's "Start guided setup" button, which passes the picked role.
 

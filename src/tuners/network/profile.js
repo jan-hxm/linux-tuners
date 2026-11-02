@@ -41,6 +41,18 @@ export const PROFILE = {
         { value: 'desktop', label: 'Desktop or developer workstation' },
       ],
       default: 'web',
+      machine: {
+        from: 'role',
+        map: {
+          server: 'web',
+          web: 'web',
+          database: 'web',
+          'container-host': 'container',
+          'vm-host': 'container',
+          router: 'router',
+          desktop: 'desktop',
+        },
+      },
     },
     {
       key: 'link',
@@ -68,7 +80,7 @@ export const PROFILE = {
       ],
       default: 'region',
     },
-    { ...RAM_FIELD, default: 16, half: true },
+    { ...RAM_FIELD, default: 16, half: true, machine: 'ramGiB' },
     {
       key: 'conntrack',
       type: 'choice',

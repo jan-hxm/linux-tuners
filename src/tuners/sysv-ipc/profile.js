@@ -29,8 +29,20 @@ export const PROFILE = {
         { value: 'db2', label: 'IBM Db2' },
       ],
       default: 'general',
+      machine: {
+        from: 'role',
+        map: {
+          server: 'general',
+          web: 'general',
+          database: 'general',
+          'container-host': 'container',
+          'vm-host': 'general',
+          router: 'general',
+          desktop: 'general',
+        },
+      },
     },
-    { ...RAM_FIELD, default: 16 },
+    { ...RAM_FIELD, default: 16, machine: 'ramGiB' },
   ],
   /**
    * The collapsed one-line summary, as rich-text parts joined with " · ".

@@ -31,8 +31,20 @@ export const PROFILE = {
         { value: 'desktop', label: 'Desktop or gaming machine' },
       ],
       default: 'server',
+      machine: {
+        from: 'role',
+        map: {
+          server: 'server',
+          web: 'server',
+          database: 'database',
+          'container-host': 'server',
+          'vm-host': 'vm-host',
+          router: 'server',
+          desktop: 'desktop',
+        },
+      },
     },
-    { ...RAM_FIELD, default: 16, half: true },
+    { ...RAM_FIELD, default: 16, half: true, machine: 'ramGiB' },
     {
       key: 'numa',
       type: 'choice',

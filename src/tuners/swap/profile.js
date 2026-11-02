@@ -31,7 +31,7 @@ export const PROFILE = {
   title: 'Hardware spec',
   applyLabel: 'Apply hardware specs',
   fields: [
-    { ...RAM_FIELD, default: 16 },
+    { ...RAM_FIELD, default: 16, machine: 'ramGiB' },
     {
       key: 'swapGiB',
       type: 'number',
@@ -75,6 +75,18 @@ export const PROFILE = {
         { value: 'custom', label: 'Custom (drive everything manually)' },
       ],
       default: 'general',
+      machine: {
+        from: 'role',
+        map: {
+          server: 'general',
+          web: 'general',
+          database: 'database',
+          'container-host': 'k8s',
+          'vm-host': 'general',
+          router: 'general',
+          desktop: 'desktop',
+        },
+      },
     },
     cgroupField({
       v1: 'cgroup v1: per-cgroup swappiness is supported but deprecated. The system-wide value remains primary.',
@@ -96,6 +108,8 @@ export const PROFILE = {
         'Run `uname -r` to find out your kernel-version.',
       ],
       default: null,
+      // The machine's kernel ranges are named by their first version.
+      machine: 'kernel',
       half: true,
     },
   ],

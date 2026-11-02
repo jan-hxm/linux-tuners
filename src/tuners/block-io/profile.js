@@ -45,6 +45,18 @@ export const PROFILE = {
         { value: 'desktop', label: 'Desktop or laptop: responsiveness under load' },
       ],
       default: 'server',
+      machine: {
+        from: 'role',
+        map: {
+          server: 'server',
+          web: 'server',
+          database: 'database',
+          'container-host': 'server',
+          'vm-host': 'server',
+          router: 'server',
+          desktop: 'desktop',
+        },
+      },
       half: true,
     },
     {

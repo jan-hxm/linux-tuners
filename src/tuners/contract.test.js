@@ -13,6 +13,7 @@ import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
 import { differingKeys, elementRange, valueTypeOf } from '@/core/valueTypes.js'
 import { CONTROLS } from '@/ui/controls/index.js'
 import { normalizeField } from '@/core/profile.js'
+import { MACHINE_FIELDS, DEFAULT_MACHINE, RAM_FIELD, machineValues } from '@/core/machine.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
 const EM_DASH = '—'
@@ -40,6 +41,19 @@ function isValidValue(domain, key, value, hw) {
   const def = domain.defsByKey[key]
   const type = valueTypeOf(def)
   return type.restore(value, def) !== undefined && type.equals(type.clamp(value, def, domain.rangeFor(key, hw)), value)
+}
+
+/**
+ * Every combination of the machine profile's choice fields, plus the RAM
+ * floor and ceiling, so each option of each machine field is mapped at least
+ * once alongside every other.
+ */
+function machineProfiles() {
+  let profiles = [DEFAULT_MACHINE]
+  for (const field of MACHINE_FIELDS.filter((f) => f.type === 'choice')) {
+    profiles = profiles.flatMap((m) => field.options.map((o) => ({ ...m, [field.key]: o.value })))
+  }
+  return [...profiles, { ...DEFAULT_MACHINE, ramGiB: RAM_FIELD.min }, { ...DEFAULT_MACHINE, ramGiB: RAM_FIELD.max }]
 }
 
 // ── State builders ──────────────────────────────────────────────────────────
@@ -384,6 +398,27 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         const blocking = domain.validate(state.hardware, state.params).filter((i) => i.blocking)
         expect(blocking.map((i) => i.id), label).toEqual([])
         expectSafeConfig(domain, configFor(domain, state), state.params)
+      }
+    })
+  })
+
+  // Design.md §5 "Guided setup": a setup step's profile is the tuner's
+  // defaults with the machine's values laid over them.
+  describe('machine profile', () => {
+    it('maps the machine role onto the workload, and copies RAM and the cgroup version', () => {
+      const byKey = Object.fromEntries(domain.profile.fields.map((f) => [f.key, f]))
+      expect(byKey[domain.workloadField].machine?.from).toBe('role')
+      if (byKey.ramGiB) expect(byKey.ramGiB.machine).toBe('ramGiB')
+      if (byKey.cgroupVersion) expect(byKey.cgroupVersion.machine).toBe('cgroupVersion')
+    })
+
+    it('maps every machine profile to a profile a link restores unchanged, with no blocking issue', () => {
+      for (const machine of machineProfiles()) {
+        const hardware = { ...domain.defaultHardware, ...machineValues(domain.profile.fields, machine) }
+        const state = { hardware, params: domain.deriveDefaults(hardware), activePreset: null, activeTab: domain.defaultTab }
+        const label = JSON.stringify(machine)
+        expect(restoreState(domain, domain.encodeState(state))?.hardware, label).toEqual(hardware)
+        expect(domain.validate(hardware, state.params).filter((i) => i.blocking).map((i) => i.id), label).toEqual([])
       }
     })
   })

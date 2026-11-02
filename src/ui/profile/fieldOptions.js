@@ -8,11 +8,8 @@
  * `{ value, label }` object when the chip needs custom text.
  */
 
-/** Total-RAM quick picks (GiB) — shared by both tuners so they never drift. */
-export const RAM_PICKS = [
-  { value: 0.5, label: '512 MiB' },
-  1, 2, 4, 8, 16, 32, 64, 128, 192, 256, 512,
-]
+// RAM is a machine field of the guided setup, so its definition lives in core.
+export { RAM_FIELD, RAM_PICKS, SIZE_SNAP_GIB, SIZE_STEP_GIB } from '@/core/machine.js'
 
 /** Swap-size quick picks (GiB) — swap tuner only; 0 means "no swap". */
 export const SWAP_PICKS = [
@@ -32,40 +29,15 @@ export const PID_PICKS = [
   { value: 4194304, label: '4194304 (systemd 64-bit)' },
 ]
 
-// Sanity ceilings: 2304 TiB of RAM/swap covers even very high-end server racks
+// Sanity ceilings: 2304 TiB of swap covers even very high-end server racks
 // while keeping derived values and the card layout bounded — without a cap,
 // pasting something like 1e65 produces astronomically long parameter values.
-export const RAM_MAX_GIB = 2304 * 1024
 export const SWAP_MAX_GIB = 2304 * 1024
 export const CORE_MAX = 4096
 export const PID_MAX_CEIL = 4194304
 
-// Floors for the sizes, low enough to model sub-GiB hosts (a 1 GiB box might
-// only have 512 MiB free for the workload). RAM can't be 0; swap can (= none).
-export const RAM_MIN_GIB = 0.25 // 256 MiB
+// Swap can be 0 (= none).
 export const SWAP_MIN_GIB = 0
-
-// Sizes snap to MiB, so sub-GiB hosts are expressible without accumulating
-// binary-float noise (0.1 + 0.2 etc.); whole-GiB values stay exact.
-export const SIZE_SNAP_GIB = 1 / 1024
-
-// Spinner step for the size fields. 0.25 GiB (256 MiB) lets the spinner reach
-// the common sub-GiB sizes; any typed value still works, since apply snaps it
-// to SIZE_SNAP_GIB.
-export const SIZE_STEP_GIB = 0.25
-
-/** The Total RAM field; a tuner spreads it and adds its `default`. */
-export const RAM_FIELD = Object.freeze({
-  key: 'ramGiB',
-  type: 'number',
-  label: 'Total RAM (GiB)',
-  min: RAM_MIN_GIB,
-  max: RAM_MAX_GIB,
-  step: SIZE_SNAP_GIB,
-  inputStep: SIZE_STEP_GIB,
-  picks: RAM_PICKS,
-  help: ['Fractional values are allowed for small hosts, e.g. 0.5 = 512 MiB.'],
-})
 
 /** cgroup v1/v2 options; each tuner supplies the note shown for the selection. */
 export function cgroupField({ v1, v2 }) {
@@ -79,6 +51,7 @@ export function cgroupField({ v1, v2 }) {
       { value: 'v2', label: 'v2', note: v2 },
     ],
     default: 'v2',
+    machine: 'cgroupVersion',
     half: true,
   }
 }

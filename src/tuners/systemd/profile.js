@@ -39,7 +39,7 @@ export const PROFILE = {
   title: 'System profile',
   applyLabel: 'Apply system profile',
   fields: [
-    { ...RAM_FIELD, default: 16 },
+    { ...RAM_FIELD, default: 16, machine: 'ramGiB' },
     {
       key: 'cpuCores',
       type: 'number',
@@ -64,6 +64,18 @@ export const PROFILE = {
         { value: 'desktop', label: 'Desktop workstation' },
       ],
       default: 'general',
+      machine: {
+        from: 'role',
+        map: {
+          server: 'general',
+          web: 'general',
+          database: 'database',
+          'container-host': 'container-host',
+          'vm-host': 'general',
+          router: 'general',
+          desktop: 'desktop',
+        },
+      },
     },
     {
       key: 'targetSlice',

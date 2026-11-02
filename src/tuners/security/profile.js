@@ -31,6 +31,18 @@ export const PROFILE = {
         { value: 'desktop', label: 'Desktop or developer workstation' },
       ],
       default: 'server',
+      machine: {
+        from: 'role',
+        map: {
+          server: 'server',
+          web: 'server',
+          database: 'server',
+          'container-host': 'container',
+          'vm-host': 'container',
+          router: 'router',
+          desktop: 'desktop',
+        },
+      },
     },
     {
       key: 'kernel',
@@ -44,6 +56,10 @@ export const PROFILE = {
         { value: 'legacy', label: '4.9 to 4.18', note: 'also no protected_fifos or protected_regular' },
       ],
       default: 'current',
+      machine: {
+        from: 'kernel',
+        map: { '5.17': 'current', '5.13': 'current', '5.8': 'lts', '4.19': 'lts', '4.9': 'legacy' },
+      },
     },
     {
       key: 'ipv6',

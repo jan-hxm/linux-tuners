@@ -152,8 +152,9 @@ asserts the required fields in dev and tests. It is listed in
   helpers a restored link uses, and text that fails its pattern is refused
   with an inline message, so the form can't produce a profile the link schema
   rejects. The form collapses to a one-line summary only after the first
-  apply. Shared pick lists, ceilings and the RAM field live in
-  `fieldOptions.js`, so the tuners never drift apart.
+  apply. Shared pick lists and ceilings live in `fieldOptions.js`, and the
+  RAM field in `core/machine.js` (re-exported there), so the tuners never
+  drift apart.
 
 ### Range slider: uncontrolled with external sync
 
@@ -224,8 +225,8 @@ and the CMP load from a changing set of Google domains.
 
 ### Guided setup
 
-> **Status: the landing role picker is built; the rest is designed, not
-> built.** The build steps are in [TODO.md](TODO.md) §2.
+> **Status: the landing role picker and the machine profile with its
+> mapping are built; the rest is designed, not built.** The build steps are in [TODO.md](TODO.md) §2.
 
 The tuners answer "what should this one setting be". The guided setup answers
 "what should I set on this machine, and in what order". It has two parts:
@@ -272,12 +273,16 @@ it, which is the promote rung of the reuse ladder applied to profile fields:
 
 - `role`: general server, web or API server, database, container or
   Kubernetes host, VM host, router or firewall, desktop.
-- `ramGiB`: the shared `RAM_FIELD`.
-- `kernel`: version ranges cut at every threshold a tuner uses (5.13 or
-  newer, 5.8 to 5.12, 5.0 to 5.7, 4.19 to 4.20, 4.9 to 4.18). A new
-  threshold adds a cut.
-- `systemd`: 243 or newer, 240 to 242, older or none.
-- `cgroupVersion`.
+- `ramGiB`: the shared `RAM_FIELD`, which moved here from
+  `ui/profile/fieldOptions.js` because core can't import ui.
+- `kernel`: version ranges cut at every version a tuner's profile tells
+  apart: security at 4.19 and 5.13, swap at 5.8 and 5.17. That gives 5.17 or
+  newer, 5.13 to 5.16, 5.8 to 5.12, 4.19 to 5.7, and 4.9 to 4.18. Each
+  option's value is the first version of its range (`'5.13'`), so swap's
+  free-text version field copies it unchanged. A new threshold adds a cut.
+- `systemd`: 243 or newer, 240 to 242, older or none (values `'243'`,
+  `'240'`, `'older'`).
+- `cgroupVersion`: v1 or v2. The shared `cgroupField` copies it.
 
 Fields only one tuner reads stay in that tuner's step: CPU cores, the slice,
 link speed and RTT, conntrack, the swap device, the disk kind, NUMA, IPv6 and
@@ -285,20 +290,25 @@ the scheduler modules.
 
 **Mapping is data in each tuner.** A tuner profile field may declare
 `machine`. That is either the name of a machine field it copies (`'ramGiB'`),
-or `{ from: '<machine field>', map: { <option>: <value> } }`. For example, the
+or `{ from: '<machine field>', map: { <option>: <value> } }` with one entry
+per option, which `defineTuner` checks (`machineProblems`). For example, the
 security tuner's `kernel` field maps the five ranges onto `current`, `lts`
-and `legacy`. The swap tuner's free-text `kernelVersion` maps each range to
-a version string inside it. Each tuner's `workload` maps the seven roles onto
-its own workloads (a VM host is `vm-host` for huge pages and `server` for
-the kernel tuner). The setup page builds a step's profile from
+and `legacy`. The swap tuner's free-text `kernelVersion` copies the range's
+first version. Each tuner's `workload` maps the seven roles onto its own
+workloads (a VM host is `vm-host` for huge pages, `container` for security
+and network, since it forwards and tracks connections for its guests, and
+`server` elsewhere). `machineValues(fields, machine)` returns the mapped
+values. The setup page builds a step's profile from
 `defaultHardware`, overlays the mapped values and runs the result through
 that tuner's restore schema. A mapping mistake therefore can't produce a
 profile a link couldn't. A mapped field is prefilled, not locked: the step
 marks it "from the machine profile", and the user can change it for that
 step only (for example the SysV IPC workload from database to `oracle`). The
 change lasts until that machine field changes. The contract suite checks that
-every option of every machine field maps to a value the tuner's field
-accepts.
+every combination of the machine's choice options, and the RAM floor and
+ceiling, maps to a profile that a link restores unchanged and that has no
+blocking issue. It also checks that every workload field maps the role and
+every RAM and cgroup field copies its machine field.
 
 **Facts link the steps.** Some limits come from another tuner's *values*, not
 from the machine profile. A domain may provide facts through an optional hook
@@ -619,8 +629,9 @@ so that a new variant is an addition rather than an edit to shared code.
   profile also names the card title, apply label and a `summary(hw, label)`
   for the collapsed line, as rich-text parts. `defineTuner` checks the list
   (unique keys, known shapes, a default the field's own rule accepts) and the
-  contract suite checks the picks and the summary. Shared pick lists, ceilings
-  and the RAM field stay in `ui/profile/fieldOptions.js`. A profile the field
+  contract suite checks the picks and the summary. Shared pick lists and
+  ceilings stay in `ui/profile/fieldOptions.js`. The RAM field is a machine
+  field, so it lives in `core/machine.js`, and `fieldOptions.js` re-exports it. A profile the field
   list can't express uses the `profile` slot of `TunerPage`; Block I/O
   avoided needing one by making a profile one kind of disk.
 - **Page shell** (`ui/TunerPage.vue`). Renders the whole page from the

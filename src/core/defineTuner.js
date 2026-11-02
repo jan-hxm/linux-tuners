@@ -8,6 +8,7 @@
 
 import { makeSerialization } from './serialization.js'
 import { profileDefaults, profileSchema, profileProblems } from './profile.js'
+import { machineProblems } from './machine.js'
 
 const REQUIRED = [
   'id',
@@ -119,6 +120,7 @@ export function assertTuner(domain) {
   const { profile } = domain
   if (!profile.title || !profile.applyLabel || typeof profile.summary !== 'function') fail('profile needs a title, an applyLabel and a summary')
   for (const problem of profileProblems(profile.fields)) fail(problem)
+  for (const problem of machineProblems(profile.fields)) fail(problem)
 
   if (!Array.isArray(domain.graphTabs)) fail('graphTabs must be an array')
   for (const tab of domain.graphTabs) {

@@ -35,15 +35,20 @@ export const PARAMETER_DEFS = [
   // ── File descriptors ──────────────────────────────────────────────────────
   {
     key: 'file_max',
+    title: 'Open files, system-wide',
     sysctlName: 'fs.file-max',
     group: 'descriptors',
     control: 'slider',
     shortDesc: 'How many files all processes together may have open.',
-    longDesc: [
-      'Every open file, socket, pipe and epoll instance takes an entry in one system-wide table. When it is full, every process without CAP_SYS_ADMIN gets ENFILE ("Too many open files in system") on its next open(), including the SSH session you would fix it from. fs.file-nr shows how many are in use.',
-      'The kernel picks about 10% of RAM in KiB at boot, roughly 100 files per MiB. systemd 240 and newer raise it to 9223372036854775807, the largest value the key takes, before the sysctl files are applied, so on those systems it is left out of the file: any number written here would lower it.',
-      'Only machines with an older systemd, or none, need it raised. Keep it well above what fs.file-nr shows at peak, and above fs.nr_open, so one process can\'t take the whole table.',
-    ],
+    longDesc: {
+      what: [
+        'Every open file, socket, pipe and epoll instance takes an entry in one system-wide table. When it is full, every process without CAP_SYS_ADMIN gets ENFILE ("Too many open files in system") on its next open(), including the SSH session you would fix it from. fs.file-nr shows how many are in use.',
+        'The kernel picks about 10% of RAM in KiB at boot, roughly 100 files per MiB. systemd 240 and newer raise it to 9223372036854775807, the largest value the key takes, before the sysctl files are applied, so on those systems it is left out of the file: any number written here would lower it.',
+      ],
+      when: [
+        'Only machines with an older systemd, or none, need it raised. Keep it well above what fs.file-nr shows at peak, and above fs.nr_open, so one process can\'t take the whole table.',
+      ],
+    },
     tuningTip: 'Only for systemd older than 240: raise it to a few million on busy servers.',
     kernelDocsUrl: `${FS_DOCS}#file-max-file-nr`,
     k8sNote: null,
@@ -56,15 +61,20 @@ export const PARAMETER_DEFS = [
   },
   {
     key: 'nr_open',
+    title: 'Highest open-file limit',
     sysctlName: 'fs.nr_open',
     group: 'descriptors',
     control: 'slider',
     shortDesc: 'The highest open-file limit (RLIMIT_NOFILE) any process may be given.',
-    longDesc: [
-      'Each process has an open-file limit, set by systemd\'s LimitNOFILE= for services and by ulimit -n in a shell. fs.nr_open caps that limit: nothing can raise its hard limit above it, root included. It costs nothing until a process actually opens that many files.',
-      'A unit asking for more with LimitNOFILE= gets its limit cut down to fs.nr_open. But when fs.nr_open is below the limit systemd itself runs with, such units fail to start with status 205 instead, and below 1048576 that includes systemd\'s default of 524288. So it is never offered below the kernel default 1048576, and at 1048576 it is left out of the file.',
-      'Leaving it out matters because distributions differ: Debian 13 and Fedora raise it at boot, to 1073741816 and 2147483584, and systemd runs with that value; Ubuntu 24.04 keeps 1048576. A smaller value written there makes units that ask for more than it stop starting. LimitNOFILE=infinity takes the value systemd read when it started or last re-executed.',
-    ],
+    longDesc: {
+      what: [
+        'Each process has an open-file limit, set by systemd\'s LimitNOFILE= for services and by ulimit -n in a shell. fs.nr_open caps that limit: nothing can raise its hard limit above it, root included. It costs nothing until a process actually opens that many files.',
+      ],
+      watch: [
+        'A unit asking for more with LimitNOFILE= gets its limit cut down to fs.nr_open. But when fs.nr_open is below the limit systemd itself runs with, such units fail to start with status 205 instead, and below 1048576 that includes systemd\'s default of 524288. So it is never offered below the kernel default 1048576, and at 1048576 it is left out of the file.',
+        'Leaving it out matters because distributions differ: Debian 13 and Fedora raise it at boot, to 1073741816 and 2147483584, and systemd runs with that value; Ubuntu 24.04 keeps 1048576. A smaller value written there makes units that ask for more than it stop starting. LimitNOFILE=infinity takes the value systemd read when it started or last re-executed.',
+      ],
+    },
     tuningTip: 'Leave it at 1048576 unless a service needs a LimitNOFILE above that.',
     kernelDocsUrl: `${FS_DOCS}#nr-open`,
     k8sNote: null,
@@ -78,14 +88,19 @@ export const PARAMETER_DEFS = [
   // ── inotify ───────────────────────────────────────────────────────────────
   {
     key: 'max_user_watches',
+    title: 'inotify watches per user',
     sysctlName: 'fs.inotify.max_user_watches',
     group: 'inotify',
     control: 'slider',
     shortDesc: 'How many files and directories each user may watch for changes with inotify.',
-    longDesc: [
-      'File watchers use one inotify watch per directory (or file) they follow: IDEs such as VS Code and JetBrains, webpack and other dev servers, Syncthing and Dropbox, and on Kubernetes nodes the kubelet and log shippers. When a user runs out, they fail with "ENOSPC: System limit for number of file watchers reached" even though the disk has space.',
-      'The limit is per user ID, and each watch in use pins kernel memory that can\'t be swapped, about 1.3 KiB with the inode it holds. Kernel 5.11 and newer, and recent 5.10 updates, size the default from RAM: as many watches as fit in 1% of it, between 8192 and 1048576 (about 15000 at 2 GiB). Older kernels use 8192.',
-    ],
+    longDesc: {
+      what: [
+        'File watchers use one inotify watch per directory (or file) they follow: IDEs such as VS Code and JetBrains, webpack and other dev servers, Syncthing and Dropbox, and on Kubernetes nodes the kubelet and log shippers. When a user runs out, they fail with "ENOSPC: System limit for number of file watchers reached" even though the disk has space.',
+      ],
+      watch: [
+        'The limit is per user ID, and each watch in use pins kernel memory that can\'t be swapped, about 1.3 KiB with the inode it holds. Kernel 5.11 and newer, and recent 5.10 updates, size the default from RAM: as many watches as fit in 1% of it, between 8192 and 1048576 (about 15000 at 2 GiB). Older kernels use 8192.',
+      ],
+    },
     tuningTip: 'Use 524288 on desktops and container hosts; the warning shows the worst-case memory.',
     kernelDocsUrl: INOTIFY_MAN,
     k8sNote: 'kind and the EKS node images raise it to 524288 so pods that watch files keep working.',
@@ -98,14 +113,17 @@ export const PARAMETER_DEFS = [
   },
   {
     key: 'max_user_instances',
+    title: 'inotify instances per user',
     sysctlName: 'fs.inotify.max_user_instances',
     group: 'inotify',
     control: 'slider',
     shortDesc: 'How many inotify instances each user may create.',
-    longDesc: [
-      'Every program that watches files opens at least one inotify instance, and each holds its own set of watches. systemd, editors, browsers and every container that tails its logs use some, so a busy desktop or a node with many pods passes the default of 128 and new watchers fail with "Too many open files".',
-      'The limit is per user ID, and an idle instance costs little memory. Ubuntu 18.04 already raised it to 1024 for LXD.',
-    ],
+    longDesc: {
+      what: [
+        'Every program that watches files opens at least one inotify instance, and each holds its own set of watches. systemd, editors, browsers and every container that tails its logs use some, so a busy desktop or a node with many pods passes the default of 128 and new watchers fail with "Too many open files".',
+        'The limit is per user ID, and an idle instance costs little memory. Ubuntu 18.04 already raised it to 1024 for LXD.',
+      ],
+    },
     tuningTip: 'Use 1024 on desktops and 8192 on container hosts.',
     kernelDocsUrl: INOTIFY_MAN,
     k8sNote: 'Container hosts raise it to 8192 (the EKS node images do), since every pod that watches files needs its own instances.',
@@ -117,14 +135,17 @@ export const PARAMETER_DEFS = [
   },
   {
     key: 'max_queued_events',
+    title: 'inotify event queue',
     sysctlName: 'fs.inotify.max_queued_events',
     group: 'inotify',
     control: 'slider',
     shortDesc: 'How many change events may wait in one inotify instance before they are dropped.',
-    longDesc: [
-      'Events queue in the instance until the program reads them. When the queue is full, the kernel drops further events and sends IN_Q_OVERFLOW, and the program has to rescan everything it watches to catch up. A checkout of a large repository or a bulk copy can produce events faster than a watcher reads them.',
-      'Queued events take a little kernel memory each, only while they wait.',
-    ],
+    longDesc: {
+      what: [
+        'Events queue in the instance until the program reads them. When the queue is full, the kernel drops further events and sends IN_Q_OVERFLOW, and the program has to rescan everything it watches to catch up. A checkout of a large repository or a bulk copy can produce events faster than a watcher reads them.',
+        'Queued events take a little kernel memory each, only while they wait.',
+      ],
+    },
     tuningTip: 'Raise it to 65536 or more where file sync or build tools watch large trees.',
     kernelDocsUrl: INOTIFY_MAN,
     k8sNote: null,
@@ -137,14 +158,17 @@ export const PARAMETER_DEFS = [
   // ── Asynchronous I/O ──────────────────────────────────────────────────────
   {
     key: 'aio_max_nr',
+    title: 'Async I/O requests',
     sysctlName: 'fs.aio-max-nr',
     group: 'aio',
     control: 'slider',
     shortDesc: 'How many native asynchronous I/O requests all processes together may set up.',
-    longDesc: [
-      'Programs that use Linux native AIO reserve request slots with io_setup(), and fs.aio-nr counts how many are reserved. When the total would pass this limit, io_setup() fails with EAGAIN. MySQL and MariaDB with InnoDB, ScyllaDB and Oracle Database use native AIO, and several instances on one host, or one instance with many disks, pass the default of 65536.',
-      'io_uring doesn\'t count against this limit, and neither do ordinary reads and writes.',
-    ],
+    longDesc: {
+      what: [
+        'Programs that use Linux native AIO reserve request slots with io_setup(), and fs.aio-nr counts how many are reserved. When the total would pass this limit, io_setup() fails with EAGAIN. MySQL and MariaDB with InnoDB, ScyllaDB and Oracle Database use native AIO, and several instances on one host, or one instance with many disks, pass the default of 65536.',
+        'io_uring doesn\'t count against this limit, and neither do ordinary reads and writes.',
+      ],
+    },
     tuningTip: 'Use 1048576 on database hosts; leave the default elsewhere.',
     kernelDocsUrl: `${FS_DOCS}#aio-nr-aio-max-nr`,
     k8sNote: null,

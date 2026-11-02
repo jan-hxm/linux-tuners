@@ -88,8 +88,10 @@ Every tuner follows the same flow:
    a preset first resets to the defaults, so parameters the preset doesn't
    mention return to their default.
 4. **Parameter cards**: a slider or toggle, click-to-edit exact value,
-   layered descriptions (short, long, tuning tip, zones) and a reference drawer
-   with a formula where one helps. The drawer prints the def's
+   layered descriptions (a plain-language `title`, the short description, a
+   "Learn more" in labelled parts with the tuning tip, zones) and a reference
+   drawer with a formula where one helps ([§7](#7-uiux-and-accessibility-conventions)
+   "Three layers per parameter"). The drawer prints the def's
    `kernelDefault`, plus its `kernelDefaultNote` when the default depends on
    the kernel version or the distribution build. A "kernel defaults" preset
    only makes sense where one fixed set is right on every kernel offered: the
@@ -523,6 +525,20 @@ must follow them, and existing UI must not regress.
   "Edit" keeps the form open.
 - **Copy and share feedback** changes the button state and announces the
   result through an `aria-live="polite"` region.
+- **Three layers per parameter.** The card, always visible, shows the def's
+  plain-language `title` above its sysctl name, the value, the one-line
+  `shortDesc` and the zones. The control is labelled by the title and the name
+  together. "Learn more" on the card is the beginner layer: `longDesc` in its
+  labelled parts (`ui/descParts.js`: "What it does", always there, then "When
+  to change it" and "Watch out" where the def has them), the rule of thumb and
+  the context note. The drawer is the pro reference and doesn't repeat
+  `longDesc`: the accepted range and the kernel default with its version note,
+  a "Try it now" command that sets the current value until the next reboot
+  (the domain's `tryCommand`: `sudo sysctl -w`, or `echo | sudo tee` for a
+  sysfs file; systemd and block I/O have none, since their settings are
+  directives and udev rules), the context note, the formula with live values,
+  defaults by workload, and the sources. The contract suite checks every def's
+  title and parts.
 - **Reset needs no confirmation.** It only recomputes the defaults, and
   `UndoToast` offers to put back what a reset or a preset snap replaced (the
   store's `undoState`, one step deep; any other edit clears it, and it is never
@@ -1011,6 +1027,12 @@ These hold for every tuner and every output writer (§9 `core/output`):
 - **Paths are constants.** Output file paths and download names are fixed per
   tuner, match `^/etc/[a-z0-9._/-]+$` and contain no `..`. Apply commands are
   fixed text with only those paths interpolated.
+- **The drawer's "Try it now" command** is the one place a value from state
+  appears in a shell command. `sysctlTryCommand` and `sysfsTryCommand` (in
+  `core/output`) build it from the def's name or constant `/sys` path and the
+  value as its type formats it, and run the same name, path and value checks
+  as the file's lines, so the value is plain tokens with no shell syntax. The
+  contract suite holds every command to those two forms.
 - **Shared-link restore stays strict** (§5 Shareable URL state). A change that
   relaxes a schema, a range or the preset-id check is a security change.
 

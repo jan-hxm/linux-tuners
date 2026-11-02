@@ -22,6 +22,21 @@ export function sysctlLine(name, text) {
 }
 
 /**
+ * A command that sets the def's value at once, until the next reboot, so it
+ * can be tried before the file is saved. The same name and value checks as
+ * the file's lines; a value with spaces (a tuple) is quoted.
+ *
+ * @param {Object} def   Def with `sysctlName` and optional `alsoSets`
+ * @param {string} text  The value as its type formats it
+ */
+export function sysctlTryCommand(def, text) {
+  const names = [def.sysctlName, ...(def.alsoSets ?? [])]
+  for (const name of names) sysctlLine(name, text)
+  const arg = text.includes(' ') ? `"${text}"` : text
+  return `sudo sysctl -w ${names.map((name) => `${name}=${arg}`).join(' ')}`
+}
+
+/**
  * The body of a sysctl file: one header per section that writes a key, then
  * each def of that section (in def order) as a comment line and a
  * `name = value` line, plus one more line per name in the def's `alsoSets`

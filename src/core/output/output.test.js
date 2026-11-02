@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { combineFiles, configFile, isSafeConfigPath } from './files.js'
 import { commentLine, fileBanner, presetSummary, sectionHeader } from './comments.js'
-import { sysctlConfig, sysctlLine } from './sysctlFile.js'
+import { sysctlConfig, sysctlLine, sysctlTryCommand } from './sysctlFile.js'
 import { iniDirective, iniSection } from './iniDropIn.js'
-import { tmpfilesConfig, tmpfilesWrite } from './tmpfilesFile.js'
+import { sysfsTryCommand, tmpfilesConfig, tmpfilesWrite } from './tmpfilesFile.js'
 import { udevAttrRule, udevConfig, udevMatch } from './udevRules.js'
 
 const LS = String.fromCharCode(0x2028)
@@ -174,5 +174,24 @@ describe('ini drop-in writer', () => {
     }
     for (const bad of ['Exec Start', 'x', 'A=B']) expect(() => iniDirective(bad, '1', 'x'), bad).toThrow()
     for (const bad of ['Slice]\n[Service', 'slice']) expect(() => iniSection(bad), bad).toThrow()
+  })
+})
+
+describe('try-it commands', () => {
+  it('sets every name a sysctl def writes, quoting a value with spaces', () => {
+    expect(sysctlTryCommand({ sysctlName: 'vm.swappiness' }, '10')).toBe('sudo sysctl -w vm.swappiness=10')
+    expect(sysctlTryCommand({ sysctlName: 'kernel.sem' }, '250 32000 100 128')).toBe('sudo sysctl -w kernel.sem="250 32000 100 128"')
+    expect(sysctlTryCommand({ sysctlName: 'net.ipv4.conf.all.rp_filter', alsoSets: ['net.ipv4.conf.default.rp_filter'] }, '1'))
+      .toBe('sudo sysctl -w net.ipv4.conf.all.rp_filter=1 net.ipv4.conf.default.rp_filter=1')
+  })
+
+  it('writes a sysfs value with tee', () => {
+    expect(sysfsTryCommand({ sysfsPath: '/sys/kernel/mm/transparent_hugepage/enabled' }, 'madvise'))
+      .toBe('echo madvise | sudo tee /sys/kernel/mm/transparent_hugepage/enabled')
+  })
+
+  it('refuses a value the file would refuse', () => {
+    expect(() => sysctlTryCommand({ sysctlName: 'vm.swappiness' }, '1; reboot')).toThrow()
+    expect(() => sysfsTryCommand({ sysfsPath: '/sys/kernel/mm/ksm/run' }, '1 && reboot')).toThrow()
   })
 })

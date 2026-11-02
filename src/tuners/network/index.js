@@ -6,6 +6,7 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
+import { sysctlTryCommand } from '@/core/output/sysctlFile.js'
 import { PROFILE, LINK_BPS, RTT_SECONDS } from './profile.js'
 import { PARAMETER_KEYS, PARAMETER_DEFS_BY_KEY, KUBE_PROXY_DOCS } from './defs.js'
 import { deriveDefaults, rangeFor, isApplicable, bdpBytes, tcpBufferMax, windowLimitBps, WINDOW_SHARE } from './calculations.js'
@@ -109,6 +110,7 @@ export const networkDomain = defineTuner({
   context: { badge: 'K8s', label: 'Kubernetes', url: KUBE_PROXY_DOCS },
   contextApplies: (hw) => hw.workload === 'container',
   docsLabel: 'kernel.org docs',
+  tryCommand: sysctlTryCommand,
   noteKey: 'k8sNote',
   page: PAGE,
   about: ABOUT,

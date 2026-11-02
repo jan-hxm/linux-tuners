@@ -26,6 +26,19 @@ export function tmpfilesWrite(path, text) {
 }
 
 /**
+ * A command that writes the def's value to its sysfs file at once, until the
+ * next reboot, so it can be tried before the file is saved. The same path and
+ * value checks as the `w` line.
+ *
+ * @param {Object} def   Def with `sysfsPath`
+ * @param {string} text  The value as its type formats it
+ */
+export function sysfsTryCommand(def, text) {
+  tmpfilesWrite(def.sysfsPath, text)
+  return `echo ${text} | sudo tee ${def.sysfsPath}`
+}
+
+/**
  * The body of a tmpfiles.d file: one header per section that writes a key,
  * then each def of that section as a comment line and its `w` line.
  *

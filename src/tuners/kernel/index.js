@@ -5,6 +5,7 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
+import { sysctlTryCommand } from '@/core/output/sysctlFile.js'
 import { PROFILE } from './profile.js'
 import { PARAMETER_KEYS, PARAMETER_DEFS_BY_KEY, LXD_SERVER_SETTINGS } from './defs.js'
 import { deriveDefaults, rangeFor, isApplicable, defaultTasksMax, effectivePidMax, kernelThreads, threadStackRamShare } from './calculations.js'
@@ -89,6 +90,7 @@ export const kernelDomain = defineTuner({
   context: { badge: 'LXD', label: 'Container hosts', url: LXD_SERVER_SETTINGS },
   contextApplies: (hw) => hw.workload === 'container',
   docsLabel: 'kernel docs',
+  tryCommand: sysctlTryCommand,
   noteKey: 'containerNote',
   page: PAGE,
   about: ABOUT,

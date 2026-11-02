@@ -5,6 +5,7 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
+import { sysctlTryCommand } from '@/core/output/sysctlFile.js'
 import { PROFILE } from './profile.js'
 import { PARAMETER_KEYS, PARAMETER_DEFS_BY_KEY, CIS_BENCHMARKS } from './defs.js'
 import { deriveDefaults, rangeFor, isApplicable } from './calculations.js'
@@ -62,6 +63,7 @@ export const securityDomain = defineTuner({
   linkVersion: 2,
   context: { badge: 'CIS', label: 'CIS benchmark', url: CIS_BENCHMARKS },
   docsLabel: 'kernel.org docs',
+  tryCommand: sysctlTryCommand,
   noteKey: 'cisNote',
   page: PAGE,
   about: ABOUT,

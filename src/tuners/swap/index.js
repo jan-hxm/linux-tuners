@@ -5,6 +5,7 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
+import { sysctlTryCommand } from '@/core/output/sysctlFile.js'
 import { PROFILE } from './profile.js'
 import { PARAMETER_KEYS, PARAMETER_DEFS_BY_KEY, K8S_BLOG } from './defs.js'
 import {
@@ -121,6 +122,7 @@ export const swapDomain = defineTuner({
   // The Kubernetes guidance only applies when the user is actually tuning a k8s node
   contextApplies: (hw) => hw.workload === 'k8s',
   docsLabel: 'kernel.org docs',
+  tryCommand: sysctlTryCommand,
   noteKey: 'k8sNote',
   formula,
   page: PAGE,

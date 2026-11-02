@@ -43,6 +43,8 @@ const DEFAULTS = {
   contextApplies: () => true,
   /** No reference-drawer formula. */
   formula: () => null,
+  /** No command to try a value before saving the file. */
+  tryCommand: () => null,
   /** No simulation module, so no impact metrics. */
   simulation: {},
   /** No graphs: the tune step goes full width and the impact bar hides. */

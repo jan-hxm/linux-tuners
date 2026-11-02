@@ -3,6 +3,7 @@ import { ref, computed, nextTick } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { controlFor } from '@/ui/controls/index.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
+import { DESC_PARTS } from '@/ui/descParts.js'
 
 const props = defineProps({
   paramKey: { type: String, required: true },
@@ -23,8 +24,14 @@ const formatted = computed(() => domain.formatValue(value.value, def.value, tune
 // rather than mid-word; <wbr> marks the spots without changing copied text.
 const nameParts = computed(() => def.value.sysctlName.split(/(?<=[._/-])/))
 
-// Stable id used to link the control to the param-name button via aria-labelledby.
-const labelId = computed(() => `param-label-${props.paramKey}`)
+// The control is labelled by the plain-language title and the sysctl name
+// (the name's text, not its button, whose aria-label says it opens the drawer).
+const titleId = computed(() => `param-title-${props.paramKey}`)
+const nameId = computed(() => `param-name-${props.paramKey}`)
+const labelId = computed(() => `${titleId.value} ${nameId.value}`)
+
+/** The parts of longDesc this parameter has, each with its label. */
+const descParts = computed(() => DESC_PARTS.filter(({ key }) => def.value.longDesc[key]?.length))
 
 const isWorkloadTuned = computed(() => {
   // True when the workload's hardware-derived default differs from the stock default.
@@ -105,14 +112,14 @@ function openInDrawer() {
     <!-- On a phone the value wraps under the name instead of squeezing it. -->
     <header class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
       <div class="min-w-0 flex-1 basis-56">
+        <p :id="titleId" class="text-sm font-semibold text-slate-900">{{ def.title }}</p>
         <button
-          :id="labelId"
           type="button"
-          class="break-words text-left font-mono text-sm font-semibold text-slate-900 hover:underline"
+          class="break-words text-left font-mono text-xs text-slate-700 hover:underline"
           :aria-label="`${def.sysctlName}, open reference`"
           @click="openInDrawer"
         >
-          <template v-for="(part, i) in nameParts" :key="i">{{ part }}<wbr></template>
+          <span :id="nameId"><template v-for="(part, i) in nameParts" :key="i">{{ part }}<wbr></template></span>
         </button>
         <a
           :href="def.kernelDocsUrl"
@@ -206,7 +213,10 @@ function openInDrawer() {
         {{ expanded ? '▾' : '▸' }} Learn more
       </button>
       <div v-if="expanded" class="mt-2 space-y-2 text-xs leading-relaxed text-slate-700">
-        <p v-for="(para, i) in def.longDesc" :key="i">{{ para }}</p>
+        <section v-for="part in descParts" :key="part.key" class="space-y-1">
+          <h4 class="font-semibold text-slate-800">{{ part.label }}</h4>
+          <p v-for="(para, i) in def.longDesc[part.key]" :key="i">{{ para }}</p>
+        </section>
         <p v-if="def.tuningTip" class="rounded bg-slate-50 p-2 font-medium text-slate-800">
           <span class="font-semibold">Rule of thumb:</span> {{ def.tuningTip }}
         </p>
@@ -220,7 +230,7 @@ function openInDrawer() {
           </a>
           ·
           <button type="button" class="text-slate-600 underline" @click="openInDrawer">
-            open in reference drawer
+            Full reference
           </button>
         </p>
       </div>

@@ -2,6 +2,7 @@
 import { computed, onMounted, onBeforeUnmount, watch, nextTick, ref } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
+import { copyText } from '@/ui/fileActions.js'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
@@ -56,6 +57,19 @@ const formula = computed(() => {
   if (!def.value) return null
   return domain.formula(def.value, { hardware: tuner.hardware, params: tuner.params })
 })
+
+// A command that sets the current value until the next reboot, from the
+// domain (sysctl -w, or a sysfs write); null when the setting has none.
+const tryCommand = computed(() => {
+  if (!def.value) return null
+  return domain.tryCommand(def.value, valueTypeOf(def.value).format(tuner.params[def.value.key], def.value))
+})
+/** 'ok' | 'fail' after a copy, cleared after a moment. */
+const copyStatus = ref(null)
+async function copyCommand() {
+  copyStatus.value = (await copyText(tryCommand.value)) ? 'ok' : 'fail'
+  setTimeout(() => (copyStatus.value = null), 1800)
+}
 
 function close() {
   tuner.closeDrawer()
@@ -121,7 +135,8 @@ watch(isOpen, async (open) => {
       <header class="sticky top-0 flex items-start justify-between gap-3 border-b border-slate-200 bg-white p-4">
         <div class="min-w-0">
           <p class="text-xs uppercase tracking-wide text-slate-500">Reference</p>
-          <h2 class="font-mono text-base font-semibold text-slate-900 break-all">{{ def.sysctlName }}</h2>
+          <h2 class="text-base font-semibold text-slate-900">{{ def.title }}</h2>
+          <p class="break-all font-mono text-sm text-slate-700">{{ def.sysctlName }}</p>
           <p class="mt-1 text-xs text-slate-600">{{ def.shortDesc }}</p>
         </div>
         <button
@@ -134,29 +149,32 @@ watch(isOpen, async (open) => {
 
       <div class="space-y-5 p-4 text-sm text-slate-800">
         <section>
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Documentation</h3>
-          <div class="mt-1 space-y-2 leading-relaxed">
-            <p v-for="(para, i) in def.longDesc" :key="i">{{ para }}</p>
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Range</h3>
+          <p class="mt-1 text-xs text-slate-700">
+            {{ rangeText.accepts }}
+            Kernel default: <span class="font-mono">{{ rangeText.kernelDefault }}</span>.
+            <template v-if="def.kernelDefaultNote">{{ def.kernelDefaultNote }}</template>
+          </p>
+        </section>
+
+        <section v-if="tryCommand">
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Try it now</h3>
+          <p class="mt-1 text-xs text-slate-700">Sets the current value until the next reboot. The generated file makes it permanent.</p>
+          <div class="mt-1 flex items-start gap-2">
+            <code class="min-w-0 flex-1 break-all rounded bg-slate-50 p-2 font-mono text-[11px] leading-snug text-slate-800">{{ tryCommand }}</code>
+            <button
+              type="button"
+              class="shrink-0 rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
+              @click="copyCommand"
+            >{{ copyStatus === 'ok' ? 'Copied ✓' : copyStatus === 'fail' ? 'Copy failed' : 'Copy' }}</button>
           </div>
-          <p v-if="def.tuningTip" class="mt-2 rounded border border-slate-200 bg-slate-50 p-2 text-xs font-medium text-slate-800">
-            <span class="font-semibold">Rule of thumb:</span> {{ def.tuningTip }}
-          </p>
-          <p class="mt-2 text-xs">
-            <a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="text-sky-700 underline">
-              {{ domain.docsLabel }} ↗
-            </a>
-          </p>
+          <p class="sr-only" aria-live="polite">{{ copyStatus === 'ok' ? 'Copied to clipboard.' : copyStatus === 'fail' ? 'Clipboard write failed.' : '' }}</p>
         </section>
 
         <section v-if="contextNote">
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ domain.context.label }} context</h3>
           <p class="mt-1 rounded bg-sky-50 p-2 text-xs leading-relaxed text-sky-900">
             {{ contextNote }}
-          </p>
-          <p class="mt-2 text-xs">
-            <a :href="domain.context.url" target="_blank" rel="noopener" class="text-sky-700 underline">
-              Source ↗
-            </a>
           </p>
         </section>
 
@@ -200,12 +218,11 @@ watch(isOpen, async (open) => {
         </section>
 
         <section>
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Range</h3>
-          <p class="mt-1 text-xs text-slate-700">
-            {{ rangeText.accepts }}
-            Kernel default: <span class="font-mono">{{ rangeText.kernelDefault }}</span>.
-            <template v-if="def.kernelDefaultNote">{{ def.kernelDefaultNote }}</template>
-          </p>
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sources</h3>
+          <ul class="mt-1 space-y-1 text-xs">
+            <li><a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="text-sky-700 underline">{{ domain.docsLabel }} ↗</a></li>
+            <li v-if="contextNote"><a :href="domain.context.url" target="_blank" rel="noopener" class="text-sky-700 underline">{{ domain.context.label }} guidance ↗</a></li>
+          </ul>
         </section>
       </div>
     </aside>

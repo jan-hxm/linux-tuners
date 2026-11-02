@@ -50,15 +50,22 @@ export const PARAMETER_DEFS = [
   // ── Huge page pool ────────────────────────────────────────────────────────
   {
     key: 'nr_hugepages',
+    title: 'Huge page pool',
     sysctlName: 'vm.nr_hugepages',
     group: 'pool',
     control: 'slider',
     shortDesc: 'How many 2 MiB huge pages the kernel sets aside for programs that ask for them.',
-    longDesc: [
-      'Programs that map memory with MAP_HUGETLB or from a hugetlbfs mount get it from this pool: PostgreSQL with huge_pages = on, Oracle Database, DPDK, and QEMU guests backed by huge pages. One 2 MiB page replaces 512 normal ones in the page tables and the TLB, which speeds up programs that touch a large shared memory area.',
-      'The pool is taken from RAM when it is set, whether a program uses it or not, and nothing else can use it. So size it to what the program needs, not more. At 0, the kernel default, it is left out of the file, so a pool set elsewhere (another sysctl.d file or the hugepages= boot option) stays.',
-      'Set at boot, the kernel finds the pages easily. Raised later on a busy machine it may find fewer free 2 MiB blocks than asked for: check HugePages_Total in /proc/meminfo.',
-    ],
+    longDesc: {
+      what: [
+        'Programs that map memory with MAP_HUGETLB or from a hugetlbfs mount get it from this pool: PostgreSQL with huge_pages = on, Oracle Database, DPDK, and QEMU guests backed by huge pages. One 2 MiB page replaces 512 normal ones in the page tables and the TLB, which speeds up programs that touch a large shared memory area.',
+      ],
+      when: [
+        'The pool is taken from RAM when it is set, whether a program uses it or not, and nothing else can use it. So size it to what the program needs, not more. At 0, the kernel default, it is left out of the file, so a pool set elsewhere (another sysctl.d file or the hugepages= boot option) stays.',
+      ],
+      watch: [
+        'Set at boot, the kernel finds the pages easily. Raised later on a busy machine it may find fewer free 2 MiB blocks than asked for: check HugePages_Total in /proc/meminfo.',
+      ],
+    },
     tuningTip: 'Set it to what the program asks for, e.g. PostgreSQL\'s postgres -C shared_memory_size_in_huge_pages, plus a few spare pages.',
     kernelDocsUrl: `${VM_DOCS}#nr-hugepages`,
     dbNote: 'PostgreSQL uses the pool with huge_pages = on (or try); postgres -C shared_memory_size_in_huge_pages prints the pages it needs.',
@@ -70,14 +77,17 @@ export const PARAMETER_DEFS = [
   },
   {
     key: 'nr_overcommit_hugepages',
+    title: 'Surplus huge pages',
     sysctlName: 'vm.nr_overcommit_hugepages',
     group: 'pool',
     control: 'slider',
     shortDesc: 'How many more huge pages the kernel may allocate on demand once the pool is used up.',
-    longDesc: [
-      'Surplus pages are allocated from free memory when a program asks for more huge pages than the pool holds, and freed again when it lets go. Unlike the pool they cost nothing while unused, but they are only there if the kernel finds free 2 MiB blocks at that moment, so a program can still fail to get them.',
-      'At 0, the kernel default, there are no surplus pages and the key is left out of the file.',
-    ],
+    longDesc: {
+      what: [
+        'Surplus pages are allocated from free memory when a program asks for more huge pages than the pool holds, and freed again when it lets go. Unlike the pool they cost nothing while unused, but they are only there if the kernel finds free 2 MiB blocks at that moment, so a program can still fail to get them.',
+        'At 0, the kernel default, there are no surplus pages and the key is left out of the file.',
+      ],
+    },
     tuningTip: 'Leave it at 0 unless a program can fall back to normal pages when the surplus is not there.',
     kernelDocsUrl: `${VM_DOCS}#nr-overcommit-hugepages`,
     dbNote: null,
@@ -90,6 +100,7 @@ export const PARAMETER_DEFS = [
   // ── Transparent huge pages ────────────────────────────────────────────────
   {
     key: 'thp_enabled',
+    title: 'Transparent huge pages',
     sysctlName: 'transparent_hugepage/enabled',
     sysfsPath: `${THP_PATH}/enabled`,
     group: 'thp',
@@ -101,12 +112,18 @@ export const PARAMETER_DEFS = [
       { value: 'never', label: 'never: off' },
     ],
     shortDesc: 'Whether the kernel backs program memory with 2 MiB pages on its own, without a pool.',
-    longDesc: [
-      'Transparent huge pages (THP) give programs 2 MiB pages without a reserved pool or any change to the program. At always, any large enough anonymous mapping gets them, and khugepaged merges small pages in the background. At madvise, only memory a program marks with madvise(MADV_HUGEPAGE) does: the JVM with -XX:+UseTransparentHugePages, QEMU for guest RAM, and some allocators.',
-      'always can waste memory, since a program that touches a few bytes of a 2 MiB range gets the whole page, and makes some databases slower or less predictable. PostgreSQL, Oracle and Redis advise against it, and so did MongoDB before 8.0. madvise keeps the gain for programs that ask for it.',
-      'Debian kernels start at always; Ubuntu and Fedora at madvise.',
-      'Each time it is set to always or madvise, at boot included, khugepaged raises vm.min_free_kbytes to its own floor if it is lower (the kernel logs "raising min_free_kbytes"). The tmpfiles.d file runs after the sysctl files, so a lower min_free_kbytes from the swap tuner only holds with never.',
-    ],
+    longDesc: {
+      what: [
+        'Transparent huge pages (THP) give programs 2 MiB pages without a reserved pool or any change to the program. At always, any large enough anonymous mapping gets them, and khugepaged merges small pages in the background. At madvise, only memory a program marks with madvise(MADV_HUGEPAGE) does: the JVM with -XX:+UseTransparentHugePages, QEMU for guest RAM, and some allocators.',
+      ],
+      when: [
+        'always can waste memory, since a program that touches a few bytes of a 2 MiB range gets the whole page, and makes some databases slower or less predictable. PostgreSQL, Oracle and Redis advise against it, and so did MongoDB before 8.0. madvise keeps the gain for programs that ask for it.',
+        'Debian kernels start at always; Ubuntu and Fedora at madvise.',
+      ],
+      watch: [
+        'Each time it is set to always or madvise, at boot included, khugepaged raises vm.min_free_kbytes to its own floor if it is lower (the kernel logs "raising min_free_kbytes"). The tmpfiles.d file runs after the sysctl files, so a lower min_free_kbytes from the swap tuner only holds with never.',
+      ],
+    },
     tuningTip: 'Use madvise; always only where the main program is known to gain from it.',
     kernelDocsUrl: `${THP_DOCS}#global-thp-controls`,
     dbNote: 'PostgreSQL, Oracle and Redis advise against THP always; madvise leaves them on normal pages.',
@@ -118,6 +135,7 @@ export const PARAMETER_DEFS = [
   },
   {
     key: 'thp_defrag',
+    title: 'THP defragmentation',
     sysctlName: 'transparent_hugepage/defrag',
     sysfsPath: `${THP_PATH}/defrag`,
     group: 'thp',
@@ -131,10 +149,14 @@ export const PARAMETER_DEFS = [
       { value: 'never', label: 'never: take a huge page only if one is free' },
     ],
     shortDesc: 'How hard the kernel works to find a free 2 MiB block when a program faults in THP memory.',
-    longDesc: [
-      'When no free 2 MiB block is there, the kernel can stop the faulting program and compact memory until one is (direct compaction), wake kswapd and kcompactd to do it in the background and use small pages for now (defer), or just use small pages.',
-      'Waiting gets programs their huge pages sooner but adds latency spikes to page faults. madvise, the default, waits only for memory that asked for huge pages; defer+madvise also starts background compaction for everything else.',
-    ],
+    longDesc: {
+      what: [
+        'When no free 2 MiB block is there, the kernel can stop the faulting program and compact memory until one is (direct compaction), wake kswapd and kcompactd to do it in the background and use small pages for now (defer), or just use small pages.',
+      ],
+      when: [
+        'Waiting gets programs their huge pages sooner but adds latency spikes to page faults. madvise, the default, waits only for memory that asked for huge pages; defer+madvise also starts background compaction for everything else.',
+      ],
+    },
     tuningTip: 'Keep madvise; use defer+madvise with THP always so other programs never wait.',
     kernelDocsUrl: `${THP_DOCS}#global-thp-controls`,
     dbNote: null,
@@ -146,6 +168,7 @@ export const PARAMETER_DEFS = [
   // ── Kernel samepage merging ───────────────────────────────────────────────
   {
     key: 'ksm_run',
+    title: 'Memory merging (KSM)',
     sysctlName: 'ksm/run',
     sysfsPath: `${KSM_PATH}/run`,
     group: 'ksm',
@@ -153,11 +176,15 @@ export const PARAMETER_DEFS = [
     control: 'toggle',
     toggleLabels: { on: 'on: merge identical pages', off: 'off: kernel default' },
     shortDesc: 'Whether ksmd scans memory for identical pages and merges them into one shared copy.',
-    longDesc: [
-      'Kernel samepage merging (KSM) saves memory where many processes hold the same data, mostly virtual machines running the same guest OS. It only looks at memory a program has marked with madvise(MADV_MERGEABLE); QEMU marks guest RAM by default, other programs rarely do.',
-      'The scanning costs CPU time, and a merged page is copied again when one side writes to it. Merging also lets one guest notice, through write timings, that another holds the same page, a known side channel between virtual machines.',
-      'Off, the kernel default, it is left out of the file, so a service that turns it on (such as ksmtuned) keeps working.',
-    ],
+    longDesc: {
+      what: [
+        'Kernel samepage merging (KSM) saves memory where many processes hold the same data, mostly virtual machines running the same guest OS. It only looks at memory a program has marked with madvise(MADV_MERGEABLE); QEMU marks guest RAM by default, other programs rarely do.',
+      ],
+      watch: [
+        'The scanning costs CPU time, and a merged page is copied again when one side writes to it. Merging also lets one guest notice, through write timings, that another holds the same page, a known side channel between virtual machines.',
+        'Off, the kernel default, it is left out of the file, so a service that turns it on (such as ksmtuned) keeps working.',
+      ],
+    },
     tuningTip: 'Turn it on for VM hosts that run many similar guests and are short on memory.',
     kernelDocsUrl: `${KSM_DOCS}#ksm-daemon-sysfs-interface`,
     dbNote: null,
@@ -169,14 +196,17 @@ export const PARAMETER_DEFS = [
   },
   {
     key: 'ksm_pages_to_scan',
+    title: 'KSM pages per scan',
     sysctlName: 'ksm/pages_to_scan',
     sysfsPath: `${KSM_PATH}/pages_to_scan`,
     group: 'ksm',
     control: 'slider',
     shortDesc: 'How many pages ksmd scans each time it wakes up.',
-    longDesc: [
-      'With the default of 100 pages every 20 ms, ksmd scans about 20 MiB a second, so a pass over 64 GiB of guest memory takes close to an hour. More pages per wake-up find duplicates sooner at the cost of more CPU time for ksmd.',
-    ],
+    longDesc: {
+      what: [
+        'With the default of 100 pages every 20 ms, ksmd scans about 20 MiB a second, so a pass over 64 GiB of guest memory takes close to an hour. More pages per wake-up find duplicates sooner at the cost of more CPU time for ksmd.',
+      ],
+    },
     tuningTip: 'Raise it towards 1000 when guests start often and memory is tight; watch ksmd in top.',
     kernelDocsUrl: `${KSM_DOCS}#ksm-daemon-sysfs-interface`,
     dbNote: null,
@@ -188,14 +218,17 @@ export const PARAMETER_DEFS = [
   },
   {
     key: 'ksm_sleep_millisecs',
+    title: 'KSM scan interval',
     sysctlName: 'ksm/sleep_millisecs',
     sysfsPath: `${KSM_PATH}/sleep_millisecs`,
     group: 'ksm',
     control: 'slider',
     shortDesc: 'How long ksmd sleeps between scans.',
-    longDesc: [
-      'Together with pages_to_scan this sets the scan rate: pages_to_scan pages every sleep_millisecs. A longer sleep lowers ksmd\'s CPU use and finds duplicates more slowly.',
-    ],
+    longDesc: {
+      what: [
+        'Together with pages_to_scan this sets the scan rate: pages_to_scan pages every sleep_millisecs. A longer sleep lowers ksmd\'s CPU use and finds duplicates more slowly.',
+      ],
+    },
     tuningTip: 'Keep 20 ms and change pages_to_scan instead.',
     kernelDocsUrl: `${KSM_DOCS}#ksm-daemon-sysfs-interface`,
     dbNote: null,
@@ -208,14 +241,19 @@ export const PARAMETER_DEFS = [
   // ── Memory maps and NUMA ──────────────────────────────────────────────────
   {
     key: 'max_map_count',
+    title: 'Memory mappings per process',
     sysctlName: 'vm.max_map_count',
     group: 'maps',
     control: 'slider',
     shortDesc: 'How many separate memory mappings one process may have.',
-    longDesc: [
-      'Every mmap() region, shared library segment and thread stack of a process is one mapping. Programs that map many files or allocate in many small regions pass the kernel default of 65530: Elasticsearch and OpenSearch refuse to start below 262144, and games under Wine or Proton, Java heaps with many threads and some databases crash with out-of-memory errors when they hit it.',
-      'A mapping costs a couple of hundred bytes of kernel memory, and only while it exists, so a high limit costs nothing until a process uses it. Debian 13, Ubuntu 24.04 and Fedora 43 start it at 1048576; older releases keep 65530. At 65530 the key is left out of the file, and it is never offered lower: writing 0 stops every process from mapping memory, SSH logins included.',
-    ],
+    longDesc: {
+      what: [
+        'Every mmap() region, shared library segment and thread stack of a process is one mapping. Programs that map many files or allocate in many small regions pass the kernel default of 65530: Elasticsearch and OpenSearch refuse to start below 262144, and games under Wine or Proton, Java heaps with many threads and some databases crash with out-of-memory errors when they hit it.',
+      ],
+      when: [
+        'A mapping costs a couple of hundred bytes of kernel memory, and only while it exists, so a high limit costs nothing until a process uses it. Debian 13, Ubuntu 24.04 and Fedora 43 start it at 1048576; older releases keep 65530. At 65530 the key is left out of the file, and it is never offered lower: writing 0 stops every process from mapping memory, SSH logins included.',
+      ],
+    },
     tuningTip: 'Use 1048576, what current distributions already set.',
     kernelDocsUrl: `${VM_DOCS}#max-map-count`,
     dbNote: null,
@@ -228,16 +266,19 @@ export const PARAMETER_DEFS = [
   },
   {
     key: 'zone_reclaim_mode',
+    title: 'NUMA zone reclaim',
     sysctlName: 'vm.zone_reclaim_mode',
     group: 'maps',
     type: 'bool',
     control: 'toggle',
     toggleLabels: { on: 'on: reclaim on the local node first', off: 'off: use other nodes first' },
     shortDesc: 'Whether the kernel frees memory on the local NUMA node before it allocates from another node.',
-    longDesc: [
-      'On a machine with several NUMA nodes, memory on a CPU\'s own node is faster to reach. With zone reclaim on, the kernel evicts page cache on the local node rather than allocate from a remote one. That helps workloads that fit within one node and stay there, and slows file servers and databases, which lose their cache while other nodes still have free memory.',
-      'The kernel default is 0 (off). Only machines with more than one node have the key in the file.',
-    ],
+    longDesc: {
+      what: [
+        'On a machine with several NUMA nodes, memory on a CPU\'s own node is faster to reach. With zone reclaim on, the kernel evicts page cache on the local node rather than allocate from a remote one. That helps workloads that fit within one node and stay there, and slows file servers and databases, which lose their cache while other nodes still have free memory.',
+        'The kernel default is 0 (off). Only machines with more than one node have the key in the file.',
+      ],
+    },
     tuningTip: 'Keep it off unless the workload is partitioned per node.',
     kernelDocsUrl: `${VM_DOCS}#zone-reclaim-mode`,
     dbNote: null,

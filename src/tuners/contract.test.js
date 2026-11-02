@@ -13,6 +13,7 @@ import { downloadNames } from '@/ui/fileActions.js'
 import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
 import { differingKeys, elementRange, valueTypeOf } from '@/core/valueTypes.js'
 import { CONTROLS } from '@/ui/controls/index.js'
+import { DESC_PARTS } from '@/ui/descParts.js'
 import { normalizeField } from '@/core/profile.js'
 import { MACHINE_FIELDS, MACHINE_FACTS, DEFAULT_MACHINE, RAM_FIELD, machineValues, factValues, factsReadBy } from '@/core/machine.js'
 import { LIVE_TUNERS } from './registry.js'
@@ -326,13 +327,50 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
       }
     })
 
+    // Design.md §7 "Three layers per parameter".
+    it('gives every def a short plain-language title, unique in the tuner', () => {
+      const titles = domain.parameterKeys.map((key) => domain.defsByKey[key].title)
+      for (const [i, title] of titles.entries()) {
+        expect(typeof title, domain.parameterKeys[i]).toBe('string')
+        expect(title.length, title).toBeGreaterThan(0)
+        expect(title.length, title).toBeLessThanOrEqual(40)
+        expect(title, title).not.toMatch(/[.:]$/)
+      }
+      expect(new Set(titles).size).toBe(titles.length)
+    })
+
+    it('splits every longDesc into the labelled parts, with what it does first', () => {
+      const parts = DESC_PARTS.map((p) => p.key)
+      for (const key of domain.parameterKeys) {
+        const { longDesc } = domain.defsByKey[key]
+        expect(Object.keys(longDesc).every((k) => parts.includes(k)), key).toBe(true)
+        expect(longDesc.what?.length, key).toBeGreaterThan(0)
+        for (const paras of Object.values(longDesc)) {
+          expect(paras.length, key).toBeGreaterThan(0)
+          for (const para of paras) expect(typeof para === 'string' && para.trim().length > 0, key).toBe(true)
+        }
+      }
+    })
+
+    it('gives a try-it command only as one of the shared plain forms', () => {
+      for (const state of legitimateStates(domain)) {
+        for (const key of domain.parameterKeys) {
+          const def = domain.defsByKey[key]
+          const command = domain.tryCommand(def, valueTypeOf(def).format(state.params[key], def))
+          if (command === null) continue
+          // The value is plain tokens, so the command has no shell syntax beyond the one pipe.
+          expect(command, key).toMatch(/^(sudo sysctl -w( [a-z0-9_.-]+=("[A-Za-z0-9_. -]+"|[A-Za-z0-9_.-]+))+|echo [A-Za-z0-9_+.-]+ \| sudo tee \/sys(\/[a-z0-9_]+)+)$/)
+          expect(command, key).toContain(def.sysfsPath ?? def.sysctlName)
+        }
+      }
+    })
+
     it('has a def with docs, descriptions, a known type and a control for that type', () => {
       for (const key of domain.parameterKeys) {
         const def = domain.defsByKey[key]
         expect(def.key, key).toBe(key)
         expect(def.kernelDocsUrl, key).toMatch(/^https:\/\//)
         expect(def.shortDesc, key).toBeTruthy()
-        expect(def.longDesc?.length, key).toBeGreaterThan(0)
         expect(Object.hasOwn(CONTROLS, def.control), `${key}: control ${def.control}`).toBe(true)
         expect(() => valueTypeOf(def), key).not.toThrow()
         expect(CONTROLS[def.control].types, `${key}: ${def.control} edits ${def.type ?? 'int'}`).toContain(def.type ?? 'int')

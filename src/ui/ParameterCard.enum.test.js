@@ -19,7 +19,8 @@ const CC = {
   options: [{ value: 'cubic', label: 'CUBIC' }, { value: 'bbr', label: 'BBR' }],
   kernelDefault: 'cubic',
   shortDesc: 'Congestion control.',
-  longDesc: ['x'],
+  title: 'Congestion control',
+  longDesc: { what: ['x'] },
   kernelDocsUrl: 'https://docs.kernel.org/',
 }
 const defsByKey = { cc: CC }

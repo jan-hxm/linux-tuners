@@ -5,6 +5,7 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
+import { sysctlTryCommand } from '@/core/output/sysctlFile.js'
 import { PROFILE } from './profile.js'
 import { PARAMETER_KEYS, PARAMETER_DEFS_BY_KEY, KIND_KNOWN_ISSUES } from './defs.js'
 import { deriveDefaults, rangeFor, isApplicable, kernelWatches, watchMemoryBytes, WATCH_COST_BYTES } from './calculations.js'
@@ -83,6 +84,7 @@ export const filesystemDomain = defineTuner({
   context: { badge: 'K8s', label: 'Kubernetes', url: KIND_KNOWN_ISSUES },
   contextApplies: (hw) => hw.workload === 'container',
   docsLabel: 'kernel docs',
+  tryCommand: sysctlTryCommand,
   noteKey: 'k8sNote',
   page: PAGE,
   about: ABOUT,

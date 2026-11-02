@@ -6,6 +6,8 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
+import { sysctlTryCommand } from '@/core/output/sysctlFile.js'
+import { sysfsTryCommand } from '@/core/output/tmpfilesFile.js'
 import { PROFILE } from './profile.js'
 import { PARAMETER_KEYS, PARAMETER_DEFS_BY_KEY, POSTGRES_HUGE_PAGES } from './defs.js'
 import { deriveDefaults, rangeFor, isApplicable, poolBytes, ramBytes } from './calculations.js'
@@ -88,6 +90,8 @@ export const hugepagesDomain = defineTuner({
   context: { badge: 'DB', label: 'Databases', url: POSTGRES_HUGE_PAGES },
   contextApplies: (hw) => hw.workload === 'database',
   docsLabel: 'kernel docs',
+  // THP and KSM live in sysfs, the rest are sysctls.
+  tryCommand: (def, text) => (def.sysfsPath ? sysfsTryCommand(def, text) : sysctlTryCommand(def, text)),
   noteKey: 'dbNote',
   page: PAGE,
   about: ABOUT,

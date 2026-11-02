@@ -5,6 +5,7 @@
  */
 
 import { defineTuner } from '@/core/defineTuner.js'
+import { sysctlTryCommand } from '@/core/output/sysctlFile.js'
 import { PROFILE } from './profile.js'
 import { PARAMETER_KEYS, PARAMETER_DEFS_BY_KEY, DB2_KERNEL_PARAMS } from './defs.js'
 import { deriveDefaults, rangeFor, queueMemoryBytes, queueRamShare } from './calculations.js'
@@ -76,6 +77,7 @@ export const sysvIpcDomain = defineTuner({
   context: { badge: 'DB', label: 'Databases', url: DB2_KERNEL_PARAMS },
   contextApplies: (hw) => hw.workload === 'oracle' || hw.workload === 'db2',
   docsLabel: 'kernel docs',
+  tryCommand: sysctlTryCommand,
   noteKey: 'dbNote',
   page: PAGE,
   about: ABOUT,

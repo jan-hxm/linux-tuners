@@ -212,3 +212,24 @@ describe('ParameterCard K8s context badge gating', () => {
     expect(wrapper.text()).toContain('K8s')
   })
 })
+describe('ParameterCard layers (Design.md §7)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('labels the control with the plain-language title and the sysctl name', async () => {
+    useTunerStoreFor(swapDomain)
+    const wrapper = mountCard('swappiness')
+    await nextTick()
+    const ids = wrapper.get('input[type="range"]').attributes('aria-labelledby').split(' ')
+    expect(ids.map((id) => wrapper.get(`#${id}`).text())).toEqual(['Swap aggressiveness', 'vm.swappiness'])
+  })
+
+  it('shows longDesc in labelled parts under Learn more, and only the parts the def has', async () => {
+    useTunerStoreFor(swapDomain)
+    const wrapper = mountCard('dirty_expire_centisecs')
+    await wrapper.findAll('button').find((b) => b.text().includes('Learn more')).trigger('click')
+    const headings = wrapper.findAll('h4').map((h) => h.text())
+    expect(headings).toEqual(['What it does', 'When to change it'])
+  })
+})

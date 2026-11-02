@@ -303,7 +303,8 @@ must follow them, and existing UI must not regress.
   base rule in `main.css`.
 - **One accent colour, sky.** Primary buttons (copy, a profile's apply) and
   selected states (the active preset, segmented and pick options, the current
-  tuner in the header, the open graph tab) use `bg-sky-700 text-white`, hover
+  page in the header nav, whose first entry "All tuners" is the landing page's,
+  the open graph tab) use `bg-sky-700 text-white`, hover
   `bg-sky-800`, or a `border-sky-600` underline. Text links are `text-sky-700`
   and the charts' info tone is sky-500. Fills use 700 because white on sky-500
   is under 3:1; `theme.test.js` checks the fill contrast in both schemes.

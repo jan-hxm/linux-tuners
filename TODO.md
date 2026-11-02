@@ -15,7 +15,6 @@ sysfs-based. Global `/sys` values can use the tmpfiles.d writer the huge pages t
 
 ## 2. UX
 
-- [ ] Give the top nav an active state on the landing page.
 
 ## 3. Engineering
 

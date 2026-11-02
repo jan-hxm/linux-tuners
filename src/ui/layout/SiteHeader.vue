@@ -24,6 +24,14 @@ watch(() => route.path, revealActive)
         <span class="text-slate-400">.dev</span>
       </RouterLink>
       <nav ref="nav" aria-label="Tuners" class="flex min-w-0 items-center gap-1 overflow-x-auto text-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <!-- The landing page's own entry, so the nav shows where you are there too.
+             Exact match only: every page sits under "/". -->
+        <RouterLink
+          to="/"
+          class="shrink-0 whitespace-nowrap rounded px-2 py-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+          active-class=""
+          exact-active-class="bg-sky-700 text-white hover:bg-sky-700 hover:text-white"
+        >All tuners</RouterLink>
         <RouterLink
           v-for="tuner in LIVE_TUNERS"
           :key="tuner.id"

@@ -6,8 +6,8 @@
  * exactly as a restored link does, so the form can't produce a profile the
  * link schema would reject.
  */
-import { reactive, ref, computed, watch } from 'vue'
-import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
+import { reactive, ref, computed, watch, inject } from 'vue'
+import { useActiveTuner, useTunerDomain, PROFILE_FIELD_NOTE_KEY } from '@/ui/useActiveTuner.js'
 import { normalizeField, isFieldDisabled } from '@/core/profile.js'
 import NumberPickField from './NumberPickField.vue'
 import RichText from '@/ui/RichText.vue'
@@ -16,6 +16,8 @@ const tuner = useActiveTuner()
 const domain = useTunerDomain()
 const profile = domain.profile
 const fields = profile.fields
+/** Where a field's value came from, in the guided setup; nothing elsewhere. */
+const fieldNote = inject(PROFILE_FIELD_NOTE_KEY, () => null)
 
 const HELP_CODE = 'font-mono bg-slate-100 px-1 py-0.5'
 const idFor = (key) => `profile-${domain.id}-${key}`
@@ -107,7 +109,7 @@ watch(
 
     <form v-if="!collapsed" class="space-y-5 p-4" @submit.prevent="apply">
       <div v-for="(row, r) in rows" :key="r" :class="{ 'grid gap-4 sm:grid-cols-2': row.half }">
-        <template v-for="f in row.fields" :key="f.key">
+        <div v-for="f in row.fields" :key="f.key">
           <NumberPickField
             v-if="f.type === 'number'"
             :id="idFor(f.key)"
@@ -200,7 +202,8 @@ watch(
               <template v-for="(line, i) in f.help" :key="i"><br v-if="i"><RichText :text="line" :code-class="HELP_CODE" /></template>
             </p>
           </div>
-        </template>
+          <p v-if="fieldNote(f)" class="mt-1 text-xs font-medium text-sky-800">{{ fieldNote(f) }}</p>
+        </div>
       </div>
 
       <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">

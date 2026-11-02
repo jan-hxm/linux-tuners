@@ -82,7 +82,6 @@ export const hugepagesDomain = defineTuner({
   presets: PRESETS,
   presetsById: PRESETS_BY_ID,
   generateConfig,
-  outputFilename: '99-hugepages-tuning.conf',
   formula,
   workloads: ['server', 'database', 'vm-host', 'desktop'],
   workloadField: 'workload',

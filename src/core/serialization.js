@@ -64,16 +64,8 @@ export function makeSerialization({ parameterKeys, defsByKey, defaultHardware, h
         if (value === undefined) return null
         params[key] = value
       }
-      // Hardware fields end up in the generated config (comments, a file path),
-      // so anything outside the schema rejects the whole link. Missing fields
-      // inherit from defaults; unknown fields are dropped.
-      const hardware = { ...defaultHardware }
-      for (const [key, rule] of Object.entries(hardwareSchema)) {
-        if (!Object.hasOwn(parsed.hardware, key)) continue
-        const value = parsed.hardware[key]
-        if (!matchesRule(value, rule, defaultHardware[key])) return null
-        hardware[key] = snapToStep(value, rule)
-      }
+      const hardware = restoreFields(parsed.hardware, hardwareSchema, defaultHardware)
+      if (!hardware) return null
       return {
         hardware,
         params,
@@ -88,7 +80,30 @@ export function makeSerialization({ parameterKeys, defsByKey, defaultHardware, h
   return { encodeState, decodeState }
 }
 
-function isPlainObject(v) {
+/**
+ * Profile fields from a link, held to their schema. They end up in the
+ * generated config (comments, a file path), so anything outside the schema
+ * rejects the whole set. Missing fields inherit from the defaults; unknown
+ * fields are dropped; numbers snap to their step.
+ *
+ * @param {*} raw
+ * @param {Object} schema    core/profile.js profileSchema
+ * @param {Object} defaults
+ * @returns {Object|null}
+ */
+export function restoreFields(raw, schema, defaults) {
+  if (!isPlainObject(raw)) return null
+  const out = { ...defaults }
+  for (const [key, rule] of Object.entries(schema)) {
+    if (!Object.hasOwn(raw, key)) continue
+    const value = raw[key]
+    if (!matchesRule(value, rule, defaults[key])) return null
+    out[key] = snapToStep(value, rule)
+  }
+  return out
+}
+
+export function isPlainObject(v) {
   return v !== null && typeof v === 'object' && !Array.isArray(v)
 }
 

@@ -9,6 +9,7 @@ import { TUNER_DOMAINS } from './domains.js'
 import { assertTuner } from '@/core/defineTuner.js'
 import { restoreState, presetParams } from '@/core/createTunerStore.js'
 import { parseRichText } from '@/ui/richText.js'
+import { downloadNames } from '@/ui/fileActions.js'
 import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
 import { differingKeys, elementRange, valueTypeOf } from '@/core/valueTypes.js'
 import { CONTROLS } from '@/ui/controls/index.js'
@@ -650,5 +651,39 @@ describe('guided setup facts', () => {
         Object.assign(facts, domain.facts(hardware, params))
       }
     }
+  })
+})
+
+// Design.md §5 "Guided setup", "Output": the setup writes every tuner's files
+// side by side, so none may fight over a value. sysctl.d's lexical order would
+// otherwise pick the winner silently.
+describe('guided setup output', () => {
+  /** What a def writes: its sysctl names, its sysfs path or its udev attribute. */
+  const targets = (def) => (def.sysfsPath ? [def.sysfsPath] : def.udevAttr ? [`udev ${def.udevAttr}`] : emittedNames(def))
+
+  it('has no two tuners write the same sysctl key or sysfs path', () => {
+    const owner = {}
+    for (const domain of TUNER_DOMAINS) {
+      for (const def of Object.values(domain.defsByKey)) {
+        for (const target of targets(def)) {
+          expect(owner[target] ?? domain.id, `${target} from ${domain.id} and ${owner[target]}`).toBe(domain.id)
+          owner[target] = domain.id
+        }
+      }
+    }
+  })
+
+  it('has no two tuners write the same file, and gives every file its own download name', () => {
+    const byPath = {}
+    for (const domain of TUNER_DOMAINS) {
+      for (const state of legitimateStates(domain)) {
+        for (const { path } of configFor(domain, state)) {
+          expect(byPath[path] ?? domain.id, `${path} from ${domain.id} and ${byPath[path]}`).toBe(domain.id)
+          byPath[path] = domain.id
+        }
+      }
+    }
+    const names = downloadNames(Object.keys(byPath))
+    expect(new Set(names).size).toBe(names.length)
   })
 })

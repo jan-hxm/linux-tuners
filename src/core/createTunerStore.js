@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { differingKeys, valueTypeOf } from './valueTypes.js'
+import { factValues } from './machine.js'
 
 const URL_DEBOUNCE_MS = 200
 
@@ -13,11 +14,14 @@ const URL_DEBOUNCE_MS = 200
  *
  * @param {string} id  Unique Pinia store id (the domain id)
  * @param {import('@/core/types.js').TunerDomain} domain
+ * @param {Object} [options]
+ * @param {boolean} [options.urlSync]  Read and write location.hash. The guided
+ *   setup turns it off, because the setup page owns the link.
  */
-export function defineTunerStore(id, domain) {
+export function defineTunerStore(id, domain, { urlSync = true } = {}) {
   return defineStore(id, {
     state: () => {
-      const restored = restoreFromUrlHash(domain)
+      const restored = urlSync ? restoreFromUrlHash(domain) : null
       if (restored) {
         return {
           hardware: restored.hardware,
@@ -26,6 +30,7 @@ export function defineTunerStore(id, domain) {
           activeTab: restored.activeTab ?? domain.defaultTab,
           drawerParamKey: null,
           undoState: null,
+          facts: {},
           _urlWriteTimer: null,
         }
       }
@@ -42,16 +47,35 @@ export function defineTunerStore(id, domain) {
          * Any other change clears it. Never part of the shared link.
          */
         undoState: null,
+        /**
+         * The facts earlier guided-setup steps provide (core/machine.js
+         * MACHINE_FACTS). None on a tuner's own page.
+         */
+        facts: {},
         _urlWriteTimer: null,
       }
     },
 
     getters: {
       issues(state) {
-        return domain.validate(state.hardware, state.params)
+        return domain.validate(state.hardware, state.params, state.facts)
       },
       blocked() {
         return domain.hasBlockingIssue(this.issues)
+      },
+      /**
+       * The generated files, named after the active preset and whether the
+       * values moved off it.
+       * @returns {import('./output/files.js').ConfigFile[]}
+       */
+      configFiles(state) {
+        const preset = state.activePreset ? domain.presetsById[state.activePreset] : null
+        return domain.generateConfig({
+          hardware: state.hardware,
+          params: state.params,
+          presetLabel: preset?.label ?? null,
+          customised: preset ? differingKeys(domain.defsByKey, preset.values, state.params).length > 0 : false,
+        })
       },
       /** {[paramKey]: ValidationIssue[]} for fast per-card lookup */
       issuesByParam() {
@@ -129,6 +153,22 @@ export function defineTunerStore(id, domain) {
       },
 
       /**
+       * Take new facts from earlier setup steps. Only the profile fields that
+       * copy a fact change; the params keep their values, held to the new
+       * ranges, so tuning an earlier step doesn't reset this one.
+       *
+       * @param {Record<string, number>} facts
+       */
+      setFacts(facts) {
+        this.facts = { ...facts }
+        const fed = factValues(domain.profile.fields, facts)
+        if (Object.keys(fed).every((key) => this.hardware[key] === fed[key])) return
+        this.hardware = { ...this.hardware, ...fed }
+        this.params = clampToProfile(domain, this.hardware, this.params)
+        this.syncUrl()
+      },
+
+      /**
        * Swap in a whole new set of params and remember the old one for undo.
        * A snap that changes nothing leaves nothing to undo.
        */
@@ -158,10 +198,11 @@ export function defineTunerStore(id, domain) {
       },
 
       /**
-       * Debounced write to location.hash. Browser-only; no-op under Node/Vitest.
+       * Debounced write to location.hash. Browser-only; no-op under Node/Vitest
+       * and without `urlSync`.
        */
       syncUrl() {
-        if (typeof window === 'undefined') return
+        if (!urlSync || typeof window === 'undefined') return
         if (this._urlWriteTimer) clearTimeout(this._urlWriteTimer)
         // The timer can outlive the view: if the user navigates to another route
         // within the debounce window, don't stamp this tuner's state onto it.

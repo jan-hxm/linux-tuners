@@ -125,7 +125,6 @@ export const systemdDomain = defineTuner({
   presets: SYSTEMD_PRESETS,
   presetsById: SYSTEMD_PRESETS_BY_ID,
   generateConfig,
-  outputFilename: 'systemd-resource-tuning.conf',
   defaultTab: 'cpu',
   graphTabs: GRAPH_TABS,
   visibleKeys: (section, _params, hw) =>

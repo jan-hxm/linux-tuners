@@ -54,7 +54,6 @@
  * @property {any[]}    presets
  * @property {Record<string, any>} presetsById
  * @property {(opts:Object)=>import('./output/files.js').ConfigFile[]} generateConfig  Built with the core/output writers
- * @property {string}   outputFilename
  * @property {(state:Object)=>string} encodeState     Derived by defineTuner (core/serialization.js)
  * @property {(s:string)=>Object|null} decodeState    Derived by defineTuner, schema from the profile
  * @property {number}   [linkVersion]  Shared-link envelope version; bumped when a parameter is added, so older links are refused. Omitted in the spec = 1.

@@ -34,8 +34,12 @@ const DIST_DIR = path.join(ROOT_DIR, 'dist')
 
 // The files a page's content comes from, for its sitemap <lastmod>. A tuner
 // page is its own src/tuners/<id>/ folder; the landing cards come from the
-// registry. Shared UI is left out, or every tweak would mark every page changed.
-const PAGE_SOURCES = { '/': ['src/views/LandingView.vue', 'src/tuners/registry.js'] }
+// registry, and the guided setup is its own folder and the registry. Shared UI
+// is left out, or every tweak would mark every page changed.
+const PAGE_SOURCES = {
+  '/': ['src/views/LandingView.vue', 'src/tuners/registry.js'],
+  '/setup': ['src/setup', 'src/tuners/registry.js'],
+}
 const sourcesFor = (route) => PAGE_SOURCES[route.path] ?? [`src/tuners/${route.name}`]
 
 function git(...args) {

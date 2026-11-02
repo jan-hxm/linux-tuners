@@ -42,6 +42,7 @@ export const TUNER_VIEWS = Object.fromEntries(
 
 const PAGE_VIEWS = {
   '/': () => import('@/views/LandingView.vue'),
+  '/setup': () => import('@/setup/SetupView.vue'),
   '/imprint': () => import('@/views/ImpressumView.vue'),
   '/privacy': () => import('@/views/DatenschutzView.vue'),
 }

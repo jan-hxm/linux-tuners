@@ -43,6 +43,17 @@ export const ROUTES_META = [
     changefreq: 'monthly',
     jsonLdType: 'WebSite',
   },
+  {
+    path: '/setup',
+    name: 'setup',
+    title: 'Guided Linux setup | linux-tuners.dev',
+    description:
+      'Tune a whole Linux machine in one pass: describe it once, go through every tuner in the order that matters, and get each sysctl, systemd and udev file.',
+    ogTitle: 'Guided Linux setup',
+    priority: 0.9,
+    changefreq: 'monthly',
+    jsonLdType: 'SoftwareApplication',
+  },
   ...LIVE_TUNERS.map((t) => ({ path: t.path, name: t.id, ...t.route })),
   {
     path: '/imprint',

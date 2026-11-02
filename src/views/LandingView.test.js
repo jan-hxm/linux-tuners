@@ -11,7 +11,7 @@ const Empty = { template: '<div />' }
 async function landingAt(path) {
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/', component: LandingView }, ...LIVE_TUNERS.map((t) => ({ path: t.path, component: Empty }))],
+    routes: [{ path: '/', component: LandingView }, { path: '/setup', component: Empty }, ...LIVE_TUNERS.map((t) => ({ path: t.path, component: Empty }))],
   })
   router.push(path)
   await router.isReady()
@@ -67,5 +67,11 @@ describe('LandingView role picker', () => {
       expect(checked(wrapper), path).toEqual(['Any machine'])
       expect(sections(wrapper), path).toHaveLength(1)
     }
+  })
+
+  it('starts the guided setup with the picked role, and with none before a pick', async () => {
+    const setupHrefs = (wrapper) => wrapper.findAll('a').filter((a) => a.text().startsWith('Start guided setup')).map((a) => a.attributes('href'))
+    expect(setupHrefs((await landingAt('/')).wrapper)).toEqual(['/setup'])
+    expect(setupHrefs((await landingAt('/?role=vm-host')).wrapper)).toEqual(['/setup?role=vm-host', '/setup?role=vm-host'])
   })
 })

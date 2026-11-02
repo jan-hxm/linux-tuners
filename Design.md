@@ -225,8 +225,8 @@ and the CMP load from a changing set of Google domains.
 
 ### Guided setup
 
-> **Status: the landing role picker and the machine profile with its
-> mapping are built; the rest is designed, not built.** The build steps are in [TODO.md](TODO.md) §2.
+> **Status: built.** The landing role picker, the machine profile with its
+> mapping, the facts, and `/setup` itself.
 
 The tuners answer "what should this one setting be". The guided setup answers
 "what should I set on this machine, and in what order". It has two parts:
@@ -244,7 +244,10 @@ The tuners answer "what should this one setting be". The guided setup answers
   keeps the scroll position when only the query changes.
 - **`/setup` walks through a whole machine.** The user enters the machine
   profile once. Then each tuner is a step, and the last step shows every file
-  for the system.
+  for the system. One step shows at a time, with a step list beside it (above
+  it on a phone) that marks each step skipped, blocked or with issues to
+  check, and Back and Next buttons under it. Moving to a step focuses its
+  heading.
 
 **Order.** There is one setup order, and it is the registry's array order, so
 the landing cards, the nav and the setup steps can't disagree. It puts the
@@ -261,7 +264,8 @@ line the landing card shows for those roles. The role ids are listed in
 `core/machineRoles.js`, a module with no imports, since the registry is read
 under Node; `registry.test.js` checks every entry against it, and a list
 naming every role must say `'all'` instead, so a new role reaches it. The step for a tuner outside
-the role starts skipped, and the user can include it. To begin with: huge
+the role starts skipped, and the user can include it. Picking another role in
+the machine profile resets which steps are skipped to that role's. To begin with: huge
 pages for database and VM hosts, SysV IPC for databases, network for every
 role except desktop, and the rest for all roles.
 
@@ -304,7 +308,11 @@ that tuner's restore schema. A mapping mistake therefore can't produce a
 profile a link couldn't. A mapped field is prefilled, not locked: the step
 marks it "from the machine profile", and the user can change it for that
 step only (for example the SysV IPC workload from database to `oracle`). The
-change lasts until that machine field changes. The contract suite checks that
+change lasts until that machine field changes, and a shared link doesn't keep
+it (see "Link state"). The marks come through an optional injection,
+`PROFILE_FIELD_NOTE_KEY`, which a tuner page doesn't provide, so its
+`ProfileForm` shows none. A field fed by a fact is marked "from the <step>
+step" the same way. The contract suite checks that
 every combination of the machine's choice options, and the RAM floor and
 ceiling, maps to a profile that a link restores unchanged and that has no
 blocking issue. It also checks that every workload field maps the role and
@@ -347,51 +355,75 @@ the steps in order with every step at its defaults, for each machine profile,
 the facts add no issue.
 
 **Steps reuse the tuner UI.** The step's store comes from
-`defineTunerStore('setup/<id>', domain, { urlSync: false })`, a new factory
-option, because the page owns the link. The step `provide()`s it, so the
-shared `ProfileForm`, `PresetSelector` and `ParameterPanel` render in the step
-unchanged. Graphs, the About content and the drawer stay on the tuner's own
-page. Each step links there, opening a new tab with the step's state encoded
-in the hash. Edits made on that page don't flow back, because the step can
-already edit every value. Two kinds of change reach a step:
+`defineTunerStore('setup/<id>', domain, { urlSync: false })`: with the option
+off the store neither reads nor writes the hash, because the page owns the
+link. The step `provide()`s it, so the shared `ProfileForm`, `PresetSelector`,
+`ParameterPanel`, `InfoDrawer` and `UndoToast` render in the step unchanged
+(the drawer too, since every card's name opens it). Graphs and the About
+content stay on the tuner's own page. Each step links there, opening a new
+tab with the step's state encoded in the hash. Edits made on that page don't
+flow back, because the step can already edit every value. The machine step
+renders the same `ProfileForm` with the setup store standing in for a tuner
+store: it has `hardware`, `setHardware` and an undo state. Two kinds of change
+reach a step:
 
 - A machine-profile change re-derives every step's defaults, as `setHardware`
-  does, and offers Undo.
+  does, and offers Undo, which puts back the machine, the skipped steps and
+  every step's state (`UndoToast` kind `machine`).
 - A fact change from an earlier step only updates the fed profile field. The
   params keep their values and are clamped to the new range
-  (`clampToProfile`), so tuning the kernel step doesn't reset systemd.
+  (`clampToProfile`), so tuning the kernel step doesn't reset systemd. The
+  store's `facts` state and `setFacts` action do this, and its `issues` getter
+  passes the facts to `validate`. On a tuner's own page the facts stay `{}`.
+  A skipped step provides no facts, so the steps after it validate as on
+  their own pages.
 
-Each step shows its validation issues. A step with a blocking issue says so in
-the step list.
+Each step shows its validation issues above its cards. A step with a blocking
+issue says so in the step list.
 
 **Output.** The last step lists each included step's files, from that tuner's
-own `generateConfig`, unchanged. Each file has its own copy and download
-buttons, which are the per-file download from TODO §4. A combined copy uses
-`combineFiles`, with one header for the machine profile. A blocked step's
+own `generateConfig` (the store's `configFiles` getter), unchanged. Each file
+has its own copy and download buttons; the text shows on request. A file
+downloads under the last part of its path, with its folder in front when two
+files share it (`downloadNames` in `ui/fileActions.js`: systemd's two slice
+drop-ins, the huge pages sysctl.d and tmpfiles.d files). A combined copy uses
+`combineFiles`, with one header for the machine profile, built from the
+machine fields' option labels. A blocked step's
 files are left out, and the step is named in their place. There is no
 install script and no archive. A script would put executable directives in
 the output (§10). An archive would need a zip writer to save four clicks.
-A test checks that no two tuners write the same sysctl key or sysfs path, so
+A contract test checks that no two tuners write the same sysctl key, sysfs
+path, udev attribute or file, and that the download names are unique, so
 the files never fight over a value. This holds today, and lexical
 `sysctl.d` order would otherwise decide the winner silently.
 
-**Link state.** `/setup` keeps its own envelope in the hash: a version, the
-machine profile, the role, the skipped steps, and each step's state encoded
-by that tuner's own `encodeState`. Restoring is as strict as a tuner link.
-The machine profile goes through its schema, each step through its tuner's
-`decodeState`, and an unknown step id or a step that fails rejects the whole
-link. Facts and mapped fields are never read from the link. They are
-recomputed from the restored values, so a link can't make two steps disagree.
+**Link state.** `/setup` keeps its own envelope in the hash
+(`src/setup/link.js`): a version (`SETUP_LINK_VERSION`, bumped when a step is
+added), the machine profile with its role, the skipped steps, and each step's
+state encoded by that tuner's own `encodeState`. Restoring is as strict as a
+tuner link. The machine profile goes through its schema (`restoreFields`, the
+same check `decodeState` uses), each step through its tuner's `restoreState`,
+and a missing or unknown step id, an unknown or repeated skipped id, or a step
+that fails rejects the whole link, which then opens as a fresh setup. Facts
+and mapped fields are never read from the link. They are recomputed from the
+restored values, so a link can't make two steps disagree. The landing page's
+`?role=` only seeds a fresh setup, and the first hash write drops it. With
+every step included the hash is about 4.6 KB, well inside what browsers
+accept.
 
 **Layer.** `src/setup/` is a composition root, like `router.js`. It may import
-each tuner's domain module (`index.js`, through `TUNER_DOMAINS`) and the
-registry, but no tuner internals. Nothing imports it except the router. The
+`core`, `ui`, each tuner's domain module through `tuners/domains.js`, and the
+registry, but no tuner file directly. Nothing imports it except the router. The
 setup page iterates the domains and their data. It never branches on a tuner
-id. `importBoundaries.test.js` gets the rule.
+id. `importBoundaries.test.js` checks the rule. `steps.js` (the steps, the
+walk that feeds facts forward) and `link.js` are plain JS, tested under Node;
+`useSetupStore.js` holds the machine, the skipped steps and one step store
+per tuner.
 
-**Route.** `/setup` is an indexed page in `routes-meta.js`, but only once it
-works, following the no-thin-pages rule ([§6](#6-adding-a-tuner)). Its sitemap
-sources are `src/setup/` and the registry.
+**Route.** `/setup` is an indexed page in `routes-meta.js`. Its sitemap
+sources are `src/setup/` and the registry. The landing hero's "Start guided
+setup" button opens it, with `?role=` when a role is picked, and a second
+link under the role picker does the same.
 
 ## 6. Adding a tuner
 
@@ -532,6 +564,7 @@ src/
     registry.js   the list of tuners (see "Registry" below)
     <id>/         everything specific to one tuner
   views/       non-tuner pages (landing, legal)
+  setup/       the guided setup, a composition root (§5 "Guided setup")
 ```
 
 - `tuners/<id>` may import `core` and `ui`.
@@ -708,10 +741,10 @@ so that a new variant is an addition rather than an edit to shared code.
   A writer throws rather than emit a malformed line, so a bad value fails the
   contract fuzz tests instead of reaching a file. Each file of a multi-file
   tuner opens with a `# =====` banner naming its path. `ConfigOutput` shows
-  the files combined, and copy and download take that text; a download per
-  file is not built yet. A single file downloads under its own name (so the
-  block I/O file is named after its kind of disk), several under the
-  domain's `outputFilename` (`*.conf` or `*.rules`). Every emitted value goes through its def's value
+  the files combined and copies that text; each file downloads on its own,
+  under the last part of its path (so the block I/O file is named after its
+  kind of disk). The store's `configFiles` getter builds the files from the
+  active preset, for this panel and the guided setup alike. Every emitted value goes through its def's value
   type, so the "only values the kernel accepts" rule
   ([§3](#3-product-principles)) is enforced in one place. A writer that adds
   its own syntax around a value (systemd's `50%`, `yes`) starts from
@@ -984,7 +1017,11 @@ These hold for every tuner and every output writer (§9 `core/output`):
 ### Rules for the page, the build and the deploy
 
 - No `v-html`, `innerHTML`, `eval`, `new Function`, or `href`/`src` bound to
-  state. External links are literals in data files.
+  state. External links are literals in data files. One accepted trade-off:
+  a guided-setup step links to its tuner page as the registry's constant
+  path plus `#` and that tuner's `encodeState` output (lz-string's URI-safe
+  alphabet), so the link always stays on this site and the page it opens
+  restores the hash as strictly as any shared link.
 - No new network request, cookie, storage key or third-party origin (script,
   style, font, frame) without a Design.md decision and a privacy policy update.
 - `public/_headers` only gets stricter. The missing `script-src` CSP is the

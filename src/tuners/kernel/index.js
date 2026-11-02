@@ -80,7 +80,6 @@ export const kernelDomain = defineTuner({
   presets: PRESETS,
   presetsById: PRESETS_BY_ID,
   generateConfig,
-  outputFilename: '99-kernel-tuning.conf',
   formula,
   // The values the machine runs with: systemd 243+ sets pid_max at boot, and
   // threads-max is never below the kernel's own value.

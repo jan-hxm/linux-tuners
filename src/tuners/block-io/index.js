@@ -70,7 +70,6 @@ export const blockIoDomain = defineTuner({
   presets: PRESETS,
   presetsById: PRESETS_BY_ID,
   generateConfig,
-  outputFilename: '99-block-tuning.rules',
   formula,
   workloads: ['server', 'database', 'streaming', 'desktop'],
   workloadField: 'workload',

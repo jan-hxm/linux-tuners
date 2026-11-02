@@ -110,7 +110,6 @@ export const swapDomain = defineTuner({
   presets: PRESETS,
   presetsById: PRESETS_BY_ID,
   generateConfig,
-  outputFilename: '99-swap-tuning.conf',
   // 2 added vm.page-cluster; a version 1 link lacks it and is refused.
   linkVersion: 2,
   defaultTab: 'pressure',

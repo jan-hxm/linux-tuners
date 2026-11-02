@@ -11,6 +11,12 @@ import { inject } from 'vue'
  */
 export const TUNER_STORE_KEY = Symbol('tuner-store')
 export const TUNER_DOMAIN_KEY = Symbol('tuner-domain')
+/**
+ * Optional: `(field) => string | null`, a note under a profile field saying
+ * where its value came from. The guided setup provides it; a tuner page
+ * doesn't, and ProfileForm then shows none.
+ */
+export const PROFILE_FIELD_NOTE_KEY = Symbol('profile-field-note')
 
 /**
  * The active tuner store. There is no fallback: shared UI never picks a tuner,

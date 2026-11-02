@@ -101,7 +101,6 @@ export const networkDomain = defineTuner({
   presets: PRESETS,
   presetsById: PRESETS_BY_ID,
   generateConfig,
-  outputFilename: '99-network-tuning.conf',
   graphTabs: GRAPH_TABS,
   simulation,
   formula,

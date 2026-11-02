@@ -1,6 +1,7 @@
 <script setup>
 /**
- * "Undo" toast after a reset or a preset snap, fed by the store's undoState.
+ * "Undo" toast after a reset, a preset snap or (in the guided setup) a
+ * machine-profile change, fed by the provided store's undoState.
  * It hides itself after a few seconds, but not while the pointer or focus is
  * on it, and Escape dismisses it. After an undo, focus goes back to the
  * control that triggered the snap, since the toast's own button disappears.
@@ -22,6 +23,7 @@ const message = computed(() => {
   const undo = tuner.undoState
   if (!undo) return ''
   if (undo.kind === 'preset') return `Applied the ${domain.presetsById[undo.presetId].label} preset.`
+  if (undo.kind === 'machine') return 'Updated every step for the new machine profile.'
   return 'Reset to the defaults for your profile.'
 })
 

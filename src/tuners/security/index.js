@@ -56,7 +56,6 @@ export const securityDomain = defineTuner({
   presets: PRESETS,
   presetsById: PRESETS_BY_ID,
   generateConfig,
-  outputFilename: '99-security-hardening.conf',
   workloads: ['server', 'container', 'router', 'desktop'],
   workloadField: 'workload',
   // 2 added user.max_user_namespaces; a version 1 link lacks it and is refused.

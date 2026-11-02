@@ -70,7 +70,6 @@ export const sysvIpcDomain = defineTuner({
   presets: PRESETS,
   presetsById: PRESETS_BY_ID,
   generateConfig,
-  outputFilename: '99-sysv-ipc-tuning.conf',
   formula,
   workloads: ['general', 'container', 'oracle', 'db2'],
   workloadField: 'workload',

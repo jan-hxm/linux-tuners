@@ -2,67 +2,33 @@
 import { computed, ref } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { combineFiles } from '@/core/output/files.js'
-import { differingKeys } from '@/core/valueTypes.js'
+import { copyText, downloadText, downloadNames } from '@/ui/fileActions.js'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
-
-const presetLabel = computed(() =>
-  tuner.activePreset ? domain.presetsById[tuner.activePreset]?.label ?? null : null,
-)
-
-const customised = computed(() => {
-  if (!tuner.activePreset) return false
-  const preset = domain.presetsById[tuner.activePreset]
-  if (!preset) return false
-  return differingKeys(domain.defsByKey, preset.values, tuner.params).length > 0
-})
 
 const blockingIssues = computed(() => tuner.issues.filter((i) => i.blocking))
 const blocked = computed(() => blockingIssues.value.length > 0)
 
 // Multi-file tuners show every file in one text, each under a banner naming
-// its path; copy and download take that same text.
-const files = computed(() =>
-  domain.generateConfig({
-    hardware: tuner.hardware,
-    params: tuner.params,
-    presetLabel: presetLabel.value,
-    customised: customised.value,
-  }),
-)
+// its path; copy takes that same text, and each file downloads on its own
+// under its own name.
+const files = computed(() => tuner.configFiles)
 const output = computed(() => combineFiles(files.value))
-
-// One file downloads under its own name (the block I/O file depends on the
-// disk); several under the domain's combined name.
-const downloadName = computed(() => (files.value.length === 1 ? files.value[0].path.split('/').pop() : domain.outputFilename))
+const names = computed(() => downloadNames(files.value.map((f) => f.path)))
 
 const copyStatus = ref('idle') // 'idle' | 'ok' | 'fail'
 const shareStatus = ref('idle')
 
 async function copy() {
   if (blocked.value) return
-  try {
-    await navigator.clipboard.writeText(output.value)
-    copyStatus.value = 'ok'
-  } catch {
-    copyStatus.value = 'fail'
-  }
+  copyStatus.value = (await copyText(output.value)) ? 'ok' : 'fail'
   setTimeout(() => (copyStatus.value = 'idle'), 1800)
 }
 
-function download() {
+function download(i) {
   if (blocked.value) return
-  const blob = new Blob([output.value + '\n'], { type: 'text/plain;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = downloadName.value
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  // Defer revoke to next tick so the browser has a chance to start the download.
-  setTimeout(() => URL.revokeObjectURL(url), 0)
+  downloadText(names.value[i], files.value[i].content)
 }
 
 async function shareUrl() {
@@ -129,10 +95,12 @@ function reset() {
           @click="copy"
         >{{ copyStatus === 'ok' ? 'Copied ✓' : 'Copy to clipboard' }}</button>
         <button
+          v-for="(file, i) in files"
+          :key="file.path"
           type="button"
           class="rounded border border-slate-300 px-4 py-1.5 text-sm hover:bg-slate-50"
-          @click="download"
-        >Download .conf</button>
+          @click="download(i)"
+        >Download <span class="font-mono text-xs">{{ names[i] }}</span></button>
         <button
           type="button"
           class="rounded border border-slate-300 px-4 py-1.5 text-sm hover:bg-slate-50"

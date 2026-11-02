@@ -74,7 +74,6 @@ export const filesystemDomain = defineTuner({
   presets: PRESETS,
   presetsById: PRESETS_BY_ID,
   generateConfig,
-  outputFilename: '99-filesystem-tuning.conf',
   formula,
   // Left out at 1048576, where Debian 13 and Fedora start higher, so this is
   // the least the machine runs with.

@@ -25,7 +25,6 @@ const REQUIRED = [
   'presets',
   'presetsById',
   'generateConfig',
-  'outputFilename',
   'encodeState',
   'decodeState',
   'workloads',
@@ -95,7 +94,6 @@ export function assertTuner(domain) {
   }
   // Ids key the Pinia store and the shared URL hash, so they're permanent.
   if (!/^[a-z][a-z0-9-]*$/.test(domain.id)) fail('id must be kebab-case')
-  if (!/^[a-z0-9][a-z0-9._-]*\.(conf|rules)$/.test(domain.outputFilename)) fail('outputFilename must be a plain *.conf or *.rules name')
   if (!Number.isInteger(domain.linkVersion) || domain.linkVersion < 1) fail('linkVersion must be a positive integer')
 
   for (const key of domain.parameterKeys) {

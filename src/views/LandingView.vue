@@ -19,6 +19,9 @@ function pickRole(value) {
   router.replace({ query: value ? { role: value } : {} })
 }
 
+/** The guided setup, starting from the picked role. */
+const setupLink = computed(() => ({ path: '/setup', query: role.value ? { role: role.value } : {} }))
+
 const groups = computed(() =>
   role.value ? tunersForRole(LIVE_TUNERS, role.value) : { recommended: LIVE_TUNERS, optional: [] },
 )
@@ -53,6 +56,15 @@ const sections = computed(() => [
         <p class="mt-4 text-sm leading-relaxed text-slate-200 sm:text-base">
           Drag sliders. Watch the impact. Copy the config. Each tuner explains every option in plain language, derives sensible defaults from your hardware, and shows the kernel-level effect live, so you understand what you're changing, not just what to type.
         </p>
+        <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <RouterLink
+            :to="setupLink"
+            class="rounded bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100"
+          >Start guided setup</RouterLink>
+          <p class="text-xs text-slate-300">
+            One machine, every tuner in order, every file at the end.
+          </p>
+        </div>
         <p class="mt-4 text-xs text-slate-400">
           URL-encodable state for sharing.
         </p>
@@ -91,6 +103,11 @@ const sections = computed(() => [
           </button>
         </div>
         <p class="mt-2 text-xs text-slate-500" aria-live="polite">{{ summary }}</p>
+        <RouterLink
+          v-if="role"
+          :to="setupLink"
+          class="mt-2 inline-block text-sm font-medium text-sky-800 underline underline-offset-2 hover:text-sky-900"
+        >Start guided setup for this machine →</RouterLink>
       </div>
       <div v-else>
         <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ sec.heading }}</h2>

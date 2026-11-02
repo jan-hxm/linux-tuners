@@ -7,7 +7,8 @@
  * react while tuning. This bar pins the same `impact` metrics to the bottom of
  * the viewport on small screens, restoring live feedback. Hidden at `lg` where
  * the real graph panel is visible. A link at its end jumps down to the full
- * graphs. See Design.md §7.
+ * graphs. Each metric gets a column, its label over its value, so all of
+ * them fit at 320px. See Design.md §7.
  */
 defineProps({
   /** @type {{id:string,label:string,value:string,band:string}[]} */
@@ -34,15 +35,15 @@ function bandClass(band) {
     aria-label="Live impact summary"
   >
     <div class="flex items-center gap-2">
-      <ul class="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto" aria-live="polite">
+      <ul class="grid min-w-0 flex-1 auto-cols-fr grid-flow-col gap-2" aria-live="polite">
         <li
           v-for="metric in impact"
           :key="metric.id"
-          class="flex shrink-0 items-center gap-1.5"
+          class="flex min-w-0 flex-col items-start gap-0.5"
         >
-          <span class="text-[11px] uppercase tracking-wide text-slate-500">{{ metric.label }}</span>
+          <span class="text-xs leading-tight text-slate-500">{{ metric.label }}</span>
           <span
-            class="rounded px-1.5 py-0.5 text-xs font-medium"
+            class="max-w-full break-words rounded px-1.5 py-0.5 text-xs font-medium leading-tight"
             :class="bandClass(metric.band)"
           >{{ metric.value }}</span>
         </li>

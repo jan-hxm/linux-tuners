@@ -143,7 +143,7 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
     <InfoDrawer />
 
     <!-- Spacer so the mobile impact bar never covers page content. -->
-    <div v-if="impact.length" class="h-16 lg:hidden" aria-hidden="true" />
+    <div v-if="impact.length" class="h-24 lg:hidden" aria-hidden="true" />
     <MobileImpactBar :impact="impact" :graphs-id="GRAPHS_ID" />
     <UndoToast :raised="impact.length > 0" />
   </section>

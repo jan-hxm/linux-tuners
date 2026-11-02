@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="pointer-events-none fixed inset-x-0 z-30 flex justify-center px-4"
-    :class="props.raised ? 'bottom-20 lg:bottom-4' : 'bottom-4'"
+    :class="props.raised ? 'bottom-24 lg:bottom-4' : 'bottom-4'"
     aria-live="polite"
   >
     <div

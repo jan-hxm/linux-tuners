@@ -472,8 +472,11 @@ must follow them, and existing UI must not regress.
 - **The live simulation must stay usable on mobile.** `GraphPanel` sits beside
   the parameters only at `lg+`. Below that, views render `MobileImpactBar` (a
   `lg:hidden` fixed bottom bar fed the same `impact` array) plus a
-  `h-16 lg:hidden` spacer. The bar ends in a "Graphs" link to the panel's
-  `#graphs` anchor, outside its `aria-live` list so it isn't re-announced.
+  `h-24 lg:hidden` spacer. The bar gives each metric a column, its label over
+  its value, so every metric shows at 320px (it is at most 83px tall; the undo
+  toast sits at `bottom-24` above it). It ends in a "Graphs" link to the
+  panel's `#graphs` anchor, outside its `aria-live` list so it isn't
+  re-announced.
 - **Every disclosure or toggle is a real `<button>`** with `aria-expanded` and
   `aria-controls`. Never put click handlers on bare `<div>` or `<header>`
   elements.
@@ -481,8 +484,10 @@ must follow them, and existing UI must not regress.
   screens never show and keyboards can't reach. The preset "what would change"
   list sits behind a per-preset toggle button in `PresetSelector` instead.
 - **No page-level sideways scroll down to 320px.** Whatever can be wider than
-  a phone handles it itself: the header nav scrolls inside its own box (and
-  keeps the current tuner in view), selects are capped at `max-w-full`,
+  a phone handles it itself: the header nav scrolls inside its own box (keeps
+  the current tuner in view, and fades the edge that has more links past it,
+  since its scrollbar is hidden), a profile field's quick picks are a select
+  below `sm` instead of rows of chips, selects are capped at `max-w-full`,
   segmented controls wrap with growing segments, a card's value wraps under
   its name, and parameter names break after `.`, `_`, `-` or `/` (`<wbr>`).
   A one-column grid says `grid-cols-1` (`minmax(0, 1fr)`): an implicit `auto`

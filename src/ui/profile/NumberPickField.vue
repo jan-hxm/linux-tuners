@@ -7,6 +7,9 @@ import { computed } from 'vue'
  * cores, kernel.pid_max). Two-way bound via v-model; the form snaps and clamps
  * on apply.
  *
+ * Below `sm` the picks are a select instead, since a dozen chips wrap into
+ * rows that push the tune step down on a phone.
+ *
  * Picks may be bare numbers or `{ value, label }` objects (see fieldOptions.js).
  * Rich help text can be passed through the `#help` slot; plain text via `help`.
  */
@@ -30,6 +33,12 @@ const normalizedPicks = computed(() =>
   props.picks.map((p) => (typeof p === 'object' ? p : { value: p, label: String(p) })),
 )
 
+/** The pick the value matches, as the select's value, or '' for none. */
+const pickedValue = computed(() => {
+  const pick = normalizedPicks.value.find((p) => p.value === Number(props.modelValue))
+  return pick && props.modelValue !== '' ? String(pick.value) : ''
+})
+
 function set(value) {
   // Mirror v-model.number: a number when parseable, '' when the field is empty.
   emit('update:modelValue', value === '' ? '' : Number(value))
@@ -50,11 +59,21 @@ function set(value) {
         class="w-24 rounded border border-slate-300 px-2 py-1 text-sm font-mono"
         @input="set($event.target.value)"
       />
+      <select
+        v-if="normalizedPicks.length"
+        :value="pickedValue"
+        :aria-label="`${label}: common values`"
+        class="min-h-6 max-w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm sm:hidden"
+        @change="$event.target.value !== '' && set($event.target.value)"
+      >
+        <option value="" disabled>Common values</option>
+        <option v-for="pick in normalizedPicks" :key="pick.value" :value="String(pick.value)">{{ pick.label }}</option>
+      </select>
       <button
         v-for="pick in normalizedPicks"
         :key="pick.value"
         type="button"
-        class="rounded-full border px-3 py-0.5 text-xs"
+        class="hidden rounded-full border px-3 py-0.5 text-xs sm:inline-block"
         :class="Number(modelValue) === pick.value ? 'border-sky-700 bg-sky-700 text-white' : 'border-slate-300 hover:bg-slate-50'"
         @click="set(pick.value)"
       >

@@ -38,4 +38,22 @@ describe('SiteHeader', () => {
   it('marks nothing on a page outside the nav', async () => {
     expect(current(await headerAt('/privacy'))).toEqual([])
   })
+
+  it('fades an edge only while there are more links past it', async () => {
+    const wrapper = await headerAt('/')
+    const nav = wrapper.get('nav').element
+    Object.defineProperty(nav, 'scrollWidth', { value: 900 })
+    Object.defineProperty(nav, 'clientWidth', { value: 300 })
+    const fades = () => wrapper.findAll('[data-fade]').map((f) => f.attributes('data-fade'))
+
+    nav.scrollLeft = 0
+    await wrapper.get('nav').trigger('scroll')
+    expect(fades()).toEqual(['after'])
+    nav.scrollLeft = 300
+    await wrapper.get('nav').trigger('scroll')
+    expect(fades()).toEqual(['before', 'after'])
+    nav.scrollLeft = 600
+    await wrapper.get('nav').trigger('scroll')
+    expect(fades()).toEqual(['before'])
+  })
 })

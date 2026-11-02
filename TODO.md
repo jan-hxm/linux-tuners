@@ -14,10 +14,13 @@ Cheap, and nothing else pays off until people can find the site and shared links
 
 ## 2. Guided system setup
 
-The next big feature, now that nine tuners exist: it turns separate tools into one path through a whole machine. Design it in Design.md first.
+The next big feature, now that nine tuners exist: it turns separate tools into one path through a whole machine. Designed in [Design.md §5 Guided setup](Design.md#guided-setup); build in this order, each step shippable on its own.
 
-- [ ] Landing page: explain the bigger picture (which tuners matter for which machine, and in what order) and lead the user through them as steps, most important first.
-- [ ] All-in-one quick configuration: enter the shared profile once (RAM, workload, kernel, systemd version), then walk through each tuner as a step that links to its full page, and end with every file for the whole system. It has to respect the cross-tuner limits, such as `fs.nr_open` against systemd's `DefaultLimitNOFILE` hard limit. Tuners don't import each other ([Design.md §9](Design.md#9-code-organization-and-reuse)), so the shared profile and the combined output belong in `core`/`ui`.
+- [ ] Registry: reorder to the setup order and add each entry's `setup` block (`roles`, `why`), with the registry test checking the roles.
+- [ ] Landing page: the role picker that reorders the cards, shows the `why` lines and moves the rest under "Optional for this machine", plus the "Start guided setup" button once `/setup` exists.
+- [ ] `core/machine.js` and the mapping: the machine field list, each tuner's `machine` declarations, and the contract test that every machine option maps to a value the tuner accepts.
+- [ ] Facts: the `facts` hook and the facts argument of `validate`, the systemd warnings against `nrOpen`, `pidMax` and `threadsMax`, and the order test.
+- [ ] `/setup`: the store option `urlSync: false`, the steps, the link envelope with its hostile-link tests, the output step with per-file download (which closes the `ConfigOutput` item in §3), the no-shared-key test, the route and the sitemap sources, and the `src/setup/` import rule.
 
 ## 3. Quality
 

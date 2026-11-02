@@ -222,6 +222,145 @@ fallback. `public/_headers` sets frame blocking, `nosniff`, `base-uri`,
 `object-src` and a Permissions-Policy. There is deliberately no `script-src` CSP, because AdSense
 and the CMP load from a changing set of Google domains.
 
+### Guided setup
+
+> **Status: designed, not built.** The build steps are in [TODO.md](TODO.md) §2.
+
+The tuners answer "what should this one setting be". The guided setup answers
+"what should I set on this machine, and in what order". It has two parts:
+
+- **The landing page explains the bigger picture.** A role picker ("what is
+  this machine?") reorders the tuner cards into the setup order for that
+  role. Each card gets one line on why the tuner matters for that role. Tuners
+  that don't apply to the role move under "Optional for this machine" and are
+  not hidden. A "Start guided setup" button opens `/setup` with the role already
+  chosen. The page is still prerendered with every card, so crawlers and
+  no-JS visitors see the same content as before.
+- **`/setup` walks through a whole machine.** The user enters the machine
+  profile once. Then each tuner is a step, and the last step shows every file
+  for the system.
+
+**Order.** There is one setup order, and it is the registry's array order, so
+the landing cards, the nav and the setup steps can't disagree. It puts the
+settings every machine needs first, and puts each limit before the settings
+it bounds: swap and memory, security, filesystem, kernel, systemd, network,
+block I/O, huge pages, SysV IPC. systemd comes after filesystem and kernel
+because `DefaultLimitNOFILE` is bounded by `fs.nr_open`, and `DefaultTasksMax`
+by `kernel.pid_max` and `kernel.threads-max`. A contract test checks this
+order (see "Facts" below). Today's order differs, so the build reorders the
+registry.
+
+**Relevance per role.** Each registry entry gets a `setup` block of plain
+data: `roles`, the roles it is recommended for (or `'all'`), and `why`, the one
+line the landing card shows for those roles. The step for a tuner outside
+the role starts skipped, and the user can include it. To begin with: huge
+pages for database and VM hosts, SysV IPC for databases, network for every
+role except desktop, and the rest for all roles.
+
+**Machine profile** (`core/machine.js`). This is the one field list for the
+machine. It uses the same field types and helpers as a tuner profile
+(`core/profile.js`), so `ProfileForm` renders it and the same schema
+restores it from a link. A field joins it only when two or more tuners read
+it, which is the promote rung of the reuse ladder applied to profile fields:
+
+- `role`: general server, web or API server, database, container or
+  Kubernetes host, VM host, router or firewall, desktop.
+- `ramGiB`: the shared `RAM_FIELD`.
+- `kernel`: version ranges cut at every threshold a tuner uses (5.13 or
+  newer, 5.8 to 5.12, 5.0 to 5.7, 4.19 to 4.20, 4.9 to 4.18). A new
+  threshold adds a cut.
+- `systemd`: 243 or newer, 240 to 242, older or none.
+- `cgroupVersion`.
+
+Fields only one tuner reads stay in that tuner's step: CPU cores, the slice,
+link speed and RTT, conntrack, the swap device, the disk kind, NUMA, IPv6 and
+the scheduler modules.
+
+**Mapping is data in each tuner.** A tuner profile field may declare
+`machine`. That is either the name of a machine field it copies (`'ramGiB'`),
+or `{ from: '<machine field>', map: { <option>: <value> } }`. For example, the
+security tuner's `kernel` field maps the five ranges onto `current`, `lts`
+and `legacy`. The swap tuner's free-text `kernelVersion` maps each range to
+a version string inside it. Each tuner's `workload` maps the seven roles onto
+its own workloads (a VM host is `vm-host` for huge pages and `server` for
+the kernel tuner). The setup page builds a step's profile from
+`defaultHardware`, overlays the mapped values and runs the result through
+that tuner's restore schema. A mapping mistake therefore can't produce a
+profile a link couldn't. A mapped field is prefilled, not locked: the step
+marks it "from the machine profile", and the user can change it for that
+step only (for example the SysV IPC workload from database to `oracle`). The
+change lasts until that machine field changes. The contract suite checks that
+every option of every machine field maps to a value the tuner's field
+accepts.
+
+**Facts link the steps.** Some limits come from another tuner's *values*, not
+from the machine profile. A domain may provide facts through an optional hook
+`facts(hardware, params)`. It returns values named in a fixed vocabulary in
+`core/machine.js`: `pidMax` and `threadsMax` (the kernel tuner's effective
+values, so systemd 243's boot-time `pid_max` counts) and `nrOpen` (filesystem).
+A domain reads facts in two ways, and both default to none:
+
+- A profile field's `machine` may name a fact, so the systemd step's `pidMax`
+  field comes from the kernel step.
+- `validate(hardware, params, facts)` gets the facts as an optional third
+  argument. The systemd tuner warns when the `DefaultLimitNOFILE` hard limit
+  passes `nrOpen`, since systemd then sets the closest value the kernel
+  allows. It also warns when `DefaultTasksMax` or `TasksMax` passes the
+  smaller of `pidMax` and `threadsMax`.
+
+On a tuner's own page there are no facts, so it behaves as it does today.
+The rule stays with the tuner that owns the setting, written against the
+shared vocabulary, so no tuner imports another and shared code never names a
+tuner. A contract test checks that every fact a tuner reads is provided by a
+tuner earlier in the setup order.
+
+**Steps reuse the tuner UI.** The step's store comes from
+`defineTunerStore('setup/<id>', domain, { urlSync: false })`, a new factory
+option, because the page owns the link. The step `provide()`s it, so the
+shared `ProfileForm`, `PresetSelector` and `ParameterPanel` render in the step
+unchanged. Graphs, the About content and the drawer stay on the tuner's own
+page. Each step links there, opening a new tab with the step's state encoded
+in the hash. Edits made on that page don't flow back, because the step can
+already edit every value. Two kinds of change reach a step:
+
+- A machine-profile change re-derives every step's defaults, as `setHardware`
+  does, and offers Undo.
+- A fact change from an earlier step only updates the fed profile field. The
+  params keep their values and are clamped to the new range
+  (`clampToProfile`), so tuning the kernel step doesn't reset systemd.
+
+Each step shows its validation issues. A step with a blocking issue says so in
+the step list.
+
+**Output.** The last step lists each included step's files, from that tuner's
+own `generateConfig`, unchanged. Each file has its own copy and download
+buttons, which are the per-file download from TODO §3. A combined copy uses
+`combineFiles`, with one header for the machine profile. A blocked step's
+files are left out, and the step is named in their place. There is no
+install script and no archive. A script would put executable directives in
+the output (§10). An archive would need a zip writer to save four clicks.
+A test checks that no two tuners write the same sysctl key or sysfs path, so
+the files never fight over a value. This holds today, and lexical
+`sysctl.d` order would otherwise decide the winner silently.
+
+**Link state.** `/setup` keeps its own envelope in the hash: a version, the
+machine profile, the role, the skipped steps, and each step's state encoded
+by that tuner's own `encodeState`. Restoring is as strict as a tuner link.
+The machine profile goes through its schema, each step through its tuner's
+`decodeState`, and an unknown step id or a step that fails rejects the whole
+link. Facts and mapped fields are never read from the link. They are
+recomputed from the restored values, so a link can't make two steps disagree.
+
+**Layer.** `src/setup/` is a composition root, like `router.js`. It may import
+each tuner's domain module (`index.js`, through `TUNER_DOMAINS`) and the
+registry, but no tuner internals. Nothing imports it except the router. The
+setup page iterates the domains and their data. It never branches on a tuner
+id. `importBoundaries.test.js` gets the rule.
+
+**Route.** `/setup` is an indexed page in `routes-meta.js`, but only once it
+works, following the no-thin-pages rule ([§6](#6-adding-a-tuner)). Its sitemap
+sources are `src/setup/` and the registry.
+
 ## 6. Adding a tuner
 
 1. A folder `src/tuners/<name>/` laid out as in §9, with the domain module

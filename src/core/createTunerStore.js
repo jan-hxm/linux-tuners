@@ -31,6 +31,7 @@ export function defineTunerStore(id, domain, { urlSync = true } = {}) {
           drawerParamKey: null,
           undoState: null,
           facts: {},
+          restoredFromLink: true,
           _urlWriteTimer: null,
         }
       }
@@ -52,6 +53,12 @@ export function defineTunerStore(id, domain, { urlSync = true } = {}) {
          * MACHINE_FACTS). None on a tuner's own page.
          */
         facts: {},
+        /**
+         * The state came from a shared link, so the profile is already set
+         * and the page opens its form on the summary line. Never part of the
+         * link.
+         */
+        restoredFromLink: false,
         _urlWriteTimer: null,
       }
     },

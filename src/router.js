@@ -50,8 +50,9 @@ const PAGE_VIEWS = {
 const TUNER_VIEW_BY_PATH = Object.fromEntries(LIVE_TUNERS.map((t) => [t.path, TUNER_VIEWS[t.id]]))
 
 // Map declarative route meta → vue-router route records, attaching the
-// lazy-loaded view component for each path.
-const routes = [
+// lazy-loaded view component for each path. Exported for tests that mount
+// the app on a memory history.
+export const routes = [
   ...ROUTES_META.map((r) => ({
     path: r.path,
     name: r.name,

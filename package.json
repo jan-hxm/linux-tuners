@@ -26,6 +26,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/test-utils": "^2.5.1",
     "autoprefixer": "^10.4.20",
+    "axe-core": "4.14.0",
     "happy-dom": "^20.9.0",
     "postcss": "^8.4.49",
     "sharp": "^0.34.5",

@@ -127,7 +127,7 @@ watch(isOpen, async (open) => {
       aria-hidden="true"
       @click="close"
     />
-    <aside
+    <div
       v-if="isOpen && def"
       ref="panel"
       class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col overflow-y-auto border-l border-slate-200 bg-white shadow-xl"
@@ -136,7 +136,7 @@ watch(isOpen, async (open) => {
       :aria-label="`Reference for ${def.sysctlName}`"
       @keydown="onTrapKeydown"
     >
-      <header class="sticky top-0 flex items-start justify-between gap-3 border-b border-slate-200 bg-white p-4">
+      <div class="sticky top-0 flex items-start justify-between gap-3 border-b border-slate-200 bg-white p-4">
         <div class="min-w-0">
           <p class="text-xs uppercase tracking-wide text-slate-500">Reference</p>
           <h2 class="text-base font-semibold text-slate-900">{{ def.title }}</h2>
@@ -149,7 +149,7 @@ watch(isOpen, async (open) => {
           class="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
           @click="close"
         >Close ✕</button>
-      </header>
+      </div>
 
       <div class="space-y-5 p-4 text-sm text-slate-800">
         <section>
@@ -184,7 +184,7 @@ watch(isOpen, async (open) => {
 
         <section v-if="formula">
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ formula.title }}</h3>
-          <pre class="mt-1 rounded bg-slate-50 p-2 text-xs leading-snug text-slate-800 overflow-x-auto"><code>{{ formula.lines.join('\n') }}</code></pre>
+          <pre class="mt-1 rounded bg-slate-50 p-2 text-xs leading-snug text-slate-800 overflow-x-auto" tabindex="0" aria-label="Formula"><code>{{ formula.lines.join('\n') }}</code></pre>
           <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
             <template v-for="row in formula.values" :key="row.label">
               <dt class="text-slate-600">{{ row.label }}</dt>
@@ -229,6 +229,6 @@ watch(isOpen, async (open) => {
           </ul>
         </section>
       </div>
-    </aside>
+    </div>
   </Teleport>
 </template>

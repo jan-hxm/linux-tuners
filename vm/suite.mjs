@@ -574,7 +574,7 @@ export function imageSuite(id) {
       })
 
       it('shm_rmid_forced removes a segment its creator left behind, and a semaphore array above SEMMSL fails', async () => {
-        expect(ipc.defsByKey.shm_rmid_forced.longDesc.join(' ')).toContain('the process that created it has exited')
+        expect(Object.values(ipc.defsByKey.shm_rmid_forced.longDesc).flat().join(' ')).toContain('the process that created it has exited')
         const count = async () => Number((await vm.sudo('ipcs -m | grep -c "^0x" || true')).stdout.trim())
         await vm.sudo('ipcrm -a')
         await vm.sudo('ipcmk -M 4096')

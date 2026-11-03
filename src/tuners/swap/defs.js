@@ -68,7 +68,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How readily the kernel swaps app memory instead of dropping file cache.',
     longDesc: {
       what: [
-        "Your RAM holds two kinds of pages: file-backed cache (copies of things already on disk) and anonymous pages (a process's private heap and stack, which only exist in memory). Under pressure the kernel must reclaim one or the other. Swappiness is the dial that biases that choice: low values drop cache first and keep apps in RAM, while high values push apps out to swap sooner.",
+        "Your RAM holds two kinds of pages: [[file-backed cache|page-cache]] (copies of things already on disk) and [[anonymous pages|anonymous-memory]] (a process's private heap and stack, which only exist in memory). Under pressure the kernel must [[reclaim]] one or the other. Swappiness is the dial that biases that choice: low values drop cache first and keep apps in RAM, while high values push apps out to swap sooner.",
       ],
       when: [
         "Keep it low (0–10) for latency-sensitive work where a swap-in stall would hurt, especially with slow disk-backed swap. Leave it mid-range (10–60) for general-purpose servers. Push it high (100–200) only when swap is genuinely fast (zram, zswap, or NVMe), so the kernel can lean on it without paying a stall penalty.",
@@ -102,14 +102,14 @@ export const PARAMETER_DEFS = [
     shortDesc: 'The hard floor of free memory the kernel always keeps in reserve.',
     longDesc: {
       what: [
-        "This is the emergency reserve: the amount of free memory the kernel refuses to dip below across all memory zones. It sets the lowest 'min' watermark, the line that triggers slow synchronous direct reclaim once crossed, and protects the atomic allocations that drivers and the network stack make in contexts where they cannot afford to wait.",
+        "This is the emergency reserve: the amount of free memory the kernel refuses to dip below across all memory zones. It sets the lowest 'min' [[watermark]], the line that triggers slow synchronous direct [[reclaim]] once crossed, and protects the atomic allocations that drivers and the network stack make in contexts where they cannot afford to wait.",
       ],
       when: [
         "Raise it to give the kernel a bigger safety buffer, and to widen the entire watermark window, since the low and high watermarks are built on top of this floor. It's commonly raised together with watermark_scale_factor to keep background reclaim comfortably ahead of demand.",
       ],
       watch: [
         "Set it too low and atomic allocations start failing under load; you'll see order-0 allocation failures in dmesg. Set it too high and you permanently hand usable RAM to a reserve that mostly sits idle.",
-        'With transparent huge pages at always or madvise, khugepaged raises it to its own floor each time THP is switched on, at boot included; the 67584 shown as the default is that floor on a small VM. A lower value only holds with THP set to never.',
+        'With [[transparent huge pages|thp]] at always or madvise, khugepaged raises it to its own floor each time THP is switched on, at boot included; the 67584 shown as the default is that floor on a small VM. A lower value only holds with THP set to never.',
       ],
     },
     tuningTip: 'Bump it up if you see atomic allocation failures under load; lower it if reserves are eating RAM you need.',
@@ -131,7 +131,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How much head start background reclaim gets before apps stall.',
     longDesc: {
       what: [
-        "The kernel wakes its background reclaim thread (kswapd) when free memory falls to the 'low' watermark, and lets it sleep again once memory recovers to the 'high' watermark. This factor sets how far apart those two lines sit: the runway kswapd has to free memory quietly in the background before your processes are dragged into slow direct reclaim themselves.",
+        "The kernel wakes its background [[reclaim]] thread ([[kswapd]]) when free memory falls to the 'low' [[watermark]], and lets it sleep again once memory recovers to the 'high' watermark. This factor sets how far apart those two lines sit: the runway kswapd has to free memory quietly in the background before your processes are dragged into slow direct reclaim themselves.",
       ],
       when: [
         "A wider window matters because it lets kswapd start earlier and reclaim more per pass, so a sudden burst of allocations gets absorbed in the background instead of stalling the workload. That's why latency-sensitive and high-allocation-rate services widen it; the only cost is the kernel keeps a little more memory free at all times.",
@@ -157,7 +157,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How hard the kernel reclaims filesystem metadata vs ordinary cache.',
     longDesc: {
       what: [
-        'The kernel caches filesystem metadata so repeated lookups skip the disk: dentries (the results of directory-entry path lookups) and inodes (per-file metadata like size and permissions). This dial controls how aggressively that metadata cache is reclaimed relative to ordinary page cache. At the default 100 the two are reclaimed at the same rate.',
+        'The kernel caches filesystem metadata so repeated lookups skip the disk: dentries (the results of directory-entry path lookups) and inodes (per-file metadata like size and permissions). This dial controls how aggressively that metadata cache is reclaimed relative to ordinary [[page cache]]. At the default 100 the two are reclaimed at the same rate.',
       ],
       when: [
         'Drop it below 100 to make the kernel hold on to metadata longer, a clear win for workloads that walk huge directory trees or keep many files open, like build servers, file servers, and mail spools. Push it above 100 to evict metadata more eagerly when you would rather spend that memory on data page cache.',
@@ -218,7 +218,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'The ceiling where writers are forced to stop and flush to disk.',
     longDesc: {
       what: [
-        "As processes write, modified ('dirty') pages accumulate in memory before being flushed to disk. dirty_ratio is the ceiling: once dirty pages reach this percentage of available memory, any process that writes more is forced to stop and synchronously help flush data until the level drops back under the line.",
+        "As processes write, modified ('dirty') pages accumulate in memory before being flushed to disk. dirty_ratio is the ceiling: once [[dirty pages|dirty-page]] reach this percentage of available memory, any process that writes more is forced to stop and synchronously help flush data until the level drops back under the line.",
       ],
       when: [
         'Lower it to cap tail latency: a smaller pool of dirty pages means no single write storm or fsync can stall everything at once. Raise it to favour throughput on large sequential writes, letting more data accumulate before the kernel insists on writing it out.',
@@ -246,7 +246,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'The earlier, gentler trigger that starts flushing in the background.',
     longDesc: {
       what: [
-        'This is the quieter, earlier trigger in the dirty-page pipeline. When dirty pages cross this percentage of available memory, the kernel wakes its background flusher to start writing pages out asynchronously, without blocking the processes that created them.',
+        'This is the quieter, earlier trigger in the dirty-page pipeline. When [[dirty pages|dirty-page]] cross this percentage of available memory, the kernel wakes its background flusher to start writing pages out asynchronously, without blocking the processes that created them.',
       ],
       when: [
         'Keep it comfortably below dirty_ratio so background flushing has room to drain dirty pages before they ever reach the synchronous ceiling. A common starting point is roughly half of dirty_ratio.',
@@ -274,7 +274,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How long a dirty page may sit in memory before it must be flushed.',
     longDesc: {
       what: [
-        'A dirty page is not flushed the instant it is written; it is allowed to linger in case it gets modified again or can be batched with neighbouring writes. This sets that maximum age, in hundredths of a second, after which a page is considered stale and becomes eligible for the next writeback pass.',
+        'A [[dirty page]] is not flushed the instant it is written; it is allowed to linger in case it gets modified again or can be batched with neighbouring writes. This sets that maximum age, in hundredths of a second, after which a page is considered stale and becomes eligible for the next [[writeback]] pass.',
       ],
       when: [
         'Shorten it to get data onto disk sooner, narrowing the window in which a crash would lose recent writes. Lengthen it to batch more I/O together, which is friendlier to throughput and to flash wear.',
@@ -299,10 +299,10 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How often the background flusher wakes up to look for expired pages.',
     longDesc: {
       what: [
-        'This is how often the background flusher thread wakes, in hundredths of a second, to look for dirty pages older than dirty_expire_centisecs and write them out. Where dirty_expire sets when a page is due, this sets how often the kernel checks.',
+        'This is how often the background flusher thread wakes, in hundredths of a second, to look for [[dirty pages|dirty-page]] older than dirty_expire_centisecs and write them out. Where dirty_expire sets when a page is due, this sets how often the kernel checks.',
       ],
       watch: [
-        'Setting it to 0 disables periodic writeback entirely; pages then only flush when a ratio threshold is hit or an fsync forces it. Keep it at or below dirty_expire_centisecs, otherwise pages can age past their expiry between checks and linger longer than you intended.',
+        'Setting it to 0 disables periodic [[writeback]] entirely; pages then only flush when a ratio threshold is hit or an fsync forces it. Keep it at or below dirty_expire_centisecs, otherwise pages can age past their expiry between checks and linger longer than you intended.',
       ],
     },
     tuningTip: 'Lower it to flush expired pages more promptly; raise it to wake the flusher less often. Don’t exceed dirty_expire_centisecs.',
@@ -327,7 +327,7 @@ export const PARAMETER_DEFS = [
         'When a program asks for memory, the kernel can either trust that not all of it will actually be touched and hand it over, or carefully refuse any request that would exceed real RAM plus swap. This policy picks which behaviour you get, across three modes: 0 heuristic, 1 always, 2 strict.',
       ],
       when: [
-        'Mode 0 (default) lets most allocations through but rejects wildly unrealistic ones, which is the right choice for almost everyone. Mode 1 never refuses, which suits sparse-allocation workloads (some scientific code, certain in-memory databases) that reserve enormous address space they never fully use. Mode 2 refuses anything past the CommitLimit; use it on systems that must never invoke the OOM killer and would rather see an honest malloc() failure.',
+        'Mode 0 (default) lets most allocations through but rejects wildly unrealistic ones, which is the right choice for almost everyone. Mode 1 never refuses, which suits sparse-allocation workloads (some scientific code, certain in-memory databases) that reserve enormous address space they never fully use. Mode 2 refuses anything past the CommitLimit; use it on systems that must never invoke the [[OOM killer]] and would rather see an honest malloc() failure.',
       ],
       watch: [
         'On Kubernetes nodes stay on 0 or 1: mode 2 makes kubelet mis-account memory and can break pod eviction. Mode 2 also depends on overcommit_ratio being set sensibly, or it will start refusing allocations far too early.',
@@ -379,7 +379,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'Reboot the whole machine on OOM instead of killing one process.',
     longDesc: {
       what: [
-        'When the system runs out of memory, the kernel normally invokes the OOM killer to pick and terminate a process, freeing memory and keeping the box alive. Turn this on and it does the opposite: the kernel deliberately panics (and typically reboots) instead of killing anything.',
+        'When the system runs out of memory, the kernel normally invokes the [[OOM killer]] to pick and terminate a process, freeing memory and keeping the box alive. Turn this on and it does the opposite: the kernel deliberately panics (and typically reboots) instead of killing anything.',
       ],
       when: [
         'That trade makes sense for clustered nodes where a fast, clean reboot beats a machine limping along in an unpredictable half-killed state. It is the wrong choice for Kubernetes workers, where kubelet relies on graceful OOM eviction to reschedule pods, and a panic just takes the entire node down.',

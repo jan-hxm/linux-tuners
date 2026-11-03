@@ -63,6 +63,13 @@ describe('tuner registry', () => {
     }
   })
 
+  it('says when the defaults are fine for every live tuner', () => {
+    for (const t of LIVE_TUNERS) {
+      expect(t.setup.defaultsFine, t.id).toBeTruthy()
+      expect(t.setup.defaultsFine, t.id).not.toContain(EM_DASH)
+    }
+  })
+
   it('has exactly one domain module per live tuner', () => {
     expect(TUNER_DOMAINS.map((d) => d.id).sort()).toEqual(LIVE_TUNERS.map((t) => t.id).sort())
   })

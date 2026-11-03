@@ -38,10 +38,10 @@ watch(() => route.path, revealActive)
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
       <RouterLink to="/" class="flex shrink-0 items-baseline gap-0.5 whitespace-nowrap text-sm font-semibold tracking-tight text-slate-900">
         <span>linux-tuners</span>
-        <span class="text-slate-400">.dev</span>
+        <span class="text-slate-500">.dev</span>
       </RouterLink>
       <div class="relative min-w-0">
-        <nav ref="nav" aria-label="Tuners" class="flex min-w-0 items-center gap-1 overflow-x-auto text-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" @scroll.passive="updateFades">
+        <nav ref="nav" aria-label="Tuners" class="focus-inset flex min-w-0 items-center gap-1 overflow-x-auto text-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" @scroll.passive="updateFades">
           <!-- The landing page's own entry, so the nav shows where you are there too.
                Exact match only: every page sits under "/". -->
           <RouterLink

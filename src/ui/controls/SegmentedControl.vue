@@ -27,7 +27,7 @@ const segments = computed(() =>
   <div
     role="radiogroup"
     :aria-labelledby="labelId"
-    class="mt-3 flex w-fit max-w-full flex-wrap gap-px overflow-hidden rounded border border-slate-300 bg-slate-300"
+    class="focus-inset mt-3 flex w-fit max-w-full flex-wrap gap-px overflow-hidden rounded border border-slate-300 bg-slate-300"
   >
     <button
       v-for="seg in segments"

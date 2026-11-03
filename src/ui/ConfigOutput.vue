@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onBeforeUnmount } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { combineFiles } from '@/core/output/files.js'
 import { copyText, downloadText, downloadNames } from '@/ui/fileActions.js'
@@ -39,10 +39,18 @@ const defaultsLabel = `${domain.defaultLabel.toLowerCase()}s`
 const copyStatus = ref('idle') // 'idle' | 'ok' | 'fail'
 const shareStatus = ref('idle')
 
+// The confirmations reset after a moment; the timers are cleared on unmount.
+const timers = {}
+function resetLater(status, name) {
+  clearTimeout(timers[name])
+  timers[name] = setTimeout(() => (status.value = 'idle'), 1800)
+}
+onBeforeUnmount(() => Object.values(timers).forEach(clearTimeout))
+
 async function copy() {
   if (blocked.value) return
   copyStatus.value = (await copyText(output.value)) ? 'ok' : 'fail'
-  setTimeout(() => (copyStatus.value = 'idle'), 1800)
+  resetLater(copyStatus, 'copy')
 }
 
 function download(i) {
@@ -67,7 +75,7 @@ async function shareUrl() {
   } catch {
     shareStatus.value = 'fail'
   }
-  setTimeout(() => (shareStatus.value = 'idle'), 1800)
+  resetLater(shareStatus, 'share')
 }
 
 function reset() {

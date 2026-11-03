@@ -5,6 +5,7 @@
  * range are tuples.
  */
 
+import { defineAsyncComponent } from 'vue'
 import { defineTuner } from '@/core/defineTuner.js'
 import { sysctlTryCommand } from '@/core/output/sysctlFile.js'
 import { PROFILE, LINK_BPS, RTT_SECONDS } from './profile.js'
@@ -16,7 +17,7 @@ import { PRESETS, PRESETS_BY_ID } from './presets.js'
 import { formatValue, formatBytes, formatRate } from './formatting.js'
 import { PAGE, ABOUT } from './about.js'
 import * as simulation from './simulation.js'
-import ThroughputChart from './components/ThroughputChart.vue'
+const ThroughputChart = defineAsyncComponent(() => import('./components/ThroughputChart.vue'))
 
 const SECTIONS = [
   {

@@ -9,6 +9,7 @@ describe('ChartFrame', () => {
     const frame = w.get('[role="img"]')
     expect(frame.attributes('aria-label')).toBe('Swap chart: flat')
     expect(frame.attributes('style')).toContain('height: 8rem')
-    expect(frame.find('canvas').exists()).toBe(true)
+    // The canvas sits in a hidden wrapper, so it isn't a second, unlabelled image.
+    expect(frame.get('canvas').element.parentElement.getAttribute('aria-hidden')).toBe('true')
   })
 })

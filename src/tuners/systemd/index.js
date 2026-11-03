@@ -4,6 +4,7 @@
  * exactly like src/tuners/swap/index.js.
  */
 
+import { defineAsyncComponent } from 'vue'
 import { defineTuner } from '@/core/defineTuner.js'
 import { bootThreadsMax, systemdTasksMax } from '@/core/kernelLimits.js'
 import { PROFILE } from './profile.js'
@@ -15,9 +16,9 @@ import { SYSTEMD_PRESETS, SYSTEMD_PRESETS_BY_ID } from './presets.js'
 import { formatValue } from './formatting.js'
 import { PAGE, ABOUT } from './about.js'
 import * as simulation from './simulation.js'
-import CpuShareChart from './components/CpuShareChart.vue'
-import MemoryBudgetChart from './components/MemoryBudgetChart.vue'
-import TasksChart from './components/TasksChart.vue'
+const CpuShareChart = defineAsyncComponent(() => import('./components/CpuShareChart.vue'))
+const MemoryBudgetChart = defineAsyncComponent(() => import('./components/MemoryBudgetChart.vue'))
+const TasksChart = defineAsyncComponent(() => import('./components/TasksChart.vue'))
 
 const SECTIONS = [
   {

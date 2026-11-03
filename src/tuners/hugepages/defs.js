@@ -58,7 +58,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How many 2 MiB huge pages the kernel sets aside for programs that ask for them.',
     longDesc: {
       what: [
-        'Programs that map memory with MAP_HUGETLB or from a hugetlbfs mount get it from this pool: PostgreSQL with huge_pages = on, Oracle Database, DPDK, and QEMU guests backed by huge pages. One 2 MiB page replaces 512 normal ones in the page tables and the TLB, which speeds up programs that touch a large shared memory area.',
+        'Programs that map memory with MAP_HUGE[[TLB]] or from a hugetlbfs mount get it from this pool: PostgreSQL with huge_pages = on, Oracle Database, DPDK, and QEMU guests backed by huge pages. One 2 MiB page replaces 512 normal ones in the page tables and the TLB, which speeds up programs that touch a large shared memory area.',
       ],
       when: [
         'The pool is taken from RAM when it is set, whether a program uses it or not, and nothing else can use it. So size it to what the program needs, not more. At 0, the kernel default, it is left out of the file, so a pool set elsewhere (another sysctl.d file or the hugepages= boot option) stays.',
@@ -86,7 +86,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How many more huge pages the kernel may allocate on demand once the pool is used up.',
     longDesc: {
       what: [
-        'Surplus pages are allocated from free memory when a program asks for more huge pages than the pool holds, and freed again when it lets go. Unlike the pool they cost nothing while unused, but they are only there if the kernel finds free 2 MiB blocks at that moment, so a program can still fail to get them.',
+        'Surplus pages are allocated from free memory when a program asks for more [[huge pages|huge-page]] than the pool holds, and freed again when it lets go. Unlike the pool they cost nothing while unused, but they are only there if the kernel finds free 2 MiB blocks at that moment, so a program can still fail to get them.',
         'At 0, the kernel default, there are no surplus pages and the key is left out of the file.',
       ],
     },
@@ -155,7 +155,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How hard the kernel works to find a free 2 MiB block when a program faults in THP memory.',
     longDesc: {
       what: [
-        'When no free 2 MiB block is there, the kernel can stop the faulting program and compact memory until one is (direct compaction), wake kswapd and kcompactd to do it in the background and use small pages for now (defer), or just use small pages.',
+        'When no free 2 MiB block is there, the kernel can stop the faulting program and compact memory until one is (direct compaction), wake [[kswapd]] and kcompactd to do it in the background and use small pages for now (defer), or just use small pages.',
       ],
       when: [
         'Waiting gets programs their huge pages sooner but adds latency spikes to page faults. madvise, the default, waits only for memory that asked for huge pages; defer+madvise also starts background compaction for everything else.',
@@ -284,7 +284,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'Whether the kernel frees memory on the local NUMA node before it allocates from another node.',
     longDesc: {
       what: [
-        'On a machine with several NUMA nodes, memory on a CPU\'s own node is faster to reach. With zone reclaim on, the kernel evicts page cache on the local node rather than allocate from a remote one. That helps workloads that fit within one node and stay there, and slows file servers and databases, which lose their cache while other nodes still have free memory.',
+        'On a machine with several [[NUMA]] nodes, memory on a CPU\'s own node is faster to reach. With zone reclaim on, the kernel evicts [[page cache]] on the local node rather than allocate from a remote one. That helps workloads that fit within one node and stay there, and slows file servers and databases, which lose their cache while other nodes still have free memory.',
         'The kernel default is 0 (off). Only machines with more than one node have the key in the file.',
       ],
     },

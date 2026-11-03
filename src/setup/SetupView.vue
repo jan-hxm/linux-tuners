@@ -63,7 +63,7 @@ const goto = (id) => go(PANELS.findIndex((p) => p.id === id))
 
 <template>
   <section class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-    <header class="light-palette overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-5 py-5 text-white shadow-sm sm:px-6 sm:py-6">
+    <header class="light-palette surface-inverse overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-5 py-5 text-white shadow-sm sm:px-6 sm:py-6">
       <p class="text-xs uppercase tracking-widest text-slate-400">Guided setup</p>
       <h1 class="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">Tune a whole Linux machine</h1>
       <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-200">

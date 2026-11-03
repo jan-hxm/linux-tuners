@@ -8,6 +8,10 @@ import RichText from '@/ui/RichText.vue'
 
 const props = defineProps({
   paramKey: { type: String, required: true },
+  // Compact density (Design.md §7 "Filter, changed only and compact"): no
+  // descriptions or Learn more, and name, value and control share one row
+  // where the card is wide enough. The drawer keeps the full reference.
+  compact: { type: Boolean, default: false },
 })
 
 const tuner = useActiveTuner()
@@ -118,11 +122,15 @@ function openInDrawer() {
 
 <template>
   <article
-    class="rounded border border-slate-200 bg-white p-3 shadow-sm transition focus-within:border-slate-400"
+    class="rounded border border-slate-200 bg-white shadow-sm transition focus-within:border-slate-400"
+    :class="compact ? 'px-3 py-2' : 'p-3'"
   >
+    <!-- Compact: the header dissolves (display: contents) so name, value and
+         control are items of one wrapping row, the control last on a phone. -->
+    <div :class="{ 'flex flex-wrap items-center gap-x-3 gap-y-1': compact }">
     <!-- On a phone the value wraps under the name instead of squeezing it. -->
-    <header class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-      <div class="min-w-0 flex-1 basis-56">
+    <header :class="compact ? 'contents' : 'flex flex-wrap items-start justify-between gap-x-3 gap-y-1'">
+      <div class="min-w-0 flex-1" :class="compact ? 'order-1 basis-40 sm:basis-48' : 'basis-56'">
         <p :id="titleId" class="text-sm font-semibold text-slate-900">{{ def.title }}</p>
         <button
           type="button"
@@ -153,13 +161,15 @@ function openInDrawer() {
           >danger at 0</li>
         </ul>
 
-        <p v-if="def.alsoSets" class="mt-1 break-all font-mono text-xs text-slate-500">also sets {{ def.alsoSets.join(', ') }}</p>
-        <p class="mt-1.5 text-xs text-slate-600">{{ def.shortDesc }}</p>
-        <p class="mt-1 text-xs text-slate-500">{{ sourceLine }}</p>
-        <p v-if="def.kernelDefaultNote" class="text-xs text-slate-500">{{ def.kernelDefaultNote }}</p>
+        <template v-if="!compact">
+          <p v-if="def.alsoSets" class="mt-1 break-all font-mono text-xs text-slate-500">also sets {{ def.alsoSets.join(', ') }}</p>
+          <p class="mt-1.5 text-xs text-slate-600">{{ def.shortDesc }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ sourceLine }}</p>
+          <p v-if="def.kernelDefaultNote" class="text-xs text-slate-500">{{ def.kernelDefaultNote }}</p>
+        </template>
       </div>
 
-      <div class="ml-auto shrink-0 text-right">
+      <div class="ml-auto shrink-0 text-right" :class="{ 'order-2 sm:order-3': compact }">
         <input
           v-if="editing"
           ref="numberEl"
@@ -178,12 +188,12 @@ function openInDrawer() {
           v-else-if="control.editable"
           type="button"
           class="inline-flex min-h-6 items-center gap-1 rounded px-1 font-mono text-sm font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 hover:bg-slate-100 hover:decoration-slate-500"
-          aria-label="Edit value: type an exact number"
+          :aria-label="`${formatted}, edit: type an exact value`"
           title="Click to type an exact value"
           @click="startEdit"
         >{{ formatted }}<span aria-hidden="true" class="text-[11px] text-slate-400">✎</span></button>
         <div v-else class="font-mono text-sm font-semibold text-slate-900">{{ formatted }}</div>
-        <div v-if="control.showsRange && !range.elements" class="text-xs text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
+        <div v-if="!compact && control.showsRange && !range.elements" class="text-xs text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
         <button
           type="button"
           class="mt-1 min-h-6 rounded border border-slate-300 px-2 text-xs text-slate-700 hover:bg-slate-50"
@@ -194,15 +204,19 @@ function openInDrawer() {
       </div>
     </header>
 
-    <component
-      :is="control.component"
-      :def="def"
-      :value="value"
-      :range="range"
-      :label-id="labelId"
-      :value-text="formatted"
-      @update="setValue"
-    />
+    <!-- Controls bring their own top margin, which a compact row drops. -->
+    <div :class="{ 'order-3 min-w-0 basis-full sm:order-2 sm:grow-[2] sm:basis-56 [&>*]:mt-0': compact }">
+      <component
+        :is="control.component"
+        :def="def"
+        :value="value"
+        :range="range"
+        :label-id="labelId"
+        :value-text="formatted"
+        @update="setValue"
+      />
+    </div>
+    </div>
 
     <!-- Validation issues for this parameter -->
     <ul v-if="issues.length" class="mt-3 space-y-1">
@@ -218,7 +232,7 @@ function openInDrawer() {
     </ul>
 
     <!-- Expandable "learn more" -->
-    <div class="mt-3 border-t border-slate-100 pt-2">
+    <div v-if="!compact" class="mt-3 border-t border-slate-100 pt-2">
       <button
         type="button"
         class="inline-flex min-h-6 items-center text-xs text-slate-500 hover:text-slate-700"

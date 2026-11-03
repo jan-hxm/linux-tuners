@@ -3,8 +3,8 @@ import { RouterLink } from 'vue-router'
 
 // Privacy policy — current coverage:
 //   - Section 2: Cloudflare Pages hosting (server logs, retention, DPF, SCCs)
-//   - Section 3: URL hash for sharing, the show-all-parameters local-storage
-//     preference, Cloudflare's strictly-necessary cookies
+//   - Section 3: URL hash for sharing, the show-all and compact local-storage
+//     preferences, Cloudflare's strictly-necessary cookies
 //   - Section 4: Google AdSense + IAB TCF consent collection via Google's CMP
 //
 // Language note: written in English to match the rest of the site. § 5 TMG /
@@ -22,7 +22,7 @@ import { RouterLink } from 'vue-router'
       <p class="mt-1 text-xs text-slate-500">
         Information on the processing of personal data per Art. 13 GDPR
       </p>
-      <p class="mt-1 text-xs text-slate-400">Last updated: November 2026</p>
+      <p class="mt-1 text-xs text-slate-500">Last updated: November 2026</p>
     </header>
 
     <section class="space-y-2 text-sm leading-relaxed text-slate-800">
@@ -86,12 +86,14 @@ import { RouterLink } from 'vue-router'
         transmitted to the server. It contains no personally identifiable data.
       </p>
       <p>
-        <strong>Display preference:</strong> If you turn on <em>Show all parameters</em> on a tuner page,
+        <strong>Display preferences:</strong> If you turn on <em>Show all parameters</em> on a tuner page,
         your browser's local storage keeps the entry
         <code class="rounded bg-slate-100 px-1 font-mono text-[12px]">linux-tuners:show-all-parameters</code>
         with the value <code class="rounded bg-slate-100 px-1 font-mono text-[12px]">1</code>, so the switch
-        stays on next time. Turning the switch off removes it. It is read only by this site's code in your
-        browser, is never transmitted, and contains no personal data. Storing it is strictly necessary to
+        stays on next time. The <em>Compact</em> switch does the same with
+        <code class="rounded bg-slate-100 px-1 font-mono text-[12px]">linux-tuners:compact-parameters</code>.
+        Turning a switch off removes its entry. They are read only by this site's code in your
+        browser, are never transmitted, and contain no personal data. Storing them is strictly necessary to
         provide the setting you asked for and is permitted without consent per § 25 (2) (2) TTDSG.
       </p>
       <p>

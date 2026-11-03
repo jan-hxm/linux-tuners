@@ -7,11 +7,14 @@
  */
 import { computed, provide } from 'vue'
 import ProfileForm from '@/ui/profile/ProfileForm.vue'
+import ProfileDraftNotice from '@/ui/profile/ProfileDraftNotice.vue'
+import { useProfileDraft } from '@/ui/profile/useProfileDraft.js'
 import PresetSelector from '@/ui/PresetSelector.vue'
 import ParameterPanel from '@/ui/ParameterPanel.vue'
 import InfoDrawer from '@/ui/InfoDrawer.vue'
 import UndoToast from '@/ui/UndoToast.vue'
-import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY, PROFILE_FIELD_NOTE_KEY } from '@/ui/useActiveTuner.js'
+import IssueAnnouncer from '@/ui/IssueAnnouncer.vue'
+import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY, PROFILE_FIELD_NOTE_KEY, PROFILE_DRAFT_KEY } from '@/ui/useActiveTuner.js'
 import { factValues, machineValues } from '@/core/machine.js'
 import { machineOptionLabel } from './machineProfile.js'
 import { FACT_PROVIDERS, SETUP_STEPS } from './steps.js'
@@ -30,6 +33,9 @@ const { entry, domain } = props.step
 provide(TUNER_STORE_KEY, store)
 provide(TUNER_DOMAIN_KEY, domain)
 provide(PROFILE_FIELD_NOTE_KEY, fieldNote)
+// The machine profile already set this step's profile, so the form starts on
+// its summary line; the notice above the values repeats unapplied edits.
+provide(PROFILE_DRAFT_KEY, useProfileDraft(store, domain.profile, { collapsed: true }))
 
 const ISSUE_CLASSES = {
   error: 'border-red-300 bg-red-50 text-red-900',
@@ -102,6 +108,7 @@ const tunerLink = computed(
       </section>
       <section class="space-y-2" :aria-labelledby="`setup-${step.id}-tune`">
         <h3 :id="`setup-${step.id}-tune`" class="text-sm font-semibold text-slate-900">{{ num }}c. Values</h3>
+        <ProfileDraftNotice />
         <ul v-if="store.issues.length" class="space-y-1" aria-label="Validation issues">
           <li
             v-for="issue in store.issues"
@@ -116,6 +123,7 @@ const tunerLink = computed(
       </section>
       <InfoDrawer />
       <UndoToast />
+      <IssueAnnouncer />
     </template>
   </div>
 </template>

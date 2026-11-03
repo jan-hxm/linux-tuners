@@ -2,13 +2,14 @@
 /**
  * The profile form every tuner renders in step 1, built from the domain's
  * profile field list (src/tuners/<id>/profile.js, src/core/profile.js). The
- * user edits a local draft and applies it atomically; numbers snap and clamp
- * exactly as a restored link does, so the form can't produce a profile the
- * link schema would reject.
+ * user edits a draft (useProfileDraft.js) and applies it atomically; numbers
+ * snap and clamp exactly as a restored link does, so the form can't produce a
+ * profile the link schema would reject.
  */
-import { reactive, ref, computed, watch, inject } from 'vue'
-import { useActiveTuner, useTunerDomain, PROFILE_FIELD_NOTE_KEY } from '@/ui/useActiveTuner.js'
-import { normalizeField, isFieldDisabled, optionLabel } from '@/core/profile.js'
+import { computed, inject } from 'vue'
+import { useActiveTuner, useTunerDomain, PROFILE_FIELD_NOTE_KEY, PROFILE_DRAFT_KEY } from '@/ui/useActiveTuner.js'
+import { isFieldDisabled, optionLabel } from '@/core/profile.js'
+import { useProfileDraft } from './useProfileDraft.js'
 import NumberPickField from './NumberPickField.vue'
 import RichText from '@/ui/RichText.vue'
 
@@ -19,7 +20,7 @@ const fields = profile.fields
 /** Where a field's value came from, in the guided setup; nothing elsewhere. */
 const fieldNote = inject(PROFILE_FIELD_NOTE_KEY, () => null)
 
-const HELP_CODE = 'font-mono bg-slate-100 px-1 py-0.5'
+const HELP_CODE = 'font-mono bg-slate-100 px-1 py-0.5 text-slate-600'
 const idFor = (key) => `profile-${domain.id}-${key}`
 
 /** Layout rows: consecutive `half` fields share a two-column row. */
@@ -30,28 +31,9 @@ for (const field of fields) {
   else rows.push({ half: Boolean(field.half), fields: [field] })
 }
 
-function toDraft(hw) {
-  return Object.fromEntries(fields.map((f) => [f.key, f.type === 'text' ? (hw[f.key] ?? '') : hw[f.key]]))
-}
-
-// Local draft: lets the user edit several fields and apply atomically.
-const draft = reactive(toDraft(tuner.hardware))
-const errors = reactive({})
-const collapsed = ref(false)
-// Auto-collapse to the one-line summary only on the very first apply (the
-// initial guided flow). After the user has explicitly re-opened with "Edit",
-// keep the form open on apply so they can keep tweaking without re-expanding.
-const hasApplied = ref(false)
-
-/** The draft value as the store would hold it, before snapping. */
-function draftValue(field) {
-  if (field.type === 'number') return Number(draft[field.key])
-  if (field.type === 'text') return String(draft[field.key] ?? '').trim() || null
-  return draft[field.key]
-}
-
-const differsFrom = (hw) => fields.some((f) => draftValue(f) !== hw[f.key])
-const dirty = computed(() => differsFrom(tuner.hardware))
+// The draft is shared with ProfileDraftNotice when the page provides one;
+// rendered on its own (a test), the form keeps its own.
+const { draft, errors, collapsed, dirty, apply } = inject(PROFILE_DRAFT_KEY, null) ?? useProfileDraft(tuner, profile)
 
 const summary = computed(() =>
   profile.summary(tuner.hardware, (key, value) => optionLabel(fields, key, value)).join(' · '),
@@ -59,33 +41,6 @@ const summary = computed(() =>
 
 const disabled = (field) => isFieldDisabled(field, draft)
 const selectedNote = (field) => field.options.find((o) => o.value === draft[field.key])?.note
-
-function apply() {
-  const hw = {}
-  for (const field of fields) {
-    const value = normalizeField(field, draft[field.key])
-    errors[field.key] = value === undefined ? (field.invalidMessage ?? 'Invalid value.') : null
-    hw[field.key] = value
-  }
-  if (fields.some((f) => errors[f.key])) return
-  // Write the normalised values back into the draft so the form shows what was
-  // actually applied (otherwise an out-of-range entry would keep showing
-  // "Unsaved changes" against the clamped store value).
-  Object.assign(draft, toDraft(hw))
-  tuner.setHardware(hw)
-  if (!hasApplied.value) collapsed.value = true
-  hasApplied.value = true
-}
-
-// If something else replaces store.hardware, mirror it into the draft unless
-// the user has unsaved edits against the previous profile.
-watch(
-  () => tuner.hardware,
-  (hw, previous) => {
-    if (!differsFrom(previous)) Object.assign(draft, toDraft(hw))
-  },
-  { deep: true },
-)
 </script>
 
 <template>
@@ -99,6 +54,7 @@ watch(
         v-if="collapsed"
         type="button"
         class="rounded border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+        :aria-expanded="false"
         @click="collapsed = false"
       >
         Edit
@@ -165,7 +121,7 @@ watch(
             <div
               role="radiogroup"
               :aria-labelledby="`${idFor(f.key)}-label`"
-              class="mt-2 inline-flex overflow-hidden rounded border border-slate-300"
+              class="focus-inset mt-2 inline-flex overflow-hidden rounded border border-slate-300"
             >
               <button
                 v-for="o in f.options"
@@ -205,7 +161,7 @@ watch(
       </div>
 
       <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
-        <span v-if="dirty" class="text-xs text-amber-600">Unsaved changes</span>
+        <span v-if="dirty" class="text-xs text-amber-700">Unsaved changes</span>
         <button
           type="submit"
           class="rounded bg-sky-700 px-4 py-1.5 text-sm font-medium text-white hover:bg-sky-800"

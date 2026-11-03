@@ -71,6 +71,7 @@ function apply(preset) {
         <button
           type="button"
           class="group flex flex-1 items-start gap-2 rounded border px-3 py-2 text-left text-sm transition"
+          :aria-pressed="isActive(preset)"
           :class="[
             isActive(preset)
               ? 'border-sky-700 bg-sky-700 text-white'

@@ -41,9 +41,15 @@ describe('SetupView', () => {
   it('walks from the machine through every step to the files without warnings', async () => {
     const wrapper = await setupAt('/setup')
     expect(heading(wrapper)).toContain('Machine profile')
+    expect(wrapper.find('form').exists()).toBe(true)
     for (const step of SETUP_STEPS) {
       await wrapper.findAll('button').find((b) => b.text().endsWith('→')).trigger('click')
       expect(heading(wrapper)).toContain(step.entry.title)
+      // The machine profile set this step's profile: it opens on the summary.
+      if (!useSetupStore().skipped.includes(step.id)) {
+        expect(wrapper.find('form').exists()).toBe(false)
+        expect(wrapper.findAll('button').some((b) => b.text() === 'Edit')).toBe(true)
+      }
     }
     await wrapper.findAll('button').find((b) => b.text().endsWith('→')).trigger('click')
     expect(heading(wrapper)).toContain('Files')
@@ -123,6 +129,27 @@ describe('SetupView', () => {
     expect(useStepStore(reader.id).facts[fact]).toBe(next)
     vi.advanceTimersByTime(300)
     expect(window.location.hash.length).toBeGreaterThan(1)
+    wrapper.unmount()
+  })
+
+  it('repeats unapplied profile edits above the values, with Apply', async () => {
+    const wrapper = await setupAt('/setup')
+    const setup = useSetupStore()
+    const step = SETUP_STEPS.find((s) => !setup.skipped.includes(s.id) && s.domain.profile.fields.some((f) => f.type === 'number'))
+    while (!heading(wrapper).includes(step.entry.title)) {
+      await wrapper.findAll('button').find((b) => b.text().endsWith('→')).trigger('click')
+    }
+    expect(wrapper.text()).not.toContain('Unsaved profile changes.')
+    await wrapper.findAll('button').find((b) => b.text() === 'Edit').trigger('click')
+    const field = step.domain.profile.fields.find((f) => f.type === 'number')
+    const store = useStepStore(step.id)
+    const next = store.hardware[field.key] === field.max ? field.min : field.max
+    await wrapper.find(`#profile-${step.domain.id}-${field.key}`).setValue(String(next))
+    expect(wrapper.text()).toContain('Unsaved profile changes.')
+    const values = wrapper.get(`[aria-labelledby="setup-${step.id}-tune"]`)
+    await values.findAll('button').find((b) => b.text() === step.domain.profile.applyLabel).trigger('click')
+    expect(store.hardware[field.key]).toBe(next)
+    expect(wrapper.text()).not.toContain('Unsaved profile changes.')
     wrapper.unmount()
   })
 

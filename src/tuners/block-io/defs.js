@@ -131,7 +131,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How far ahead the kernel reads when a file is read sequentially.',
     longDesc: {
       what: [
-        'When a program reads a file in order, the kernel reads ahead into the page cache so the next read is already in memory. A larger window keeps a hard disk streaming instead of seeking between readers, and helps backups, media servers and large scans. For random reads it fetches data nobody asked for and pushes useful pages out of the cache.',
+        'When a program reads a file in order, the kernel reads ahead into the [[page cache]] so the next read is already in memory. A larger window keeps a hard disk streaming instead of seeking between readers, and helps backups, media servers and large scans. For random reads it fetches data nobody asked for and pushes useful pages out of the cache.',
         'The kernel default is 128 KiB, more for a device that reports a large optimal I/O size (Fedora 43 started its virtio disks at 8192). At 128 it is left out of the file, so that choice stays. The kernel rounds it down to whole 4 KiB pages.',
       ],
     },

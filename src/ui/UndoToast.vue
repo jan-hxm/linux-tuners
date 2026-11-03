@@ -82,7 +82,7 @@ onBeforeUnmount(() => {
   >
     <div
       v-if="tuner.undoState"
-      class="pointer-events-auto flex max-w-md items-center gap-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white shadow-lg"
+      class="surface-inverse pointer-events-auto flex max-w-md items-center gap-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white shadow-lg"
       @mouseenter="hold"
       @mouseleave="release"
       @focusin="hold"

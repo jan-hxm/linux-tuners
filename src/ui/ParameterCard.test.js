@@ -233,6 +233,17 @@ describe('ParameterCard layers (Design.md §7)', () => {
     expect(headings).toEqual(['What it does', 'When to change it'])
   })
 
+  it('renders longDesc as rich text, with glossary terms as buttons', async () => {
+    useTunerStoreFor(swapDomain)
+    const wrapper = mountCard('swappiness')
+    await wrapper.findAll('button').find((b) => b.text().includes('Learn more')).trigger('click')
+    const term = wrapper.findAll('button').find((b) => b.text() === 'anonymous pages')
+    expect(term.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.text()).not.toContain('[[')
+    await term.trigger('click')
+    expect(wrapper.text()).toContain('Anonymous memory:')
+  })
+
   it('explains its badges in visible text under Learn more, not in a title', async () => {
     const store = useTunerStoreFor(swapDomain)
     store.setHardware({ ...store.hardware, workload: 'k8s' })

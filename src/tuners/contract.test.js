@@ -9,6 +9,7 @@ import { TUNER_DOMAINS } from './domains.js'
 import { assertTuner } from '@/core/defineTuner.js'
 import { restoreState, presetParams } from '@/core/createTunerStore.js'
 import { parseRichText } from '@/ui/richText.js'
+import { GLOSSARY } from '@/ui/glossary.js'
 import { downloadNames } from '@/ui/fileActions.js'
 import { combineFiles, isSafeConfigPath } from '@/core/output/files.js'
 import { installSteps } from '@/core/output/installSteps.js'
@@ -300,6 +301,19 @@ function strings(value, out = []) {
   return out
 }
 
+/**
+ * Checks a string RichText renders: links are https, glossary ids exist, and
+ * no markup is left over in plain text (a typo like `[[term]` or an unclosed
+ * code span would show literally).
+ */
+function expectCleanRichText(text) {
+  for (const seg of parseRichText(text)) {
+    if (seg.type === 'link') expect(seg.href).toMatch(/^https:\/\/[^\s"'<>]+$/)
+    if (seg.type === 'term') expect(Object.hasOwn(GLOSSARY, seg.id), `unknown glossary id "${seg.id}" in: ${text}`).toBe(true)
+    if (seg.type === 'text') expect(seg.text, text).not.toMatch(/`|\*\*|(^|\s)\*\S|\]\(|\[\[|\]\]/)
+  }
+}
+
 // ── The suite ───────────────────────────────────────────────────────────────
 
 describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, domain) => {
@@ -340,10 +354,7 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
     it('summarises every profile as rich text with no stray markup', () => {
       const label = (key, value) => domain.profile.fields.find((f) => f.key === key).options.find((o) => o.value === value).label
       for (const hw of profilesFor(domain)) {
-        const text = domain.profile.summary(hw, label).join(' · ')
-        for (const seg of parseRichText(text)) {
-          if (seg.type === 'text') expect(seg.text, text).not.toMatch(/`|\*\*|\]\(/)
-        }
+        expectCleanRichText(domain.profile.summary(hw, label).join(' · '))
       }
     })
 
@@ -378,11 +389,7 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
           expect(paras.length, key).toBeGreaterThan(0)
           for (const para of paras) {
             expect(typeof para === 'string' && para.trim().length > 0, key).toBe(true)
-            // Rendered as rich text: any markup it doesn't parse shows literally.
-            for (const seg of parseRichText(para)) {
-              if (seg.type === 'link') expect(seg.href).toMatch(/^https:\/\/[^\s"'<>]+$/)
-              if (seg.type === 'text') expect(seg.text, key).not.toMatch(/[*`]|\]\(/)
-            }
+            expectCleanRichText(para)
           }
         }
       }
@@ -676,12 +683,7 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
     })
 
     it('links only to https URLs and leaves no stray markup', () => {
-      for (const text of [domain.page.intro, ...strings(domain.about)]) {
-        for (const seg of parseRichText(text)) {
-          if (seg.type === 'link') expect(seg.href).toMatch(/^https:\/\/[^\s"'<>]+$/)
-          if (seg.type === 'text') expect(seg.text, text).not.toMatch(/`|\*\*|\]\(/)
-        }
-      }
+      for (const text of [domain.page.intro, ...strings(domain.about)]) expectCleanRichText(text)
     })
   })
 

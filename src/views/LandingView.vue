@@ -47,7 +47,7 @@ const sections = computed(() => [
 <template>
   <section class="mx-auto max-w-6xl space-y-10 p-4 sm:p-6">
     <!-- Hero -->
-    <header class="light-palette overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-6 py-10 text-white shadow-sm sm:px-10 sm:py-14">
+    <header class="light-palette surface-inverse overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-6 py-10 text-white shadow-sm sm:px-10 sm:py-14">
       <div class="max-w-3xl">
         <p class="text-xs uppercase tracking-widest text-slate-400">linux-tuners.dev</p>
         <h1 class="mt-2 text-2xl font-semibold leading-tight tracking-tight sm:text-4xl">
@@ -65,13 +65,13 @@ const sections = computed(() => [
             One machine, every tuner in order, every file at the end.
           </p>
         </div>
-        <p class="mt-4 text-xs text-slate-400">
-          URL-encodable state for sharing.
-        </p>
+        <ul class="mt-5 space-y-1 text-xs text-slate-300" aria-label="What to expect">
+          <li>Runs in your browser and sends nothing.</li>
+          <li>Every value cites its source.</li>
+          <li>The output says how to apply and undo it.</li>
+        </ul>
       </div>
     </header>
-
-    <AdSlot slot="landing" label="landing top" />
 
     <!-- Live tuners: every card in setup order, or split by the picked role -->
     <section
@@ -87,7 +87,7 @@ const sections = computed(() => [
         <div
           role="radiogroup"
           aria-labelledby="role-picker-label"
-          class="mt-2 flex w-fit max-w-full flex-wrap gap-px overflow-hidden rounded border border-slate-300 bg-slate-300"
+          class="focus-inset mt-2 flex w-fit max-w-full flex-wrap gap-px overflow-hidden rounded border border-slate-300 bg-slate-300"
         >
           <button
             v-for="r in roleOptions"
@@ -127,9 +127,6 @@ const sections = computed(() => [
               <span v-else-if="sec.id === 'optional'" class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
                 Optional
               </span>
-              <span v-else class="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-                Available
-              </span>
             </header>
             <p v-if="sec.steps" class="mt-2 border-l-2 border-sky-600 pl-2 text-sm text-slate-800">{{ tuner.setup.why }}</p>
             <p class="mt-2 flex-1 text-sm text-slate-600">{{ tuner.blurb }}</p>
@@ -137,7 +134,7 @@ const sections = computed(() => [
               <li
                 v-for="key in tuner.keys"
                 :key="key"
-                class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] text-slate-600"
+                class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-600"
               >{{ key }}</li>
             </ul>
             <p class="mt-4 text-xs font-medium text-slate-700">Open tuner →</p>
@@ -145,6 +142,8 @@ const sections = computed(() => [
         </li>
       </component>
     </section>
+
+    <AdSlot slot="landing" label="landing" />
 
     <!-- Roadmap -->
     <section class="space-y-4">
@@ -168,7 +167,7 @@ const sections = computed(() => [
               <li
                 v-for="key in tuner.keys"
                 :key="key"
-                class="rounded bg-slate-200/60 px-1.5 py-0.5 font-mono text-[11px] text-slate-600"
+                class="rounded bg-slate-200/60 px-1.5 py-0.5 font-mono text-xs text-slate-600"
               >{{ key }}</li>
             </ul>
           </div>

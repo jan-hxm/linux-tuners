@@ -53,7 +53,7 @@ export const SYSTEMD_DEFS = [
         'Turns on CPU usage accounting for all units that do not override it, so that `systemctl status` and `systemd-cgtop` report CPU time per service. It maps to the per-unit CPUAccounting= setting.',
       ],
       when: [
-        'On the unified cgroup v2 hierarchy CPU accounting is essentially free because the cpu controller is always present, so enabling it system-wide costs almost nothing and gives you per-service CPU visibility. The main reason to leave it off is to keep the cgroup tree minimal on very constrained systems.',
+        'On the unified [[cgroup]] v2 hierarchy CPU accounting is essentially free because the cpu controller is always present, so enabling it system-wide costs almost nothing and gives you per-service CPU visibility. The main reason to leave it off is to keep the cgroup tree minimal on very constrained systems.',
       ],
       watch: [
         'On cgroup v2 with kernel 4.15 or newer systemd reports CPU time without this option and treats it as a no-op, and systemd 258 removed it. This tuner offers it only for cgroup v1.',
@@ -83,7 +83,7 @@ export const SYSTEMD_DEFS = [
         'Enables memory accounting for all units, the prerequisite for MemoryHigh=/MemoryMax= limits to be enforced and for `systemctl status` to show a Memory: line. Maps to the per-unit MemoryAccounting= setting.',
       ],
       when: [
-        'systemd defaults this to yes on modern systems. Keep it on: memory limits silently do nothing without it, and on cgroup v2 the memory controller is the one you most want telemetry from.',
+        'systemd defaults this to yes on modern systems. Keep it on: memory limits silently do nothing without it, and on [[cgroup]] v2 the memory controller is the one you most want telemetry from.',
       ],
     },
     tuningTip: 'Leave it on; MemoryHigh/MemoryMax limits are only enforced when memory accounting is active.',
@@ -161,7 +161,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Track per-unit network traffic (requires eBPF) by default.',
     longDesc: {
       what: [
-        'Enables IP accounting for all units, recording bytes and packets sent/received per service via an eBPF program attached to the unit cgroup. Maps to the per-unit IPAccounting= setting.',
+        'Enables IP accounting for all units, recording bytes and packets sent/received per service via an [[eBPF|bpf]] program attached to the unit [[cgroup]]. Maps to the per-unit IPAccounting= setting.',
       ],
       when: [
         'systemd defaults this to no. It is the heaviest of the accounting options and only works where the kernel supports the required eBPF hooks, so enable it deliberately when you need per-service network figures.',
@@ -188,7 +188,7 @@ export const SYSTEMD_DEFS = [
     longDesc: {
       what: [
         'Sets the TasksMax= that every unit inherits unless it overrides it: the maximum number of tasks a single service may create. This is the per-service fork-bomb guard rail.',
-        'systemd derives the default as 15% of the minimum of kernel.pid_max, kernel.threads-max, and the root cgroup pids.max. The kernel sizes threads-max from RAM, so below 512 GiB it is the smaller: about 19,660 tasks with 16 GiB. With pid_max = 32768, as before systemd 243, it is at most the well-known 4915.',
+        'systemd derives the default as 15% of the minimum of kernel.pid_max, kernel.threads-max, and the root [[cgroup]] pids.max. The kernel sizes threads-max from RAM, so below 512 GiB it is the smaller: about 19,660 tasks with 16 GiB. With pid_max = 32768, as before systemd 243, it is at most the well-known 4915.',
       ],
       when: [
         'Raise it for hosts that legitimately run many threads per service (databases, JVMs, container runtimes). Lower it to make the fork-bomb guard rail tighter on multi-tenant systems.',
@@ -243,7 +243,7 @@ export const SYSTEMD_DEFS = [
         'The hard half of the default RLIMIT_NOFILE: the absolute ceiling a unit may raise its soft limit to without privilege. systemd defaults it to 524288.',
       ],
       when: [
-        'This is the value connection-heavy daemons (web servers, proxies, databases) actually care about, because they raise their soft limit up to it at startup. Raise it on hosts that run such services; there is little downside since file descriptors are cheap.',
+        'This is the value connection-heavy daemons (web servers, proxies, databases) actually care about, because they raise their soft limit up to it at startup. Raise it on hosts that run such services; there is little downside since [[file descriptors|file-descriptor]] are cheap.',
       ],
       watch: [
         'It must be greater than or equal to the soft limit. The kernel hard ceiling is controlled separately by fs.nr_open.',
@@ -271,7 +271,7 @@ export const SYSTEMD_DEFS = [
         'The default RLIMIT_MEMLOCK every unit inherits: how much memory a process may lock into RAM with mlock()/mlockall() so it can never be swapped out. systemd defaults it to 8M.',
       ],
       when: [
-        'Databases (to pin buffers/WAL), crypto daemons (to keep keys out of swap), and increasingly eBPF and RDMA workloads need this raised, otherwise their mlock() calls fail. Raise it for those; leave the small default in place elsewhere so a buggy process cannot lock arbitrary amounts of unswappable RAM.',
+        'Databases (to pin buffers/WAL), crypto daemons (to keep keys out of swap), and increasingly [[eBPF|bpf]] and RDMA workloads need this raised, otherwise their mlock() calls fail. Raise it for those; leave the small default in place elsewhere so a buggy process cannot lock arbitrary amounts of unswappable RAM.',
       ],
     },
     tuningTip: 'Raise it for databases, crypto, eBPF and RDMA workloads; keep it small otherwise.',
@@ -295,7 +295,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Proportional CPU share for this slice under contention.',
     longDesc: {
       what: [
-        'Sets the cgroup v2 cpu.weight for the slice. When several siblings compete for a saturated CPU, available time is divided in proportion to their weights: a slice with weight 200 gets twice the CPU of a sibling with weight 100. When the CPU is not contended, weight does nothing and every unit runs at full speed.',
+        'Sets the [[cgroup]] v2 cpu.weight for the slice. When several siblings compete for a saturated CPU, available time is divided in proportion to their weights: a slice with weight 200 gets twice the CPU of a sibling with weight 100. When the CPU is not contended, weight does nothing and every unit runs at full speed.',
       ],
       when: [
         'The value runs from 1 to 10000 with a default of 100. Raise the weight of the slice whose latency matters most (e.g. system.slice on a server so daemons out-prioritise interactive user sessions); lower it to make a slice yield under load.',
@@ -329,7 +329,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Hard ceiling on CPU time for this slice, across all cores.',
     longDesc: {
       what: [
-        'An absolute cap on CPU time via the cgroup v2 cpu controller, expressed as a percentage where 100% equals one full core. On a multi-core host you set it above 100%: 400% lets the slice burn up to four cores’ worth of CPU, even if more are idle.',
+        'An absolute cap on CPU time via the [[cgroup]] v2 cpu controller, expressed as a percentage where 100% equals one full core. On a multi-core host you set it above 100%: 400% lets the slice burn up to four cores’ worth of CPU, even if more are idle.',
       ],
       when: [
         'Unlike CPUWeight (which only shares spare capacity), CPUQuota throttles the slice even on an otherwise idle machine. Use it to stop a batch/build slice from ever monopolising the box, or to make capacity predictable for billing.',
@@ -357,10 +357,10 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Soft memory limit: throttle (not kill) when the slice exceeds it.',
     longDesc: {
       what: [
-        'The main memory-pressure mechanism in cgroup v2. When the slice’s usage rises above MemoryHigh the kernel does not kill anything; it aggressively reclaims the slice’s pages and throttles its allocations, slowing it down so it backs off. Usage may briefly exceed the line when reclaim cannot keep up.',
+        'The main memory-pressure mechanism in [[cgroup]] v2. When the slice’s usage rises above MemoryHigh the kernel does not kill anything; it aggressively [[reclaims|reclaim]] the slice’s pages and throttles its allocations, slowing it down so it backs off. Usage may briefly exceed the line when reclaim cannot keep up.',
       ],
       when: [
-        'Expressed here as a percentage of total RAM. Set it below MemoryMax so a slice hits the gentle throttle first and only reaches the hard cap if it keeps climbing. This is the knob you reach for to keep one slice from starving the rest of the system of page cache.',
+        'Expressed here as a percentage of total RAM. Set it below MemoryMax so a slice hits the gentle throttle first and only reaches the hard cap if it keeps climbing. This is the knob you reach for to keep one slice from starving the rest of the system of [[page cache]].',
         'At 100% the soft limit is removed (infinity): no throttling, only the hard MemoryMax (if any) applies.',
       ],
     },
@@ -387,7 +387,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Hard memory limit: OOM-kill inside the slice when exceeded.',
     longDesc: {
       what: [
-        'The absolute memory ceiling for the slice, enforced by the cgroup v2 memory controller. If usage cannot be brought under the limit by reclaim, the OOM killer is invoked inside the slice and kills one of its processes, so the rest of the system is protected.',
+        'The absolute memory ceiling for the slice, enforced by the [[cgroup]] v2 memory controller. If usage cannot be brought under the limit by [[reclaim]], the [[OOM killer]] is invoked inside the slice and kills one of its processes, so the rest of the system is protected.',
       ],
       when: [
         'Expressed here as a percentage of total RAM. systemd recommends using MemoryHigh as the primary control and MemoryMax as the last line of defence a little above it, so the slice is throttled before anything is killed.',
@@ -419,10 +419,10 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Cap on how much swap this slice may use.',
     longDesc: {
       what: [
-        'Limits the swap (not RAM) the slice may consume, via the cgroup v2 memory controller. Expressed here as a percentage of total RAM for an at-a-glance budget.',
+        'Limits the swap (not RAM) the slice may consume, via the [[cgroup]] v2 memory controller. Expressed here as a percentage of total RAM for an at-a-glance budget.',
       ],
       when: [
-        'Set it to 0 to forbid the slice from swapping at all: the classic database tuning, where you would rather the slice be reclaimed or OOM-killed than suffer the latency of paging buffers to disk. Leave it at 100% (infinity) to let the slice use swap freely.',
+        'Set it to 0 to forbid the slice from swapping at all: the classic database tuning, where you would rather the slice be reclaimed or [[OOM-killed|oom-killer]] than suffer the latency of paging buffers to disk. Leave it at 100% (infinity) to let the slice use swap freely.',
       ],
     },
     tuningTip: 'Set 0 to pin a latency-sensitive slice (e.g. a database) out of swap; leave at the top otherwise.',
@@ -448,7 +448,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Proportional block-I/O bandwidth share under contention.',
     longDesc: {
       what: [
-        'Sets the cgroup v2 io.weight for the slice. When units compete for a saturated block device, bandwidth is split in proportion to their weights, exactly like CPUWeight does for CPU. Requires the io controller and is only observable with I/O accounting on.',
+        'Sets the [[cgroup]] v2 io.weight for the slice. When units compete for a saturated block device, bandwidth is split in proportion to their weights, exactly like CPUWeight does for CPU. Requires the io controller and is only observable with I/O accounting on.',
       ],
       when: [
         'The value runs from 1 to 10000 with a default of 100. Raise it for the slice whose disk latency matters (databases, the journal), lower it for bulk/batch slices so they yield the disk under contention.',
@@ -482,7 +482,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Hard cap on tasks (processes + threads) for this slice.',
     longDesc: {
       what: [
-        'Caps the total number of tasks the slice and everything beneath it may run, via the cgroup v2 pids controller. Where DefaultTasksMax bounds a single unit, this bounds the whole slice hierarchy, useful for reserving PID-space headroom for the rest of the system.',
+        'Caps the total number of tasks the slice and everything beneath it may run, via the [[cgroup]] v2 pids controller. Where DefaultTasksMax bounds a single unit, this bounds the whole slice hierarchy, useful for reserving PID-space headroom for the rest of the system.',
       ],
       when: [
         'Set it to contain a slice (e.g. user.slice) so logged-in users or a runaway workload cannot exhaust the host PID space and block the system daemons from forking. Size it to the slice’s legitimate peak task count plus margin.',

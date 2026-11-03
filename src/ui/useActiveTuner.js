@@ -17,6 +17,12 @@ export const TUNER_DOMAIN_KEY = Symbol('tuner-domain')
  * doesn't, and ProfileForm then shows none.
  */
 export const PROFILE_FIELD_NOTE_KEY = Symbol('profile-field-note')
+/**
+ * Optional: the profile form's draft (ui/profile/useProfileDraft.js), which
+ * the page provides so ProfileDraftNotice can repeat "Unsaved changes" above
+ * the parameters. Without it, ProfileForm keeps its own draft.
+ */
+export const PROFILE_DRAFT_KEY = Symbol('profile-draft')
 
 /**
  * The active tuner store. There is no fallback: shared UI never picks a tuner,

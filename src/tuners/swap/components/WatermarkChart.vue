@@ -64,8 +64,8 @@ const chartOptions = computed(() => ({
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <div>
-      <p class="text-[11px] uppercase tracking-wide text-slate-500">/proc/zoneinfo (simulated)</p>
-      <pre class="mt-1 overflow-x-auto rounded bg-slate-900 p-2 text-[11px] leading-snug text-slate-100"><code>{{ watermarks.zoneInfoSnippet }}</code></pre>
+      <p class="text-xs uppercase tracking-wide text-slate-500">/proc/zoneinfo (simulated)</p>
+      <pre class="mt-1 overflow-x-auto rounded bg-slate-900 p-2 text-xs leading-snug text-slate-100" tabindex="0" aria-label="Simulated /proc/zoneinfo output"><code>{{ watermarks.zoneInfoSnippet }}</code></pre>
     </div>
   </div>
 </template>

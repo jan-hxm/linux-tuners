@@ -24,9 +24,11 @@
  * @property {Object}  [route]   Route metadata (live only): title, description,
  *                               ogTitle, priority, changefreq, jsonLdType
 
- * @property {{ roles: 'all' | string[], why: string }} [setup] Guided setup (live
- *                               only): the MACHINE_ROLES it is recommended for,
- *                               and the line the landing card shows for them
+ * @property {{ roles: 'all' | string[], why: string, defaultsFine: string }} [setup]
+ *                               Guided setup (live only): the MACHINE_ROLES it is
+ *                               recommended for, the line the landing card shows
+ *                               for them, and when the defaults are fine (the
+ *                               "Do I need this?" box on the tuner page)
  */
 
 /** @type {TunerEntry[]} */
@@ -51,6 +53,7 @@ export const TUNERS = [
     setup: {
       roles: 'all',
       why: 'How eagerly the kernel swaps, how much memory it keeps free, and when dirty pages reach the disk. Every machine has these, and the defaults ignore its RAM.',
+      defaultsFine: 'A small desktop or a lightly loaded machine that never runs short of memory or writes large files.',
     },
   },
   {
@@ -73,6 +76,7 @@ export const TUNERS = [
     setup: {
       roles: 'all',
       why: 'Kernel pointer, ptrace and BPF restrictions plus network spoofing protections. Cheap, and most distributions leave some of them open.',
+      defaultsFine: 'A throwaway or isolated test machine, or one whose distribution already ships a hardened profile you have reviewed.',
     },
   },
   {
@@ -95,6 +99,7 @@ export const TUNERS = [
     setup: {
       roles: 'all',
       why: "The open-file and inotify ceilings that file watchers, databases and container nodes hit first. It sets fs.nr_open, which bounds systemd's file limit.",
+      defaultsFine: 'Machines that never hit a "too many open files" or inotify limit error, which covers most servers and desktops.',
     },
   },
   {
@@ -117,6 +122,7 @@ export const TUNERS = [
     setup: {
       roles: 'all',
       why: "The process and thread ceilings, key quotas, and whether a crashed machine reboots. It sets the limits that bound systemd's task caps.",
+      defaultsFine: 'Machines that run a normal number of processes and few containers, and where a crash can wait for you to reboot by hand.',
     },
   },
   {
@@ -139,6 +145,7 @@ export const TUNERS = [
     setup: {
       roles: 'all',
       why: 'Default task and file limits for every service, and CPU, memory and IO caps per slice. Comes after the filesystem and kernel limits it must stay under.',
+      defaultsFine: 'A single-purpose machine whose services never compete for CPU, memory or IO and never hit the task or file limits.',
     },
   },
   {
@@ -161,6 +168,7 @@ export const TUNERS = [
     setup: {
       roles: ['server', 'web', 'database', 'container-host', 'vm-host', 'router'],
       why: 'Socket buffers sized for the link, listen backlogs, congestion control and connection tracking, for machines that serve or forward traffic.',
+      defaultsFine: 'A desktop, or a server with modest traffic on a 1 Gbit/s link or slower that never drops connections or logs a full conntrack table.',
     },
   },
   {
@@ -183,6 +191,7 @@ export const TUNERS = [
     setup: {
       roles: 'all',
       why: 'The I/O scheduler and read-ahead for each kind of disk, where the kernel picks one default for all of them.',
+      defaultsFine: "Machines with a single kind of disk where the kernel's default scheduler already suits the workload.",
     },
   },
   {
@@ -205,6 +214,7 @@ export const TUNERS = [
     setup: {
       roles: ['database', 'vm-host'],
       why: 'Huge page pools, Transparent Huge Pages and KSM, which databases and VM hosts depend on and other machines are better off leaving alone.',
+      defaultsFine: 'Anything that is not a database or a VM host. Skip it unless your software documents huge pages or KSM.',
     },
   },
   {
@@ -227,6 +237,7 @@ export const TUNERS = [
     setup: {
       roles: ['database'],
       why: 'The shared memory and semaphore limits that Oracle, Db2 and older middleware check before they install.',
+      defaultsFine: 'Anything that is not Oracle, Db2 or older middleware asking for these limits. Modern kernel defaults are already large.',
     },
   },
   // Roadmap toward the whole sysctl tree plus the key sysfs runtime tunables,

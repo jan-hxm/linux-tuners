@@ -1,12 +1,14 @@
 <script setup>
 /**
  * Renders a prose string from a data file (about.js) with a tiny inline
- * markup: `code`, **bold** and [label](https://url). It builds nodes from
+ * markup: `code`, **bold**, [label](https://url) and glossary terms
+ * ([[label]] or [[label|id]], shown by GlossaryTerm.vue). It builds nodes from
  * parsed segments rather than HTML, so text is always escaped (Design.md §10,
  * no HTML sinks). Links must be absolute https URLs written in the data file.
  */
 import { computed } from 'vue'
 import { parseRichText } from './richText.js'
+import GlossaryTerm from './GlossaryTerm.vue'
 
 const props = defineProps({
   text: { type: String, required: true },
@@ -28,6 +30,7 @@ const segments = computed(() => parseRichText(props.text))
       target="_blank"
       rel="noopener"
     >{{ seg.text }} ↗</a>
+    <GlossaryTerm v-else-if="seg.type === 'term'" :text="seg.text" :id="seg.id" />
     <template v-else>{{ seg.text }}</template>
   </template>
 </template>

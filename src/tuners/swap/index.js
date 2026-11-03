@@ -4,6 +4,7 @@
  * components.
  */
 
+import { defineAsyncComponent } from 'vue'
 import { defineTuner } from '@/core/defineTuner.js'
 import { sysctlTryCommand } from '@/core/output/sysctlFile.js'
 import { PROFILE } from './profile.js'
@@ -19,9 +20,9 @@ import { PRESETS, PRESETS_BY_ID } from './presets.js'
 import { formatValue } from './formatting.js'
 import { PAGE, ABOUT } from './about.js'
 import * as simulation from './simulation.js'
-import PressureChart from './components/PressureChart.vue'
-import WatermarkChart from './components/WatermarkChart.vue'
-import DirtyChart from './components/DirtyChart.vue'
+const PressureChart = defineAsyncComponent(() => import('./components/PressureChart.vue'))
+const WatermarkChart = defineAsyncComponent(() => import('./components/WatermarkChart.vue'))
+const DirtyChart = defineAsyncComponent(() => import('./components/DirtyChart.vue'))
 
 const GRAPH_TABS = [
   { id: 'pressure', label: 'Swap pressure', component: PressureChart, blurb: 'How swap usage grows as memory fills, given current swappiness and watermarks.' },

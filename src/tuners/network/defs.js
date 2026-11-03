@@ -443,7 +443,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How many connections netfilter tracks at once.',
     longDesc: {
       what: [
-        'Stateful firewall rules, NAT, Docker and Kubernetes services all rely on connection tracking. When the table is full, the kernel drops new connections and logs "nf_conntrack: table full, dropping packet", which looks like random timeouts.',
+        'Stateful firewall rules, NAT, Docker and Kubernetes services all rely on [[connection tracking|conntrack]]. When the table is full, the kernel drops new connections and logs "nf_conntrack: table full, dropping packet", which looks like random timeouts.',
       ],
       when: [
         'The default equals nf_conntrack_buckets, which the kernel sizes from RAM: 262144 on 64-bit machines with more than 4 GiB. Each entry takes roughly 300 bytes, so a million entries cost about 300 MiB.',
@@ -472,7 +472,7 @@ export const PARAMETER_DEFS = [
         'Lookups walk a hash chain, so a table with too few buckets for nf_conntrack_max makes every packet slower once the table fills. Each entry is hashed twice (original and reply direction), so with the default of one bucket per allowed entry, a full table averages chains of two.',
       ],
       watch: [
-        'The kernel sizes it from RAM, between 1024 and 262144. It can be changed at runtime since kernel 4.8, but only in the initial network namespace: inside a container the write fails.',
+        'The kernel sizes it from RAM, between 1024 and 262144. It can be changed at runtime since kernel 4.8, but only in the initial network [[namespace]]: inside a container the write fails.',
       ],
     },
     tuningTip: 'Keep it near nf_conntrack_max.',

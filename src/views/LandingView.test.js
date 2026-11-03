@@ -75,3 +75,26 @@ describe('LandingView role picker', () => {
     expect(setupHrefs((await landingAt('/?role=vm-host')).wrapper)).toEqual(['/setup?role=vm-host', '/setup?role=vm-host'])
   })
 })
+
+describe('LandingView page content', () => {
+  it('puts the ad after the tuner grid, not between the hero and the role picker', async () => {
+    const { wrapper } = await landingAt('/')
+    const html = wrapper.html()
+    const ad = html.indexOf('ad-slot-stub')
+    expect(ad).toBeGreaterThan(html.lastIndexOf('Open tuner'))
+  })
+
+  it('states three trust points and no longer the URL-state line', async () => {
+    const { wrapper } = await landingAt('/')
+    const text = wrapper.text()
+    expect(text).toContain('Runs in your browser and sends nothing.')
+    expect(text).toContain('Every value cites its source.')
+    expect(text).toContain('The output says how to apply and undo it.')
+    expect(text).not.toContain('URL-encodable')
+  })
+
+  it('has no Available badge on live cards', async () => {
+    const { wrapper } = await landingAt('/')
+    expect(wrapper.text()).not.toContain('Available')
+  })
+})

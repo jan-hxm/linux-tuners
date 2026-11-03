@@ -99,7 +99,7 @@ export const PARAMETER_DEFS = [
         'The kernel keyring stores credentials such as Kerberos tickets, filesystem encryption keys and the session keyrings systemd creates for services. Each user ID other than root has its own quota; past it, add_key() fails with EDQUOT ("Disk quota exceeded"). cat /proc/key-users shows what each user holds.',
       ],
       when: [
-        'Containers with user namespaces run as non-root host user IDs, so every service in them counts against this quota rather than root\'s 1000000. LXD suggests 2000, more than the number of containers on the host.',
+        'Containers with user [[namespaces|namespace]] run as non-root host user IDs, so every service in them counts against this quota rather than root\'s 1000000. LXD suggests 2000, more than the number of containers on the host.',
       ],
     },
     tuningTip: 'Raise it to 2000 on container hosts; leave it elsewhere.',

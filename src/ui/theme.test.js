@@ -56,4 +56,25 @@ describe('dark-mode shade mapping', () => {
       }
     }
   })
+
+  it('keeps the hero text and every focus ring visible on what is behind them', () => {
+    // The heroes and step chain are light-palette (no mapping) and run from
+    // slate-900 to slate-700; their smallest text is text-xs.
+    const hero = [900, 800, 700].map((shade) => colors.slate[shade])
+    for (const text of [300, 200]) {
+      for (const bg of hero) expect(contrast(colors.slate[text], bg), `slate-${text} on hero`).toBeGreaterThanOrEqual(4.5)
+    }
+    // The slate-400 eyebrows sit in the slate-900 corner.
+    expect(contrast(colors.slate[400], colors.slate[900]), 'slate-400 eyebrow').toBeGreaterThanOrEqual(4.5)
+    // Rings (main.css) need 3:1. The default slate-900 ring on the page and
+    // cards, in both schemes; the .surface-inverse ring (white) on the hero
+    // and on the undo toast, whose slate-900 fill flips with the scheme.
+    for (const bg of [['white'], ['slate', 50]]) {
+      expect(contrast(colors.slate[900], hexOf(bg[0] === 'white' ? 'white' : bg)), 'ring, light').toBeGreaterThanOrEqual(3)
+      expect(contrast(hexOf(darkColour('slate', 900)), hexOf(darkColour(...bg))), 'ring, dark').toBeGreaterThanOrEqual(3)
+    }
+    for (const bg of hero) expect(contrast('#ffffff', bg), 'inverse ring on hero').toBeGreaterThanOrEqual(3)
+    expect(contrast('#ffffff', colors.slate[900]), 'inverse ring on toast, light').toBeGreaterThanOrEqual(3)
+    expect(contrast(hexOf(darkColour('white')), hexOf(darkColour('slate', 900))), 'inverse ring on toast, dark').toBeGreaterThanOrEqual(3)
+  })
 })

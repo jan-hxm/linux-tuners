@@ -86,7 +86,7 @@ watch(adsConfigured, (now) => {
     aria-label="Advertisement"
     class="overflow-hidden"
   >
-    <p class="mb-1 text-center text-[10px] uppercase tracking-widest text-slate-400">Advertisement</p>
+    <p class="mb-1 text-center text-[10px] uppercase tracking-widest text-slate-500">Advertisement</p>
     <ins
       class="adsbygoogle"
       style="display:block"

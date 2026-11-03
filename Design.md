@@ -109,7 +109,11 @@ Every tuner follows the same flow:
 
 Vue 3 + **plain JavaScript** (no TypeScript; shapes are JSDoc `@typedef`s),
 `<script setup>`, Pinia, vue-router, Tailwind CSS, Chart.js via vue-chartjs
-(registered once in `src/ui/charts/chartSetup.js`), lz-string for URL state.
+(registered once in `src/ui/charts/chartSetup.js`, which `ChartFrame.vue` imports, so
+Chart.js loads only when a chart first renders: each tuner's chart tab components are
+`defineAsyncComponent` in its `index.js`; `Filler` is needed for `fill: true`; the
+Chart.js chunk is about 176 kB raw / 62 kB gzip, and the shared entry chunk went from
+298 / 109 kB gzip to 126 / 49 kB gzip, Nov 2026), lz-string for URL state.
 Tests use Vitest + @vue/test-utils. Tests under `src/ui/` and
 `src/tuners/*/components/` run in happy-dom, as does any test that pins it with
 a `// @vitest-environment happy-dom` comment; model code runs in node.
@@ -145,10 +149,11 @@ asserts the required fields in dev and tests. It is listed in
   `AboutSection`, `InfoDrawer` and the mobile impact bar, whose metrics come
   from the simulation's `impactSummary`. All page copy and the About content are data in
   `src/tuners/<id>/about.js` (`PAGE`, `ABOUT`), with a small inline markup
-  (`` `code` ``, `**bold**`, `[label](https://…)`) rendered by `RichText.vue`
-  from parsed segments, never as HTML. The parameter cards render each
-  def's `longDesc` paragraphs the same way, and the contract suite fails on
-  markup the parser doesn't know (a single `*`), since it would show
+  (`` `code` ``, `**bold**`, `[label](https://…)`, `[[glossary term]]`)
+  rendered by `RichText.vue` from parsed segments (`ui/richText.js`), never as
+  HTML. The same markup works in a def's `longDesc` paragraphs, which the
+  card renders through `RichText` too, and the contract suite fails on
+  markup the parser doesn't know (an `*italic*`), since it would show
   literally. The About section is always visible
   (no collapse), since it's real content and counts toward page quality.
 - **Profile form:** one generic `src/ui/profile/ProfileForm.vue` renders each
@@ -158,8 +163,12 @@ asserts the required fields in dev and tests. It is listed in
   once. On apply, numbers snap and clamp with the same `core/profile.js`
   helpers a restored link uses, and text that fails its pattern is refused
   with an inline message, so the form can't produce a profile the link schema
-  rejects. The form collapses to a one-line summary only after the first
-  apply. Shared pick lists and ceilings live in `fieldOptions.js`, and the
+  rejects. The form collapses to a one-line summary after the first apply,
+  and starts collapsed when the profile is already set: a page restored from
+  a shared link (the store's `restoredFromLink`) and every tuner step of
+  `/setup`. The draft lives in `useProfileDraft.js`, which the page creates
+  and provides (`PROFILE_DRAFT_KEY`), so `ProfileDraftNotice` can repeat
+  unapplied edits with the same Apply at the top of the tune step. Shared pick lists and ceilings live in `fieldOptions.js`, and the
   RAM field in `core/machine.js` (re-exported there), so the tuners never
   drift apart.
 
@@ -207,12 +216,14 @@ file someone may run as root, restoring it is strict:
 
 ### Viewer preferences
 
-One key in `localStorage`, `linux-tuners:show-all-parameters` (`ui/showAllParams.js`),
-remembers the parameter panel's "Show all parameters" switch: `'1'` when on,
-removed when off. It is a convenience for the viewer, never tuner state, so it
-is not part of the hash, is never sent anywhere, and the page works the same
-when storage is blocked or throws (the switch starts off). The privacy policy
-lists it in section 3. Any other preference worth remembering takes the same
+Two keys in `localStorage` (`ui/viewerPrefs.js`) remember the parameter
+panel's switches: `linux-tuners:show-all-parameters` for "Show all
+parameters" and `linux-tuners:compact-parameters` for "Compact", each `'1'`
+when on and removed when off. They are conveniences for the viewer, never
+tuner state, so they are not part of the hash, are never sent anywhere, and
+the page works the same when storage is blocked or throws (the switches start
+off). The privacy policy lists them in section 3. The filter text and "Changed
+only" are not remembered at all: they last for the visit. Any other preference worth remembering takes the same
 form: one on/off or enum value per key, prefixed `linux-tuners:`, and a line in
 the policy.
 
@@ -262,7 +273,10 @@ The tuners answer "what should this one setting be". The guided setup answers
   this machine?") reorders the tuner cards into the setup order for that
   role. Each card gets one line on why the tuner matters for that role. Tuners
   that don't apply to the role move under "Optional for this machine" and are
-  not hidden. A "Start guided setup" button opens `/setup` with the role already
+  not hidden. The hero lists three plain trust points (runs in the browser and
+  sends nothing, every value cites its source, the output says how to apply and
+  undo), live cards carry no status badge, and the ad sits below the tuner grid
+  so the role picker stays near the top on a phone. A "Start guided setup" button opens `/setup` with the role already
   chosen. The page is still prerendered with every card, so crawlers and
   no-JS visitors see the same content as before. The picked role lives in the
   query (`/?role=database`), so Back and a shared link keep it; a value that
@@ -489,6 +503,11 @@ must follow them, and existing UI must not regress.
   toast sits at `bottom-24` above it). It ends in a "Graphs" link to the
   panel's `#graphs` anchor, outside its `aria-live` list so it isn't
   re-announced.
+- **Each tuner page opens with a "Do I need this?" box** (`NeedThisBox`, under
+  the hero, collapsible, open by default). It is built from the registry's
+  `setup` block: `why`, the `roles` (as `MACHINE_ROLES` labels) and
+  `defaultsFine`, which every live tuner must set (registry test). Change the
+  wording in the registry, never in the component.
 - **Every disclosure or toggle is a real `<button>`** with `aria-expanded` and
   `aria-controls`. Never put click handlers on bare `<div>` or `<header>`
   elements.
@@ -496,7 +515,8 @@ must follow them, and existing UI must not regress.
   screens never show and keyboards can't reach. The preset "what would change"
   list sits behind a per-preset toggle button in `PresetSelector` instead, and
   a card's badges ("danger at 0", the context badge) are explained in its
-  Learn more layer.
+  Learn more layer, and a glossary term opens its definition inline ([§8
+  Glossary terms](#8-copy-conventions)).
 - **Targets are at least 24 × 24 px** (WCAG 2.2 AA, 2.5.8). A small text
   button or link that stands alone (Learn more, "N changes", the section
   headers, the value's edit button) gets `inline-flex min-h-6 items-center`,
@@ -527,13 +547,48 @@ must follow them, and existing UI must not regress.
 - **Canvas charts get `role="img"`** and a reactive plain-language
   `aria-label` summary: render them inside `ui/charts/ChartFrame.vue`, which
   requires the label. The visible legend isn't an alternative for assistive
-  technology.
+  technology. The frame wraps the canvas in an `aria-hidden` box, since
+  vue-chartjs gives the canvas an unlabelled `role="img"` of its own.
 - **No global keyboard shortcuts that clash with the browser.** For example,
   the old `Ctrl+Shift+C` copy binding overrode devtools.
 - **Type size and contrast floors:** meaningful text is at least `text-xs`
-  (12px) and at least `text-slate-500` on white. `text-[10px]`/`text-[11px]`
-  and `text-slate-400` are only for decorative chrome (status pills, the
-  `.dev` logo tail, hero eyebrows on dark backgrounds).
+  (12px) and at least `text-slate-500` on white, or on `slate-50`; on a
+  `bg-slate-100` chip use `text-slate-600` (slate-500 there is 4.3:1).
+  `text-[10px]`/`text-[11px]` and `text-slate-400` are only for decorative
+  chrome (status pills, hero eyebrows in the hero's slate-900 corner).
+  Text on the hero's lighter end (slate-700) is `text-slate-300` or lighter:
+  slate-400 there is 4.1:1. `theme.test.js` pins the hero and ring pairs.
+- **Focus rings stay visible on every surface.** `main.css` gives every
+  control a 2px `slate-900` outline 2px outside it (it follows the scheme).
+  Two classes adjust it for their subtree: `surface-inverse` on surfaces that
+  are dark by design (the heroes, the step chain, the undo toast) turns the
+  ring `white`, which would otherwise vanish into them; `focus-inset` on a box
+  that clips its children (segmented controls, the header's scrolling nav)
+  draws the ring 2px inside the control in its text colour, which contrasts
+  with its fill whether selected or not. A box that scrolls on its own (a
+  `pre` with `overflow-x-auto`) gets `tabindex="0"` and an `aria-label`, so
+  keyboards can scroll it.
+- **State changes are announced, not only drawn.** The undo toast's
+  `aria-live="polite"` region reads "Applied the X preset." (or the reset or
+  machine-profile message) after a snap, and preset buttons carry
+  `aria-pressed`. `IssueAnnouncer` (beside the toast in `TunerPage` and each
+  setup step) reads each validation issue that appears once the values have
+  settled for 600 ms, so a drag across a threshold doesn't chatter, and says
+  how many are left when some clear. Issues present on mount aren't read.
+- **Automated sweep.** `src/a11y.test.js` runs axe-core (devDependency) over
+  every route, every setup step, and each tuner with every disclosure open, a
+  preset applied, each graph tab and the drawer, and fails on any serious or
+  critical violation. happy-dom has no layout, so rules that need it (colour
+  contrast, label-in-name, scrollable regions) are skipped there. The first
+  sweep (November 2026) also ran axe in headless Edge over the built site
+  in both schemes at 1280 and 375 px, with every layer open, and checked each
+  focus ring's contrast and clipping; it found and fixed the invisible ring on
+  the dark hero and toast, rings clipped by segmented controls and the header
+  nav, the value button's name not containing its value (2.5.3), the
+  unlabelled chart canvases, low-contrast `.dev`, help-code, "Last updated",
+  ad-label and hero text, a scrollable `pre` keyboards couldn't reach, and the
+  drawer's `aside`/`header` landmarks. Rerun that browser pass after a visual
+  change; the happy-dom test only guards structure.
 - **Dark mode follows the system** (`prefers-color-scheme`; there is no
   toggle). Components keep their light-mode classes and use no `dark:`
   variants: `tailwind.config.js` points `white` and the slate, amber, red,
@@ -559,8 +614,10 @@ must follow them, and existing UI must not regress.
   Secondary buttons stay outlined slate.
 - **Segmented or radio-style button groups** use `role="radiogroup"` plus
   `role="radio"` and `aria-checked` on each option.
-- **Profile forms auto-collapse only after the first apply.** Re-tuning after
-  "Edit" keeps the form open.
+- **Profile forms auto-collapse after the first apply**, or start collapsed
+  when the profile is already set (shared link, setup steps). Re-tuning after
+  "Edit" keeps the form open. Unapplied edits also show above the parameters,
+  with an Apply button, so nobody has to scroll back up.
 - **Copy and share feedback** changes the button state and announces the
   result through an `aria-live="polite"` region.
 - **Three layers per parameter.** The card, always visible, shows the def's
@@ -593,6 +650,28 @@ must follow them, and existing UI must not regress.
   def has a tier and every section an essential parameter. Essential means
   what most readers of that tuner should look at; the rest is for a reason
   the reader already has.
+- **Filter, changed only and compact.** A tuner with 15 or more parameters
+  (`hasProTools` in `ui/paramFilter.js`, counted from the domain's defs, so
+  today systemd, security and network) gets three pro tools above its
+  sections, next to "Show all parameters". A filter field matches every
+  term of the query, case-blind and treating `.`, `_`, `-` and `/` as spaces,
+  against a def's title, name, key and description text (`shortDesc`,
+  `longDesc`, the rule of thumb). "Changed only" keeps the cards whose value
+  differs from the profile's default (the store's `changedKeys`, sticky the
+  same way as the advanced reveal). While either is on, the tiers step aside:
+  matching cards show from both tiers, the "Show N advanced" buttons go,
+  "Show all parameters" is disabled, every section with a match is open
+  (a collapsed one comes back collapsed afterwards), and a section left
+  with no card is hidden; a polite live line counts the cards
+  shown, and when none is left an empty state says why, with a "Clear
+  filter" button that returns focus to the field. "Compact" drops each
+  card's descriptions, source line, range and Learn more, and the section
+  summaries (the name opens the
+  drawer, which keeps the reference) and puts name, value and control on one
+  row from `sm` up; on a phone the control wraps under the name and value.
+  Issues and Reset stay. The filter text never enters the shared link, and
+  only "Compact" is remembered ([§5 Viewer
+  preferences](#viewer-preferences)). No keyboard shortcut opens the filter.
 - **Where a value comes from.** Every card names its default in a line under
   its description ("Kernel default 60"), and adds the profile's when it
   differs ("Kernel default 60 · for your profile 10"; the domain's `defaultLabel` names whose
@@ -642,6 +721,21 @@ must follow them, and existing UI must not regress.
   generated config. Use a comma, colon, semicolon or parentheses instead. En
   dashes in numeric ranges (`0–200`) are fine. Code comments and docs are
   exempt.
+- **Glossary terms.** A term that recurs across tuners (page cache,
+  anonymous memory, reclaim, watermark, kswapd, dirty page, writeback, OOM
+  killer, cgroup, namespace, eBPF, conntrack, file descriptor, THP, huge page,
+  TLB, NUMA) is defined once in `src/ui/glossary.js` and marked in copy as
+  `[[label]]`, whose id is the label in kebab case (`[[OOM killer]]` is
+  `oom-killer`), or `[[label|id]]` when the wording differs
+  (`[[dirty pages|dirty-page]]`). `GlossaryTerm.vue` renders it as a button
+  (`aria-expanded`, `aria-controls`) that shows the definition on its own line
+  under the text; a second press or Escape hides it, and it is never a
+  `title` tooltip. Mark a term at its first appearance in each card's
+  `longDesc` (or About block), not every occurrence, and not where the card
+  is itself about that term. Don't mark terms in the hero intro, profile help
+  or anything else inside a label or button. Definitions are plain text with
+  no markup. The contract suite fails on an id the glossary doesn't have, and
+  `glossary.test.js` on an entry no copy uses.
 - The site, including the legal pages, is in English. Statute references keep
   their German citation form: `§ 5 TMG`, `Art. 6 (1) (f) GDPR`,
   `§ 25 (2) (2) TTDSG`. Any material change to the privacy policy bumps its

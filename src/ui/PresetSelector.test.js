@@ -56,4 +56,15 @@ describe('PresetSelector change preview', () => {
     expect(panel.text()).toBe('')
     expect(toggle().exists()).toBe(false)
   })
+
+  it('says which preset is active with aria-pressed, not only with colour', async () => {
+    const store = useTunerStoreFor(swapDomain)
+    const wrapper = mountSelector(store)
+    const chips = () => wrapper.findAll('button[aria-pressed]')
+    expect(chips().map((b) => b.attributes('aria-pressed'))).toEqual(swapDomain.presets.map(() => 'false'))
+    const preset = swapDomain.presets[1]
+    await chips()[1].trigger('click')
+    expect(store.activePreset).toBe(preset.id)
+    expect(chips().map((b) => b.attributes('aria-pressed'))).toEqual(swapDomain.presets.map((p) => String(p === preset)))
+  })
 })

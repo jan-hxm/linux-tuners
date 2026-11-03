@@ -75,7 +75,7 @@ const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
           </p>
         </div>
         <nav class="flex items-center gap-3 text-xs text-slate-300">
-          <a href="#about" class="hover:text-white hover:underline">About this tuner</a>
+          <a href="#about" class="inline-flex min-h-6 items-center hover:text-white hover:underline">About this tuner</a>
         </nav>
       </div>
 

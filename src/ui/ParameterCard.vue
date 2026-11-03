@@ -124,7 +124,7 @@ function openInDrawer() {
         <p :id="titleId" class="text-sm font-semibold text-slate-900">{{ def.title }}</p>
         <button
           type="button"
-          class="break-words text-left font-mono text-xs text-slate-700 hover:underline"
+          class="min-h-6 break-words text-left font-mono text-xs text-slate-700 hover:underline"
           :aria-label="`${def.sysctlName}, open reference`"
           @click="openInDrawer"
         >
@@ -134,20 +134,20 @@ function openInDrawer() {
           :href="def.kernelDocsUrl"
           target="_blank"
           rel="noopener"
-          class="ml-1 text-xs text-slate-500 hover:text-slate-700"
-          title="Open kernel.org docs in new tab"
+          class="ml-0.5 inline-flex min-h-6 min-w-6 items-center justify-center text-xs text-slate-500 hover:text-slate-700"
+          :aria-label="`${domain.docsLabel}, opens in a new tab`"
+          :title="`Open ${domain.docsLabel} in a new tab`"
         >↗</a>
 
+        <!-- What each badge means is spelled out under Learn more. -->
         <ul class="mt-1 flex flex-wrap gap-1">
           <li
             v-if="contextNote"
-            class="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-800"
-            :title="`Has ${domain.context.label}-specific guidance`"
+            class="rounded bg-sky-100 px-1.5 py-0.5 text-xs font-medium text-sky-800"
           >{{ domain.context.badge }}</li>
           <li
             v-if="def.dangerousIfZero"
-            class="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-red-800"
-            title="Setting to 0 is documented as dangerous"
+            class="rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-800"
           >danger at 0</li>
         </ul>
 
@@ -177,13 +177,13 @@ function openInDrawer() {
         <button
           v-else-if="control.editable"
           type="button"
-          class="inline-flex items-center gap-1 rounded px-1 font-mono text-sm font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 hover:bg-slate-100 hover:decoration-slate-500"
+          class="inline-flex min-h-6 items-center gap-1 rounded px-1 font-mono text-sm font-semibold text-slate-900 underline decoration-slate-300 decoration-dotted underline-offset-2 hover:bg-slate-100 hover:decoration-slate-500"
           aria-label="Edit value: type an exact number"
           title="Click to type an exact value"
           @click="startEdit"
         >{{ formatted }}<span aria-hidden="true" class="text-[11px] text-slate-400">✎</span></button>
         <div v-else class="font-mono text-sm font-semibold text-slate-900">{{ formatted }}</div>
-        <div v-if="control.showsRange && !range.elements" class="text-[11px] text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
+        <div v-if="control.showsRange && !range.elements" class="text-xs text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
         <button
           v-if="changed"
           type="button"
@@ -221,7 +221,7 @@ function openInDrawer() {
     <div class="mt-3 border-t border-slate-100 pt-2">
       <button
         type="button"
-        class="text-xs text-slate-500 hover:text-slate-700"
+        class="inline-flex min-h-6 items-center text-xs text-slate-500 hover:text-slate-700"
         :aria-expanded="expanded"
         @click="expanded = !expanded"
       >
@@ -235,8 +235,11 @@ function openInDrawer() {
         <p v-if="def.tuningTip" class="rounded bg-slate-50 p-2 font-medium text-slate-800">
           <span class="font-semibold">Rule of thumb:</span> {{ def.tuningTip }}
         </p>
+        <p v-if="def.dangerousIfZero" class="rounded bg-red-50 p-2 text-red-900">
+          <span class="font-semibold">Danger at 0:</span> setting this to 0 is documented as dangerous.
+        </p>
         <p v-if="contextNote" class="rounded bg-sky-50 p-2 text-sky-900">
-          <span class="font-semibold">{{ domain.context.label }}:</span> {{ contextNote }}
+          <span class="font-semibold">{{ domain.context.label }} ({{ domain.context.badge }}):</span> {{ contextNote }}
           <a :href="domain.context.url" target="_blank" rel="noopener" class="whitespace-nowrap underline">Source ↗</a>
         </p>
         <p>

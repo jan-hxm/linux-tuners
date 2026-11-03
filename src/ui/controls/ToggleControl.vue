@@ -17,13 +17,13 @@ const emit = defineEmits(['update'])
       role="switch"
       :aria-checked="value === 1"
       :aria-labelledby="labelId"
-      class="relative h-5 w-9 rounded-full transition"
+      class="relative h-6 w-11 rounded-full transition"
       :class="value === 1 ? (def.toggleDanger ? 'bg-red-600' : 'bg-emerald-600') : 'bg-slate-300'"
       @click="emit('update', value === 1 ? 0 : 1)"
     >
       <span
-        class="absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all"
-        :class="value === 1 ? 'left-[18px]' : 'left-0.5'"
+        class="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all"
+        :class="value === 1 ? 'left-[22px]' : 'left-0.5'"
       />
     </button>
     <span class="text-xs text-slate-600">

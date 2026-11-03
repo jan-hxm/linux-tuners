@@ -73,7 +73,7 @@ function set(value) {
         v-for="pick in normalizedPicks"
         :key="pick.value"
         type="button"
-        class="hidden rounded-full border px-3 py-0.5 text-xs sm:inline-block"
+        class="hidden min-h-6 rounded-full border px-3 py-0.5 text-xs sm:inline-block"
         :class="Number(modelValue) === pick.value ? 'border-sky-700 bg-sky-700 text-white' : 'border-slate-300 hover:bg-slate-50'"
         @click="set(pick.value)"
       >

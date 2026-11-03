@@ -482,7 +482,14 @@ must follow them, and existing UI must not regress.
   elements.
 - **Nothing a user needs lives only in a `title` tooltip**, which touch
   screens never show and keyboards can't reach. The preset "what would change"
-  list sits behind a per-preset toggle button in `PresetSelector` instead.
+  list sits behind a per-preset toggle button in `PresetSelector` instead, and
+  a card's badges ("danger at 0", the context badge) are explained in its
+  Learn more layer.
+- **Targets are at least 24 × 24 px** (WCAG 2.2 AA, 2.5.8). A small text
+  button or link that stands alone (Learn more, "N changes", the section
+  headers, the value's edit button) gets `inline-flex min-h-6 items-center`,
+  switches are `h-6 w-11`, and chips get `min-h-6`. Links inside running text
+  are exempt; a list of links with tighter than 24 px line pitch is not.
 - **No page-level sideways scroll down to 320px.** Whatever can be wider than
   a phone handles it itself: the header nav scrolls inside its own box (keeps
   the current tuner in view, and fades the edge that has more links past it,

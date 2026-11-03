@@ -25,7 +25,7 @@ function commit(index, raw) {
 
 <template>
   <div role="group" :aria-labelledby="labelId" class="mt-3 flex flex-wrap gap-3">
-    <label v-for="(label, i) in def.tupleLabels" :key="label" class="flex flex-col text-[11px] text-slate-600">
+    <label v-for="(label, i) in def.tupleLabels" :key="label" class="flex flex-col text-xs text-slate-600">
       {{ label }}
       <input
         type="number"

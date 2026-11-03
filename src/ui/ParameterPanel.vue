@@ -79,20 +79,20 @@ const issueCountsBySection = computed(() => {
           role="switch"
           :aria-checked="showAllParams"
           :aria-labelledby="showAllLabelId"
-          class="relative h-5 w-9 shrink-0 rounded-full transition"
+          class="relative h-6 w-11 shrink-0 rounded-full transition"
           :class="showAllParams ? 'bg-emerald-600' : 'bg-slate-300'"
           @click="setShowAllParams(!showAllParams)"
         >
           <span
-            class="absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all"
-            :class="showAllParams ? 'left-[18px]' : 'left-0.5'"
+            class="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all"
+            :class="showAllParams ? 'left-[22px]' : 'left-0.5'"
           />
         </button>
         <span :id="showAllLabelId" class="text-xs text-slate-600">Show all parameters</span>
       </div>
       <button
         type="button"
-        class="text-xs text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-700 hover:decoration-slate-500"
+        class="inline-flex min-h-6 items-center text-xs text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-700 hover:decoration-slate-500"
         @click="tuner.resetToHardwareDefaults()"
       >
         Reset to hardware defaults
@@ -108,7 +108,7 @@ const issueCountsBySection = computed(() => {
           <h3 class="text-sm font-semibold text-slate-900">
             <button
               type="button"
-              class="flex w-full items-center gap-1.5 text-left"
+              class="flex min-h-6 w-full items-center gap-1.5 text-left"
               :aria-expanded="open[section.id]"
               :aria-controls="`section-panel-${section.id}`"
               @click="open[section.id] = !open[section.id]"

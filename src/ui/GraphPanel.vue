@@ -103,7 +103,7 @@ function bandClass(band) {
           :key="metric.id"
           class="rounded border border-slate-200 p-3"
         >
-          <p class="text-[11px] uppercase tracking-wide text-slate-500">{{ metric.label }}</p>
+          <p class="text-xs uppercase tracking-wide text-slate-500">{{ metric.label }}</p>
           <p
             class="mt-1 inline-block rounded px-2 py-0.5 text-sm font-medium"
             :class="bandClass(metric.band)"

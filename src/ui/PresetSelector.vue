@@ -97,7 +97,7 @@ function apply(preset) {
         <button
           v-if="diffsByPreset[preset.id].length"
           type="button"
-          class="self-start px-1 text-xs text-slate-500 hover:text-slate-700"
+          class="inline-flex min-h-6 items-center self-start px-1 text-xs text-slate-500 hover:text-slate-700"
           :aria-expanded="previewId === preset.id"
           :aria-controls="panelId"
           :aria-label="`${preset.label}: ${changeCount(preset)}, show what would change`"

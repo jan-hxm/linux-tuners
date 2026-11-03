@@ -177,7 +177,7 @@ const currentZone = computed(() =>
       class="pointer-events-none absolute top-[15px] h-1.5 w-0.5 -translate-x-1/2 rounded-full bg-slate-400"
       :style="{ left: `calc(8px + (100% - 16px) * ${defaultPct / 100})` }"
     />
-    <ul v-if="def.zones" class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+    <ul v-if="def.zones" class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">
       <li
         v-for="z in def.zones"
         :key="z.label"

@@ -232,6 +232,20 @@ describe('ParameterCard layers (Design.md §7)', () => {
     const headings = wrapper.findAll('h4').map((h) => h.text())
     expect(headings).toEqual(['What it does', 'When to change it'])
   })
+
+  it('explains its badges in visible text under Learn more, not in a title', async () => {
+    const store = useTunerStoreFor(swapDomain)
+    store.setHardware({ ...store.hardware, workload: 'k8s' })
+    // vfs_cache_pressure is dangerous at 0; swappiness has the K8s note.
+    for (const [key, meaning] of [['vfs_cache_pressure', 'Danger at 0:'], ['swappiness', 'Kubernetes (K8s):']]) {
+      const wrapper = mountCard(key)
+      await nextTick()
+      expect(wrapper.findAll('li[title]')).toHaveLength(0)
+      expect(wrapper.text()).not.toContain(meaning)
+      await wrapper.findAll('button').find((b) => b.text().includes('Learn more')).trigger('click')
+      expect(wrapper.text()).toContain(meaning)
+    }
+  })
 })
 
 describe('ParameterCard value source (Design.md §7)', () => {

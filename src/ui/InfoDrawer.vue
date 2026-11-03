@@ -161,7 +161,7 @@ watch(isOpen, async (open) => {
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Try it now</h3>
           <p class="mt-1 text-xs text-slate-700">Sets the current value until the next reboot. The generated file makes it permanent.</p>
           <div class="mt-1 flex items-start gap-2">
-            <code class="min-w-0 flex-1 break-all rounded bg-slate-50 p-2 font-mono text-[11px] leading-snug text-slate-800">{{ tryCommand }}</code>
+            <code class="min-w-0 flex-1 break-all rounded bg-slate-50 p-2 font-mono text-xs leading-snug text-slate-800">{{ tryCommand }}</code>
             <button
               type="button"
               class="shrink-0 rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
@@ -180,7 +180,7 @@ watch(isOpen, async (open) => {
 
         <section v-if="formula">
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ formula.title }}</h3>
-          <pre class="mt-1 rounded bg-slate-50 p-2 text-[11px] leading-snug text-slate-800 overflow-x-auto"><code>{{ formula.lines.join('\n') }}</code></pre>
+          <pre class="mt-1 rounded bg-slate-50 p-2 text-xs leading-snug text-slate-800 overflow-x-auto"><code>{{ formula.lines.join('\n') }}</code></pre>
           <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
             <template v-for="row in formula.values" :key="row.label">
               <dt class="text-slate-600">{{ row.label }}</dt>
@@ -209,7 +209,7 @@ watch(isOpen, async (open) => {
               >
                 <td class="py-1 capitalize">
                   {{ row.workload }}
-                  <span v-if="row.workload === tuner.hardware.workload" class="text-[10px] text-slate-500">(current)</span>
+                  <span v-if="row.workload === tuner.hardware.workload" class="text-xs text-slate-500">(current)</span>
                 </td>
                 <td class="py-1 font-mono">{{ row.formatted }}</td>
               </tr>
@@ -219,9 +219,9 @@ watch(isOpen, async (open) => {
 
         <section>
           <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sources</h3>
-          <ul class="mt-1 space-y-1 text-xs">
-            <li><a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="text-sky-700 underline">{{ domain.docsLabel }} ↗</a></li>
-            <li v-if="contextNote"><a :href="domain.context.url" target="_blank" rel="noopener" class="text-sky-700 underline">{{ domain.context.label }} guidance ↗</a></li>
+          <ul class="mt-1 text-xs">
+            <li><a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="inline-flex min-h-6 items-center text-sky-700 underline">{{ domain.docsLabel }} ↗</a></li>
+            <li v-if="contextNote"><a :href="domain.context.url" target="_blank" rel="noopener" class="inline-flex min-h-6 items-center text-sky-700 underline">{{ domain.context.label }} guidance ↗</a></li>
           </ul>
         </section>
       </div>

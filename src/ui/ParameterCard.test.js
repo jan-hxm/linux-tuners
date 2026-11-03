@@ -253,7 +253,8 @@ describe('ParameterCard value source (Design.md §7)', () => {
     setActivePinia(createPinia())
   })
 
-  const resetButton = (wrapper) => wrapper.findAll('button').find((b) => b.text() === 'Reset')
+  // Reset keeps its space while hidden, so a visible one is the one without `invisible`.
+  const resetButton = (wrapper) => wrapper.findAll('button').find((b) => b.text() === 'Reset' && !b.classes('invisible'))
 
   it('names the kernel default beside the profile default, and resets to the profile default', async () => {
     const store = useTunerStoreFor(swapDomain)
@@ -270,6 +271,21 @@ describe('ParameterCard value source (Design.md §7)', () => {
     await reset.trigger('click')
     expect(store.params.swappiness).toBe(10)
     expect(resetButton(wrapper)).toBeUndefined()
+  })
+
+  it('keeps the source line and Reset in the layout, so the card holds its height mid-drag', async () => {
+    const store = useTunerStoreFor(swapDomain)
+    const wrapper = mountCard('page_cluster')
+    await nextTick()
+    const height = () => [wrapper.findAll('p').length, wrapper.findAll('button').length]
+    const before = height()
+    expect(wrapper.text()).toContain('Kernel default 3')
+    expect(wrapper.findAll('button').find((b) => b.text() === 'Reset').classes()).toContain('invisible')
+
+    store.setParam('page_cluster', 5)
+    await nextTick()
+    expect(height()).toEqual(before)
+    expect(resetButton(wrapper)).toBeDefined()
   })
 
   it('marks the kernel default on the track and emphasises the zone holding the value', async () => {

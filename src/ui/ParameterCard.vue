@@ -4,6 +4,7 @@ import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { controlFor } from '@/ui/controls/index.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
 import { DESC_PARTS } from '@/ui/descParts.js'
+import RichText from '@/ui/RichText.vue'
 
 const props = defineProps({
   paramKey: { type: String, required: true },
@@ -35,11 +36,12 @@ const descParts = computed(() => DESC_PARTS.filter(({ key }) => def.value.longDe
 
 // Where the value comes from: the stock default, the profile's default when
 // it differs, and a Reset back to the profile's when the value moved off it.
+// The line always shows and Reset keeps its space while hidden, so the card
+// keeps its height and the slider stays put while it's dragged.
 const profileDefault = computed(() => tuner.profileDefaults[props.paramKey])
 const profileDiffers = computed(() => !valueTypeOf(def.value).equals(profileDefault.value, def.value.kernelDefault))
 const changed = computed(() => !valueTypeOf(def.value).equals(value.value, profileDefault.value))
 const sourceLine = computed(() => {
-  if (!profileDiffers.value && !changed.value) return null
   const stock = `${domain.defaultLabel} ${domain.formatValue(def.value.kernelDefault, def.value, tuner.hardware)}`
   if (!profileDiffers.value) return stock
   return `${stock} · for your profile ${domain.formatValue(profileDefault.value, def.value, tuner.hardware)}`
@@ -153,10 +155,8 @@ function openInDrawer() {
 
         <p v-if="def.alsoSets" class="mt-1 break-all font-mono text-xs text-slate-500">also sets {{ def.alsoSets.join(', ') }}</p>
         <p class="mt-1.5 text-xs text-slate-600">{{ def.shortDesc }}</p>
-        <template v-if="sourceLine">
-          <p class="mt-1 text-xs text-slate-500">{{ sourceLine }}</p>
-          <p v-if="def.kernelDefaultNote" class="text-xs text-slate-500">{{ def.kernelDefaultNote }}</p>
-        </template>
+        <p class="mt-1 text-xs text-slate-500">{{ sourceLine }}</p>
+        <p v-if="def.kernelDefaultNote" class="text-xs text-slate-500">{{ def.kernelDefaultNote }}</p>
       </div>
 
       <div class="ml-auto shrink-0 text-right">
@@ -185,9 +185,9 @@ function openInDrawer() {
         <div v-else class="font-mono text-sm font-semibold text-slate-900">{{ formatted }}</div>
         <div v-if="control.showsRange && !range.elements" class="text-xs text-slate-500">range {{ range.min.toLocaleString() }}–{{ range.max.toLocaleString() }}</div>
         <button
-          v-if="changed"
           type="button"
           class="mt-1 min-h-6 rounded border border-slate-300 px-2 text-xs text-slate-700 hover:bg-slate-50"
+          :class="{ invisible: !changed }"
           :aria-label="`Reset ${def.title} to ${domain.formatValue(profileDefault, def, tuner.hardware)}`"
           @click="resetValue"
         >Reset</button>
@@ -230,7 +230,7 @@ function openInDrawer() {
       <div v-if="expanded" class="mt-2 space-y-2 text-xs leading-relaxed text-slate-700">
         <section v-for="part in descParts" :key="part.key" class="space-y-1">
           <h4 class="font-semibold text-slate-800">{{ part.label }}</h4>
-          <p v-for="(para, i) in def.longDesc[part.key]" :key="i">{{ para }}</p>
+          <p v-for="(para, i) in def.longDesc[part.key]" :key="i"><RichText :text="para" /></p>
         </section>
         <p v-if="def.tuningTip" class="rounded bg-slate-50 p-2 font-medium text-slate-800">
           <span class="font-semibold">Rule of thumb:</span> {{ def.tuningTip }}

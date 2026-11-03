@@ -98,6 +98,11 @@ export function normalizeField(field, raw) {
   return field.options.some((o) => o.value === raw) ? raw : undefined
 }
 
+/** The label a choice field shows for a value; the value itself otherwise. */
+export function optionLabel(fields, key, value) {
+  return fields.find((f) => f.key === key)?.options?.find((o) => o.value === value)?.label ?? value
+}
+
 /** Whether a field is disabled for the given draft (`disabledWhen`). */
 export function isFieldDisabled(field, draft) {
   const rule = field.disabledWhen

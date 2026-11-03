@@ -146,7 +146,10 @@ asserts the required fields in dev and tests. It is listed in
   from the simulation's `impactSummary`. All page copy and the About content are data in
   `src/tuners/<id>/about.js` (`PAGE`, `ABOUT`), with a small inline markup
   (`` `code` ``, `**bold**`, `[label](https://…)`) rendered by `RichText.vue`
-  from parsed segments, never as HTML. The About section is always visible
+  from parsed segments, never as HTML. The parameter cards render each
+  def's `longDesc` paragraphs the same way, and the contract suite fails on
+  markup the parser doesn't know (a single `*`), since it would show
+  literally. The About section is always visible
   (no collapse), since it's real content and counts toward page quality.
 - **Profile form:** one generic `src/ui/profile/ProfileForm.vue` renders each
   tuner's `profile.js` field list (§9 "Profile"): number fields with
@@ -167,6 +170,15 @@ asserts the required fields in dev and tests. It is listed in
 when the same input event triggers a re-render. Instead a `selfWrite` flag plus
 a watcher push store changes to the DOM only when they come from outside the
 slider (preset, profile change, URL restore, the card's click-to-type edit).
+
+The track also holds still on screen while it's dragged. Its card keeps its
+height (the source line always shows, and Reset keeps its space while hidden),
+and a change that resizes something above it (a validation message in an
+earlier card, a section's issue count wrapping its header on a phone) is undone
+by scrolling: after the DOM updates, `commit` scrolls the window by however far
+the track moved, with `behavior: 'instant'`, since the page's smooth scrolling
+would otherwise lag behind the drag. Scrolling the window doesn't cancel the
+drag.
 
 ### Shareable URL state
 
@@ -563,7 +575,7 @@ must follow them, and existing UI must not regress.
   (the domain's `tryCommand`: `sudo sysctl -w`, or `echo | sudo tee` for a
   sysfs file; systemd and block I/O have none, since their settings are
   directives and udev rules), the context note, the formula with live values,
-  defaults by workload, and the sources. The contract suite checks every def's
+  defaults by workload (named by the profile's option labels), and the sources. The contract suite checks every def's
   title and parts.
 - **Essential and advanced parameters.** Every def has a `tier`. Each
   section of `ParameterPanel` shows its essential cards and a "Show N
@@ -581,16 +593,16 @@ must follow them, and existing UI must not regress.
   def has a tier and every section an essential parameter. Essential means
   what most readers of that tuner should look at; the rest is for a reason
   the reader already has.
-- **Where a value comes from.** A card whose profile default differs from
-  `def.kernelDefault` says so in a line under its description ("Kernel
-  default 60 · for your profile 10"; the domain's `defaultLabel` names whose
+- **Where a value comes from.** Every card names its default in a line under
+  its description ("Kernel default 60"), and adds the profile's when it
+  differs ("Kernel default 60 · for your profile 10"; the domain's `defaultLabel` names whose
   default it is, "systemd default" for systemd, and the drawer uses it too),
   with the def's `kernelDefaultNote` under it, since many defaults scale with
   RAM or differ by distribution and the number alone would claim too much.
-  The line also shows, without the profile part, once the value moves off a
-  default that equals the kernel's. When the value differs from the profile's
-  default (the store's `profileDefaults`), a "Reset" button under the value
-  sets it back; it is an ordinary edit, so it needs no undo. A slider marks
+  The line always shows, so the card doesn't change height mid-drag. When
+  the value differs from the profile's default (the store's
+  `profileDefaults`), a "Reset" button under the value sets it back (it is
+  `invisible` otherwise, keeping its space and leaving the tab order); it is an ordinary edit, so it needs no undo. A slider marks
   the kernel default with a tick under its track when it is inside the range,
   and emphasises the zone that holds the value: `def.zones` are
   `{ label, min, max }`, and a zone that depends on another parameter

@@ -105,7 +105,7 @@ function apply(preset) {
         >
           {{ previewId === preset.id ? '▾' : '▸' }} {{ changeCount(preset) }}
         </button>
-        <span v-else class="px-1 text-xs text-slate-500">Matches current values</span>
+        <span v-else class="inline-flex min-h-6 items-center px-1 text-xs text-slate-500">Matches current values</span>
       </li>
     </ul>
 

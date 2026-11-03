@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 
 const props = defineProps({
   def: { type: Object, required: true },
@@ -36,9 +36,22 @@ watch(() => props.value, (v) => {
   if (el && Number(el.value) !== v) el.value = String(v)
 })
 
+// A value change can resize things above the slider (a validation message in
+// an earlier card, a section's issue count wrapping its header on a phone),
+// which would shift the track under the pointer mid-drag. After the DOM
+// updates, scroll by however far the track moved so it stays put on screen.
 function commit(v) {
   selfWrite = true
+  const el = sliderEl.value
+  const top = el?.getBoundingClientRect().top
   emit('update', v)
+  if (el) {
+    nextTick(() => {
+      const shift = el.getBoundingClientRect().top - top
+      // Instant: the page's smooth scrolling would lag behind the drag.
+      if (shift) window.scrollBy({ top: shift, behavior: 'instant' })
+    })
+  }
 }
 
 // --- Touch handling for the range slider ----------------------------------

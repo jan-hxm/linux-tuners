@@ -74,7 +74,7 @@ export const PARAMETER_DEFS = [
         "Keep it low (0–10) for latency-sensitive work where a swap-in stall would hurt, especially with slow disk-backed swap. Leave it mid-range (10–60) for general-purpose servers. Push it high (100–200) only when swap is genuinely fast (zram, zswap, or NVMe), so the kernel can lean on it without paying a stall penalty.",
       ],
       watch: [
-        "Kernel 5.8 raised the maximum from 100 to 200 on any swap device, not just compressed swap. Anything above 100 weights swapping *more* heavily than dropping cache, which only makes sense when a swap-out is nearly as cheap as evicting a clean cache page, i.e. on fast in-memory swap like zram or zswap.",
+        "Kernel 5.8 raised the maximum from 100 to 200 on any swap device, not just compressed swap. Anything above 100 weights swapping more heavily than dropping cache, which only makes sense when a swap-out is nearly as cheap as evicting a clean cache page, i.e. on fast in-memory swap like zram or zswap.",
       ],
     },
     tuningTip: 'Bump it up when swap is fast and you want to keep cache; lower it when swap is slow and stalls hurt.',
@@ -299,7 +299,7 @@ export const PARAMETER_DEFS = [
     shortDesc: 'How often the background flusher wakes up to look for expired pages.',
     longDesc: {
       what: [
-        'This is how often the background flusher thread wakes, in hundredths of a second, to look for dirty pages older than dirty_expire_centisecs and write them out. Where dirty_expire sets *when a page is due*, this sets *how often the kernel checks*.',
+        'This is how often the background flusher thread wakes, in hundredths of a second, to look for dirty pages older than dirty_expire_centisecs and write them out. Where dirty_expire sets when a page is due, this sets how often the kernel checks.',
       ],
       watch: [
         'Setting it to 0 disables periodic writeback entirely; pages then only flush when a ratio threshold is hit or an fsync forces it. Keep it at or below dirty_expire_centisecs, otherwise pages can age past their expiry between checks and linger longer than you intended.',

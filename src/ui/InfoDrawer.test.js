@@ -36,6 +36,15 @@ describe('InfoDrawer, the pro reference', () => {
     wrapper.unmount()
   })
 
+  it('names the workloads by their profile labels and marks the current one', async () => {
+    const { wrapper } = await openDrawer(swapDomain, 'swappiness')
+    const rows = wrapper.findAll('tbody tr').map((r) => r.find('td').text())
+    expect(rows).toContain('Kubernetes node')
+    expect(rows).toContain('Embedded / constrained memory')
+    expect(rows.filter((r) => r.includes('(current)'))).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('has no command for a setting that is not a sysctl', async () => {
     const { wrapper } = await openDrawer(systemdDomain, 'cpu_weight')
     expect(wrapper.text()).not.toContain('Try it now')

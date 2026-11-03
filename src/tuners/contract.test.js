@@ -376,7 +376,14 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         expect(longDesc.what?.length, key).toBeGreaterThan(0)
         for (const paras of Object.values(longDesc)) {
           expect(paras.length, key).toBeGreaterThan(0)
-          for (const para of paras) expect(typeof para === 'string' && para.trim().length > 0, key).toBe(true)
+          for (const para of paras) {
+            expect(typeof para === 'string' && para.trim().length > 0, key).toBe(true)
+            // Rendered as rich text: any markup it doesn't parse shows literally.
+            for (const seg of parseRichText(para)) {
+              if (seg.type === 'link') expect(seg.href).toMatch(/^https:\/\/[^\s"'<>]+$/)
+              if (seg.type === 'text') expect(seg.text, key).not.toMatch(/[*`]|\]\(/)
+            }
+          }
         }
       }
     })

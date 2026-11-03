@@ -2,6 +2,7 @@
 import { computed, onMounted, onBeforeUnmount, watch, nextTick, ref } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
+import { optionLabel } from '@/core/profile.js'
 import { copyText } from '@/ui/fileActions.js'
 
 const tuner = useActiveTuner()
@@ -25,11 +26,14 @@ const contextNote = computed(() => {
 
 const workloadComparison = computed(() => {
   if (!def.value) return []
+  const field = domain.workloadField
   return domain.workloads.map((workload) => {
-    const hw = { ...tuner.hardware, [domain.workloadField]: workload }
+    const hw = { ...tuner.hardware, [field]: workload }
     const value = domain.deriveDefaults(hw)[def.value.key]
     return {
       workload,
+      label: optionLabel(domain.profile.fields, field, workload),
+      current: workload === tuner.hardware[field],
       value,
       formatted: domain.formatValue(value, def.value, hw),
     }
@@ -205,11 +209,11 @@ watch(isOpen, async (open) => {
                 v-for="row in workloadComparison"
                 :key="row.workload"
                 class="border-t border-slate-100"
-                :class="{ 'bg-slate-50': row.workload === tuner.hardware.workload }"
+                :class="{ 'bg-slate-50': row.current }"
               >
-                <td class="py-1 capitalize">
-                  {{ row.workload }}
-                  <span v-if="row.workload === tuner.hardware.workload" class="text-xs text-slate-500">(current)</span>
+                <td class="py-1">
+                  {{ row.label }}
+                  <span v-if="row.current" class="text-xs text-slate-500">(current)</span>
                 </td>
                 <td class="py-1 font-mono">{{ row.formatted }}</td>
               </tr>

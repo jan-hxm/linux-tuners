@@ -8,7 +8,7 @@
  */
 import { reactive, ref, computed, watch, inject } from 'vue'
 import { useActiveTuner, useTunerDomain, PROFILE_FIELD_NOTE_KEY } from '@/ui/useActiveTuner.js'
-import { normalizeField, isFieldDisabled } from '@/core/profile.js'
+import { normalizeField, isFieldDisabled, optionLabel } from '@/core/profile.js'
 import NumberPickField from './NumberPickField.vue'
 import RichText from '@/ui/RichText.vue'
 
@@ -53,11 +53,9 @@ function draftValue(field) {
 const differsFrom = (hw) => fields.some((f) => draftValue(f) !== hw[f.key])
 const dirty = computed(() => differsFrom(tuner.hardware))
 
-function optionLabel(key, value) {
-  return fields.find((f) => f.key === key)?.options?.find((o) => o.value === value)?.label ?? value
-}
-
-const summary = computed(() => profile.summary(tuner.hardware, optionLabel).join(' · '))
+const summary = computed(() =>
+  profile.summary(tuner.hardware, (key, value) => optionLabel(fields, key, value)).join(' · '),
+)
 
 const disabled = (field) => isFieldDisabled(field, draft)
 const selectedNote = (field) => field.options.find((o) => o.value === draft[field.key])?.note

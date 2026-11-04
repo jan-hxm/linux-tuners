@@ -81,7 +81,7 @@
    * chain, as measured in the browser. Sticky offsets and anchor scroll margins
    * below them are built from these, so update them if either bar changes. */
   :root {
-    --site-header-h: 41px;
+    --site-header-h: 61px;
     --step-chain-h: 53px;
   }
 

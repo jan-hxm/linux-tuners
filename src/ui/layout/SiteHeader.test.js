@@ -10,7 +10,7 @@ const Empty = { template: '<div />' }
 async function headerAt(path) {
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/', component: Empty }, { path: '/privacy', component: Empty }, ...LIVE_TUNERS.map((t) => ({ path: t.path, component: Empty }))],
+    routes: [{ path: '/', component: Empty }, { path: '/privacy', component: Empty }, { path: '/setup', component: Empty }, ...LIVE_TUNERS.map((t) => ({ path: t.path, component: Empty }))],
   })
   router.push(path)
   await router.isReady()
@@ -25,18 +25,31 @@ describe('SiteHeader', () => {
   it('marks "All tuners" as the current page on the landing page', async () => {
     const wrapper = await headerAt('/')
     expect(current(wrapper)).toEqual(['All tuners'])
-    expect(wrapper.get('nav a[href="/"]').classes()).toContain('bg-sky-700')
+    expect(wrapper.get('nav a[href="/"]').classes()).toContain('!border-ink')
   })
 
   it('marks only the tuner on a tuner page', async () => {
     const tuner = LIVE_TUNERS[0]
     const wrapper = await headerAt(tuner.path)
     expect(current(wrapper)).toEqual([tuner.navLabel])
-    expect(wrapper.get('nav a[href="/"]').classes()).not.toContain('bg-sky-700')
+    expect(wrapper.get('nav a[href="/"]').classes()).not.toContain('!border-ink')
   })
 
   it('marks nothing on a page outside the nav', async () => {
     expect(current(await headerAt('/privacy'))).toEqual([])
+  })
+
+  it('puts every live tuner in the nav, one click away', async () => {
+    const wrapper = await headerAt('/')
+    const links = wrapper.findAll('nav a').map((a) => [a.text(), a.attributes('href')])
+    expect(links).toEqual([['All tuners', '/'], ...LIVE_TUNERS.map((t) => [t.navLabel, t.path])])
+  })
+
+  it('offers one primary Start setup link to the guided setup', async () => {
+    const wrapper = await headerAt('/')
+    const start = wrapper.findAll('a').filter((a) => a.text() === 'Start setup')
+    expect(start).toHaveLength(1)
+    expect(start[0].attributes('href')).toBe('/setup')
   })
 
   it('fades an edge only while there are more links past it', async () => {

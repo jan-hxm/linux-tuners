@@ -1,21 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Horizontal logo with wordmark for linux-tuners.dev. Use where a small icon
-  alone is not enough context (AdSense consent banner, footer attributions,
-  embeds). Pairs the favicon mark with the brand wordmark.
+  Horizontal logo with wordmark for linux-tuners.dev, on a transparent
+  background: the tick mark (a short ruler with one tall verdigris tick) and
+  the name. Use where a small icon alone is not enough context (AdSense
+  consent banner, footer attributions, embeds). Rasterized by `npm run gen:icons`.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" width="360" height="80" role="img" aria-label="linux-tuners.dev">
-  <!-- Mark -->
-  <g>
-    <rect x="8" y="8" width="64" height="64" rx="12" fill="#0f172a"/>
-    <rect x="18" y="38" width="44" height="4" rx="2" fill="#475569"/>
-    <rect x="18" y="38" width="30" height="4" rx="2" fill="#0ea5e9"/>
-    <circle cx="48" cy="40" r="8" fill="white"/>
-    <circle cx="48" cy="40" r="3" fill="#0ea5e9"/>
+  <g transform="translate(8 8) scale(2.909)">
+    <path d="M1 17H21" stroke="#161616" stroke-width="1.5" fill="none"/>
+    <path d="M4 17V12M8 17V14M16 17V14M20 17V12" stroke="#161616" stroke-width="1.5" fill="none"/>
+    <path d="M12 17V2" stroke="#1F7A6B" stroke-width="3" fill="none"/>
   </g>
-
-  <!-- Wordmark -->
-  <text x="92" y="50" fill="#0f172a"
-        font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
-        font-size="28" font-weight="700" letter-spacing="-0.5">linux-tuners<tspan fill="#0ea5e9">.dev</tspan></text>
+  <text x="88" y="50" fill="#161616"
+        font-family="'Host Grotesk', 'Helvetica Neue', Arial, sans-serif"
+        font-size="28" font-weight="600" letter-spacing="-0.3">linux-tuners.dev</text>
 </svg>

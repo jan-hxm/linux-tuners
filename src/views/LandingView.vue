@@ -2,6 +2,7 @@
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AdSlot from '@/ui/AdSlot.vue'
+import { PAGE_WIDTH } from '@/ui/layout/pageWidth.js'
 import MarkGlyph from '@/ui/controls/MarkGlyph.vue'
 import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
 import { MACHINE_ROLES, isMachineRole, tunersForRole } from '@/core/machineRoles.js'
@@ -53,7 +54,7 @@ const stepNumber = (i) => String(i + 1).padStart(2, '0')
 // --- The specimen --------------------------------------------------------
 //
 // The swap domain and the slider are lazy-loaded, so the landing chunk stays
-// small. The specimen keeps its value to itself (REDESIGN §4 decision 4).
+// small. The specimen keeps its value to itself (Design.md §5 "Guided setup").
 const LandingSpecimen = defineAsyncComponent(() => import('./LandingSpecimen.vue'))
 const example = shallowRef(null)
 async function loadExample() {
@@ -104,7 +105,7 @@ const secondaryButton = 'inline-flex min-h-11 items-center justify-center border
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl px-4 pb-4 sm:px-6">
+  <div class="pb-4" :class="PAGE_WIDTH">
     <!-- Hero: one sentence, then the real thing to touch -->
     <section class="grid gap-x-16 gap-y-12 pb-12 pt-10 sm:pb-[72px] sm:pt-[88px] lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:items-start">
       <div class="min-w-0">
@@ -207,7 +208,7 @@ const secondaryButton = 'inline-flex min-h-11 items-center justify-center border
 
         <div class="contents lg:block lg:min-w-0 lg:border-t lg:border-ink" data-route>
           <!-- The primary action sits in the route's header row, above the
-               route, whose length depends on the role (REDESIGN §4 decision 6). -->
+               route, whose length depends on the role (Design.md §5 "Guided setup"). -->
           <div class="sticky bottom-0 z-10 mt-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-y border-b-rule border-t-ink bg-paper py-3 lg:bottom-auto lg:py-1.5 lg:top-[var(--site-header-h)] lg:mt-0 lg:border-t-0">
             <p class="text-sm text-quiet" aria-live="polite">{{ summary }}</p>
             <RouterLink :to="setupLink" :class="primaryButton" data-setup-button>{{ COPY.start.setupButton }}</RouterLink>

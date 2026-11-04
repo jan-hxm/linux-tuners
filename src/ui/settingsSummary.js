@@ -1,7 +1,7 @@
 /**
  * The one-line count of where a set of settings stands, as the group rows and
  * the export say it: "5 settings. All fit your machine." or "9 settings. 7 fit
- * your machine, 2 changed by you." (REDESIGN §4 decision 10). Built from the
+ * your machine, 2 changed by you." (Design.md §7). Built from the
  * keys shown and the store's `changedKeys`, never hand-typed.
  *
  * @param {string[]} keys      The settings being counted

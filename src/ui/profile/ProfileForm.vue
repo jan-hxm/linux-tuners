@@ -84,7 +84,7 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
             <select
               :id="idFor(f.key)"
               v-model="draft[f.key]"
-              class="mt-2 min-h-11 w-full max-w-md border border-rule-strong !bg-paper px-2.5 text-[15px] text-ink"
+              class="mt-2 min-h-11 w-full max-w-md border border-rule-strong bg-paper px-2.5 text-[15px] text-ink"
             >
               <option v-for="o in f.options" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
@@ -148,7 +148,7 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
               :placeholder="f.placeholder"
               :aria-invalid="Boolean(errors[f.key])"
               :aria-describedby="errors[f.key] ? `${idFor(f.key)}-error` : undefined"
-              class="mt-2 min-h-11 w-full max-w-md border !bg-paper px-2.5 font-mono text-[15px] text-ink placeholder:text-quiet"
+              class="mt-2 min-h-11 w-full max-w-md border bg-paper px-2.5 font-mono text-[15px] text-ink placeholder:text-quiet"
               :class="errors[f.key] ? 'border-error' : 'border-rule-strong'"
               @input="errors[f.key] = null"
             />

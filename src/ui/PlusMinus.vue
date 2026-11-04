@@ -1,5 +1,5 @@
 <script setup>
-// The mono-weight + / − at the end of a disclosure row (REDESIGN §5 WS4),
+// The mono-weight + / − at the end of a disclosure row (Design.md §7),
 // drawn rather than typed so it stays out of the button's text and name: the
 // button's aria-expanded says the state.
 defineProps({

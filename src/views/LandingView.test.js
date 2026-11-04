@@ -108,7 +108,7 @@ describe('LandingView role picker', () => {
     expect(setupHrefs((await landingAt('/?role=vm-host')).wrapper)).toEqual(['/setup?role=vm-host'])
   })
 
-  // REDESIGN §4 decision 6: never a primary action below content whose
+  // Design.md §5 "Guided setup": never a primary action below content whose
   // length depends on data. The button comes right after the roles, before
   // the route, for every role.
   it('puts "Start guided setup" after the role list and before the route', async () => {

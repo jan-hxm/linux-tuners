@@ -29,12 +29,15 @@ const formatted = computed(() => format(value.value))
 // Many formatted values carry a second reading in brackets ("262144 kB
 // (256 MiB)", "3 (up to 8 pages, 32 KiB)"). The card prints the first part
 // large and the bracket beside it in quiet text; the full string stays the
-// accessible name and valuetext.
+// slider's valuetext.
 const splitValue = (text) => {
   const m = /^(.+?) \((.+)\)$/.exec(text)
   return m ? { main: m[1], aside: m[2] } : { main: text, aside: null }
 }
 const valueParts = computed(() => splitValue(formatted.value))
+// The edit button's name starts with the value as it reads on screen, both
+// parts without the bracket (WCAG 2.5.3: the name contains the visible text).
+const valueText = computed(() => [valueParts.value.main, valueParts.value.aside].filter(Boolean).join(' '))
 
 // Long names break after a separator (kernel.unprivileged_bpf_ / disabled)
 // rather than mid-word; <wbr> marks the spots without changing copied text.
@@ -83,7 +86,7 @@ const contextNote = computed(() => {
 
 // The notes, in the order of the layers (Design.md §7 "Three layers per
 // parameter"): the parts of longDesc, the rule of thumb, the context note.
-// The margin holds at most three notes (REDESIGN §4 decision 9): the first
+// The margin holds at most three notes (Design.md §7): the first
 // two of these and the origin note. A card too narrow for the wide margin
 // (beside the graph column, or on a phone) holds two: the first of these and
 // the origin note. The rest stay behind "Learn more", with the danger note,
@@ -136,7 +139,7 @@ const moreNotes = computed(() => [
     : []),
 ])
 
-// Where the card has no margin (a narrow card, REDESIGN §4 decision 7), each
+// Where the card has no margin (a narrow card, Design.md §7), each
 // margin note is an [n] toggle that opens it in place.
 const openNotes = reactive({})
 // On a wide card, which notes show past their first sentence. Its own state,
@@ -265,7 +268,7 @@ function openInDrawer() {
               :type="control.editable ? 'button' : undefined"
               class="group inline-flex min-h-6 max-w-full flex-wrap items-baseline gap-x-2 text-left font-mono"
               :class="compact ? 'justify-end' : ''"
-              :aria-label="control.editable ? `${formatted}, edit: type an exact value` : undefined"
+              :aria-label="control.editable ? `${valueText}, edit: type an exact value` : undefined"
               :title="control.editable ? 'Click to type an exact value' : undefined"
               @click="control.editable && startEdit()"
             >
@@ -276,7 +279,9 @@ function openInDrawer() {
                   compact ? 'text-lg' : 'pc-num-large',
                 ]"
               >{{ valueParts.main }}</span>
-              <span v-if="valueParts.aside" class="text-base text-quiet">{{ valueParts.aside }}</span>
+              <!-- A real space between the parts, so the text reads as two
+                   words and the accessible name contains it (WCAG 2.5.3). -->
+              <template v-if="valueParts.aside">{{ ' ' }}<span class="text-base text-quiet">{{ valueParts.aside }}</span></template>
               <span v-if="control.editable" aria-hidden="true" class="text-sm text-quiet group-hover:text-ink">✎</span>
             </component>
             <p

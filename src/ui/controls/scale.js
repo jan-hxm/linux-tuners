@@ -1,5 +1,5 @@
 /**
- * The printed scale under a slider (REDESIGN "Scale", the ruler motif): where
+ * The printed scale under a slider (Design.md §7, the ruler motif): where
  * a value sits on the range, and the major and minor ticks with their numbers.
  * Pure, so the slider, the landing specimen and tests share it.
  */

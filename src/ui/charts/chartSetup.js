@@ -28,13 +28,15 @@ Chart.register(
   Filler,
 )
 
-// The page's type (REDESIGN §3): words in the sans stack, and the numbers on
+// The page's type (Design.md §7): words in the sans stack, and the numbers on
 // the axes in mono, like the numbers on a slider's scale. 13px is the floor
 // for meaningful text. No chart titles or legends: GraphPanel and each chart
 // carry their own.
 Chart.defaults.font.family = FONT_SANS.join(', ')
 Chart.defaults.font.size = 13
 Chart.defaults.scale.ticks.font = { family: FONT_MONO.join(', '), size: 13 }
+// Category labels are words (TasksChart's limits), so they stay in sans.
+Chart.defaults.scales.category.ticks.font = { family: FONT_SANS.join(', '), size: 13 }
 Chart.defaults.plugins.legend.display = false
 
 // Tick, title and grid colours follow the scheme. Synchronous, so the defaults

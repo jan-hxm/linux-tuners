@@ -1,5 +1,5 @@
 /**
- * The landing specimen's data (REDESIGN §4 decision 4), loaded on demand so
+ * The landing specimen's data (Design.md §5 "Guided setup"), loaded on demand so
  * the swap domain stays out of the landing chunk: the domain, the setting's
  * key, the example machine and its one-line summary. Plain data; nothing
  * here reads or writes a store or the URL.

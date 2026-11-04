@@ -1,69 +1,40 @@
-import colors from 'tailwindcss/colors.js'
 import plugin from 'tailwindcss/plugin.js'
-import { THEMED_FAMILIES, SHADES, darkColour, TOKENS, FONT_SANS, FONT_MONO } from './src/ui/theme.js'
+import { TOKENS, FONT_SANS, FONT_MONO } from './src/ui/theme.js'
 
-// Dark mode: themed colours are CSS variables holding an RGB triplet, light
-// values on :root and the mapped ones from src/ui/theme.js under
-// prefers-color-scheme: dark. `.light-palette` brings the light values back for
-// surfaces that are dark by design (the hero). See Design.md §7.
-const NAMES = ['white', ...THEMED_FAMILIES.flatMap((family) => SHADES.map((shade) => `${family}-${shade}`))]
-const hex = (name) => (name === 'white' ? colors.white : colors[name.split('-')[0]][name.split('-')[1]])
-// Tailwind writes white as #fff, so expand the short form first.
-const triplet = (value) =>
-  (value.length === 4 ? [...value.slice(1)].map((c) => c + c).join('') : value.slice(1))
-    .match(/../g)
-    .map((h) => parseInt(h, 16))
-    .join(' ')
-const themed = (name) => `rgb(var(--c-${name}) / <alpha-value>)`
-// The semantic tokens of the redesign (REDESIGN.md §3) live in --t-* variables
-// beside the legacy --c-* families, which stay until nothing uses them (WS8).
+// The colour tokens (src/ui/theme.js, Design.md §7) are the whole palette:
+// CSS variables holding an RGB triplet, light values on :root and dark ones
+// under prefers-color-scheme: dark, so components need no `dark:` variants.
+// Tailwind's own colour families are not offered at all (theme.test.js).
+const triplet = (hex) => hex.slice(1).match(/../g).map((h) => parseInt(h, 16)).join(' ')
 const token = (name) => `rgb(var(--t-${name}) / <alpha-value>)`
-
-function vars(dark) {
-  const tokens = Object.entries(TOKENS).map(([name, pair]) => [`--t-${name}`, triplet(pair[dark ? 1 : 0].toLowerCase())])
-  return Object.fromEntries([
-    ...tokens,
-    ...NAMES.map((name) => {
-      if (!dark) return [`--c-${name}`, triplet(hex(name))]
-      const [family, shade] = name === 'white' ? ['white'] : name.split('-')
-      const to = darkColour(family, Number(shade))
-      return [`--c-${name}`, triplet(hex(to === 'white' ? 'white' : to.join('-')))]
-    }),
-  ])
-}
+const vars = (scheme) => Object.fromEntries(Object.entries(TOKENS).map(([name, pair]) => [`--t-${name}`, triplet(pair[scheme])]))
 
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{vue,js}'],
   theme: {
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      inherit: 'inherit',
+      // The drawer's scrim dims the page in either scheme.
+      black: '#000',
+      ...Object.fromEntries(Object.keys(TOKENS).map((name) => [name, token(name)])),
+    },
     extend: {
       fontFamily: {
         sans: FONT_SANS,
         mono: FONT_MONO,
       },
-      colors: {
-        ...Object.fromEntries(Object.keys(TOKENS).map((name) => [name, token(name)])),
-        white: themed('white'),
-        ...Object.fromEntries(
-          THEMED_FAMILIES.map((family) => [family, Object.fromEntries(SHADES.map((shade) => [shade, themed(`${family}-${shade}`)]))]),
-        ),
-        zone: {
-          safe: '#16a34a',
-          warn: '#d97706',
-          danger: '#dc2626',
-          kswapd: '#0ea5e9',
-        },
-      },
-      // A bare `border` follows the scheme too (preflight's default is gray-200).
-      borderColor: { DEFAULT: themed('slate-200') },
+      // A bare `border` is a hairline (preflight's default is gray-200).
+      borderColor: { DEFAULT: token('rule') },
     },
   },
   plugins: [
     plugin(({ addBase }) => {
       addBase({
-        ':root': { ...vars(false), 'color-scheme': 'light dark' },
-        '@media (prefers-color-scheme: dark)': { ':root': vars(true) },
-        '.light-palette': { ...vars(false), 'color-scheme': 'light' },
+        ':root': { ...vars(0), 'color-scheme': 'light dark' },
+        '@media (prefers-color-scheme: dark)': { ':root': vars(1) },
       })
     }),
   ],

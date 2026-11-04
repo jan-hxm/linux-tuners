@@ -58,14 +58,13 @@ const chartOptions = computed(() => ({
     <ChartFrame :aria-label="summary" height="8rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
-    <div class="flex flex-wrap gap-3 text-xs text-slate-600">
-      <span>
-        When the CPU is saturated, sibling slices split it in proportion to their
-        <code class="font-mono">CPUWeight</code>. With the CPU idle, weight has no effect.
-      </span>
-      <span v-if="cpu.quotaCores !== null" class="rounded bg-amber-50 px-2 py-0.5 text-amber-800">
-        Hard cap: CPUQuota limits this slice to ~{{ cpu.quotaCores.toFixed(1) }} of {{ cpu.cores }} cores regardless of weight.
-      </span>
-    </div>
+    <p class="text-[13px] text-ink-2">
+      When the CPU is saturated, sibling slices split it in proportion to their
+      <code class="font-mono">CPUWeight</code>. With the CPU idle, weight has no effect.
+    </p>
+    <p v-if="cpu.quotaCores !== null" class="flex gap-1.5 text-[13px] text-mine-text">
+      <span aria-hidden="true" class="font-mono">!</span>
+      <span>Hard cap: CPUQuota limits this slice to ~{{ cpu.quotaCores.toFixed(1) }} of {{ cpu.cores }} cores regardless of weight.</span>
+    </p>
   </div>
 </template>

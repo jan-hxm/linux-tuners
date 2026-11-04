@@ -10,6 +10,8 @@ import { useRoute } from 'vue-router'
 import SetupMachine from './SetupMachine.vue'
 import SetupStep from './SetupStep.vue'
 import SetupFiles from './SetupFiles.vue'
+import StepChain from '@/ui/StepChain.vue'
+import { PAGE_WIDTH } from '@/ui/layout/pageWidth.js'
 import { SETUP_STEPS } from './steps.js'
 import { useSetupStore, useStepStore } from './useSetupStore.js'
 
@@ -49,17 +51,15 @@ function status(p) {
   if (!p.step) return null
   if (setup.skipped.includes(p.id)) return { label: 'Skipped', mark: '–', cls: 'text-quiet', seg: 'border-dashed border-rule-strong' }
   const store = useStepStore(p.id)
-  if (store.blocked) return { label: 'Blocked', mark: '×', cls: 'font-medium text-error', seg: 'border-error' }
+  if (store.blocked) return { label: 'Blocked', mark: '×', cls: 'font-medium text-error', seg: 'border-error', error: true }
   if (store.issues.length) return { label: `${store.issues.length} to check`, mark: '!', cls: 'text-ink-2', seg: '' }
   return null
 }
 
-/** The segment above a step: the current one thick, earlier ones darker. */
-function segment(p, i) {
-  const st = status(p)
-  if (i === current.value) return ['border-t-4', st?.seg.includes('border-error') ? 'border-error' : 'border-fit']
-  return ['border-t-2 pt-0.5', st?.seg || (i < current.value ? 'border-rule-strong' : 'border-rule')]
-}
+/** The step list: each step with its number and, where it has one, its status. */
+const CHAIN = computed(() =>
+  PANELS.map((p, i) => ({ id: p.id, label: p.title, mark: String(i + 1).padStart(2, '0'), status: status(p) })),
+)
 
 async function go(index) {
   current.value = Math.max(0, Math.min(PANELS.length - 1, index))
@@ -72,7 +72,7 @@ const goto = (id) => go(PANELS.findIndex((p) => p.id === id))
 </script>
 
 <template>
-  <section class="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6">
+  <section class="pb-16 pt-10" :class="PAGE_WIDTH">
     <header class="border-t border-ink pt-4">
       <p class="font-mono text-[13px] text-quiet">Guided setup</p>
       <h1 class="mt-2 text-[26px] font-medium leading-tight tracking-[-0.02em] text-ink sm:text-[34px]">Tune a whole Linux machine</h1>
@@ -83,25 +83,7 @@ const goto = (id) => go(PANELS.findIndex((p) => p.id === id))
 
     <!-- Step list: one segment per step on a scale, the current step thick. -->
     <nav aria-label="Setup steps" class="mt-8">
-      <ol class="grid grid-cols-2 gap-x-2 sm:grid-cols-3 lg:grid-cols-6">
-        <li v-for="(p, i) in PANELS" :key="p.id" class="min-w-0">
-          <button
-            type="button"
-            class="flex min-h-11 w-full flex-col items-start justify-center py-1 pr-2 text-left text-[15px] hover:bg-paper-hover"
-            :class="[segment(p, i), i === current ? 'font-medium text-ink' : 'text-ink-2']"
-            :aria-current="i === current ? 'step' : undefined"
-            @click="go(i)"
-          >
-            <span class="flex w-full items-baseline gap-2">
-              <span class="font-mono text-[13px]" :class="i === current ? 'text-fit-text' : 'text-quiet'">{{ String(i + 1).padStart(2, '0') }}</span>
-              <span class="min-w-0 flex-1 leading-snug">{{ p.title }}</span>
-            </span>
-            <span v-if="status(p)" class="text-[13px]" :class="status(p).cls">
-              <span aria-hidden="true">{{ status(p).mark }} </span>{{ status(p).label }}
-            </span>
-          </button>
-        </li>
-      </ol>
+      <StepChain :steps="CHAIN" :current="current" grid-class="grid-cols-2 gap-x-2 sm:grid-cols-3 lg:grid-cols-6" @select="go" />
     </nav>
 
     <div class="mt-10 space-y-6">

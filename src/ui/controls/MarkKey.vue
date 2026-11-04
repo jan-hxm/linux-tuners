@@ -1,6 +1,6 @@
 <script setup>
 /**
- * The key to the three marks (REDESIGN §3), one row: "Kernel default",
+ * The key to the three marks (Design.md §7), one row: "Kernel default",
  * "Fits your machine", "Changed by you". For a group's header row and the
  * landing page. `defaultLabel` is the domain's (`domain.defaultLabel`), so
  * systemd says "systemd default". Each label sits in its mark's text colour.

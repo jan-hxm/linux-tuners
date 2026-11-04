@@ -21,7 +21,6 @@ function mountForm(domain) {
 describe('ProfileForm', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    history.replaceState(null, '', '/')
   })
 
   it('renders every field from the swap field list with the defaults', () => {

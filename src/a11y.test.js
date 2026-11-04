@@ -52,7 +52,6 @@ const button = (w, text) => w.findAll('button').find((b) => b.text().includes(te
 
 beforeEach(() => {
   setActivePinia(createPinia())
-  history.replaceState(null, '', '/')
   // index.html sets the language and the router each page's title.
   document.documentElement.lang = 'en'
   document.title = 'linux-tuners.dev'
@@ -67,7 +66,10 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('axe sweep', () => {
+// Each case mounts the whole app and runs axe several times over a large DOM:
+// about 1 to 5 s alone, and several times that when the full suite loads
+// every core, so the default 5 s timeout is too tight for them.
+describe('axe sweep', { timeout: 30_000 }, () => {
   it.each(ROUTES_META.map((r) => r.path))('%s has no serious or critical violations', async (path) => {
     await mountAt(path)
     expect(await violations()).toEqual([])

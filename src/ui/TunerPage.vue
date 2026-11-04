@@ -13,7 +13,7 @@
  * simulation behind the impact metrics, and the copy from about.js. From lg
  * up the graphs sit in a sticky column beside the settings, visible by
  * default; below lg they sit open above the settings, and the impact bar
- * keeps the numbers in view (REDESIGN §4 decision 7). A domain without graph
+ * keeps the numbers in view (Design.md §7). A domain without graph
  * tabs gets a full-width tune step and no impact bar. The router renders this
  * directly for each live tuner.
  */
@@ -32,6 +32,8 @@ import ConfigOutput from '@/ui/ConfigOutput.vue'
 import InfoDrawer from '@/ui/InfoDrawer.vue'
 import AboutSection from '@/ui/AboutSection.vue'
 import StepHeader from '@/ui/StepHeader.vue'
+import StepChain from '@/ui/StepChain.vue'
+import { PAGE_WIDTH } from '@/ui/layout/pageWidth.js'
 import MobileImpactBar from '@/ui/MobileImpactBar.vue'
 import UndoToast from '@/ui/UndoToast.vue'
 import IssueAnnouncer from '@/ui/IssueAnnouncer.vue'
@@ -105,7 +107,7 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
 </script>
 
 <template>
-  <section class="mx-auto max-w-[86rem] px-4 pb-16 sm:px-6 lg:px-8">
+  <section class="pb-16" :class="PAGE_WIDTH">
     <!-- Title block: where you are, what the tuner is for, which machine. -->
     <header class="flex flex-wrap items-end justify-between gap-x-12 gap-y-4 pt-8 sm:pt-10">
       <div class="min-w-0 max-w-3xl flex-[1_1_32rem]">
@@ -145,23 +147,7 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
       aria-label="Steps"
       class="mt-6 bg-paper lg:sticky lg:top-[var(--site-header-h)] lg:z-20"
     >
-      <ol class="grid grid-cols-2 sm:grid-cols-4">
-        <li v-for="(step, i) in STEPS" :key="step.id" class="min-w-0">
-          <a
-            :href="step.href"
-            :aria-current="activeStep === step.id ? 'location' : undefined"
-            class="flex min-h-11 items-center gap-2.5 pr-4 text-[15px] hover:bg-paper-hover"
-            :class="
-              i === activeIndex
-                ? 'border-t-4 border-fit font-medium text-ink'
-                : ['border-t-2 pt-0.5 text-ink-2', i < activeIndex ? 'border-rule-strong' : 'border-rule']
-            "
-          >
-            <span class="font-mono text-[13px]" :class="i === activeIndex ? 'text-fit-text' : 'text-quiet'">{{ step.mark }}</span>
-            <span class="min-w-0 truncate">{{ step.label }}</span>
-          </a>
-        </li>
-      </ol>
+      <StepChain :steps="STEPS" :current="activeIndex" current-attr="location" truncate />
     </nav>
 
     <div class="mt-8">

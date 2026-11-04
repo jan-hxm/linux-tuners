@@ -9,11 +9,10 @@ export default defineConfig({
     },
   },
   test: {
-    environmentMatchGlobs: [
-      ['src/ui/**', 'happy-dom'],
-      ['src/tuners/*/components/**', 'happy-dom'],
-    ],
+    // A test that needs a DOM says so in its own file, never through path
+    // globs: see src/testEnvironment.test.js.
     environment: 'node',
+    setupFiles: ['src/testSetup.js'],
     include: ['src/**/*.test.js', 'scripts/**/*.test.js'],
   },
 })

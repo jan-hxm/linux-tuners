@@ -31,7 +31,6 @@ function mountPage({ collapsed = false } = {}) {
 describe('ProfileDraftNotice', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    history.replaceState(null, '', '/')
   })
 
   it('shows nothing without a provided draft', () => {

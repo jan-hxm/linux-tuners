@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // The slider on its own, as the landing page's live specimen uses it: no
-// store, the value held by the caller (REDESIGN WS2/WS3).
+// store, the value held by the caller (Design.md §7).
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'

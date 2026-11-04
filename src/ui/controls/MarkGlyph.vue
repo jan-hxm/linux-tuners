@@ -1,7 +1,6 @@
 <script setup>
 /**
- * One of the three marks that say where a value comes from (REDESIGN §3 "The
- * three marks"), as a small inline glyph for keys and legends. They differ in
+ * One of the three marks that say where a value comes from (Design.md §7), as a small inline glyph for keys and legends. They differ in
  * shape as well as colour, so they read without colour: a thin ink tick for
  * the kernel default, a heavier verdigris bar for what fits the machine, an
  * ochre dot for a value changed by you. The slider draws the same marks on

@@ -74,7 +74,7 @@ watch(adsConfigured, (now) => {
   -->
   <aside
     v-if="showDevPlaceholder"
-    class="rounded border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-xs text-slate-500"
+    class="border border-dashed border-rule-strong p-4 text-center text-[13px] text-quiet"
     aria-hidden="true"
   >
     <p class="font-semibold uppercase tracking-wide">Ad placeholder · {{ label }}</p>
@@ -86,7 +86,7 @@ watch(adsConfigured, (now) => {
     aria-label="Advertisement"
     class="overflow-hidden"
   >
-    <p class="mb-1 text-center text-[10px] uppercase tracking-widest text-slate-500">Advertisement</p>
+    <p class="mb-1 text-center text-[13px] text-quiet">Advertisement</p>
     <ins
       class="adsbygoogle"
       style="display:block"

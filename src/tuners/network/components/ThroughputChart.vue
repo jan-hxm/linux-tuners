@@ -2,11 +2,18 @@
 import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
+import ChartLegend from '@/ui/charts/ChartLegend.vue'
 import { PALETTE } from '@/ui/charts/palette.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import { formatBytes, formatRate } from '../formatting.js'
 import * as simulation from '../simulation.js'
+
+const LEGEND = [
+  { label: 'tuned buffer', tone: 'ink' },
+  { label: 'kernel default', tone: 'quiet', dash: true },
+  { label: 'your path', tone: 'fit', dash: true },
+]
 
 const { throughputCurve: curve } = useTunerSimulation(useActiveTuner(), simulation)
 
@@ -28,7 +35,7 @@ const chartData = computed(() => {
       {
         label: 'kernel default (6 MiB)',
         data: c.points.map((p) => ({ x: p.rttMs, y: p.defaultGbps })),
-        borderColor: PALETTE.muted,
+        borderColor: PALETTE.quiet,
         borderDash: [4, 3],
         borderWidth: 1.5,
         pointRadius: 0,
@@ -41,7 +48,7 @@ const chartData = computed(() => {
           { x: c.rttMs, y: 0 },
           { x: c.rttMs, y: c.linkGbps },
         ],
-        borderColor: PALETTE.info,
+        borderColor: PALETTE.fit,
         borderDash: [2, 2],
         borderWidth: 1.5,
         pointRadius: 0,
@@ -54,7 +61,7 @@ const chartData = computed(() => {
           { x: 0, y: c.linkGbps },
           { x: lastMs, y: c.linkGbps },
         ],
-        borderColor: PALETTE.faint,
+        borderColor: PALETTE.rule,
         borderWidth: 1,
         pointRadius: 0,
         fill: false,
@@ -108,22 +115,12 @@ const chartOptions = computed(() => {
     <ChartFrame :aria-label="summary">
       <Line :data="chartData" :options="chartOptions" />
     </ChartFrame>
-    <div class="flex flex-wrap gap-3 text-xs text-slate-600">
-      <span class="inline-flex items-center gap-1">
-        <span class="inline-block h-0.5 w-4 bg-slate-900"></span> tuned buffer
-      </span>
-      <span class="inline-flex items-center gap-1">
-        <span class="inline-block h-0.5 w-4 border-t border-dashed border-slate-500"></span> kernel default
-      </span>
-      <span class="inline-flex items-center gap-1">
-        <span class="inline-block h-0.5 w-4 border-t border-dashed border-sky-500"></span> your path
-      </span>
-    </div>
-    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">
+    <ChartLegend :items="LEGEND" />
+    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-[13px] text-ink-2">
       <dt>Bandwidth-delay product</dt>
-      <dd class="font-mono text-slate-900">{{ formatBytes(curve.bdp) }}</dd>
+      <dd class="font-mono text-ink">{{ formatBytes(curve.bdp) }}</dd>
       <dt>One connection at {{ curve.rttMs }} ms</dt>
-      <dd class="font-mono text-slate-900">{{ formatRate(curve.reachBps) }}</dd>
+      <dd class="font-mono text-ink">{{ formatRate(curve.reachBps) }}</dd>
     </dl>
   </div>
 </template>

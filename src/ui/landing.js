@@ -17,7 +17,7 @@ export const LANDING_COPY = Object.freeze({
     caption: 'Try it. Every setting on this site reads like this.',
     loading: 'Loading the example setting.',
   },
-  // The three marks (REDESIGN §3). The first one's label is the domain's
+  // The three marks (Design.md §7). The first one's label is the domain's
   // defaultLabel on a tuner page; here it speaks for every tuner.
   key: {
     label: 'How to read the marks',

@@ -41,7 +41,7 @@ describe('tuner registry', () => {
     }
   })
 
-  // The landing table's first column (REDESIGN §4 decision 5).
+  // The landing table's first column (Design.md §9 "Registry").
   it('asks one question per live tuner, without em dashes', () => {
     for (const t of LIVE_TUNERS) {
       expect(typeof t.question, t.id).toBe('string')

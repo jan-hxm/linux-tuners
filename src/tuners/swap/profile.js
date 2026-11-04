@@ -129,7 +129,7 @@ export const PROFILE = {
 export const DEFAULT_HARDWARE = /** @type {HardwareSpec} */ (profileDefaults(PROFILE.fields))
 
 /**
- * The landing page's live specimen (REDESIGN §4 decision 4): one setting,
+ * The landing page's live specimen (Design.md §5 "Guided setup"): one setting,
  * shown for an example machine, a desktop with 16 GiB RAM and 8 GiB NVMe
  * swap, the other fields at their defaults. A desktop puts the value that
  * fits (deriveDefaults) visibly apart from the kernel default, where

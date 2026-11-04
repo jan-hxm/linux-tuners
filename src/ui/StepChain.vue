@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Steps as segments on a line (REDESIGN §3, "the motif is the ruler tick"):
+ * Steps as segments on a line (Design.md §7, "the motif is the ruler tick"):
  * the current step a thick verdigris segment, the ones behind it darker than
  * the ones ahead. Shared by the tuner page (links to its sections, marked
  * `aria-current="location"` as the reader scrolls) and the guided setup

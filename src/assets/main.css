@@ -1,4 +1,4 @@
-/* Self-hosted webfonts (REDESIGN.md §4 decision 1): Latin subsets of Host
+/* Self-hosted webfonts (Design.md §10): Latin subsets of Host
  * Grotesk 400/500/600 and Fragment Mono 400, under the SIL OFL (fonts/OFL.txt).
  * Never load them from a third-party origin (Design.md §10). Vite fingerprints
  * the files. The subsets cover U+0000-00FF plus common punctuation, arrows and

@@ -152,7 +152,7 @@ function onTouchEnd() {
 // selfWrite note above).
 const pct = computed(() => pctOf(props.value, props.range))
 
-// The three marks (REDESIGN §3): a thin ink tick at the kernel (or systemd)
+// The three marks (Design.md §7): a thin ink tick at the kernel (or systemd)
 // default, a heavier verdigris bar at the value that fits the profile, and an
 // ochre dot above the scale at the value once it differs from that. Each is
 // drawn only inside the range. The dot never replaces the thumb: the thumb
@@ -262,7 +262,7 @@ const currentZone = computed(() =>
 
 <style scoped>
 /* The input is only the handle: its track is transparent over the printed
- * scale, and its thumb is what says "drag me" (REDESIGN §4 decision 8): a
+ * scale, and its thumb is what says "drag me" (Design.md §7): a
  * filled ink disc of 24px with a 3px paper ring on a 44px tall hit area,
  * larger on hover and while dragged. The focus ring is the global one from
  * main.css, around the hit area. Colours are the theme tokens, so the slider

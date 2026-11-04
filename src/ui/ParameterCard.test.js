@@ -405,7 +405,7 @@ describe('ParameterCard layers (Design.md §7)', () => {
   })
 })
 
-describe('ParameterCard [n] note toggles (REDESIGN §4 decision 7)', () => {
+describe('ParameterCard [n] note toggles (Design.md §7)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })

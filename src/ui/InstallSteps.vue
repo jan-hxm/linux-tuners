@@ -5,7 +5,7 @@
  * commands come from core/output/installSteps.js and the text around them
  * from ui/installGuide.js, which the static page text shares (Design.md §7
  * "Export steps"). Laid out as the margin's numbered notes beside the file
- * (REDESIGN §3); `next` marks the first step once the file is copied.
+ * (Design.md §7); `next` marks the first step once the file is copied.
  */
 import { computed, ref } from 'vue'
 import { installGuide } from '@/ui/installGuide.js'

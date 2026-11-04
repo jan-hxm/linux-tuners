@@ -13,7 +13,7 @@ const emit = defineEmits(['update'])
 </script>
 
 <template>
-  <!-- A square switch (REDESIGN §3: no rounded corners), h-6 w-11 as
+  <!-- A square switch (Design.md §7: no rounded corners), h-6 w-11 as
        Design.md §7 asks, in a 44px tall row. On is an ink fill with the knob
        on the right; a setting that is risky when on (def.toggleDanger) says
        so in its label, in the warning colour with a warning sign. -->

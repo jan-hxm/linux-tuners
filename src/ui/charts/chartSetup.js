@@ -28,7 +28,7 @@ Chart.register(
   Filler,
 )
 
-// The page's type (REDESIGN §3): words in the sans stack, and the numbers on
+// The page's type (Design.md §7): words in the sans stack, and the numbers on
 // the axes in mono, like the numbers on a slider's scale. 13px is the floor
 // for meaningful text. No chart titles or legends: GraphPanel and each chart
 // carry their own.

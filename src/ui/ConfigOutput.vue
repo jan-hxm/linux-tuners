@@ -1,6 +1,6 @@
 <script setup>
 /**
- * The export, the page's finish line (REDESIGN §4 decision 10): a summary
+ * The export, the page's finish line (Design.md §7): a summary
  * from state, Copy as the one large primary button, Download and Share link
  * beside it, the file below, and the install steps in the margin, the first
  * marked as next once the file is copied. Copy and download take exactly

@@ -23,7 +23,7 @@ const segments = computed(() => parseRichText(props.text))
   <template v-for="(seg, i) in segments" :key="i">
     <code v-if="seg.type === 'code'" :class="codeClass">{{ seg.text }}</code>
     <strong v-else-if="seg.type === 'bold'" class="font-semibold">{{ seg.text }}</strong>
-    <!-- Text links are ink, underlined 3px below the text (REDESIGN §3). -->
+    <!-- Text links are ink, underlined 3px below the text (Design.md §7). -->
     <a
       v-else-if="seg.type === 'link'"
       :href="seg.href"

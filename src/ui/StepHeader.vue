@@ -1,6 +1,6 @@
 <script setup>
 // A tuner step's heading row: an ink rule above it, the step number in mono
-// and the section headline (REDESIGN §3 "Type": 34px, 26px on a phone).
+// and the section headline (Design.md §7: 34px, 26px on a phone).
 defineProps({
   num: { type: Number, required: true },
   title: { type: String, required: true },

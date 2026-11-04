@@ -1,5 +1,5 @@
 <script setup>
-// The tick mark: a short ruler with one tall verdigris tick (REDESIGN.md §3,
+// The tick mark: a short ruler with one tall verdigris tick (Design.md §7,
 // "The motif is the ruler tick"). Decorative; the wordmark next to it names
 // the site. Colours follow the scheme through the ink and fit tokens.
 defineProps({ size: { type: Number, default: 22 } })

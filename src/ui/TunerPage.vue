@@ -13,7 +13,7 @@
  * simulation behind the impact metrics, and the copy from about.js. From lg
  * up the graphs sit in a sticky column beside the settings, visible by
  * default; below lg they sit open above the settings, and the impact bar
- * keeps the numbers in view (REDESIGN §4 decision 7). A domain without graph
+ * keeps the numbers in view (Design.md §7). A domain without graph
  * tabs gets a full-width tune step and no impact bar. The router renders this
  * directly for each live tuner.
  */

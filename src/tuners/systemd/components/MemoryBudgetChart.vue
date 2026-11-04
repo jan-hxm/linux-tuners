@@ -67,13 +67,11 @@ const chartOptions = computed(() => {
     <ChartFrame :aria-label="summary" height="8rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
-    <div class="flex flex-wrap gap-3 text-xs text-slate-600">
-      <span>
-        <code class="font-mono">MemoryHigh</code> throttles the slice; <code class="font-mono">MemoryMax</code> is the hard OOM cap.
-      </span>
-      <span v-if="memory.noLimits" class="rounded bg-amber-50 px-2 py-0.5 text-amber-800">
-        No memory limits set; the slice can use all of RAM.
-      </span>
-    </div>
+    <p class="text-[13px] text-ink-2">
+      <code class="font-mono">MemoryHigh</code> throttles the slice; <code class="font-mono">MemoryMax</code> is the hard OOM cap.
+    </p>
+    <p v-if="memory.noLimits" class="flex gap-1.5 text-[13px] text-mine-text">
+      <span aria-hidden="true" class="font-mono">!</span>No memory limits set; the slice can use all of RAM.
+    </p>
   </div>
 </template>

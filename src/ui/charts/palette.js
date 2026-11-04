@@ -1,17 +1,13 @@
 /**
  * The one set of chart colours. Charts and simulations name a tone (simulation
- * segments carry `tone: 'danger'`, never a hex value), and read them from this
+ * segments carry `tone: 'error'`, never a hex value), and read them from this
  * reactive table, which swaps to the dark set while the system prefers a dark
  * scheme. `text` and `grid` feed Chart.js's defaults (chartSetup.js).
  *
- * The design tones come from the semantic tokens in `ui/theme.js` (REDESIGN.md
- * §3): `ink` for the main series, `quiet` and `rule` for context, `fit` for the
- * profile's default, `mine` for the visitor's value, `error` for danger.
- *
- * The legacy tones (`muted`, `faint`, `ok`, `info`, `warn`, `danger`) keep their
- * Tailwind colours, mapped like the classes by `ui/theme.js`, so the
- * Tailwind-styled legends next to charts that aren't restyled yet stay in step.
- * They go once no chart names them (WS8).
+ * The tones are the colour tokens in `ui/theme.js` (Design.md §7), so a legend
+ * styled with the same token classes matches its chart: `ink` for the main
+ * series, `quiet` and `rule` for context, `fit` for what comes from the
+ * visitor's machine, `mine` for the visitor's own value, `error` for danger.
  */
 import { reactive, readonly, ref } from 'vue'
 import { TOKENS } from '../theme.js'
@@ -38,25 +34,8 @@ function designTones(scheme) {
   }
 }
 
-export const LIGHT = Object.freeze({
-  ...designTones(0),
-  muted: '#64748b', // slate-500
-  faint: '#cbd5e1', // slate-300
-  ok: '#16a34a', // green-600
-  info: '#0ea5e9', // sky-500
-  warn: '#d97706', // amber-600
-  danger: '#dc2626', // red-600
-})
-
-export const DARK = Object.freeze({
-  ...designTones(1),
-  muted: '#94a3b8', // slate-400
-  faint: '#475569', // slate-600
-  ok: '#4ade80', // green-400
-  info: '#0ea5e9', // sky-500
-  warn: '#fbbf24', // amber-400
-  danger: '#f87171', // red-400
-})
+export const LIGHT = Object.freeze(designTones(0))
+export const DARK = Object.freeze(designTones(1))
 
 const current = reactive({ ...LIGHT })
 export const PALETTE = readonly(current)

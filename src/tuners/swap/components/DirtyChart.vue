@@ -2,10 +2,17 @@
 import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
+import ChartLegend from '@/ui/charts/ChartLegend.vue'
 import { PALETTE } from '@/ui/charts/palette.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import * as simulation from '../simulation.js'
+
+const LEGEND = [
+  { label: 'dirty pages', tone: 'ink' },
+  { label: 'bg flush', tone: 'quiet', dash: true },
+  { label: 'stall ceiling', tone: 'error', dash: true },
+]
 
 const { dirtyTimeline: dirty } = useTunerSimulation(useActiveTuner(), simulation)
 
@@ -29,7 +36,7 @@ const chartData = computed(() => {
           { x: 0, y: d.bgLine },
           { x: d.points.at(-1).t, y: d.bgLine },
         ],
-        borderColor: PALETTE.ok,
+        borderColor: PALETTE.quiet,
         borderDash: [4, 3],
         borderWidth: 1.5,
         pointRadius: 0,
@@ -42,7 +49,7 @@ const chartData = computed(() => {
           { x: 0, y: d.ratioLine },
           { x: d.points.at(-1).t, y: d.ratioLine },
         ],
-        borderColor: PALETTE.danger,
+        borderColor: PALETTE.error,
         borderDash: [4, 3],
         borderWidth: 1.5,
         pointRadius: 0,
@@ -109,22 +116,12 @@ const chartOptions = computed(() => {
     <ChartFrame :aria-label="summary">
       <Line :data="chartData" :options="chartOptions" />
     </ChartFrame>
-    <div class="flex flex-wrap gap-3 text-xs text-slate-600">
-      <span class="inline-flex items-center gap-1">
-        <span class="inline-block h-0.5 w-4 bg-slate-900"></span> dirty pages
-      </span>
-      <span class="inline-flex items-center gap-1">
-        <span class="inline-block h-0.5 w-4 border-t border-dashed border-green-600"></span> bg flush
-      </span>
-      <span class="inline-flex items-center gap-1">
-        <span class="inline-block h-0.5 w-4 border-t border-dashed border-red-600"></span> stall ceiling
-      </span>
-      <span v-if="dirty.stallReached" class="rounded bg-red-50 px-2 py-0.5 text-red-800">
-        Stalls reached in this window: writes synchronously waited for the flusher.
-      </span>
-      <span v-if="!dirty.flushEvents.length" class="rounded bg-amber-50 px-2 py-0.5 text-amber-800">
-        Periodic writeback disabled (dirty_writeback_centisecs = 0).
-      </span>
-    </div>
+    <ChartLegend :items="LEGEND" />
+    <p v-if="dirty.stallReached" class="flex gap-1.5 text-[13px] text-error">
+      <span aria-hidden="true" class="font-mono">×</span>Stalls reached in this window: writes synchronously waited for the flusher.
+    </p>
+    <p v-if="!dirty.flushEvents.length" class="flex gap-1.5 text-[13px] text-mine-text">
+      <span aria-hidden="true" class="font-mono">!</span>Periodic writeback disabled (dirty_writeback_centisecs = 0).
+    </p>
   </div>
 </template>

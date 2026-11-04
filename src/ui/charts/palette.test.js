@@ -3,9 +3,8 @@ import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import colors from 'tailwindcss/colors.js'
 import { PALETTE, LIGHT, DARK, tone } from './palette.js'
-import { darkColour, TOKENS } from '../theme.js'
+import { TOKENS } from '../theme.js'
 
 const SRC = fileURLToPath(new URL('../..', import.meta.url))
 const COLOUR_LITERAL = /#[0-9a-f]{3,8}\b|rgba?\(/i
@@ -27,7 +26,7 @@ function chartSources() {
 
 describe('palette', () => {
   it('resolves known tones and rejects unknown ones', () => {
-    expect(tone('danger')).toBe(PALETTE.danger)
+    expect(tone('error')).toBe(PALETTE.error)
     expect(() => tone('purple')).toThrow(/Unknown chart tone/)
   })
 
@@ -43,15 +42,8 @@ describe('palette', () => {
     expect(DARK.inkFill).toBe('rgba(236, 236, 232, 0.08)')
   })
 
-  // The Tailwind colour each legacy tone is, so legends styled with Tailwind classes match.
-  const SOURCES = { muted: ['slate', 500], faint: ['slate', 300], ok: ['green', 600], info: ['sky', 500], warn: ['amber', 600], danger: ['red', 600] }
-
-  it('keeps the legacy tones on the Tailwind colours, mapped like the classes in dark mode', () => {
-    for (const [name, [family, shade]] of Object.entries(SOURCES)) {
-      expect(LIGHT[name], name).toBe(colors[family][shade])
-      const dark = darkColour(family, shade)
-      expect(DARK[name], name).toBe(dark === 'white' ? colors.white : colors[dark[0]][dark[1]])
-    }
+  it('offers no tone outside the tokens', () => {
+    expect(Object.keys(LIGHT).sort()).toEqual([...Object.keys(TOKEN_SOURCES), 'inkFill'].sort())
     expect(Object.keys(DARK).sort()).toEqual(Object.keys(LIGHT).sort())
   })
 

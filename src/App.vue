@@ -7,7 +7,7 @@ import SiteFooter from '@/ui/layout/SiteFooter.vue'
 <template>
   <a
     href="#main"
-    class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-slate-900 focus:px-3 focus:py-1.5 focus:text-sm focus:text-white"
+    class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:bg-ink focus:px-3 focus:py-1.5 focus:text-sm focus:text-paper"
   >
     Skip to main content
   </a>

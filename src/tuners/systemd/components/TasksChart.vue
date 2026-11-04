@@ -17,7 +17,7 @@ const chartData = computed(() => {
       {
         label: '% of kernel.pid_max',
         data: t.bars.map((b) => b.pct),
-        backgroundColor: [PALETTE.ink, PALETTE.muted],
+        backgroundColor: [PALETTE.ink, PALETTE.quiet],
         borderWidth: 0,
       },
     ],
@@ -38,7 +38,6 @@ const chartOptions = computed(() => ({
   animation: false,
   scales: {
     x: { min: 0, max: 100, title: { display: true, text: '% of kernel.pid_max' } },
-    y: { ticks: { font: { size: 10 } } },
   },
   plugins: {
     tooltip: {
@@ -58,11 +57,11 @@ const chartOptions = computed(() => ({
     <ChartFrame :aria-label="summary" height="8rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
-    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">
+    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-[13px] text-ink-2">
       <dt>kernel.pid_max</dt>
-      <dd class="font-mono text-slate-900">{{ tasks.pidMax.toLocaleString() }}</dd>
+      <dd class="font-mono text-ink">{{ tasks.pidMax.toLocaleString() }}</dd>
       <dt>DefaultLimitNOFILE (soft:hard)</dt>
-      <dd class="font-mono text-slate-900">{{ tasks.nofileSoft.toLocaleString() }}:{{ tasks.nofileHard.toLocaleString() }}</dd>
+      <dd class="font-mono text-ink">{{ tasks.nofileSoft.toLocaleString() }}:{{ tasks.nofileHard.toLocaleString() }}</dd>
     </dl>
   </div>
 </template>

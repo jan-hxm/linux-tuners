@@ -2,10 +2,17 @@
 import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
+import ChartLegend from '@/ui/charts/ChartLegend.vue'
 import { PALETTE } from '@/ui/charts/palette.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import * as simulation from '../simulation.js'
+
+const LEGEND = [
+  { label: 'swap usage', tone: 'ink' },
+  { label: 'kswapd band', tone: 'quiet', dash: true },
+  { label: 'direct reclaim / OOM', tone: 'error', dash: true },
+]
 
 const { pressureCurve: pressure } = useTunerSimulation(useActiveTuner(), simulation)
 
@@ -45,7 +52,7 @@ const chartData = computed(() => {
         { x: p.highFillPct, y: 0 },
         { x: p.highFillPct, y: 100 },
       ],
-      borderColor: PALETTE.info,
+      borderColor: PALETTE.quiet,
       borderDash: [4, 3],
       borderWidth: 1,
       pointRadius: 0,
@@ -58,14 +65,14 @@ const chartData = computed(() => {
         { x: p.lowFillPct, y: 0 },
         { x: p.lowFillPct, y: 100 },
       ],
-      borderColor: PALETTE.info,
+      borderColor: PALETTE.quiet,
       borderDash: [4, 3],
       borderWidth: 1,
       pointRadius: 0,
       fill: false,
       showLine: true,
     },
-    verticalMarker(p.minFillPct, PALETTE.danger, [2, 2]),
+    verticalMarker(p.minFillPct, PALETTE.error, [2, 2]),
   ]
   return { datasets }
 })
@@ -126,19 +133,9 @@ const chartOptions = computed(() => ({
     <ChartFrame :aria-label="summary">
       <Line :data="chartData" :options="chartOptions" />
     </ChartFrame>
-    <div class="flex flex-wrap gap-3 text-xs text-slate-600">
-      <span class="inline-flex items-center gap-1">
-        <span class="inline-block h-0.5 w-4 bg-slate-900"></span> swap usage
-      </span>
-      <span class="inline-flex items-center gap-1">
-        <span class="inline-block h-0.5 w-4 border-t border-dashed border-sky-500"></span> kswapd band
-      </span>
-      <span class="inline-flex items-center gap-1">
-        <span class="inline-block h-0.5 w-4 border-t border-dashed border-red-600"></span> direct reclaim / OOM
-      </span>
-      <span v-if="pressure.noSwap" class="rounded bg-amber-50 px-2 py-0.5 text-amber-800">
-        Swap disabled, so the curve stays at 0.
-      </span>
-    </div>
+    <ChartLegend :items="LEGEND" />
+    <p v-if="pressure.noSwap" class="flex gap-1.5 text-[13px] text-mine-text">
+      <span aria-hidden="true" class="font-mono">!</span>Swap disabled, so the curve stays at 0.
+    </p>
   </div>
 </template>

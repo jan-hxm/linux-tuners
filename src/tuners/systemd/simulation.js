@@ -28,7 +28,7 @@ export function cpuShares(hw, p) {
   const segments = weights.map((w) => ({
     ...w,
     pct: Math.round((w.weight / total) * 1000) / 10,
-    tone: w.isTarget ? 'ink' : 'faint',
+    tone: w.isTarget ? 'ink' : 'rule',
   }))
   const targetPct = segments.find((s) => s.isTarget)?.pct ?? 0
 
@@ -57,19 +57,19 @@ export function memoryBudget(hw, p) {
   const segments = []
   // Normal-use zone: up to the first limit we encounter.
   const normalEndPct = throttleStart ?? hardCap ?? 100
-  segments.push({ label: 'normal use', mib: pctToMiB(normalEndPct), tone: 'ok' })
+  segments.push({ label: 'normal use', mib: pctToMiB(normalEndPct), tone: 'rule' })
 
   // Throttle band between MemoryHigh and MemoryMax (or RAM top).
   if (throttleStart !== null) {
     const bandEndPct = hardCap ?? 100
     if (bandEndPct > throttleStart) {
-      segments.push({ label: 'throttle (MemoryHigh→Max)', mib: pctToMiB(bandEndPct - throttleStart), tone: 'warn' })
+      segments.push({ label: 'throttle (MemoryHigh→Max)', mib: pctToMiB(bandEndPct - throttleStart), tone: 'quiet' })
     }
   }
 
   // Above the hard cap: unavailable to the slice (OOM territory).
   if (hardCap !== null && hardCap < 100) {
-    segments.push({ label: 'above MemoryMax (OOM)', mib: pctToMiB(100 - hardCap), tone: 'danger' })
+    segments.push({ label: 'above MemoryMax (OOM)', mib: pctToMiB(100 - hardCap), tone: 'error' })
   }
 
   return {

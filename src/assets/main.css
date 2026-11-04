@@ -114,23 +114,6 @@
     outline: 2px solid rgb(var(--t-ink));
     outline-offset: 2px;
   }
-
-  /* Surfaces that are dark by design (the heroes, the step chain, the undo
-   * toast) would swallow that ink ring, so inside them it takes the
-   * card colour instead: white on the heroes, and on the toast whichever of
-   * white or slate-900 is the opposite of its fill in the current scheme. */
-  .surface-inverse :focus-visible {
-    outline-color: rgb(var(--c-white));
-  }
-
-  /* Inside a box that clips its children (segmented controls, the header's
-   * scrolling nav) a ring outside the control would be cut off, so it goes
-   * inside instead, in the control's text colour, which contrasts with its
-   * fill whether the segment is selected or not. */
-  .focus-inset :focus-visible {
-    outline-color: currentColor;
-    outline-offset: -2px;
-  }
 }
 
 /* The static page text the build puts inside <div id="app"> for readers that

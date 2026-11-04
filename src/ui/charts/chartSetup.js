@@ -35,6 +35,8 @@ Chart.register(
 Chart.defaults.font.family = FONT_SANS.join(', ')
 Chart.defaults.font.size = 13
 Chart.defaults.scale.ticks.font = { family: FONT_MONO.join(', '), size: 13 }
+// Category labels are words (TasksChart's limits), so they stay in sans.
+Chart.defaults.scales.category.ticks.font = { family: FONT_SANS.join(', '), size: 13 }
 Chart.defaults.plugins.legend.display = false
 
 // Tick, title and grid colours follow the scheme. Synchronous, so the defaults

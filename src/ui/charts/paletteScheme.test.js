@@ -15,7 +15,7 @@ describe('palette scheme', () => {
 
     expect(prefersDark.value).toBe(true)
     expect(PALETTE.ink).toBe(DARK.ink)
-    expect(tone('danger')).toBe(DARK.danger)
+    expect(tone('error')).toBe(DARK.error)
 
     query.matches = false
     onChange()

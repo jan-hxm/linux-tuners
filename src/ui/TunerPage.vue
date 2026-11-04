@@ -1,21 +1,26 @@
 <script setup>
 /**
- * The page shell every tuner renders through: hero, the step chain (sticky
- * from lg up, highlighting the step in view), the
- * four steps (profile, preset, tune, export), ad slot, About section, info
- * drawer, the undo toast, the issue announcer, and the mobile impact bar with its spacer
- * (Design.md §7). It
- * provides the store and domain to the shared components below it, including
- * whatever goes into the `profile` slot.
+ * The page shell every tuner renders through: the title block (breadcrumb,
+ * title, purpose and the machine it is tuning for), the step chain (segments
+ * on a line, sticky from lg up, the step in view marked), the four steps
+ * (profile, preset, tune, export), ad slot, About section, info drawer, the
+ * undo toast, the issue announcer, and the mobile impact bar with its spacer
+ * (Design.md §7). It provides the store and domain to the shared components
+ * below it, including whatever goes into the `profile` slot.
  *
  * Everything comes from the domain: the profile field list (rendered by
  * ProfileForm unless the `profile` slot replaces it), graph tabs, the
- * simulation behind the impact metrics, and the copy from about.js. A domain
- * without graph tabs gets a full-width tune step and no impact bar. The
- * router renders this directly for each live tuner.
+ * simulation behind the impact metrics, and the copy from about.js. From lg
+ * up the graphs sit in a sticky column beside the settings, visible by
+ * default; below lg they sit open above the settings, and the impact bar
+ * keeps the numbers in view (REDESIGN §4 decision 7). A domain without graph
+ * tabs gets a full-width tune step and no impact bar. The router renders this
+ * directly for each live tuner.
  */
-import { provide, computed } from 'vue'
+import { provide, computed, inject, nextTick } from 'vue'
+import { RouterLink, routerKey } from 'vue-router'
 import { useTunerStoreFor } from '@/core/createTunerStore.js'
+import { optionLabel } from '@/core/profile.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import ProfileForm from '@/ui/profile/ProfileForm.vue'
 import ProfileDraftNotice from '@/ui/profile/ProfileDraftNotice.vue'
@@ -46,7 +51,8 @@ provide(TUNER_STORE_KEY, store)
 provide(TUNER_DOMAIN_KEY, props.domain)
 // Shared by the profile form and the notice above the parameters. A page
 // opened from a shared link starts on the summary line: its profile is set.
-provide(PROFILE_DRAFT_KEY, useProfileDraft(store, props.domain.profile, { collapsed: store.restoredFromLink }))
+const profileDraft = useProfileDraft(store, props.domain.profile, { collapsed: store.restoredFromLink })
+provide(PROFILE_DRAFT_KEY, profileDraft)
 
 const graphTabs = props.domain.graphTabs
 const hasGraphs = graphTabs.length > 0
@@ -63,93 +69,151 @@ const STEPS = [
   { num: 2, label: 'Preset', id: 'preset' },
   { num: 3, label: 'Tune', id: 'tune' },
   { num: 4, label: 'Export', id: 'export' },
-].map((step) => ({ ...step, href: `#${step.id}` }))
-/** The step the reader is in, highlighted in the step chain. */
+].map((step) => ({ ...step, href: `#${step.id}`, mark: String(step.num).padStart(2, '0') }))
+/** The step the reader is in, marked in the step chain. */
 const activeStep = useScrollSpy(STEPS.map((step) => step.id))
+/** Steps before this index are behind the reader; past the last, all are. */
+const activeIndex = computed(() => {
+  const i = STEPS.findIndex((step) => step.id === activeStep.value)
+  return i === -1 ? STEPS.length : i
+})
 
-const HERO_CODE = 'rounded bg-white/10 px-1 font-mono text-[12px]'
+// The machine this page tunes, as the profile form's collapsed summary says it.
+const profileSummary = computed(() =>
+  props.domain.profile
+    .summary(store.hardware, (key, value) => optionLabel(props.domain.profile.fields, key, value))
+    .join(' · '),
+)
+
+/** "Edit machine": open the profile form and put focus in it. */
+async function editMachine() {
+  profileDraft.collapsed.value = false
+  await nextTick()
+  const step = document.getElementById(page.profileStep.id)
+  const field = step?.querySelector('input:not([disabled]), select:not([disabled]), [role="radio"]')
+  if (field) field.focus()
+  else step?.scrollIntoView()
+}
+
+// The breadcrumb's link stays in the app when a router is installed; a test
+// that mounts the page on its own gets a plain link.
+const hasRouter = inject(routerKey, null) !== null
+
+const STEP_SCROLL = 'scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1.5rem)]'
+const INTRO_CODE = 'font-mono text-[0.9em] text-ink'
+const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-[3px] hover:text-ink'
 </script>
 
 <template>
-  <section class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-    <header class="light-palette surface-inverse overflow-hidden rounded-t-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-white shadow-sm">
-      <div class="flex flex-wrap items-start justify-between gap-3 px-5 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
-        <div class="max-w-2xl">
-          <p class="text-xs uppercase tracking-widest text-slate-400">Tuner</p>
-          <h1 class="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">{{ page.title }}</h1>
-          <p class="mt-2 text-sm leading-relaxed text-slate-200">
-            <RichText :text="page.intro" :code-class="HERO_CODE" />
-          </p>
-        </div>
-        <nav class="flex items-center gap-3 text-xs text-slate-300">
-          <a href="#about" class="inline-flex min-h-6 items-center hover:text-white hover:underline">About this tuner</a>
+  <section class="mx-auto max-w-[86rem] px-4 pb-16 sm:px-6 lg:px-8">
+    <!-- Title block: where you are, what the tuner is for, which machine. -->
+    <header class="flex flex-wrap items-end justify-between gap-x-12 gap-y-6 pt-10 sm:pt-12">
+      <div class="min-w-0 max-w-3xl flex-[1_1_32rem]">
+        <nav aria-label="Breadcrumb" class="text-sm text-quiet">
+          <ol class="flex flex-wrap items-center gap-x-1.5">
+            <li>
+              <RouterLink v-if="hasRouter" to="/" :class="CRUMB_LINK">All tuners</RouterLink>
+              <a v-else href="/" :class="CRUMB_LINK">All tuners</a>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page">{{ page.title }}</li>
+          </ol>
         </nav>
+        <h1 class="mt-3 text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-ink sm:text-[44px] sm:leading-[1.08]">{{ page.title }}</h1>
+        <p class="mt-3.5 max-w-[36em] text-[17px] leading-relaxed text-ink-2 sm:text-lg">
+          <RichText :text="page.intro" :code-class="INTRO_CODE" />
+        </p>
+        <p class="mt-2 text-sm">
+          <a href="#about" class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]">About this tuner</a>
+        </p>
       </div>
-
+      <div class="flex min-w-0 max-w-full flex-wrap items-center gap-x-3.5 gap-y-1 border-y border-rule py-1.5">
+        <span class="text-sm text-quiet">Tuning for</span>
+        <span class="min-w-0 break-words font-mono text-sm text-ink"><RichText :text="profileSummary" /></span>
+        <button
+          type="button"
+          class="inline-flex min-h-11 items-center px-2 text-sm font-medium text-ink underline underline-offset-[3px] hover:bg-paper-hover"
+          @click="editMachine"
+        >Edit machine</button>
+      </div>
     </header>
 
-    <!-- Step chain: a sibling of the hero, not inside it, so from lg up it can
-         stick under the site header for the whole page. -->
+    <!-- Step chain: segments on a line, the step in view a thick verdigris
+         segment. Outside the title block, so from lg up it can stick under
+         the site header for the whole page (its height is --step-chain-h). -->
     <nav
       aria-label="Steps"
-      class="light-palette surface-inverse !mt-0 rounded-b-lg bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-xs shadow-sm lg:sticky lg:top-[var(--site-header-h)] lg:z-20"
+      class="mt-8 bg-paper lg:sticky lg:top-[var(--site-header-h)] lg:z-20"
     >
-      <ol class="flex flex-wrap items-center gap-x-0.5 gap-y-1 border-t border-white/10 bg-black/10 px-5 py-3 sm:px-6">
-        <li class="mr-1 text-slate-400">Jump to:</li>
-        <template v-for="(step, i) in STEPS" :key="step.label">
-          <li>
-            <a
-              :href="step.href"
-              :aria-current="activeStep === step.id ? 'location' : undefined"
-              class="inline-flex items-center gap-1.5 rounded px-2 py-1 transition"
-              :class="activeStep === step.id ? 'bg-white/15' : 'hover:bg-white/10'"
-            >
-              <span
-                class="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold"
-                :class="activeStep === step.id ? 'bg-white text-slate-900' : 'bg-white/20 text-white'"
-              >{{ step.num }}</span>
-              <span :class="activeStep === step.id ? 'text-white' : 'text-slate-200'">{{ step.label }}</span>
-            </a>
-          </li>
-          <li v-if="i < STEPS.length - 1" class="text-slate-500" aria-hidden="true">→</li>
-        </template>
+      <ol class="grid grid-cols-2 sm:grid-cols-4">
+        <li v-for="(step, i) in STEPS" :key="step.id" class="min-w-0">
+          <a
+            :href="step.href"
+            :aria-current="activeStep === step.id ? 'location' : undefined"
+            class="flex min-h-11 items-center gap-2.5 pr-4 text-[15px] hover:bg-paper-hover"
+            :class="
+              i === activeIndex
+                ? 'border-t-4 border-fit font-medium text-ink'
+                : ['border-t-2 pt-0.5 text-ink-2', i < activeIndex ? 'border-rule-strong' : 'border-rule']
+            "
+          >
+            <span class="font-mono text-[13px]" :class="i === activeIndex ? 'text-fit-text' : 'text-quiet'">{{ step.mark }}</span>
+            <span class="min-w-0 truncate">{{ step.label }}</span>
+          </a>
+        </li>
       </ol>
     </nav>
 
-    <NeedThisBox :tuner-id="domain.id" />
+    <div class="mt-10">
+      <NeedThisBox :tuner-id="domain.id" />
+    </div>
 
-    <section :id="page.profileStep.id" class="space-y-3 scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)]">
+    <section :id="page.profileStep.id" class="mt-16" :class="STEP_SCROLL">
       <StepHeader :num="1" :title="page.profileStep.title" :subtitle="page.profileStep.subtitle" />
-      <slot name="profile"><ProfileForm /></slot>
+      <div class="mt-6">
+        <slot name="profile"><ProfileForm /></slot>
+      </div>
     </section>
 
-    <section id="preset" class="space-y-3 scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)]">
+    <section id="preset" class="mt-16" :class="STEP_SCROLL">
       <StepHeader :num="2" title="Pick a starting point" subtitle="Optional: jump to a tuned baseline for your workload, then fine-tune." />
-      <PresetSelector />
+      <div class="mt-6">
+        <PresetSelector />
+      </div>
     </section>
 
-    <section id="tune" class="space-y-3 scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)]">
+    <section id="tune" class="mt-16" :class="STEP_SCROLL">
       <StepHeader :num="3" title="Tune and preview" :subtitle="page.tuneSubtitle" />
-      <ProfileDraftNotice />
-      <div v-if="hasGraphs" class="grid grid-cols-1 gap-4 lg:grid-cols-5 lg:items-start">
-        <div class="lg:col-span-3">
-          <ParameterPanel />
-        </div>
-        <div :id="GRAPHS_ID" class="scroll-mt-16 lg:sticky lg:top-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)] lg:col-span-2 lg:self-start">
+      <ProfileDraftNotice class="mt-6" />
+      <div v-if="hasGraphs" class="mt-8 grid grid-cols-1 gap-y-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start lg:gap-x-12">
+        <!-- The graphs: open above the settings on a narrow screen, a sticky
+             column beside them from lg up. The settings come first in the
+             reading order. -->
+        <div
+          :id="GRAPHS_ID"
+          class="min-w-0 scroll-mt-16 max-lg:order-first lg:sticky lg:col-start-2 lg:row-start-1 lg:top-[calc(var(--site-header-h)+var(--step-chain-h)+1.5rem)] lg:self-start"
+        >
           <GraphPanel :tabs="graphTabs" :impact="impact" />
         </div>
+        <div class="min-w-0 lg:col-start-1 lg:row-start-1">
+          <ParameterPanel />
+        </div>
       </div>
-      <ParameterPanel v-else />
+      <ParameterPanel v-else class="mt-8" />
     </section>
 
-    <section id="export" class="space-y-3 scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1rem)]">
+    <section id="export" class="mt-20" :class="STEP_SCROLL">
       <StepHeader :num="4" :title="page.exportStep.title" :subtitle="page.exportStep.subtitle" />
-      <ConfigOutput />
+      <div class="mt-6">
+        <ConfigOutput />
+      </div>
     </section>
 
-    <AdSlot :slot="page.adSlot" :label="`${domain.id} tuner footer`" />
+    <div class="mt-16 empty:hidden">
+      <AdSlot :slot="page.adSlot" :label="`${domain.id} tuner footer`" />
+    </div>
 
-    <AboutSection :about="domain.about" />
+    <AboutSection class="mt-16" :about="domain.about" />
     <InfoDrawer />
 
     <!-- Spacer so the mobile impact bar never covers page content. -->

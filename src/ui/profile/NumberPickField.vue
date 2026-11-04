@@ -47,7 +47,7 @@ function set(value) {
 
 <template>
   <div>
-    <label :for="fieldId" class="block text-sm font-medium text-slate-700">{{ label }}</label>
+    <label :for="fieldId" class="block text-[15px] font-medium text-ink">{{ label }}</label>
     <div class="mt-2 flex flex-wrap items-center gap-2">
       <input
         :id="fieldId"
@@ -56,14 +56,14 @@ function set(value) {
         :min="min"
         :max="max"
         :step="step"
-        class="w-24 rounded border border-slate-300 px-2 py-1 text-sm font-mono"
+        class="min-h-11 w-28 border border-rule-strong !bg-paper px-2.5 font-mono text-[15px] text-ink"
         @input="set($event.target.value)"
       />
       <select
         v-if="normalizedPicks.length"
         :value="pickedValue"
         :aria-label="`${label}: common values`"
-        class="min-h-6 max-w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm sm:hidden"
+        class="min-h-11 max-w-full border border-rule-strong !bg-paper px-2 text-[15px] text-ink sm:hidden"
         @change="$event.target.value !== '' && set($event.target.value)"
       >
         <option value="" disabled>Common values</option>
@@ -73,14 +73,14 @@ function set(value) {
         v-for="pick in normalizedPicks"
         :key="pick.value"
         type="button"
-        class="hidden min-h-6 rounded-full border px-3 py-0.5 text-xs sm:inline-block"
-        :class="Number(modelValue) === pick.value ? 'border-sky-700 bg-sky-700 text-white' : 'border-slate-300 hover:bg-slate-50'"
+        class="hidden min-h-9 border px-3 font-mono text-[13px] sm:inline-block"
+        :class="Number(modelValue) === pick.value ? 'border-ink bg-ink text-paper' : 'border-rule-strong text-ink hover:bg-paper-hover'"
         @click="set(pick.value)"
       >
         {{ pick.label }}
       </button>
     </div>
-    <p v-if="help || $slots.help" class="mt-1 text-xs text-slate-500">
+    <p v-if="help || $slots.help" class="mt-1.5 text-sm text-quiet">
       <slot name="help">{{ help }}</slot>
     </p>
   </div>

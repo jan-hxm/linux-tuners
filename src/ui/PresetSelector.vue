@@ -2,6 +2,7 @@
 import { computed, ref, useId } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { differingKeys } from '@/core/valueTypes.js'
+import PlusMinus from '@/ui/PlusMinus.vue'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
@@ -61,64 +62,60 @@ function apply(preset) {
 </script>
 
 <template>
-  <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-xs text-slate-500">
+  <section>
+    <p class="text-[15px] text-ink-2">
       Click a preset to snap every parameter to its values. Your hardware spec stays unchanged.
     </p>
 
-    <ul class="mt-3 flex flex-wrap gap-2">
-      <li v-for="preset in PRESETS" :key="preset.id" class="flex max-w-xs flex-col gap-1">
+    <!-- Hairline rows; the applied preset sits on the selected tint with a
+         filled verdigris dot, like a radio. -->
+    <ul class="mt-4 grid grid-cols-1 gap-x-8 border-t border-ink sm:grid-cols-2 xl:grid-cols-3">
+      <li v-for="preset in PRESETS" :key="preset.id" class="flex min-w-0 flex-col border-b border-rule">
         <button
           type="button"
-          class="group flex flex-1 items-start gap-2 rounded border px-3 py-2 text-left text-sm transition"
+          class="flex flex-1 items-start gap-3.5 px-2 py-3.5 text-left text-ink"
           :aria-pressed="isActive(preset)"
-          :class="[
-            isActive(preset)
-              ? 'border-sky-700 bg-sky-700 text-white'
-              : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50',
-          ]"
+          :class="isActive(preset) ? 'bg-fit-tint' : 'hover:bg-paper-hover'"
           @click="apply(preset)"
         >
-          <span class="flex-1">
-            <span class="font-medium">{{ preset.label }}</span>
-            <span
-              class="block text-xs"
-              :class="isActive(preset) ? 'text-sky-100' : 'text-slate-500'"
-            >
-              {{ preset.description }}
-            </span>
-          </span>
           <span
-            v-if="isCustomised(preset)"
-            class="light-palette shrink-0 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900"
-          >
-            customised
+            aria-hidden="true"
+            class="mt-[3px] h-[18px] w-[18px] shrink-0 rounded-full"
+            :class="isActive(preset) ? 'border-[6px] border-fit bg-paper' : 'border-[1.5px] border-rule-strong'"
+          />
+          <span class="min-w-0 flex-1">
+            <span class="block text-base" :class="isActive(preset) ? 'font-medium' : ''">{{ preset.label }}</span>
+            <span class="mt-0.5 block text-sm leading-relaxed text-ink-2">{{ preset.description }}</span>
+            <span v-if="isCustomised(preset)" class="mt-1.5 flex items-center gap-1.5 text-[13px] text-mine-text">
+              <span aria-hidden="true" class="h-[9px] w-[9px] shrink-0 rounded-full bg-mine" />
+              customised
+            </span>
           </span>
         </button>
         <button
           v-if="diffsByPreset[preset.id].length"
           type="button"
-          class="inline-flex min-h-6 items-center self-start px-1 text-xs text-slate-500 hover:text-slate-700"
+          class="inline-flex min-h-9 items-center gap-2 self-start px-2 pb-1.5 text-[13px] text-ink-2 underline underline-offset-[3px] hover:text-ink"
           :aria-expanded="previewId === preset.id"
           :aria-controls="panelId"
           :aria-label="`${preset.label}: ${changeCount(preset)}, show what would change`"
           @click="togglePreview(preset)"
         >
-          {{ previewId === preset.id ? '▾' : '▸' }} {{ changeCount(preset) }}
+          {{ changeCount(preset) }}<PlusMinus :open="previewId === preset.id" />
         </button>
-        <span v-else class="inline-flex min-h-6 items-center px-1 text-xs text-slate-500">Matches current values</span>
+        <span v-else class="inline-flex min-h-9 items-center px-2 pb-1.5 text-[13px] text-quiet">Matches current values</span>
       </li>
     </ul>
 
     <div :id="panelId">
       <div
         v-if="previewPreset"
-        class="mt-3 rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"
+        class="mt-4 border-b border-rule pb-3 text-sm text-ink-2"
       >
-        <p class="font-semibold text-slate-800">Applying {{ previewPreset.label }} would change:</p>
-        <ul v-if="diffsByPreset[previewPreset.id].length" class="mt-2 space-y-1">
-          <li v-for="d in diffsByPreset[previewPreset.id]" :key="d.key" class="break-words">
-            <span class="font-mono">{{ d.name }}</span>: {{ d.current }} → {{ d.preset }}
+        <p class="font-medium text-ink">Applying {{ previewPreset.label }} would change:</p>
+        <ul v-if="diffsByPreset[previewPreset.id].length" class="mt-2">
+          <li v-for="d in diffsByPreset[previewPreset.id]" :key="d.key" class="break-words border-t border-rule py-1.5">
+            <span class="font-mono text-ink">{{ d.name }}</span>: <span class="font-mono">{{ d.current }} → {{ d.preset }}</span>
           </li>
         </ul>
         <p v-else class="mt-2">Nothing: it matches your current values.</p>

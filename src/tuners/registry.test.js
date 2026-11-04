@@ -27,7 +27,7 @@ describe('tuner registry', () => {
       expect(t.title, t.id).toBeTruthy()
       expect(t.blurb, t.id).toBeTruthy()
       expect(t.keys.length, t.id).toBeGreaterThan(0)
-      const shown = [t.title, t.blurb, t.navLabel, ...t.keys, ...Object.values(t.route ?? {}), t.setup?.why]
+      const shown = [t.title, t.blurb, t.navLabel, t.question, ...t.keys, ...Object.values(t.route ?? {}), t.setup?.why]
       expect(shown.join(' '), t.id).not.toContain(EM_DASH)
     }
   })
@@ -41,8 +41,21 @@ describe('tuner registry', () => {
     }
   })
 
-  it('gives planned tuners no path, nav entry or route', () => {
+  // The landing table's first column (REDESIGN §4 decision 5).
+  it('asks one question per live tuner, without em dashes', () => {
+    for (const t of LIVE_TUNERS) {
+      expect(typeof t.question, t.id).toBe('string')
+      expect(t.question.trim(), t.id).toBe(t.question)
+      expect(t.question, t.id).toMatch(/\S\?$/)
+      expect(t.question, t.id).not.toContain(EM_DASH)
+    }
+    const questions = LIVE_TUNERS.map((t) => t.question)
+    expect(new Set(questions).size).toBe(questions.length)
+  })
+
+  it('gives planned tuners no path, nav entry, route or question', () => {
     for (const t of PLANNED_TUNERS) {
+      expect(t.question, t.id).toBeUndefined()
       expect(t.path, t.id).toBeUndefined()
       expect(t.navLabel, t.id).toBeUndefined()
       expect(t.route, t.id).toBeUndefined()

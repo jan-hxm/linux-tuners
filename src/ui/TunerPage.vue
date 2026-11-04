@@ -33,6 +33,7 @@ import InfoDrawer from '@/ui/InfoDrawer.vue'
 import AboutSection from '@/ui/AboutSection.vue'
 import StepHeader from '@/ui/StepHeader.vue'
 import StepChain from '@/ui/StepChain.vue'
+import { PAGE_WIDTH } from '@/ui/layout/pageWidth.js'
 import MobileImpactBar from '@/ui/MobileImpactBar.vue'
 import UndoToast from '@/ui/UndoToast.vue'
 import IssueAnnouncer from '@/ui/IssueAnnouncer.vue'
@@ -106,7 +107,7 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
 </script>
 
 <template>
-  <section class="mx-auto max-w-[86rem] px-4 pb-16 sm:px-6 lg:px-8">
+  <section class="pb-16" :class="PAGE_WIDTH">
     <!-- Title block: where you are, what the tuner is for, which machine. -->
     <header class="flex flex-wrap items-end justify-between gap-x-12 gap-y-4 pt-8 sm:pt-10">
       <div class="min-w-0 max-w-3xl flex-[1_1_32rem]">

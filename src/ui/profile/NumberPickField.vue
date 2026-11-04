@@ -56,14 +56,14 @@ function set(value) {
         :min="min"
         :max="max"
         :step="step"
-        class="min-h-11 w-28 border border-rule-strong !bg-paper px-2.5 font-mono text-[15px] text-ink"
+        class="min-h-11 w-28 border border-rule-strong bg-paper px-2.5 font-mono text-[15px] text-ink"
         @input="set($event.target.value)"
       />
       <select
         v-if="normalizedPicks.length"
         :value="pickedValue"
         :aria-label="`${label}: common values`"
-        class="min-h-11 max-w-full border border-rule-strong !bg-paper px-2 text-[15px] text-ink sm:hidden"
+        class="min-h-11 max-w-full border border-rule-strong bg-paper px-2 text-[15px] text-ink sm:hidden"
         @change="$event.target.value !== '' && set($event.target.value)"
       >
         <option value="" disabled>Common values</option>

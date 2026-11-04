@@ -11,6 +11,7 @@ import SetupMachine from './SetupMachine.vue'
 import SetupStep from './SetupStep.vue'
 import SetupFiles from './SetupFiles.vue'
 import StepChain from '@/ui/StepChain.vue'
+import { PAGE_WIDTH } from '@/ui/layout/pageWidth.js'
 import { SETUP_STEPS } from './steps.js'
 import { useSetupStore, useStepStore } from './useSetupStore.js'
 
@@ -71,7 +72,7 @@ const goto = (id) => go(PANELS.findIndex((p) => p.id === id))
 </script>
 
 <template>
-  <section class="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6">
+  <section class="pb-16 pt-10" :class="PAGE_WIDTH">
     <header class="border-t border-ink pt-4">
       <p class="font-mono text-[13px] text-quiet">Guided setup</p>
       <h1 class="mt-2 text-[26px] font-medium leading-tight tracking-[-0.02em] text-ink sm:text-[34px]">Tune a whole Linux machine</h1>

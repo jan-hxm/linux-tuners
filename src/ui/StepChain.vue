@@ -59,7 +59,7 @@ function segment(step, i, current) {
           <span class="min-w-0 flex-1 leading-snug" :class="{ truncate }">{{ step.label }}</span>
         </span>
         <span v-if="step.status" class="text-[13px]" :class="step.status.cls">
-          <span aria-hidden="true">{{ step.status.mark }} </span>{{ step.status.label }}
+          <span aria-hidden="true" class="mr-1">{{ step.status.mark }}</span>{{ step.status.label }}
         </span>
       </component>
     </li>

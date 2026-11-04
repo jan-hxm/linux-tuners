@@ -3,6 +3,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { LIVE_TUNERS } from '@/tuners/registry.js'
 import TickLogo from './TickLogo.vue'
+import { PAGE_WIDTH } from './pageWidth.js'
 
 // On a phone the tuner links don't fit, so the nav scrolls sideways on its
 // own instead of widening the page. Keep the current tuner's link in view, and
@@ -40,7 +41,7 @@ watch(() => route.path, revealActive)
        rows; sticky from lg up, where it is the single row that
        --site-header-h (main.css) measures. -->
   <header class="z-30 border-b border-rule bg-paper lg:sticky lg:top-0">
-    <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 sm:px-6 lg:flex-nowrap">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 py-2 lg:flex-nowrap" :class="PAGE_WIDTH">
       <RouterLink to="/" class="order-1 flex shrink-0 items-center gap-2.5 whitespace-nowrap text-base font-semibold tracking-tight text-ink">
         <TickLogo />
         <span>linux-tuners.dev</span>

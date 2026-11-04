@@ -85,12 +85,12 @@
     --step-chain-h: 44px;
   }
 
-  /* Text fields and selects take the card colour, so they follow dark mode
-   * instead of the browser's grey dark controls. A bg-* class still wins. */
-  input:not([type='range'], [type='checkbox'], [type='radio']),
-  select,
-  textarea {
-    background-color: rgb(var(--c-white));
+  /* Text fields and selects take the paper colour, so they follow dark mode
+   * instead of the browser's grey dark controls. Inside :where() the rule
+   * has no specificity, so a bg-* class still wins (the :not() list alone
+   * would outrank one). */
+  :where(input:not([type='range'], [type='checkbox'], [type='radio']), select, textarea) {
+    background-color: rgb(var(--t-paper));
   }
 
   /* Smooth anchor scrolling for the step-chain links. */

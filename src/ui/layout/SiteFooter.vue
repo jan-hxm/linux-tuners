@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { testedOnText } from './testedOn.js'
+import { PAGE_WIDTH } from './pageWidth.js'
 
 // The author's note is approved text (REDESIGN.md §4 decision 3): do not
 // reword it. The signature is the GitHub handle, linking to the profile.
@@ -23,7 +24,7 @@ const year = new Date().getFullYear()
   <!-- No consent banner or privacy-options link here: Google's CMP injects its
        own (CLAUDE.md, Design.md §5 "Ads and consent"). -->
   <footer class="mt-24 border-t border-ink bg-paper">
-    <div class="mx-auto grid max-w-6xl gap-x-16 gap-y-8 px-4 pb-14 pt-10 sm:px-6 md:grid-cols-2">
+    <div class="grid gap-x-16 gap-y-8 pb-14 pt-10 md:grid-cols-2" :class="PAGE_WIDTH">
       <div>
         <p class="max-w-[30em] text-[17px] leading-relaxed text-ink">{{ AUTHOR_NOTE }}</p>
         <p class="mt-3.5 text-[15px] text-quiet">

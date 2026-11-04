@@ -154,7 +154,7 @@ function countSummary(section) {
           autocomplete="off"
           spellcheck="false"
           placeholder="Name or description, e.g. rmem"
-          class="mt-1.5 min-h-11 w-full border border-rule-strong !bg-paper px-3 text-[15px] text-ink placeholder:text-quiet focus:border-ink"
+          class="mt-1.5 min-h-11 w-full border border-rule-strong bg-paper px-3 text-[15px] text-ink placeholder:text-quiet focus:border-ink"
         />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">

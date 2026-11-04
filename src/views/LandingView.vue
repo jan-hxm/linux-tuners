@@ -2,6 +2,7 @@
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AdSlot from '@/ui/AdSlot.vue'
+import { PAGE_WIDTH } from '@/ui/layout/pageWidth.js'
 import MarkGlyph from '@/ui/controls/MarkGlyph.vue'
 import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
 import { MACHINE_ROLES, isMachineRole, tunersForRole } from '@/core/machineRoles.js'
@@ -104,7 +105,7 @@ const secondaryButton = 'inline-flex min-h-11 items-center justify-center border
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl px-4 pb-4 sm:px-6">
+  <div class="pb-4" :class="PAGE_WIDTH">
     <!-- Hero: one sentence, then the real thing to touch -->
     <section class="grid gap-x-16 gap-y-12 pb-12 pt-10 sm:pb-[72px] sm:pt-[88px] lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:items-start">
       <div class="min-w-0">

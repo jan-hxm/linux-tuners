@@ -5,6 +5,7 @@ import { controlFor } from '@/ui/controls/index.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
 import { DESC_PARTS } from '@/ui/descParts.js'
 import RichText from '@/ui/RichText.vue'
+import { splitFirstSentence } from '@/ui/firstSentence.js'
 
 const props = defineProps({
   paramKey: { type: String, required: true },
@@ -97,7 +98,16 @@ const layerNotes = computed(() => [
     ? [{ id: 'context', label: `${domain.context.label} (${domain.context.badge})`, paras: [contextNote.value], url: domain.context.url }]
     : []),
 ])
-const marginNotes = computed(() => layerNotes.value.slice(0, MARGIN_LAYER_NOTES))
+// Each margin note shows its first sentence; "more" opens the rest of it in
+// place (the [n] toggle of a narrow card opens the whole note). The notes
+// don't depend on the value, so dragging never changes their height.
+const marginNotes = computed(() =>
+  layerNotes.value.slice(0, MARGIN_LAYER_NOTES).map((note) => {
+    const { head, tail } = splitFirstSentence(note.paras[0])
+    const rest = note.paras.slice(1)
+    return { ...note, head, tail, rest, hasMore: Boolean(tail) || rest.length > 0 }
+  }),
+)
 const moreNotes = computed(() => [
   ...layerNotes.value.slice(MARGIN_LAYER_NOTES),
   ...(def.value.dangerousIfZero
@@ -108,7 +118,12 @@ const moreNotes = computed(() => [
 // Where the card has no margin (a narrow card, REDESIGN §4 decision 7), each
 // margin note is an [n] toggle that opens it in place.
 const openNotes = reactive({})
+// On a wide card, which notes show past their first sentence. Its own state,
+// apart from the toggles: only one of the two buttons shows at a time.
+const fullNotes = reactive({})
 const noteId = (note) => `${uid}-note-${note.id}`
+const noteRestIds = (note) =>
+  [note.tail && `${noteId(note)}-tail`, note.rest.length && `${noteId(note)}-rest`].filter(Boolean).join(' ')
 const moreId = `${uid}-more`
 const expanded = ref(false)
 
@@ -329,7 +344,22 @@ function openInDrawer() {
             <div class="col-start-2 min-w-0">
               <h4 class="pc-note-label text-[13px] font-medium text-quiet">{{ note.label }}</h4>
               <div :id="noteId(note)" class="pc-note-body space-y-2 pb-2 text-ink-2" :class="{ 'pc-open': openNotes[note.id] }">
-                <p v-for="(para, j) in note.paras" :key="j"><RichText :text="para" /></p>
+                <p>
+                  <RichText :text="note.head" />
+                  <span v-if="note.tail" :id="`${noteId(note)}-tail`" class="pc-note-tail" :class="{ 'pc-hidden': !fullNotes[note.id] }">{{ ' ' }}<RichText :text="note.tail" /></span>
+                  <template v-if="note.hasMore">
+                    {{ ' ' }}<button
+                      type="button"
+                      class="pc-note-more font-medium text-ink underline underline-offset-[3px] hover:decoration-2"
+                      :aria-expanded="!!fullNotes[note.id]"
+                      :aria-controls="noteRestIds(note)"
+                      @click="fullNotes[note.id] = !fullNotes[note.id]"
+                    >{{ fullNotes[note.id] ? 'less' : 'more' }}<span class="sr-only">, {{ note.label }}</span></button>
+                  </template>
+                </p>
+                <div v-if="note.rest.length" :id="`${noteId(note)}-rest`" class="pc-note-rest space-y-2" :class="{ 'pc-hidden': !fullNotes[note.id] }">
+                  <p v-for="(para, j) in note.rest" :key="j"><RichText :text="para" /></p>
+                </div>
                 <p v-if="note.url"><a :href="note.url" target="_blank" rel="noopener" class="whitespace-nowrap underline underline-offset-[3px]">Source ↗</a></p>
               </div>
             </div>
@@ -407,24 +437,40 @@ function openInDrawer() {
 }
 
 /* A narrow card: the margin follows the column, its notes are [n] toggles
- * and only the origin note is always open. */
+ * and only the origin note is always open. An open note shows in full, so
+ * its "more" button is hidden. */
 .pc-margin {
   margin-top: 1.5rem;
 }
 .pc-note-num,
 .pc-note-label,
-.pc-note-body {
+.pc-note-body,
+.pc-note-more {
   display: none;
 }
 .pc-note-body.pc-open {
   display: block;
 }
+.pc-hidden {
+  display: none;
+}
+@container param-card not (min-width: 40rem) {
+  .pc-open .pc-note-tail {
+    display: inline;
+  }
+  .pc-open .pc-note-rest {
+    display: block;
+  }
+}
 
-/* A wide card: column and margin side by side, every margin note open. */
+/* A wide card: column and margin side by side, every margin note open at
+ * its first sentence, with "more" for the rest. */
 @container param-card (min-width: 40rem) {
   .pc-body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(13.75rem, 16.25rem);
+    /* The margin is 16.25rem, and on a wide card it grows towards 30rem
+     * while the column keeps at least 34rem (100cqi is the card's width). */
+    grid-template-columns: minmax(0, 1fr) clamp(16.25rem, calc(100cqi - 36.5rem), 30rem);
     column-gap: 2.5rem;
     align-items: start;
   }
@@ -438,6 +484,9 @@ function openInDrawer() {
   .pc-note-label,
   .pc-note-body {
     display: block;
+  }
+  .pc-note-more {
+    display: inline;
   }
   .pc-note-label {
     margin-bottom: 0.25rem;

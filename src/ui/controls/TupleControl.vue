@@ -8,6 +8,8 @@ const props = defineProps({
   labelId: { type: String, required: true },
   // Part of the shared control contract; unused here.
   valueText: { type: String, default: '' },
+  fitValue: { type: Array, default: null },
+  changed: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update'])
 
@@ -24,8 +26,8 @@ function commit(index, raw) {
 </script>
 
 <template>
-  <div role="group" :aria-labelledby="labelId" class="mt-3 flex flex-wrap gap-3">
-    <label v-for="(label, i) in def.tupleLabels" :key="label" class="flex flex-col text-xs text-slate-600">
+  <div role="group" :aria-labelledby="labelId" class="mt-4 flex flex-wrap gap-4">
+    <label v-for="(label, i) in def.tupleLabels" :key="label" class="flex flex-col text-[13px] text-quiet">
       {{ label }}
       <input
         type="number"
@@ -33,10 +35,10 @@ function commit(index, raw) {
         :min="elementRange(range, i).min"
         :max="elementRange(range, i).max"
         :step="def.step"
-        class="mt-0.5 w-32 rounded border border-slate-300 px-1.5 py-0.5 text-right font-mono text-sm text-slate-900 focus:border-slate-600 focus:outline-none"
+        class="mt-1 min-h-11 w-36 border border-rule-strong bg-paper px-2 text-right font-mono text-sm text-ink hover:border-ink"
         @change="commit(i, $event.target.value)"
       />
-      <span v-if="range.elements" class="mt-0.5 text-slate-500">{{ elementRange(range, i).min.toLocaleString() }}–{{ elementRange(range, i).max.toLocaleString() }}</span>
+      <span v-if="range.elements" class="mt-1 font-mono">{{ elementRange(range, i).min.toLocaleString() }}–{{ elementRange(range, i).max.toLocaleString() }}</span>
     </label>
   </div>
 </template>

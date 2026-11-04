@@ -29,10 +29,13 @@ function onEscape(event) {
 
 <template>
   <template v-if="entry">
+    <!-- A dotted ink-2 underline marks the term; solid while hovered or open.
+         The definition reads like a margin note: a 2px rule on its left,
+         15px text. The focus ring is the global one (main.css). -->
     <button
       type="button"
-      class="rounded-sm underline decoration-sky-700 decoration-dotted underline-offset-2 hover:decoration-solid focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-600"
-      :class="open ? 'bg-sky-50 text-sky-900' : ''"
+      class="underline decoration-ink-2 decoration-dotted decoration-1 underline-offset-[3px] hover:decoration-solid"
+      :class="{ 'decoration-solid': open }"
       :aria-expanded="open"
       :aria-controls="panelId"
       @click="open = !open"
@@ -41,8 +44,8 @@ function onEscape(event) {
     <span
       v-show="open"
       :id="panelId"
-      class="my-1 block rounded border-l-2 border-sky-600 bg-sky-50 px-2 py-1 font-normal text-sky-900"
-    ><strong class="font-semibold">{{ entry.term }}:</strong> {{ entry.definition }}</span>
+      class="my-2 block border-l-2 border-ink py-1 pl-3 text-[15px] font-normal leading-[1.55] text-ink-2"
+    ><strong class="font-medium text-ink">{{ entry.term }}:</strong> {{ entry.definition }}</span>
   </template>
   <template v-else>{{ text }}</template>
 </template>

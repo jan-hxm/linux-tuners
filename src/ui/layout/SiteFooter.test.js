@@ -37,8 +37,15 @@ describe('SiteFooter', () => {
 
   it('links Privacy, Imprint and the source, and Glossary only once that page exists', async () => {
     const names = (w) => w.findAll('nav[aria-label="Footer"] a').map((a) => a.text())
-    expect(names(await footer())).toEqual(['Privacy', 'Imprint', 'Source on GitHub'])
-    expect(names(await footer([{ path: '/glossary', name: 'glossary', component: Empty }]))).toEqual(['Glossary', 'Privacy', 'Imprint', 'Source on GitHub'])
+    expect(names(await footer())).toEqual(['Privacy', 'Imprint', 'Source on GitHub ↗', 'Sponsor ↗'])
+    expect(names(await footer([{ path: '/glossary', name: 'glossary', component: Empty }]))).toEqual(['Glossary', 'Privacy', 'Imprint', 'Source on GitHub ↗', 'Sponsor ↗'])
+  })
+
+  it('links Sponsor to GitHub Sponsors in a new tab', async () => {
+    const a = (await footer()).get('a[href="https://github.com/sponsors/jan-hxm"]')
+    expect(a.text()).toBe('Sponsor ↗')
+    expect(a.attributes('target')).toBe('_blank')
+    expect(a.attributes('rel')).toContain('noopener')
   })
 
   it('has no consent banner or em dash', async () => {

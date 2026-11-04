@@ -9,6 +9,7 @@ const AUTHOR_NOTE =
   'I built this after one too many forum threads that said "set it to X" and never said why, or what happens when you set it to Y. I also wanted to see what a change does, so tuners like swap draw it as a live graph. Every value here comes with its reason, so you can disagree with it.'
 const AUTHOR = { handle: 'jan-hxm', url: 'https://github.com/jan-hxm' }
 const SOURCE_URL = 'https://github.com/jan-hxm/linux-tuners'
+const SPONSOR_URL = 'https://github.com/sponsors/jan-hxm'
 
 // There is no glossary page yet; the link appears once a route named
 // "glossary" is registered, so it never points at the landing-page redirect.
@@ -38,7 +39,8 @@ const year = new Date().getFullYear()
           <RouterLink v-if="hasGlossary" :to="{ name: 'glossary' }" :class="linkClass">Glossary</RouterLink>
           <RouterLink to="/privacy" :class="linkClass">Privacy</RouterLink>
           <RouterLink to="/imprint" :class="linkClass">Imprint</RouterLink>
-          <a :href="SOURCE_URL" target="_blank" rel="noopener" :class="linkClass">Source on GitHub</a>
+          <a :href="SOURCE_URL" target="_blank" rel="noopener" :class="linkClass">Source on GitHub ↗</a>
+          <a :href="SPONSOR_URL" target="_blank" rel="noopener" :class="linkClass">Sponsor ↗</a>
         </nav>
         <p class="mt-3.5">© {{ year }} linux-tuners.dev</p>
       </div>

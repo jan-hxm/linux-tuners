@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, nextTick, useId } from 'vue'
+import { ref, reactive, computed, nextTick, useId, onMounted, onBeforeUnmount } from 'vue'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { controlFor } from '@/ui/controls/index.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
@@ -84,9 +84,30 @@ const contextNote = computed(() => {
 // The notes, in the order of the layers (Design.md §7 "Three layers per
 // parameter"): the parts of longDesc, the rule of thumb, the context note.
 // The margin holds at most three notes (REDESIGN §4 decision 9): the first
-// two of these and the origin note. The rest stay behind "Learn more", with
-// the danger note, and the drawer keeps the full reference.
+// two of these and the origin note. A card too narrow for the wide margin
+// (beside the graph column, or on a phone) holds two: the first of these and
+// the origin note. The rest stay behind "Learn more", with the danger note,
+// and the drawer keeps the full reference.
 const MARGIN_LAYER_NOTES = 2
+const NARROW_MARGIN_LAYER_NOTES = 1
+// The card's own width decides, never the tuner: below the width at which the
+// margin's clamp in the styles below bottoms out (34rem column + 2.5rem gap +
+// 16.25rem margin), the card counts as narrow. Until it is measured (and where
+// ResizeObserver is missing) it holds the full three.
+const NARROW_CARD_REM = 36.5 + 16.25
+const cardEl = ref(null)
+const narrowCard = ref(false)
+let resizeObserver = null
+onMounted(() => {
+  if (typeof ResizeObserver === 'undefined' || !cardEl.value) return
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+  resizeObserver = new ResizeObserver(([entry]) => {
+    narrowCard.value = entry.contentRect.width < NARROW_CARD_REM * rem
+  })
+  resizeObserver.observe(cardEl.value)
+})
+onBeforeUnmount(() => resizeObserver?.disconnect())
+const marginLayerNotes = computed(() => (narrowCard.value ? NARROW_MARGIN_LAYER_NOTES : MARGIN_LAYER_NOTES))
 const layerNotes = computed(() => [
   ...DESC_PARTS.filter(({ key }) => def.value.longDesc[key]?.length).map(({ key, label }) => ({
     id: key,
@@ -102,14 +123,14 @@ const layerNotes = computed(() => [
 // place (the [n] toggle of a narrow card opens the whole note). The notes
 // don't depend on the value, so dragging never changes their height.
 const marginNotes = computed(() =>
-  layerNotes.value.slice(0, MARGIN_LAYER_NOTES).map((note) => {
+  layerNotes.value.slice(0, marginLayerNotes.value).map((note) => {
     const { head, tail } = splitFirstSentence(note.paras[0])
     const rest = note.paras.slice(1)
     return { ...note, head, tail, rest, hasMore: Boolean(tail) || rest.length > 0 }
   }),
 )
 const moreNotes = computed(() => [
-  ...layerNotes.value.slice(MARGIN_LAYER_NOTES),
+  ...layerNotes.value.slice(marginLayerNotes.value),
   ...(def.value.dangerousIfZero
     ? [{ id: 'danger', label: 'Danger at 0', paras: ['Setting this to 0 is documented as dangerous.'] }]
     : []),
@@ -183,8 +204,9 @@ function openInDrawer() {
        column and margin side by side from 40rem, else the margin's notes as
        [n] toggles under the column (scoped styles below). -->
   <article
+    ref="cardEl"
     class="param-card border-b border-rule"
-    :class="compact ? 'pc-compact py-4' : 'py-8'"
+    :class="compact ? 'pc-compact py-4' : 'py-6'"
     :data-changed="changed ? '' : undefined"
   >
     <div class="pc-body">
@@ -220,7 +242,7 @@ function openInDrawer() {
              fits the machine, ochre once changed. Back to X beside it. -->
         <div
           class="pc-value flex"
-          :class="compact ? 'flex-col items-end gap-1' : 'mt-3.5 items-start justify-between gap-4'"
+          :class="compact ? 'flex-col items-end gap-1' : 'mt-3 items-start justify-between gap-4'"
         >
           <div class="min-w-0" :class="{ 'text-right': compact }">
             <input
@@ -286,11 +308,11 @@ function openInDrawer() {
           />
         </div>
 
-        <p v-if="!compact" class="mt-4 text-base leading-relaxed text-ink-2">{{ def.shortDesc }}</p>
+        <p v-if="!compact" class="mt-3 text-base leading-relaxed text-ink-2">{{ def.shortDesc }}</p>
 
         <!-- Validation issues: a blocking error in a 1px error frame, a
              warning in the warning colour with its sign, an info note quiet. -->
-        <ul v-if="issues.length" class="pc-issues mt-4 space-y-2 text-[15px] leading-[1.55]">
+        <ul v-if="issues.length" class="pc-issues mt-3 space-y-2 text-[15px] leading-[1.55]">
           <li
             v-for="issue in issues"
             :key="issue.id"
@@ -376,14 +398,31 @@ function openInDrawer() {
           </li>
         </ol>
 
-        <template v-if="moreNotes.length">
+        <!-- The margin's last line, under the origin note's text: Learn more
+             and the sources, so they add no row of their own to the card. -->
+        <p class="pc-links mt-1 flex flex-wrap gap-x-4 pl-[30px] text-sm">
           <button
+            v-if="moreNotes.length"
             type="button"
-            class="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-ink underline underline-offset-[3px]"
+            class="inline-flex min-h-6 items-center font-medium text-ink underline underline-offset-[3px] hover:decoration-2"
             :aria-expanded="expanded"
             :aria-controls="moreId"
             @click="expanded = !expanded"
           >Learn more</button>
+          <a
+            :href="def.kernelDocsUrl"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px] hover:decoration-2"
+          >{{ domain.docsLabel }}<span aria-hidden="true">&nbsp;↗</span><span class="sr-only">, opens in a new tab</span></a>
+          <button
+            type="button"
+            class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px] hover:decoration-2"
+            @click="openInDrawer"
+          >Full reference</button>
+        </p>
+
+        <template v-if="moreNotes.length">
           <div :id="moreId">
             <ol v-if="expanded" class="mt-2 space-y-4">
               <li
@@ -401,20 +440,6 @@ function openInDrawer() {
             </ol>
           </div>
         </template>
-
-        <p class="mt-3 flex flex-wrap gap-x-4 text-sm">
-          <a
-            :href="def.kernelDocsUrl"
-            target="_blank"
-            rel="noopener"
-            class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]"
-          >{{ domain.docsLabel }}<span aria-hidden="true">&nbsp;↗</span><span class="sr-only">, opens in a new tab</span></a>
-          <button
-            type="button"
-            class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]"
-            @click="openInDrawer"
-          >Full reference</button>
-        </p>
       </aside>
     </div>
   </article>

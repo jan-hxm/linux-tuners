@@ -107,7 +107,7 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
 <template>
   <section class="mx-auto max-w-[86rem] px-4 pb-16 sm:px-6 lg:px-8">
     <!-- Title block: where you are, what the tuner is for, which machine. -->
-    <header class="flex flex-wrap items-end justify-between gap-x-12 gap-y-6 pt-10 sm:pt-12">
+    <header class="flex flex-wrap items-end justify-between gap-x-12 gap-y-4 pt-8 sm:pt-10">
       <div class="min-w-0 max-w-3xl flex-[1_1_32rem]">
         <nav aria-label="Breadcrumb" class="text-sm text-quiet">
           <ol class="flex flex-wrap items-center gap-x-1.5">
@@ -119,11 +119,11 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
             <li aria-current="page">{{ page.title }}</li>
           </ol>
         </nav>
-        <h1 class="mt-3 text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-ink sm:text-[44px] sm:leading-[1.08]">{{ page.title }}</h1>
-        <p class="mt-3.5 max-w-[36em] text-[17px] leading-relaxed text-ink-2 sm:text-lg">
+        <h1 class="mt-2 text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-ink sm:text-[44px] sm:leading-[1.08]">{{ page.title }}</h1>
+        <p class="mt-3 max-w-[36em] text-[17px] leading-relaxed text-ink-2 sm:text-lg">
           <RichText :text="page.intro" :code-class="INTRO_CODE" />
         </p>
-        <p class="mt-2 text-sm">
+        <p class="mt-1 text-sm">
           <a href="#about" class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]">About this tuner</a>
         </p>
       </div>
@@ -143,7 +143,7 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
          the site header for the whole page (its height is --step-chain-h). -->
     <nav
       aria-label="Steps"
-      class="mt-8 bg-paper lg:sticky lg:top-[var(--site-header-h)] lg:z-20"
+      class="mt-6 bg-paper lg:sticky lg:top-[var(--site-header-h)] lg:z-20"
     >
       <ol class="grid grid-cols-2 sm:grid-cols-4">
         <li v-for="(step, i) in STEPS" :key="step.id" class="min-w-0">
@@ -164,28 +164,28 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
       </ol>
     </nav>
 
-    <div class="mt-10">
+    <div class="mt-8">
       <NeedThisBox :tuner-id="domain.id" />
     </div>
 
-    <section :id="page.profileStep.id" class="mt-16" :class="STEP_SCROLL">
+    <section :id="page.profileStep.id" class="mt-12" :class="STEP_SCROLL">
       <StepHeader :num="1" :title="page.profileStep.title" :subtitle="page.profileStep.subtitle" />
-      <div class="mt-6">
+      <div class="mt-4">
         <slot name="profile"><ProfileForm /></slot>
       </div>
     </section>
 
-    <section id="preset" class="mt-16" :class="STEP_SCROLL">
+    <section id="preset" class="mt-12" :class="STEP_SCROLL">
       <StepHeader :num="2" title="Pick a starting point" subtitle="Optional: jump to a tuned baseline for your workload, then fine-tune." />
-      <div class="mt-6">
+      <div class="mt-4">
         <PresetSelector />
       </div>
     </section>
 
-    <section id="tune" class="mt-16" :class="STEP_SCROLL">
+    <section id="tune" class="mt-12" :class="STEP_SCROLL">
       <StepHeader :num="3" title="Tune and preview" :subtitle="page.tuneSubtitle" />
-      <ProfileDraftNotice class="mt-6" />
-      <div v-if="hasGraphs" class="mt-8 grid grid-cols-1 gap-y-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start lg:gap-x-12">
+      <ProfileDraftNotice class="mt-4" />
+      <div v-if="hasGraphs" class="mt-6 grid grid-cols-1 gap-y-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start lg:gap-x-12">
         <!-- The graphs: open above the settings on a narrow screen, a sticky
              column beside them from lg up. The settings come first in the
              reading order. -->
@@ -199,21 +199,21 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
           <ParameterPanel />
         </div>
       </div>
-      <ParameterPanel v-else class="mt-8" />
+      <ParameterPanel v-else class="mt-6" />
     </section>
 
-    <section id="export" class="mt-20" :class="STEP_SCROLL">
+    <section id="export" class="mt-12" :class="STEP_SCROLL">
       <StepHeader :num="4" :title="page.exportStep.title" :subtitle="page.exportStep.subtitle" />
-      <div class="mt-6">
+      <div class="mt-4">
         <ConfigOutput />
       </div>
     </section>
 
-    <div class="mt-16 empty:hidden">
+    <div class="mt-12 empty:hidden">
       <AdSlot :slot="page.adSlot" :label="`${domain.id} tuner footer`" />
     </div>
 
-    <AboutSection class="mt-16" :about="domain.about" />
+    <AboutSection class="mt-12" :about="domain.about" />
     <InfoDrawer />
 
     <!-- Spacer so the mobile impact bar never covers page content. -->

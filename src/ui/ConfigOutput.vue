@@ -150,7 +150,7 @@ const SECONDARY = 'min-h-11 border border-rule-strong px-3.5 text-sm font-medium
     <template v-else>
       <p class="text-[15px] text-ink-2">{{ summary }}</p>
 
-      <div class="mt-6 grid grid-cols-1 gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)]">
+      <div class="mt-4 grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)]">
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2.5">
             <button
@@ -179,13 +179,13 @@ const SECONDARY = 'min-h-11 border border-rule-strong px-3.5 text-sm font-medium
             </p>
           </div>
 
-          <ul class="mt-4 border-b border-rule">
+          <ul class="mt-2 border-b border-rule">
             <li v-for="file in files" :key="file.path" class="break-all py-1.5 font-mono text-sm text-quiet">{{ file.path }}</li>
           </ul>
           <!-- The output as it is copied, one span per line. It scrolls on its
                own when long, so keyboards can reach it (Design.md §7). -->
           <pre
-            class="max-h-[36rem] overflow-auto whitespace-pre-wrap py-5 font-mono text-sm leading-[1.8] [overflow-wrap:anywhere]"
+            class="max-h-[28rem] overflow-auto whitespace-pre-wrap py-3 font-mono text-sm leading-[1.8] [overflow-wrap:anywhere]"
             tabindex="0"
             aria-label="Generated configuration"
           ><template v-for="(line, i) in lines" :key="i"><span :class="LINE_CLASS[line.kind]">{{ line.text }}</span>{{ i < lines.length - 1 ? '\n' : '' }}</template></pre>
@@ -210,7 +210,7 @@ const SECONDARY = 'min-h-11 border border-rule-strong px-3.5 text-sm font-medium
             </template>
           </div>
 
-          <div class="mt-8 border-t border-rule pt-2">
+          <div class="mt-4 border-t border-rule pt-1">
             <button
               type="button"
               class="inline-flex min-h-11 items-center text-sm text-ink-2 underline underline-offset-[3px] hover:text-ink"

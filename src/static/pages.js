@@ -17,6 +17,8 @@ import { GLOSSARY } from '@/ui/glossary.js'
 import { NEED_THIS_HEADING, needThisRows } from '@/ui/needThis.js'
 import { installGuide } from '@/ui/installGuide.js'
 import { controlMetaFor } from '@/ui/controls/meta.js'
+import { LANDING_COPY, routeSummary, tunerFacts } from '@/ui/landing.js'
+import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
 import { text, code, bold, link, rich, heading, paragraph, list, defs, codeBlock, joinSegments } from './nodes.js'
 
 const DOMAINS_BY_ID = Object.fromEntries(TUNER_DOMAINS.map((d) => [d.id, d]))
@@ -165,26 +167,56 @@ export function tunerDoc(domain, entry, { now }) {
   return { title: page.title, url: pageUrl(entry.path), blocks }
 }
 
-/** The landing page: what the site is, and every tuner with its blurb and link. */
+/**
+ * The landing page, in the live page's order: the hero, the key to the three
+ * marks, why the site exists, the route for each machine role, and every
+ * tuner with its question, setting count, files and link. The copy is the
+ * live page's (ui/landing.js), so readers without JavaScript get the same
+ * story.
+ */
 export function landingDoc() {
   const meta = ROUTE_META_BY_PATH['/']
   const setup = ROUTE_META_BY_PATH['/setup']
+  const { hero, key, why, start, tuners } = LANDING_COPY
+  const titles = (list) => list.map((t) => t.title).join(', ')
   const blocks = [
-    heading(1, meta.ogTitle ?? meta.title),
-    paragraph(text(meta.description)),
+    heading(1, hero.title),
+    paragraph(text(hero.lead)),
+    paragraph(text(hero.trust)),
+    heading(2, key.label),
+    defs(key.marks.map((m) => row(m.label, text(m.text)))),
+    heading(2, why.heading),
+    paragraph(text(why.text)),
+    defs([
+      row(why.forum.label, code(why.forum.line), text(`: ${why.forum.points.join('. ')}.`)),
+      row(why.site.label, text(`${why.site.points.join('. ')}.`)),
+    ]),
+    heading(2, start.heading),
+    paragraph(text(start.intro)),
+    list(MACHINE_ROLES.map((r) => {
+      const { recommended, optional } = tunersForRole(LIVE_TUNERS, r.value)
+      const fine = optional.length ? ` ${start.fineToLeave}: ${titles(optional)}.` : ''
+      return [bold(routeSummary(r.label, recommended.length)), text(` ${titles(recommended)}.${fine}`)]
+    })),
     paragraph(link(setup.ogTitle ?? setup.title, pageUrl(setup.path)), text(`: ${setup.description}`)),
-    heading(2, 'Tuners'),
+    heading(2, tuners.heading),
   ]
   for (const tuner of LIVE_TUNERS) {
+    const { settings, writes } = tunerFacts(DOMAINS_BY_ID[tuner.id])
     blocks.push(
       heading(3, tuner.title),
+      paragraph(bold(tuner.question)),
       paragraph(text(tuner.blurb)),
+      defs([
+        row(tuners.columns.settings, text(settings)),
+        row(tuners.columns.writes, joinSegments(writes.map((path) => [code(path)]), ', ')),
+      ]),
       list(tuner.keys.filter((k) => k !== '…').map((k) => [code(k)])),
       paragraph(link(`Open the ${tuner.title} tuner`, pageUrl(tuner.path))),
     )
   }
   if (PLANNED_TUNERS.length) {
-    blocks.push(heading(2, 'On the roadmap'), list(PLANNED_TUNERS.map((t) => [bold(`${t.title}:`), text(` ${t.blurb}`)])))
+    blocks.push(paragraph(text(`${tuners.planned}: `), ...PLANNED_TUNERS.map((t, i) => [bold(t.title), text(` (${t.blurb})${i < PLANNED_TUNERS.length - 1 ? '; ' : ''}`)])))
   }
   return { title: meta.ogTitle ?? meta.title, url: `${SITE_ORIGIN}/`, blocks }
 }

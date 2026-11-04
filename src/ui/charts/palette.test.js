@@ -5,7 +5,7 @@ import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import colors from 'tailwindcss/colors.js'
 import { PALETTE, LIGHT, DARK, tone } from './palette.js'
-import { darkColour } from '../theme.js'
+import { darkColour, TOKENS } from '../theme.js'
 
 const SRC = fileURLToPath(new URL('../..', import.meta.url))
 const COLOUR_LITERAL = /#[0-9a-f]{3,8}\b|rgba?\(/i
@@ -31,10 +31,22 @@ describe('palette', () => {
     expect(() => tone('purple')).toThrow(/Unknown chart tone/)
   })
 
-  // The Tailwind colour each tone is, so legends styled with Tailwind classes match.
-  const SOURCES = { ink: ['slate', 900], muted: ['slate', 500], faint: ['slate', 300], ok: ['green', 600], info: ['sky', 500], warn: ['amber', 600], danger: ['red', 600] }
+  // The token each design tone is, so legends styled with token classes match.
+  const TOKEN_SOURCES = { ink: 'ink', quiet: 'quiet', rule: 'rule', fit: 'fit', mine: 'mine', error: 'error', text: 'quiet', grid: 'rule' }
 
-  it('uses the Tailwind colours, mapped like the classes in dark mode', () => {
+  it('takes the design tones from the semantic tokens in both schemes', () => {
+    for (const [name, token] of Object.entries(TOKEN_SOURCES)) {
+      expect(LIGHT[name], name).toBe(TOKENS[token][0])
+      expect(DARK[name], name).toBe(TOKENS[token][1])
+    }
+    expect(LIGHT.inkFill).toBe('rgba(22, 22, 22, 0.08)')
+    expect(DARK.inkFill).toBe('rgba(236, 236, 232, 0.08)')
+  })
+
+  // The Tailwind colour each legacy tone is, so legends styled with Tailwind classes match.
+  const SOURCES = { muted: ['slate', 500], faint: ['slate', 300], ok: ['green', 600], info: ['sky', 500], warn: ['amber', 600], danger: ['red', 600] }
+
+  it('keeps the legacy tones on the Tailwind colours, mapped like the classes in dark mode', () => {
     for (const [name, [family, shade]] of Object.entries(SOURCES)) {
       expect(LIGHT[name], name).toBe(colors[family][shade])
       const dark = darkColour(family, shade)

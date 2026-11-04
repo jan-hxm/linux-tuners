@@ -1,3 +1,77 @@
+/* Self-hosted webfonts (REDESIGN.md §4 decision 1): Latin subsets of Host
+ * Grotesk 400/500/600 and Fragment Mono 400, under the SIL OFL (fonts/OFL.txt).
+ * Never load them from a third-party origin (Design.md §10). Vite fingerprints
+ * the files. The subsets cover U+0000-00FF plus common punctuation, arrows and
+ * maths signs; anything else falls through to the next font in the stack.
+ * The stacks themselves are FONT_SANS and FONT_MONO in src/ui/theme.js. */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/host-grotesk-latin-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+2248, U+2260, U+2264-2265, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/host-grotesk-latin-500.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+2248, U+2260, U+2264-2265, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./fonts/host-grotesk-latin-600.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+2248, U+2260, U+2264-2265, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Fragment Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/fragment-mono-latin-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+2248, U+2260, U+2264-2265, U+FEFF, U+FFFD;
+}
+
+/* Metric-matched fallbacks, used until the webfonts arrive (font-display:
+ * swap), so the swap barely reflows. Measured with fontTools: Host Grotesk
+ * averages 0.4989em per character on English text against Arial's 0.4733em
+ * (Arial Bold 0.5061em; Host Grotesk's width doesn't change with weight), with
+ * ascent 1.015 and descent 0.315; Fragment Mono advances 0.618em against the
+ * 0.6em of Menlo, DejaVu Sans Mono, Liberation Mono and Courier New, with
+ * ascent 0.95 and descent 0.25. The overrides are those values divided by
+ * size-adjust. Liberation Sans is metric-compatible with Arial. */
+@font-face {
+  font-family: 'Host Grotesk Fallback';
+  font-weight: 100 549;
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Helvetica');
+  size-adjust: 105.41%;
+  ascent-override: 96.29%;
+  descent-override: 29.88%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Host Grotesk Fallback';
+  font-weight: 550 900;
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Helvetica Bold');
+  size-adjust: 98.58%;
+  ascent-override: 102.96%;
+  descent-override: 31.95%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Fragment Mono Fallback';
+  src: local('Menlo'), local('DejaVu Sans Mono'), local('Liberation Mono'), local('Courier New');
+  size-adjust: 103%;
+  ascent-override: 92.23%;
+  descent-override: 24.27%;
+  line-gap-override: 0%;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,7 +100,8 @@
 
   /* Visible focus indicator on every interactive control. The default browser
    * outline is suppressed by Tailwind's preflight, so we re-add a clear ring
-   * for keyboard users without affecting mouse users (focus-visible only). */
+   * for keyboard users without affecting mouse users (focus-visible only):
+   * 2px ink, 2px outside the control, square like everything else. */
   button:focus-visible,
   [role='switch']:focus-visible,
   [role='tab']:focus-visible,
@@ -36,13 +111,12 @@
   textarea:focus-visible,
   summary:focus-visible,
   [tabindex='0']:focus-visible {
-    outline: 2px solid rgb(var(--c-slate-900));
+    outline: 2px solid rgb(var(--t-ink));
     outline-offset: 2px;
-    border-radius: 0.25rem;
   }
 
   /* Surfaces that are dark by design (the heroes, the step chain, the undo
-   * toast) would swallow that slate-900 ring, so inside them it takes the
+   * toast) would swallow that ink ring, so inside them it takes the
    * card colour instead: white on the heroes, and on the toast whichever of
    * white or slate-900 is the opposite of its fill in the current scheme. */
   .surface-inverse :focus-visible {
@@ -65,28 +139,28 @@
  * readable prose in the page's colours, which follow dark mode. */
 @layer components {
   .static-doc {
-    @apply mx-auto max-w-3xl space-y-3 px-4 py-6 text-sm leading-relaxed text-slate-800 sm:px-6;
+    @apply mx-auto max-w-3xl space-y-3 px-4 py-6 text-sm leading-relaxed text-ink-2 sm:px-6;
   }
   .static-doc h1 {
-    @apply text-2xl font-semibold tracking-tight text-slate-900;
+    @apply text-2xl font-medium tracking-tight text-ink;
   }
   .static-doc h2 {
-    @apply pt-4 text-lg font-semibold text-slate-900;
+    @apply pt-4 text-lg font-medium text-ink;
   }
   .static-doc h3 {
-    @apply pt-2 text-base font-semibold text-slate-900;
+    @apply pt-2 text-base font-medium text-ink;
   }
   .static-doc h4 {
-    @apply font-semibold text-slate-800;
+    @apply font-medium text-ink;
   }
   .static-doc a {
-    @apply text-sky-700 underline;
+    @apply text-ink underline underline-offset-[3px];
   }
   .static-doc code {
     @apply break-words font-mono;
   }
   .static-doc pre {
-    @apply whitespace-pre-wrap break-all rounded bg-slate-100 p-3 text-xs text-slate-900;
+    @apply whitespace-pre-wrap break-all bg-paper-hover p-3 text-[13px] text-ink;
   }
   .static-doc ul {
     @apply list-disc space-y-1 pl-5;
@@ -98,7 +172,7 @@
     @apply flex flex-wrap gap-x-2;
   }
   .static-doc dt {
-    @apply font-semibold text-slate-600;
+    @apply font-medium text-quiet;
   }
   .static-doc dt::after {
     content: ':';

@@ -1,6 +1,6 @@
 import colors from 'tailwindcss/colors.js'
 import plugin from 'tailwindcss/plugin.js'
-import { THEMED_FAMILIES, SHADES, darkColour } from './src/ui/theme.js'
+import { THEMED_FAMILIES, SHADES, darkColour, TOKENS, FONT_SANS, FONT_MONO } from './src/ui/theme.js'
 
 // Dark mode: themed colours are CSS variables holding an RGB triplet, light
 // values on :root and the mapped ones from src/ui/theme.js under
@@ -15,16 +15,21 @@ const triplet = (value) =>
     .map((h) => parseInt(h, 16))
     .join(' ')
 const themed = (name) => `rgb(var(--c-${name}) / <alpha-value>)`
+// The semantic tokens of the redesign (REDESIGN.md §3) live in --t-* variables
+// beside the legacy --c-* families, which stay until nothing uses them (WS8).
+const token = (name) => `rgb(var(--t-${name}) / <alpha-value>)`
 
 function vars(dark) {
-  return Object.fromEntries(
-    NAMES.map((name) => {
+  const tokens = Object.entries(TOKENS).map(([name, pair]) => [`--t-${name}`, triplet(pair[dark ? 1 : 0].toLowerCase())])
+  return Object.fromEntries([
+    ...tokens,
+    ...NAMES.map((name) => {
       if (!dark) return [`--c-${name}`, triplet(hex(name))]
       const [family, shade] = name === 'white' ? ['white'] : name.split('-')
       const to = darkColour(family, Number(shade))
       return [`--c-${name}`, triplet(hex(to === 'white' ? 'white' : to.join('-')))]
     }),
-  )
+  ])
 }
 
 /** @type {import('tailwindcss').Config} */
@@ -33,9 +38,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
+        sans: FONT_SANS,
+        mono: FONT_MONO,
       },
       colors: {
+        ...Object.fromEntries(Object.keys(TOKENS).map((name) => [name, token(name)])),
         white: themed('white'),
         ...Object.fromEntries(
           THEMED_FAMILIES.map((family) => [family, Object.fromEntries(SHADES.map((shade) => [shade, themed(`${family}-${shade}`)]))]),

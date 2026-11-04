@@ -10,6 +10,9 @@ import ParameterCard from './ParameterCard.vue'
 import { useTunerStoreFor } from '@/core/createTunerStore.js'
 import { swapDomain } from '@/tuners/swap/index.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
+import { TUNER_DOMAINS } from '@/tuners/domains.js'
+import { splitFirstSentence } from './firstSentence.js'
+import RichText from './RichText.vue'
 
 function mountCard(paramKey) {
   return mount(ParameterCard, {
@@ -283,6 +286,62 @@ describe('ParameterCard layers (Design.md §7)', () => {
       expect(wrapper.text()).not.toContain(meaning)
       await learnMore(wrapper).trigger('click')
       expect(wrapper.text()).toContain(meaning)
+    }
+  })
+
+  it('shows a margin note to its first sentence, with a real "more" button for the rest', async () => {
+    useTunerStoreFor(swapDomain)
+    const wrapper = mountCard('swappiness')
+    await nextTick()
+    const note = swapDomain.defsByKey.swappiness.longDesc.what
+    const { head, tail } = splitFirstSentence(note[0])
+    expect(tail || note.length > 1).toBeTruthy() // the fixture has something to hide
+    const first = wrapper.get('button.pc-note-more')
+    expect(first.attributes('type')).toBe('button')
+    expect(first.attributes('aria-expanded')).toBe('false')
+    expect(first.text()).toBe('more, What it does')
+    const controlled = first.attributes('aria-controls').split(' ').map((id) => wrapper.get(`#${id}`))
+    expect(controlled.length).toBeGreaterThanOrEqual(1)
+    const shown = (el) => !el.classes('pc-hidden')
+    for (const el of controlled) expect(shown(el)).toBe(false)
+    // The first sentence is in view, rendered as rich text.
+    const texts = wrapper.get('aside li').findAllComponents(RichText).map((c) => c.props('text'))
+    expect(texts.slice(0, 2)).toEqual([head, tail])
+    expect(wrapper.get(`[id="${first.attributes('aria-controls').split(' ')[0]}"]`).element.textContent).toMatch(/^\s/) // a space after the sentence
+
+    await first.trigger('click')
+    expect(first.attributes('aria-expanded')).toBe('true')
+    expect(first.text()).toBe('less, What it does')
+    for (const el of controlled) expect(shown(el)).toBe(true)
+    await first.trigger('click')
+    for (const el of controlled) expect(shown(el)).toBe(false)
+  })
+
+  it('keeps the origin note whole, without a "more" button', async () => {
+    useTunerStoreFor(swapDomain)
+    const wrapper = mountCard('swappiness')
+    await nextTick()
+    const origin = marginItems(wrapper).at(-1)
+    expect(origin.find('button').exists()).toBe(false)
+    expect(origin.text()).toContain('Kernel default 60, which also fits your machine.')
+  })
+
+  it.each(TUNER_DOMAINS.map((d) => [d.id, d]))('gives every %s margin note a "more" button exactly when it has more', async (_id, domain) => {
+    const store = useTunerStoreFor(domain)
+    for (const key of Object.keys(domain.defsByKey)) {
+      const wrapper = mount(ParameterCard, {
+        props: { paramKey: key },
+        global: { provide: { [TUNER_STORE_KEY]: store, [TUNER_DOMAIN_KEY]: domain } },
+      })
+      await nextTick()
+      for (const li of marginItems(wrapper).slice(0, -1)) {
+        const id = li.get('.pc-note-body').attributes('id')
+        const more = li.find('button.pc-note-more')
+        const hidden = [`${id}-tail`, `${id}-rest`].filter((x) => li.find(`[id="${x}"]`).exists())
+        expect(more.exists()).toBe(hidden.length > 0)
+        if (more.exists()) expect(more.attributes('aria-controls').split(' ')).toEqual(hidden)
+      }
+      wrapper.unmount()
     }
   })
 

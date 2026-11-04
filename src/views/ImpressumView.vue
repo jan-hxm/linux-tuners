@@ -15,14 +15,14 @@
 </script>
 
 <template>
-  <section class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
+  <section class="mx-auto max-w-[70ch] space-y-8 px-4 py-8 font-sans sm:px-6 sm:py-12">
     <header>
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Imprint</h1>
-      <p class="mt-1 text-xs text-slate-500">Information per § 5 TMG (German Telemedia Act)</p>
+      <h1 class="text-3xl font-semibold tracking-tight text-ink">Imprint</h1>
+      <p class="mt-2 text-sm text-quiet">Information per § 5 TMG (German Telemedia Act)</p>
     </header>
 
-    <section class="space-y-3 text-sm text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Responsible for content</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-sm font-semibold uppercase tracking-wide text-quiet">Responsible for content</h2>
       <address class="not-italic space-y-0.5 font-mono">
         <div>Jan Steffen Henke</div>
         <div>Am Heidelberg 6</div>
@@ -31,18 +31,18 @@
       </address>
     </section>
 
-    <section class="space-y-3 text-sm text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Contact</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-sm font-semibold uppercase tracking-wide text-quiet">Contact</h2>
       <dl class="space-y-1">
         <div class="flex gap-2">
-          <dt class="w-24 shrink-0 text-slate-500">Email:</dt>
+          <dt class="w-24 shrink-0 text-quiet">Email:</dt>
           <dd class="font-mono">info@linux-tuners.dev</dd>
         </div>
       </dl>
     </section>
 
-    <section class="space-y-2 text-xs leading-relaxed text-slate-600">
-      <h2 class="text-sm font-semibold text-slate-900">Liability for content</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-lg font-semibold text-ink">Liability for content</h2>
       <p>
         The content of these pages has been created with the greatest possible care. No guarantee can be
         given, however, for the accuracy, completeness, or currency of the content. As a service provider
@@ -56,7 +56,7 @@
         notification of any such infringements we will remove the content concerned without delay.
       </p>
 
-      <h2 class="mt-4 text-sm font-semibold text-slate-900">Liability for links</h2>
+      <h2 class="mt-8 border-t border-rule pt-6 text-lg font-semibold text-ink">Liability for links</h2>
       <p>
         Our offering contains links to external websites of third parties whose content we have no
         influence over. We therefore cannot accept any liability for these external contents. The
@@ -65,7 +65,7 @@
         illegal content was apparent at the time of linking.
       </p>
 
-      <h2 class="mt-4 text-sm font-semibold text-slate-900">Copyright</h2>
+      <h2 class="mt-8 border-t border-rule pt-6 text-lg font-semibold text-ink">Copyright</h2>
       <p>
         The content and works on these pages created by the site operators are subject to German copyright
         law. Reproduction, editing, distribution, and any kind of exploitation outside the limits of
@@ -74,7 +74,7 @@
       </p>
       <p>
         The application's source code itself is released under the MIT License (see the
-        <a href="https://github.com/jan-hxm/linux-tuners/blob/main/LICENSE" target="_blank" rel="noopener" class="text-sky-700 underline">LICENSE file in the repository</a>).
+        <a href="https://github.com/jan-hxm/linux-tuners/blob/main/LICENSE" target="_blank" rel="noopener" class="text-ink underline underline-offset-[3px]">LICENSE file in the repository</a>).
       </p>
     </section>
   </section>

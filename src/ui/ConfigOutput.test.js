@@ -85,6 +85,9 @@ describe('ConfigOutput', () => {
   })
 
   it('opens with a summary from state and marks the first step as next after a copy', async () => {
+    // The "Copied" confirmation resets after 1.8 s; fake timers keep a slow
+    // run from passing that before the assertions.
+    vi.useFakeTimers()
     const writeText = vi.fn().mockResolvedValue()
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
     const { store, wrapper } = mountOutput(swapDomain)
@@ -109,6 +112,7 @@ describe('ConfigOutput', () => {
     store.setParam('swappiness', 30)
     await nextTick()
     expect(firstStep().attributes('aria-current')).toBeUndefined()
+    vi.useRealTimers()
   })
 
   describe.each(BLOCKING)('%#: %s blocked state', (domain, _name, bad) => {

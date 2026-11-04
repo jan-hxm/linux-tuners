@@ -23,7 +23,6 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('%s view', (id, domain) => {
   beforeEach(async () => {
     View = await TUNER_VIEWS[id]()
     setActivePinia(createPinia())
-    history.replaceState(null, '', '/')
     warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     error = vi.spyOn(console, 'error').mockImplementation(() => {})
   })
@@ -84,7 +83,6 @@ describe('a tuner without graphs', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
-    history.replaceState(null, '', '/')
   })
 
   it('defaults to no tabs and no default tab', () => {

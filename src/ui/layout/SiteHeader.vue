@@ -28,6 +28,12 @@ function revealActive() {
   })
 }
 
+// A link reached with Tab scrolls clear of the edge fades, so its whole
+// focus ring shows (the nav's scroll-padding is the fade's width).
+function revealFocused(event) {
+  event.target.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
+}
+
 onMounted(() => {
   revealActive()
   window.addEventListener('resize', updateFades)
@@ -51,7 +57,7 @@ watch(() => route.path, revealActive)
         class="order-2 ml-auto inline-flex min-h-11 shrink-0 items-center whitespace-nowrap bg-ink px-4 text-[15px] font-medium text-paper hover:bg-ink-2 lg:order-3 lg:ml-0"
       >Start setup</RouterLink>
       <div class="relative order-3 min-w-0 basis-full lg:order-2 lg:flex-1 lg:basis-auto">
-        <nav ref="nav" aria-label="Tuners" class="flex min-w-0 items-center gap-1 overflow-x-auto px-1 py-1 text-[15px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:justify-end" @scroll.passive="updateFades">
+        <nav ref="nav" aria-label="Tuners" class="flex min-w-0 scroll-px-9 items-center gap-1 overflow-x-auto px-1 py-1 text-[15px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:justify-end" @scroll.passive="updateFades" @focusin="revealFocused">
           <!-- The landing page's own entry, so the nav shows where you are there too.
                Exact match only: every page sits under "/". -->
           <RouterLink

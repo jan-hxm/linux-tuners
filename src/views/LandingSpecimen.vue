@@ -1,6 +1,6 @@
 <script setup>
 /**
- * The landing hero's live specimen (REDESIGN §4 decision 4): one real
+ * The landing hero's live specimen (Design.md §5 "Guided setup"): one real
  * setting in column-and-margin form, for an example machine. The def, the
  * range, the kernel default and the value that fits all come from the
  * domain; the slider is the real SliderControl. The value lives here only:
@@ -87,7 +87,8 @@ const nameId = 'specimen-name'
           <li v-if="def.tuningTip" class="grid grid-cols-[30px_minmax(0,1fr)] border-t border-ink pt-2.5">
             <span class="font-mono text-[13px] text-quiet">[1]</span>
             <div class="min-w-0">
-              <h3 class="mb-1 text-[13px] font-medium text-quiet">Rule of thumb</h3>
+              <!-- A label, not a heading: the hero has no section headings under its h1. -->
+              <p class="mb-1 text-[13px] font-medium text-quiet">Rule of thumb</p>
               <p class="text-ink-2">{{ def.tuningTip }}</p>
             </div>
           </li>

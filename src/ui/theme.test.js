@@ -56,7 +56,7 @@ describe('old colour families', () => {
   })
 })
 
-describe('semantic tokens (REDESIGN.md §3)', () => {
+describe('semantic tokens (Design.md §7)', () => {
   const SCHEMES = [
     [0, 'light'],
     [1, 'dark'],
@@ -96,6 +96,8 @@ describe('semantic tokens (REDESIGN.md §3)', () => {
     for (const [scheme, label] of SCHEMES) {
       expect(contrast(TOKENS.paper[scheme], TOKENS.ink[scheme]), `paper on ink, ${label}`).toBeGreaterThanOrEqual(4.5)
       expect(contrast(TOKENS['paper-hover'][scheme], TOKENS.ink[scheme]), `paper-hover on ink, ${label}`).toBeGreaterThanOrEqual(4.5)
+      // A primary button's hover fill is ink-2.
+      expect(contrast(TOKENS.paper[scheme], TOKENS['ink-2'][scheme]), `paper on ink-2, ${label}`).toBeGreaterThanOrEqual(4.5)
     }
   })
 

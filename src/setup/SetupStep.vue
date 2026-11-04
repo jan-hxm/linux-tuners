@@ -37,10 +37,12 @@ provide(PROFILE_FIELD_NOTE_KEY, fieldNote)
 // its summary line; the notice above the values repeats unapplied edits.
 provide(PROFILE_DRAFT_KEY, useProfileDraft(store, domain.profile, { collapsed: true }))
 
+// An issue says its level in words, so colour only backs it up.
+const ISSUE_LABEL = { error: 'Error', warn: 'Check', info: 'Note' }
 const ISSUE_CLASSES = {
-  error: 'border-red-300 bg-red-50 text-red-900',
-  warn: 'border-amber-300 bg-amber-50 text-amber-900',
-  info: 'border-sky-300 bg-sky-50 text-sky-900',
+  error: 'border-error',
+  warn: 'border-mine',
+  info: 'border-rule-strong',
 }
 
 const titleOf = (id) => SETUP_STEPS.find((s) => s.id === id)?.entry.title
@@ -67,19 +69,23 @@ const roleLabel = computed(() => machineOptionLabel('role', setup.machine.role))
 const tunerLink = computed(
   () => `${entry.path}#${domain.encodeState({ hardware: store.hardware, params: store.params, activePreset: store.activePreset })}`,
 )
+
+const SECTION_H = 'border-t border-ink pt-3 text-[17px] font-medium text-ink'
+const SECTION_NUM = 'mr-3 font-mono text-[13px] font-normal text-quiet'
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <p class="border-l-2 border-sky-600 pl-2 text-sm text-slate-800">{{ entry.setup.why }}</p>
-      <p class="mt-2 text-xs text-slate-600">
+  <div class="space-y-8">
+    <!-- Why, whether it is recommended, and the step's own actions, as hairline rows. -->
+    <div class="border-y border-rule text-[15px]">
+      <p class="py-3 leading-relaxed text-ink">{{ entry.setup.why }}</p>
+      <p class="border-t border-rule py-3 text-ink-2">
         {{ recommended ? `Recommended for this machine (${roleLabel}).` : `Optional for this machine (${roleLabel}): its defaults are usually fine.` }}
       </p>
-      <div class="mt-3 flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-rule py-3">
         <button
           type="button"
-          class="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
+          class="min-h-11 border border-rule-strong px-3.5 text-sm font-medium text-ink hover:bg-paper-hover"
           :aria-pressed="skipped"
           @click="setup.toggleSkipped(step.id)"
         >{{ skipped ? 'Include this step' : 'Skip this step' }}</button>
@@ -88,35 +94,35 @@ const tunerLink = computed(
           :href="tunerLink"
           target="_blank"
           rel="noopener"
-          class="text-sm text-sky-800 underline underline-offset-2 hover:text-sky-900"
+          class="inline-flex min-h-11 items-center text-sm text-ink-2 underline underline-offset-[3px] hover:text-ink"
         >Open with graphs on the tuner page ↗</a>
       </div>
     </div>
 
-    <p v-if="skipped" class="rounded border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">
+    <p v-if="skipped" class="border border-dashed border-rule-strong p-4 text-[15px] text-ink-2">
       Skipped. Its files are left out of the output, and the machine keeps its current values for these settings.
     </p>
 
     <template v-else>
-      <section class="space-y-2" :aria-labelledby="`setup-${step.id}-profile`">
-        <h3 :id="`setup-${step.id}-profile`" class="text-sm font-semibold text-slate-900">{{ num }}a. Profile</h3>
+      <section class="space-y-3" :aria-labelledby="`setup-${step.id}-profile`">
+        <h3 :id="`setup-${step.id}-profile`" :class="SECTION_H"><span :class="SECTION_NUM">{{ num }}a</span>Profile</h3>
         <ProfileForm />
       </section>
-      <section class="space-y-2" :aria-labelledby="`setup-${step.id}-preset`">
-        <h3 :id="`setup-${step.id}-preset`" class="text-sm font-semibold text-slate-900">{{ num }}b. Starting point</h3>
+      <section class="space-y-3" :aria-labelledby="`setup-${step.id}-preset`">
+        <h3 :id="`setup-${step.id}-preset`" :class="SECTION_H"><span :class="SECTION_NUM">{{ num }}b</span>Starting point</h3>
         <PresetSelector />
       </section>
-      <section class="space-y-2" :aria-labelledby="`setup-${step.id}-tune`">
-        <h3 :id="`setup-${step.id}-tune`" class="text-sm font-semibold text-slate-900">{{ num }}c. Values</h3>
+      <section class="space-y-3" :aria-labelledby="`setup-${step.id}-tune`">
+        <h3 :id="`setup-${step.id}-tune`" :class="SECTION_H"><span :class="SECTION_NUM">{{ num }}c</span>Values</h3>
         <ProfileDraftNotice />
-        <ul v-if="store.issues.length" class="space-y-1" aria-label="Validation issues">
+        <ul v-if="store.issues.length" class="space-y-2" aria-label="Validation issues">
           <li
             v-for="issue in store.issues"
             :key="issue.id"
-            class="rounded border px-3 py-2 text-xs"
+            class="border-l-4 py-1 pl-3 text-sm leading-relaxed text-ink"
             :class="ISSUE_CLASSES[issue.level]"
           >
-            <span v-if="issue.blocking" class="font-semibold">Blocks the files: </span>{{ issue.message }}
+            <span class="font-medium">{{ issue.blocking ? 'Blocks the files: ' : `${ISSUE_LABEL[issue.level]}: ` }}</span>{{ issue.message }}
           </li>
         </ul>
         <ParameterPanel />

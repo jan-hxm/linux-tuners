@@ -6,10 +6,12 @@
  * left out, and the step is named in their place. No install script and no
  * archive (Design.md §5 "Guided setup", "Output").
  */
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { combineFiles } from '@/core/output/files.js'
 import { copyText, downloadText, downloadNames } from '@/ui/fileActions.js'
 import InstallSteps from '@/ui/InstallSteps.vue'
+import PlusMinus from '@/ui/PlusMinus.vue'
+import { settingsSummary } from '@/ui/settingsSummary.js'
 import { machineHeader } from './machineProfile.js'
 import { SETUP_STEPS } from './steps.js'
 import { useSetupStore, useStepStore } from './useSetupStore.js'
@@ -43,90 +45,111 @@ async function copy(key, text) {
   setTimeout(() => (status.value = { ...status.value, [key]: undefined }), 1800)
 }
 
-const copyAll = () => copy('all', `${machineHeader(setup.machine)}\n\n${combineFiles(allFiles.value)}`)
+const combined = computed(() => `${machineHeader(setup.machine)}\n\n${combineFiles(allFiles.value)}`)
+
+// After "Copy all" the first install step is marked as next, until the files
+// change and what was copied is no longer what is shown.
+const copied = ref(false)
+watch(combined, () => (copied.value = false))
+
+async function copyAll() {
+  await copy('all', combined.value)
+  copied.value = status.value.all === 'ok'
+}
 const copyLink = () => copy('link', `${window.location.origin}${window.location.pathname}#${setup.linkHash()}`)
 
-const copyLabel = (key, idle) => ({ ok: 'Copied ✓', fail: 'Copy failed' })[status.value[key]] ?? idle
+const copyLabel = (key, idle) => ({ ok: 'Copied', fail: 'Copy failed' })[status.value[key]] ?? idle
+
+// One count across the included, unblocked steps; keys are prefixed with the
+// step so two tuners' settings never collide.
+const summary = computed(() => {
+  const keys = []
+  const changed = []
+  for (const s of included.value.filter((x) => !x.blocked)) {
+    const store = useStepStore(s.id)
+    for (const key of new Set(s.domain.sections.flatMap((sec) => s.domain.visibleKeys(sec, store.params, store.hardware)))) {
+      keys.push(`${s.id}:${key}`)
+      if (store.changedKeys.includes(key)) changed.push(`${s.id}:${key}`)
+    }
+  }
+  return settingsSummary(keys, changed)
+})
+
+const SECONDARY = 'min-h-11 border border-rule-strong px-3.5 text-sm font-medium text-ink hover:bg-paper-hover'
+const SMALL = 'inline-flex min-h-11 items-center border border-rule-strong px-3 text-[13px] font-medium text-ink hover:bg-paper-hover'
 </script>
 
 <template>
-  <div class="space-y-4">
-    <p class="text-sm text-slate-700">
+  <div class="space-y-6">
+    <p class="max-w-3xl text-[15px] leading-relaxed text-ink-2">
       Each file comes from its tuner unchanged, and no two tuners write the same setting.
+      <template v-if="allFiles.length"> {{ summary }}</template>
     </p>
 
-    <div class="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        class="rounded bg-sky-700 px-4 py-1.5 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-50"
-        :disabled="!allFiles.length"
-        @click="copyAll"
-      >{{ copyLabel('all', `Copy all ${allFiles.length} files`) }}</button>
-      <button
-        type="button"
-        class="rounded border border-slate-300 px-4 py-1.5 text-sm hover:bg-slate-50"
-        @click="copyLink"
-      >{{ copyLabel('link', 'Copy link to this setup') }}</button>
-    </div>
+    <p v-if="!included.length" class="border border-dashed border-rule-strong p-4 text-[15px] text-ink-2">
+      Every step is skipped, so there are no files.
+    </p>
 
-    <div v-if="blockedSteps.length" class="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-900">
-      <p class="font-semibold">Left out, because the step has a blocking issue:</p>
+    <div v-if="blockedSteps.length" class="border border-error px-4 py-3.5 text-[15px] leading-[1.55] text-ink">
+      <p class="font-medium text-error">Left out, because the step has a blocking issue:</p>
       <ul class="mt-1 list-disc pl-5">
         <li v-for="s in blockedSteps" :key="s.id">
-          <button type="button" class="underline underline-offset-2" @click="emit('goto', s.id)">{{ s.entry.title }}</button>
+          <button type="button" class="min-h-6 underline underline-offset-[3px]" @click="emit('goto', s.id)">{{ s.entry.title }}</button>
         </li>
       </ul>
     </div>
 
-    <p v-if="!included.length" class="rounded border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">
-      Every step is skipped, so there are no files.
-    </p>
-
-    <section v-for="s in included.filter((x) => !x.blocked)" :key="s.id" class="space-y-2">
-      <h3 class="text-sm font-semibold text-slate-900">{{ s.entry.title }}</h3>
-      <article
-        v-for="file in s.files"
-        :key="file.path"
-        class="rounded-lg border border-slate-200 bg-white shadow-sm"
-      >
-        <header class="flex flex-wrap items-center gap-2 px-4 py-2">
-          <code class="min-w-0 flex-1 break-all font-mono text-xs text-slate-900">{{ file.path }}</code>
+    <div v-if="allFiles.length" class="grid grid-cols-1 gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)]">
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2.5">
           <button
             type="button"
-            class="rounded border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
-            :aria-expanded="Boolean(open[file.path])"
-            :aria-controls="`setup-file-${file.path}`"
-            @click="open = { ...open, [file.path]: !open[file.path] }"
-          >{{ open[file.path] ? 'Hide' : 'Show' }}</button>
-          <button
-            type="button"
-            class="rounded border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
-            @click="copy(file.path, file.content)"
-          >{{ copyLabel(file.path, 'Copy') }}</button>
-          <button
-            type="button"
-            class="rounded border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
-            @click="downloadText(names[file.path], file.content)"
-          >Download <span class="font-mono">{{ names[file.path] }}</span></button>
-        </header>
-        <textarea
-          v-if="open[file.path]"
-          :id="`setup-file-${file.path}`"
-          :value="file.content"
-          readonly
-          class="block h-72 w-full resize-y border-t border-slate-200 bg-slate-50 p-3 font-mono text-[12px] leading-snug text-slate-900"
-          :aria-label="`Contents of ${file.path}`"
-        ></textarea>
-      </article>
-    </section>
+            class="min-h-[52px] bg-ink px-7 text-[17px] font-medium text-paper hover:bg-ink-2"
+            @click="copyAll"
+          >{{ copyLabel('all', `Copy all ${allFiles.length} files`) }}</button>
+          <button type="button" :class="SECONDARY" @click="copyLink">{{ copyLabel('link', 'Share link') }}</button>
+        </div>
 
-    <section v-if="allFiles.length" class="space-y-2 border-t border-slate-200 pt-4">
-      <h3 class="text-sm font-semibold text-slate-900">Install them</h3>
-      <InstallSteps :files="allFiles" />
-    </section>
+        <div aria-live="polite" class="mt-2 min-h-6 text-sm">
+          <p v-if="status.all === 'ok'" class="text-fit-text">Copied to clipboard. Next: save the files, then apply them.</p>
+          <p v-else-if="status.all === 'fail'" class="text-error">Clipboard write failed. Open a file below and copy it by hand.</p>
+          <p v-if="status.link === 'ok'" class="text-fit-text">Link to this setup copied.</p>
+          <p v-else-if="status.link === 'fail'" class="text-error">Clipboard write failed, but the URL bar already holds the current setup.</p>
+        </div>
 
-    <p class="sr-only" aria-live="polite">
-      {{ Object.values(status).includes('ok') ? 'Copied to clipboard.' : Object.values(status).includes('fail') ? 'Clipboard write failed.' : '' }}
-    </p>
+        <section v-for="s in included.filter((x) => !x.blocked)" :key="s.id" class="mt-6">
+          <h3 class="border-t border-ink pt-3 text-[17px] font-medium text-ink">{{ s.entry.title }}</h3>
+          <ul class="mt-2">
+            <li v-for="file in s.files" :key="file.path" class="border-t border-rule first:border-t-0">
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-2 py-2">
+                <button
+                  type="button"
+                  class="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-4 text-left hover:bg-paper-hover"
+                  :aria-expanded="Boolean(open[file.path])"
+                  :aria-controls="`setup-file-${file.path}`"
+                  @click="open = { ...open, [file.path]: !open[file.path] }"
+                >
+                  <span class="min-w-0 break-all font-mono text-sm text-ink">{{ file.path }}</span>
+                  <PlusMinus :open="Boolean(open[file.path])" />
+                </button>
+                <button type="button" :class="SMALL" @click="copy(file.path, file.content)">{{ copyLabel(file.path, 'Copy') }}</button>
+                <button type="button" :class="SMALL" @click="downloadText(names[file.path], file.content)">Download <span class="ml-1 font-mono">{{ names[file.path] }}</span></button>
+              </div>
+              <pre
+                v-if="open[file.path]"
+                :id="`setup-file-${file.path}`"
+                class="max-h-[28rem] overflow-auto whitespace-pre-wrap pb-5 font-mono text-sm leading-[1.8] text-ink [overflow-wrap:anywhere]"
+                tabindex="0"
+                :aria-label="`Contents of ${file.path}`"
+              >{{ file.content }}</pre>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <aside class="min-w-0" aria-label="How to apply them">
+        <InstallSteps :files="allFiles" combined :next="copied" />
+      </aside>
+    </div>
   </div>
 </template>

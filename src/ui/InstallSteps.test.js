@@ -17,7 +17,7 @@ describe('InstallSteps', () => {
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
     const wrapper = mount(InstallSteps, { props: { files: [FILE] } })
 
-    expect(wrapper.findAll('ol > li').map((li) => li.find('p .font-semibold').text())).toEqual([
+    expect(wrapper.findAll('ol > li').map((li) => li.find('p .font-medium').text())).toEqual([
       'Save the file.', 'Apply it now.', 'Check a value.',
     ])
     expect(wrapper.text()).toContain('If something goes wrong: delete the file and reboot.')
@@ -25,7 +25,7 @@ describe('InstallSteps', () => {
     await wrapper.find('button[aria-label="Copy command: sysctl vm.swappiness"]').trigger('click')
     await nextTick()
     expect(writeText).toHaveBeenCalledWith('sysctl vm.swappiness')
-    expect(wrapper.find('button[aria-label="Copy command: sysctl vm.swappiness"]').text()).toBe('Copied ✓')
+    expect(wrapper.find('button[aria-label="Copy command: sysctl vm.swappiness"]').text()).toBe('Copied')
     expect(wrapper.find('button[aria-label="Copy command: sudo sysctl --system"]').text()).toBe('Copy')
   })
 })

@@ -18,7 +18,11 @@ function mountOutput(domain) {
   return { store, wrapper }
 }
 
-const copyButton = (wrapper) => wrapper.findAll('button').find((b) => /Copy to clipboard|Copied/.test(b.text()))
+const copyButton = (wrapper) => wrapper.findAll('button').find((b) => /^(Copy the file|Copy all files|Copied)$/.test(b.text()))
+/** The copy button's resting label: one file, or all of them. */
+const copyLabel = (store) => (store.configFiles.length > 1 ? 'Copy all files' : 'Copy the file')
+/** The output as the preview shows it. */
+const preview = (wrapper) => wrapper.get('pre').element.textContent
 
 // A state that trips each domain's blocking validation.
 const BLOCKING = [
@@ -39,45 +43,72 @@ describe('ConfigOutput', () => {
     it('shows what the generator produces for the current state and follows changes', async () => {
       const { store, wrapper } = mountOutput(domain)
       const expected = () => combineFiles(store.configFiles)
-      expect(wrapper.get('textarea').element.value).toBe(expected())
+      expect(preview(wrapper)).toBe(expected())
 
       const before = expected()
       for (const [k, v] of Object.entries(change)) store.setParam(k, v)
       await nextTick()
       expect(expected()).not.toBe(before)
-      expect(wrapper.get('textarea').element.value).toBe(expected())
-      expect(wrapper.get('textarea').attributes('readonly')).toBeDefined()
+      expect(preview(wrapper)).toBe(expected())
+      expect(wrapper.get('pre').attributes('contenteditable')).toBeUndefined()
     })
 
-    it('copies the textarea text, then confirms and returns to idle', async () => {
+    it('copies the output text, then confirms and returns to idle', async () => {
       vi.useFakeTimers()
       const writeText = vi.fn().mockResolvedValue()
       Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
       const { store, wrapper } = mountOutput(domain)
 
-      expect(copyButton(wrapper).text()).toBe('Copy to clipboard')
+      expect(copyButton(wrapper).text()).toBe(copyLabel(store))
       await copyButton(wrapper).trigger('click')
       await flushPromises()
       expect(writeText).toHaveBeenCalledTimes(1)
       expect(writeText).toHaveBeenCalledWith(combineFiles(store.configFiles))
-      expect(copyButton(wrapper).text()).toBe('Copied ✓')
+      expect(copyButton(wrapper).text()).toBe('Copied')
       expect(wrapper.text()).toContain('Copied to clipboard.')
 
       vi.advanceTimersByTime(2000)
       await nextTick()
-      expect(copyButton(wrapper).text()).toBe('Copy to clipboard')
+      expect(copyButton(wrapper).text()).toBe(copyLabel(store))
       vi.useRealTimers()
     })
 
     it('says so when the clipboard refuses', async () => {
       const writeText = vi.fn().mockRejectedValue(new Error('denied'))
       Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
-      const { wrapper } = mountOutput(domain)
+      const { store, wrapper } = mountOutput(domain)
       await copyButton(wrapper).trigger('click')
       await flushPromises()
-      expect(wrapper.text()).toContain('Clipboard write failed. Select the textarea and copy manually.')
-      expect(copyButton(wrapper).text()).toBe('Copy to clipboard')
+      expect(wrapper.text()).toContain('Clipboard write failed. Select the text below and copy it by hand.')
+      expect(copyButton(wrapper).text()).toBe(copyLabel(store))
     })
+  })
+
+  it('opens with a summary from state and marks the first step as next after a copy', async () => {
+    const writeText = vi.fn().mockResolvedValue()
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    const { store, wrapper } = mountOutput(swapDomain)
+    const shown = [...new Set(swapDomain.sections.flatMap((s) => swapDomain.visibleKeys(s, store.params, store.hardware)))]
+    expect(wrapper.text()).toContain(`${shown.length} settings. All fit your machine.`)
+
+    store.setParam('swappiness', store.params.swappiness === 10 ? 20 : 10)
+    await nextTick()
+    expect(wrapper.text()).toContain(`${shown.length} settings. ${shown.length - 1} fit your machine, 1 changed by you.`)
+    // The changed setting's line carries the "changed by you" colour; the text is the output.
+    expect(wrapper.findAll('pre .text-mine-text').map((l) => l.text())).toEqual([expect.stringMatching(/^vm\.swappiness = /)])
+
+    const firstStep = () => wrapper.find('aside ol > li')
+    expect(firstStep().attributes('aria-current')).toBeUndefined()
+    await copyButton(wrapper).trigger('click')
+    await flushPromises()
+    expect(firstStep().attributes('aria-current')).toBe('step')
+    expect(firstStep().text()).toContain('Next.')
+    expect(wrapper.text()).toContain('Copied to clipboard. Next: save the file.')
+
+    // Once the output changes, what was copied is stale: no step is next.
+    store.setParam('swappiness', 30)
+    await nextTick()
+    expect(firstStep().attributes('aria-current')).toBeUndefined()
   })
 
   describe.each(BLOCKING)('%#: %s blocked state', (domain, _name, bad) => {
@@ -94,7 +125,7 @@ describe('ConfigOutput', () => {
       expect(blocking.length).toBeGreaterThan(0)
       expect(wrapper.text()).toContain('Config output is suppressed.')
       for (const issue of blocking) expect(wrapper.text()).toContain(issue.message)
-      expect(wrapper.find('textarea').exists()).toBe(false)
+      expect(wrapper.find('pre').exists()).toBe(false)
       expect(copyButton(wrapper)).toBeUndefined()
       expect(wrapper.findAll('button').some((b) => /Download/.test(b.text()))).toBe(false)
       expect(writeText).not.toHaveBeenCalled()
@@ -102,7 +133,7 @@ describe('ConfigOutput', () => {
       for (const k of Object.keys(bad)) store.setParam(k, good[k])
       await nextTick()
       expect(wrapper.text()).not.toContain('Config output is suppressed.')
-      expect(wrapper.get('textarea').element.value).toBe(combineFiles(store.configFiles))
+      expect(preview(wrapper)).toBe(combineFiles(store.configFiles))
       expect(copyButton(wrapper)).toBeDefined()
     })
   })

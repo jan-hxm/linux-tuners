@@ -20,7 +20,7 @@ const fields = profile.fields
 /** Where a field's value came from, in the guided setup; nothing elsewhere. */
 const fieldNote = inject(PROFILE_FIELD_NOTE_KEY, () => null)
 
-const HELP_CODE = 'font-mono bg-slate-100 px-1 py-0.5 text-slate-600'
+const HELP_CODE = 'font-mono text-ink'
 const idFor = (key) => `profile-${domain.id}-${key}`
 
 /** Layout rows: consecutive `half` fields share a two-column row. */
@@ -44,16 +44,16 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
 </script>
 
 <template>
-  <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
-    <header class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-      <div>
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ profile.title }}</h2>
-        <p v-if="collapsed" class="mt-1 text-sm text-slate-700"><RichText :text="summary" /></p>
+  <section>
+    <header class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-rule pb-3">
+      <div class="min-w-0">
+        <h2 class="text-lg font-medium text-ink">{{ profile.title }}</h2>
+        <p v-if="collapsed" class="mt-1 break-words font-mono text-sm text-ink-2"><RichText :text="summary" /></p>
       </div>
       <button
         v-if="collapsed"
         type="button"
-        class="rounded border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+        class="min-h-11 border border-rule-strong px-3.5 text-sm font-medium text-ink hover:bg-paper-hover"
         :aria-expanded="false"
         @click="collapsed = false"
       >
@@ -61,8 +61,8 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
       </button>
     </header>
 
-    <form v-if="!collapsed" class="space-y-5 p-4" @submit.prevent="apply">
-      <div v-for="(row, r) in rows" :key="r" :class="{ 'grid gap-4 sm:grid-cols-2': row.half }">
+    <form v-if="!collapsed" class="space-y-7 pt-6" @submit.prevent="apply">
+      <div v-for="(row, r) in rows" :key="r" :class="{ 'grid gap-x-8 gap-y-7 sm:grid-cols-2': row.half }">
         <div v-for="f in row.fields" :key="f.key">
           <NumberPickField
             v-if="f.type === 'number'"
@@ -80,24 +80,24 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
           </NumberPickField>
 
           <div v-else-if="f.type === 'choice' && f.control === 'select'">
-            <label class="block text-sm font-medium text-slate-700" :for="idFor(f.key)">{{ f.label }}</label>
+            <label class="block text-[15px] font-medium text-ink" :for="idFor(f.key)">{{ f.label }}</label>
             <select
               :id="idFor(f.key)"
               v-model="draft[f.key]"
-              class="mt-2 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+              class="mt-2 min-h-11 w-full max-w-md border border-rule-strong !bg-paper px-2.5 text-[15px] text-ink"
             >
               <option v-for="o in f.options" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
           </div>
 
           <fieldset v-else-if="f.type === 'choice' && f.control === 'cards'" :disabled="disabled(f)">
-            <legend class="text-sm font-medium text-slate-700">{{ f.label }}</legend>
-            <div class="mt-2 grid gap-2" :class="f.columns === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'">
+            <legend class="text-[15px] font-medium text-ink">{{ f.label }}</legend>
+            <div class="mt-2 grid gap-x-6 border-t border-rule" :class="f.columns === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'">
               <label
                 v-for="o in f.options"
                 :key="o.value"
-                class="flex cursor-pointer items-start gap-2 rounded border border-slate-200 p-2 text-sm hover:bg-slate-50"
-                :class="{ 'opacity-50': disabled(f) }"
+                class="flex min-h-11 cursor-pointer items-start gap-3 border-b border-rule px-2 py-2.5 text-[15px]"
+                :class="[draft[f.key] === o.value ? 'bg-fit-tint' : 'hover:bg-paper-hover', { 'cursor-default opacity-50': disabled(f) }]"
               >
                 <input
                   v-model="draft[f.key]"
@@ -105,23 +105,23 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
                   :name="idFor(f.key)"
                   :value="o.value"
                   :disabled="disabled(f)"
-                  class="mt-1"
+                  class="mt-1 accent-[rgb(var(--t-fit))]"
                 />
                 <span>
-                  <span :class="f.mono ? 'font-mono text-xs' : 'font-medium'">{{ o.label }}</span>
-                  <span v-if="o.note" class="block text-xs text-slate-500">{{ o.note }}</span>
+                  <span :class="f.mono ? 'font-mono text-sm text-ink' : 'text-ink'">{{ o.label }}</span>
+                  <span v-if="o.note" class="block text-sm text-ink-2">{{ o.note }}</span>
                 </span>
               </label>
             </div>
-            <p v-if="disabled(f) && f.disabledNote" class="mt-2 text-xs text-slate-500">{{ f.disabledNote }}</p>
+            <p v-if="disabled(f) && f.disabledNote" class="mt-2 text-sm text-quiet">{{ f.disabledNote }}</p>
           </fieldset>
 
           <div v-else-if="f.type === 'choice' && f.control === 'segmented'">
-            <span :id="`${idFor(f.key)}-label`" class="block text-sm font-medium text-slate-700">{{ f.label }}</span>
+            <span :id="`${idFor(f.key)}-label`" class="block text-[15px] font-medium text-ink">{{ f.label }}</span>
             <div
               role="radiogroup"
               :aria-labelledby="`${idFor(f.key)}-label`"
-              class="focus-inset mt-2 inline-flex overflow-hidden rounded border border-slate-300"
+              class="mt-2 flex flex-wrap"
             >
               <button
                 v-for="o in f.options"
@@ -129,18 +129,18 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
                 type="button"
                 role="radio"
                 :aria-checked="draft[f.key] === o.value"
-                class="px-3 py-1 text-sm"
-                :class="draft[f.key] === o.value ? 'bg-sky-700 text-white' : 'bg-white hover:bg-slate-50'"
+                class="-ml-px min-h-11 border border-ink px-4 text-[15px] first:ml-0"
+                :class="draft[f.key] === o.value ? 'bg-ink text-paper' : 'bg-paper text-ink hover:bg-paper-hover'"
                 @click="draft[f.key] = o.value"
               >
                 {{ o.label }}
               </button>
             </div>
-            <p v-if="selectedNote(f)" class="mt-1 text-xs text-slate-500">{{ selectedNote(f) }}</p>
+            <p v-if="selectedNote(f)" class="mt-1.5 text-sm text-quiet">{{ selectedNote(f) }}</p>
           </div>
 
           <div v-else-if="f.type === 'text'">
-            <label class="block text-sm font-medium text-slate-700" :for="idFor(f.key)">{{ f.label }}</label>
+            <label class="block text-[15px] font-medium text-ink" :for="idFor(f.key)">{{ f.label }}</label>
             <input
               :id="idFor(f.key)"
               v-model="draft[f.key]"
@@ -148,23 +148,24 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
               :placeholder="f.placeholder"
               :aria-invalid="Boolean(errors[f.key])"
               :aria-describedby="errors[f.key] ? `${idFor(f.key)}-error` : undefined"
-              class="mt-2 w-full rounded border border-slate-300 px-2 py-1.5 text-sm font-mono"
+              class="mt-2 min-h-11 w-full max-w-md border !bg-paper px-2.5 font-mono text-[15px] text-ink placeholder:text-quiet"
+              :class="errors[f.key] ? 'border-error' : 'border-rule-strong'"
               @input="errors[f.key] = null"
             />
-            <p v-if="errors[f.key]" :id="`${idFor(f.key)}-error`" class="mt-1 text-xs text-red-700">{{ errors[f.key] }}</p>
-            <p v-if="f.help" class="mt-1 text-xs text-slate-500">
+            <p v-if="errors[f.key]" :id="`${idFor(f.key)}-error`" class="mt-1.5 text-sm text-error">{{ errors[f.key] }}</p>
+            <p v-if="f.help" class="mt-1.5 text-sm text-quiet">
               <template v-for="(line, i) in f.help" :key="i"><br v-if="i"><RichText :text="line" :code-class="HELP_CODE" /></template>
             </p>
           </div>
-          <p v-if="fieldNote(f)" class="mt-1 text-xs font-medium text-sky-800">{{ fieldNote(f) }}</p>
+          <p v-if="fieldNote(f)" class="mt-1.5 text-sm font-medium text-fit-text">{{ fieldNote(f) }}</p>
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
-        <span v-if="dirty" class="text-xs text-amber-700">Unsaved changes</span>
+      <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 border-t border-rule pt-4">
+        <span v-if="dirty" class="text-sm text-mine-text">Unsaved changes</span>
         <button
           type="submit"
-          class="rounded bg-sky-700 px-4 py-1.5 text-sm font-medium text-white hover:bg-sky-800"
+          class="min-h-11 bg-ink px-5 text-[15px] font-medium text-paper hover:bg-ink-2"
         >
           {{ profile.applyLabel }}
         </button>

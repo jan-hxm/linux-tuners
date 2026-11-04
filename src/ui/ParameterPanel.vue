@@ -2,6 +2,9 @@
 import { ref, computed, watch, useId } from 'vue'
 import ParameterCard from './ParameterCard.vue'
 import SwitchField from './SwitchField.vue'
+import PlusMinus from './PlusMinus.vue'
+import MarkKey from './controls/MarkKey.vue'
+import { settingsSummary } from './settingsSummary.js'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { showAllParams, setShowAllParams, compactParams, setCompactParams } from '@/ui/viewerPrefs.js'
 import { hasProTools, queryTerms, defMatches } from '@/ui/paramFilter.js'
@@ -120,24 +123,29 @@ function cardKeys(section) {
   return visibleKeys(section).filter((k) => !hidden.has(k))
 }
 
-const issueCountsBySection = computed(() => {
-  /** @type {Record<string, number>} */
-  const counts = {}
+/** Each section's issues: how many, and whether one is an error. */
+const issuesBySection = computed(() => {
+  /** @type {Record<string, { count: number, error: boolean }>} */
+  const result = {}
   for (const section of SECTIONS) {
-    counts[section.id] = section.keys.reduce(
-      (sum, k) => sum + (tuner.issuesByParam[k]?.length ?? 0),
-      0,
-    )
+    const issues = section.keys.flatMap((k) => tuner.issuesByParam[k] ?? [])
+    result[section.id] = { count: issues.length, error: issues.some((i) => i.level === 'error' || i.blocking) }
   }
-  return counts
+  return result
 })
+
+/** A collapsed group's line: how many settings, and where they stand. */
+function countSummary(section) {
+  return settingsSummary(visibleKeys(section), tuner.changedKeys)
+}
 </script>
 
 <template>
-  <section class="space-y-3">
-    <div class="space-y-2 px-1">
-      <div v-if="proTools">
-        <label :for="filterId" class="block text-xs font-medium text-slate-700">Filter parameters</label>
+  <section>
+    <!-- Pro tools and the view switches: quiet, above the groups. -->
+    <div class="space-y-3">
+      <div v-if="proTools" class="max-w-xl">
+        <label :for="filterId" class="block text-sm font-medium text-ink">Filter parameters</label>
         <input
           :id="filterId"
           ref="filterEl"
@@ -146,11 +154,11 @@ const issueCountsBySection = computed(() => {
           autocomplete="off"
           spellcheck="false"
           placeholder="Name or description, e.g. rmem"
-          class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-600"
+          class="mt-1.5 min-h-11 w-full border border-rule-strong !bg-paper px-3 text-[15px] text-ink placeholder:text-quiet focus:border-ink"
         />
       </div>
-      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
           <SwitchField label="Show all parameters" :checked="showAllParams" :disabled="filtering" @update:checked="setShowAllParams" />
           <template v-if="proTools">
             <SwitchField label="Changed only" :checked="changedOnly" @update:checked="setChangedOnly" />
@@ -159,62 +167,69 @@ const issueCountsBySection = computed(() => {
         </div>
         <button
           type="button"
-          class="inline-flex min-h-6 items-center text-xs text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-700 hover:decoration-slate-500"
+          class="inline-flex min-h-11 items-center text-sm text-ink-2 underline underline-offset-[3px] hover:text-ink"
           @click="tuner.resetToHardwareDefaults()"
         >
           Reset to hardware defaults
         </button>
       </div>
-      <p v-if="proTools" class="text-xs text-slate-500" aria-live="polite">
+      <p v-if="proTools" class="text-sm text-quiet" aria-live="polite">
         <template v-if="filtering">{{ matchCount }} parameter{{ matchCount === 1 ? '' : 's' }} shown</template>
       </p>
     </div>
     <div
       v-if="filtering && !shownSections.length"
-      class="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-700"
+      class="mt-8 border-y border-rule py-5 text-[15px] text-ink-2"
     >
       <p>{{ emptyMessage }}</p>
       <button
         type="button"
-        class="mt-2 inline-flex min-h-6 items-center rounded border border-slate-300 px-2 text-xs text-slate-700 hover:bg-slate-50"
+        class="mt-3 inline-flex min-h-11 items-center border border-rule-strong px-3.5 text-sm font-medium text-ink hover:bg-paper-hover"
         @click="clearFilters"
       >
         Clear filter
       </button>
     </div>
-    <article
+
+    <!-- Groups: the headline and the marks key over an ink rule, then the
+         settings between hairlines. A collapsed group is one hairline row
+         with its count and any issues. -->
+    <section
       v-for="section in shownSections"
       :key="section.id"
-      class="rounded-lg border border-slate-200 bg-white shadow-sm"
+      class="mt-12"
+      :aria-labelledby="`section-title-${section.id}`"
     >
-      <header class="flex items-center justify-between gap-3 px-4 py-3">
-        <div class="min-w-0">
-          <h3 class="text-sm font-semibold text-slate-900">
-            <button
-              type="button"
-              class="flex min-h-6 w-full items-center gap-1.5 text-left"
-              :aria-expanded="isOpen(section)"
-              :aria-controls="`section-panel-${section.id}`"
-              :disabled="filtering"
-              @click="open[section.id] = !open[section.id]"
-            >
-              <span aria-hidden="true">{{ isOpen(section) ? '▾' : '▸' }}</span>
-              {{ section.title }}
-            </button>
-          </h3>
-          <p v-if="!compact" class="text-xs text-slate-500">{{ section.summary }}</p>
+      <div class="border-b" :class="isOpen(section) ? 'border-ink pb-3' : 'border-rule pb-4'">
+        <h3 :id="`section-title-${section.id}`">
+          <button
+            type="button"
+            class="flex min-h-11 w-full items-center justify-between gap-4 text-left text-ink enabled:hover:bg-paper-hover"
+            :aria-expanded="isOpen(section)"
+            :aria-controls="`section-panel-${section.id}`"
+            :disabled="filtering"
+            @click="open[section.id] = !open[section.id]"
+          >
+            <span class="min-w-0 text-[22px] font-medium leading-tight tracking-[-0.02em] sm:text-[26px]">{{ section.title }}</span>
+            <PlusMinus v-if="!filtering" :open="isOpen(section)" />
+          </button>
+        </h3>
+        <div class="mt-1 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1.5">
+          <p v-if="!isOpen(section)" class="text-sm text-quiet">{{ countSummary(section) }}</p>
+          <p v-else-if="!compact" class="max-w-[60ch] text-sm text-quiet">{{ section.summary }}</p>
+          <p
+            v-if="issuesBySection[section.id].count"
+            class="text-sm font-medium"
+            :class="issuesBySection[section.id].error ? 'text-error' : 'text-mine-text'"
+          >
+            {{ issuesBySection[section.id].count }} issue{{ issuesBySection[section.id].count === 1 ? '' : 's' }}
+          </p>
+          <MarkKey v-if="isOpen(section) && !compact" class="ml-auto" :default-label="domain.defaultLabel" />
         </div>
-        <span
-          v-if="issueCountsBySection[section.id]"
-          class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800"
-        >
-          {{ issueCountsBySection[section.id] }} issue{{ issueCountsBySection[section.id] === 1 ? '' : 's' }}
-        </span>
-      </header>
+      </div>
       <div
         v-if="isOpen(section)"
         :id="`section-panel-${section.id}`"
-        class="space-y-2 border-t border-slate-100 p-3"
       >
         <ParameterCard
           v-for="key in cardKeys(section)"
@@ -225,14 +240,12 @@ const issueCountsBySection = computed(() => {
         <button
           v-if="!filtering && !showAllParams && hideableKeys(section).length"
           type="button"
-          class="min-h-6 rounded px-1 text-xs text-sky-700 underline decoration-sky-300 underline-offset-2 hover:decoration-sky-700"
+          class="flex min-h-14 w-full items-center justify-between gap-4 border-b border-rule py-3 text-left text-[15px] font-medium text-ink hover:bg-paper-hover"
           :aria-expanded="advancedOpen[section.id]"
           :aria-controls="`section-panel-${section.id}`"
           @click="advancedOpen[section.id] = !advancedOpen[section.id]"
-        >
-          {{ advancedOpen[section.id] ? 'Hide advanced' : `Show ${hideableKeys(section).length} advanced` }}
-        </button>
+        >{{ advancedOpen[section.id] ? 'Hide advanced' : `Show ${hideableKeys(section).length} advanced` }}<PlusMinus :open="advancedOpen[section.id]" /></button>
       </div>
-    </article>
+    </section>
   </section>
 </template>

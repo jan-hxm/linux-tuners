@@ -2,11 +2,10 @@
 /**
  * Mobile-only sticky impact summary. On large screens the GraphPanel sits in a
  * sticky sidebar next to the parameter list, so dragging a slider shows the
- * effect live. Below `lg` that two-column layout collapses and the graph drops
- * below the entire parameter list, so a phone user can't see the simulation
- * react while tuning. This bar pins the same `impact` metrics to the bottom of
+ * effect live. Below `lg` that two-column layout collapses and the graphs sit
+ * above the parameter list, out of view while a phone user tunes. This bar pins the same `impact` metrics to the bottom of
  * the viewport on small screens, restoring live feedback. Hidden at `lg` where
- * the real graph panel is visible. A link at its end jumps down to the full
+ * the real graph panel is visible. A link at its end jumps up to the full
  * graphs. Each metric gets a column, its label over its value, so all of
  * them fit at 320px. See Design.md §7.
  */
@@ -17,33 +16,29 @@ defineProps({
   graphsId: { type: String, required: true },
 })
 
+// The band as the value's colour; the value's words carry the meaning.
 function bandClass(band) {
-  return {
-    none: 'bg-slate-100 text-slate-600',
-    low: 'bg-emerald-100 text-emerald-800',
-    med: 'bg-amber-100 text-amber-800',
-    high: 'bg-red-100 text-red-800',
-  }[band] ?? 'bg-slate-100 text-slate-600'
+  return { low: 'text-fit-text', med: 'text-mine-text', high: 'text-error' }[band] ?? 'text-ink-2'
 }
 </script>
 
 <template>
   <div
     v-if="impact.length"
-    class="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-3 py-2 shadow-[0_-2px_8px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden"
+    class="fixed inset-x-0 bottom-0 z-30 border-t border-ink bg-paper px-3 py-2 lg:hidden"
     role="region"
     aria-label="Live impact summary"
   >
-    <div class="flex items-center gap-2">
-      <ul class="grid min-w-0 flex-1 auto-cols-fr grid-flow-col gap-2" aria-live="polite">
+    <div class="flex items-center gap-3">
+      <ul class="grid min-w-0 flex-1 auto-cols-fr grid-flow-col gap-3" aria-live="polite">
         <li
           v-for="metric in impact"
           :key="metric.id"
           class="flex min-w-0 flex-col items-start gap-0.5"
         >
-          <span class="text-xs leading-tight text-slate-500">{{ metric.label }}</span>
+          <span class="text-[13px] leading-tight text-quiet">{{ metric.label }}</span>
           <span
-            class="max-w-full break-words rounded px-1.5 py-0.5 text-xs font-medium leading-tight"
+            class="max-w-full break-words font-mono text-[13px] leading-tight"
             :class="bandClass(metric.band)"
           >{{ metric.value }}</span>
         </li>
@@ -51,8 +46,8 @@ function bandClass(band) {
       <!-- Outside the live list, so it isn't re-announced on every change. -->
       <a
         :href="`#${graphsId}`"
-        class="shrink-0 rounded border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-      >Graphs <span aria-hidden="true">↓</span></a>
+        class="inline-flex min-h-11 shrink-0 items-center border border-rule-strong px-3 text-[13px] font-medium text-ink hover:bg-paper-hover"
+      >Graphs <span aria-hidden="true">&nbsp;↑</span></a>
     </div>
   </div>
 </template>

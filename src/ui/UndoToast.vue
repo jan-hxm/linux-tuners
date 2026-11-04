@@ -80,9 +80,10 @@ onBeforeUnmount(() => {
     :class="props.raised ? 'bottom-24 lg:bottom-4' : 'bottom-4'"
     aria-live="polite"
   >
+    <!-- Square, on paper, inside an ink hairline: nothing floats. -->
     <div
       v-if="tuner.undoState"
-      class="surface-inverse pointer-events-auto flex max-w-md items-center gap-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white shadow-lg"
+      class="pointer-events-auto flex max-w-md flex-wrap items-center gap-x-4 gap-y-1 border border-ink bg-paper py-1 pl-4 pr-1 text-[15px] text-ink"
       @mouseenter="hold"
       @mouseleave="release"
       @focusin="hold"
@@ -90,12 +91,14 @@ onBeforeUnmount(() => {
       @keydown.esc="dismiss"
     >
       <span>{{ message }}</span>
-      <button type="button" class="font-semibold text-sky-300 underline hover:text-sky-200" @click="undo">
-        Undo
-      </button>
-      <button type="button" class="text-slate-300 hover:text-white" aria-label="Dismiss" @click="dismiss">
-        ✕
-      </button>
+      <span class="flex items-center">
+        <button type="button" class="inline-flex min-h-11 items-center px-2 font-medium underline underline-offset-[3px] hover:bg-paper-hover" @click="undo">
+          Undo
+        </button>
+        <button type="button" class="inline-flex min-h-11 min-w-11 items-center justify-center text-ink-2 hover:bg-paper-hover hover:text-ink" aria-label="Dismiss" @click="dismiss">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l10 10M12 2 2 12" /></svg>
+        </button>
+      </span>
     </div>
   </div>
 </template>

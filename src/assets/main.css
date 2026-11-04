@@ -82,7 +82,7 @@
    * below them are built from these, so update them if either bar changes. */
   :root {
     --site-header-h: 61px;
-    --step-chain-h: 53px;
+    --step-chain-h: 44px;
   }
 
   /* Text fields and selects take the card colour, so they follow dark mode

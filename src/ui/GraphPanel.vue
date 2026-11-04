@@ -5,7 +5,7 @@ import { useActiveTuner } from '@/ui/useActiveTuner.js'
 /**
  * Generic live-simulation panel. TunerPage passes in the domain's graph tabs
  * (each naming the chart component to render) and the reactive `impact` summary array;
- * everything else — the tab strip, the active-tab wiring through the store, the
+ * everything else (the tab strip, the active-tab wiring through the store, the
  * impact cards — is shared between the swap and systemd tuners.
  */
 const props = defineProps({
@@ -47,24 +47,20 @@ function onTabKeydown(e) {
   nextTick(() => document.getElementById(`tab-${ids[next]}`)?.focus())
 }
 
+// The band of an impact metric, as the value's colour. The value's own words
+// carry the meaning; the colour only echoes it.
 function bandClass(band) {
-  return {
-    none: 'bg-slate-100 text-slate-600',
-    low: 'bg-emerald-100 text-emerald-800',
-    med: 'bg-amber-100 text-amber-800',
-    high: 'bg-red-100 text-red-800',
-  }[band] ?? 'bg-slate-100 text-slate-600'
+  return { low: 'text-fit-text', med: 'text-mine-text', high: 'text-error' }[band] ?? 'text-ink-2'
 }
 </script>
 
 <template>
-  <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
-    <header class="border-b border-slate-200 px-4 py-3">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Live simulation</h2>
-      <p class="mt-1 text-xs text-slate-500">{{ intro }}</p>
-    </header>
+  <!-- A hairline panel: no box, the tabs on an ink rule, the chart, its
+       caption and the impact numbers between hairlines. -->
+  <section aria-labelledby="graph-panel-title">
+    <h3 id="graph-panel-title" class="text-[15px] font-medium text-ink">Live simulation</h3>
 
-    <div role="tablist" aria-label="Simulation graphs" class="flex flex-wrap gap-1 border-b border-slate-100 px-4 pt-3" @keydown="onTabKeydown">
+    <div role="tablist" aria-label="Simulation graphs" class="mt-2 flex flex-wrap border-b border-ink" @keydown="onTabKeydown">
       <button
         v-for="tab in tabs"
         :id="`tab-${tab.id}`"
@@ -74,12 +70,8 @@ function bandClass(band) {
         :aria-selected="activeTab === tab.id"
         :aria-controls="`tabpanel-${tab.id}`"
         :tabindex="activeTab === tab.id ? 0 : -1"
-        class="rounded-t border-b-2 px-3 py-1.5 text-sm transition"
-        :class="
-          activeTab === tab.id
-            ? 'border-sky-600 text-slate-900'
-            : 'border-transparent text-slate-500 hover:text-slate-800'
-        "
+        class="-mb-px min-h-11 border-b-[3px] px-3.5 text-sm font-medium transition-colors first:pl-0 hover:bg-paper-hover"
+        :class="activeTab === tab.id ? 'border-fit text-ink' : 'border-transparent text-ink-2 hover:text-ink'"
         @click="tuner.setActiveTab(tab.id)"
       >
         {{ tab.label }}
@@ -90,26 +82,25 @@ function bandClass(band) {
       :id="`tabpanel-${activeTab}`"
       role="tabpanel"
       :aria-labelledby="`tab-${activeTab}`"
-      class="space-y-4 p-4"
+      class="pt-5"
     >
-      <p class="text-xs text-slate-500">{{ activeBlurb }}</p>
-
       <component :is="activeComponent" />
 
-      <!-- Impact summary cards -->
-      <ul v-if="impact.length" class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <p class="mt-3 border-t border-rule pt-3 text-[15px] leading-[1.55] text-ink-2">{{ activeBlurb }}</p>
+
+      <!-- Impact numbers, one hairline row each. -->
+      <ul v-if="impact.length" class="mt-4">
         <li
           v-for="metric in impact"
           :key="metric.id"
-          class="rounded border border-slate-200 p-3"
+          class="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-rule py-2 last:border-b"
         >
-          <p class="text-xs uppercase tracking-wide text-slate-500">{{ metric.label }}</p>
-          <p
-            class="mt-1 inline-block rounded px-2 py-0.5 text-sm font-medium"
-            :class="bandClass(metric.band)"
-          >{{ metric.value }}</p>
+          <span class="text-[13px] text-quiet">{{ metric.label }}</span>
+          <span class="font-mono text-[15px]" :class="bandClass(metric.band)">{{ metric.value }}</span>
         </li>
       </ul>
+
+      <p class="mt-3 text-[13px] text-quiet">{{ intro }}</p>
     </div>
   </section>
 </template>

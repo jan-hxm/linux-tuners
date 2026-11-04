@@ -1,3 +1,30 @@
+# Policy: search and retrieval bots (they fetch a page to answer a question and
+# link back) are welcome; AI training crawlers are not. robots.txt is voluntary.
+# Machine-readable site summary: https://linux-tuners.dev/llms.txt
+
+# AI search and retrieval bots. Repeats the "*" rules, because a bot that matches
+# a named group ignores the "*" group.
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+Allow: /
+Disallow: /imprint
+Disallow: /privacy
+
+# AI training crawlers. Google-Extended only opts out of Gemini training, not Search.
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: CCBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: meta-externalagent
+User-agent: Bytespider
+Disallow: /
+
+# Everyone else, including Googlebot and Bingbot.
 User-agent: *
 Allow: /
 Disallow: /imprint

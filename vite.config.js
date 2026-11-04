@@ -14,6 +14,6 @@ export default defineConfig({
       ['src/tuners/*/components/**', 'happy-dom'],
     ],
     environment: 'node',
-    include: ['src/**/*.test.js'],
+    include: ['src/**/*.test.js', 'scripts/**/*.test.js'],
   },
 })

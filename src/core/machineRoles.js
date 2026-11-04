@@ -23,6 +23,19 @@ export function isMachineRole(value) {
 }
 
 /**
+ * The roles a registry `setup.roles` names, as a sentence for the "Matters
+ * for" line: their labels in role order, or "Every kind of machine." for
+ * `'all'`. Empty when it names none.
+ *
+ * @param {'all' | string[] | undefined} roles
+ */
+export function rolesText(roles) {
+  if (roles === 'all') return 'Every kind of machine.'
+  const labels = MACHINE_ROLES.filter((r) => roles?.includes(r.value)).map((r) => r.label)
+  return labels.length ? `${labels.join(', ')}.` : ''
+}
+
+/**
  * Splits tuners into those recommended for a role and the rest, each kept in
  * the given (setup) order. A tuner without a `setup` block is optional.
  */

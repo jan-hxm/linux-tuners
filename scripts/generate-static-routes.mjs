@@ -17,7 +17,9 @@
 import { execFileSync } from 'node:child_process'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+
+import { LIVE_TUNERS } from '../src/tuners/registry.js'
 
 import {
   ROUTES_META,
@@ -27,6 +29,7 @@ import {
   DEFAULT_LOCALE,
   jsonLdFor,
 } from '../src/routes-meta.js'
+import { writeStaticContent } from './static-content.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT_DIR = path.resolve(__dirname, '..')
@@ -76,6 +79,8 @@ async function main() {
     wrote += 1
   }
 
+  await fs.writeFile(path.join(DIST_DIR, '404.html'), render404(), 'utf8')
+
   // Sitemap covers indexable routes only.
   const sitemap = renderSitemap(ROUTES_META.filter((r) => !r.noindex))
   await fs.writeFile(path.join(DIST_DIR, 'sitemap.xml'), sitemap, 'utf8')
@@ -83,6 +88,50 @@ async function main() {
   console.log(
     `Wrote ${wrote} per-route HTML file(s) and sitemap.xml with ${ROUTES_META.filter((r) => !r.noindex).length} entries.`,
   )
+
+  // Last: fills each route's <div id="app"> (dist/index.html too), so any
+  // step that copies the shell must run before it.
+  await writeStaticContent({ rootDir: ROOT_DIR, distDir: DIST_DIR })
+}
+
+/**
+ * The static page Cloudflare Pages serves, with a real 404 status, for any path
+ * that has no file. No scripts, no ads, not indexable.
+ */
+export function render404() {
+  const links = LIVE_TUNERS.map(
+    (t) => `        <li><a href="${escapeHtml(t.path)}">${escapeHtml(t.title)}</a></li>`,
+  ).join('\n')
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Page not found | ${escapeHtml(SITE_NAME)}</title>
+    <style>
+      body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #0f172a; line-height: 1.5; }
+      main { max-width: 36rem; margin: 0 auto; padding: 3rem 1rem; }
+      h1 { font-size: 1.5rem; margin: 0 0 0.75rem; }
+      a { color: #1d4ed8; }
+      ul { padding-left: 1.25rem; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #0f172a; color: #e2e8f0; }
+        a { color: #93c5fd; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Page not found</h1>
+      <p>There is nothing at this address. Go to the <a href="/">${escapeHtml(SITE_NAME)} home page</a> or pick a tuner:</p>
+      <ul>
+${links}
+      </ul>
+    </main>
+  </body>
+</html>
+`
 }
 
 function renderForRoute(template, route) {
@@ -172,13 +221,16 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/'/g, '&#39;')
 }
 
 function escapeRegex(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-main().catch((err) => {
-  console.error('[generate-static-routes] failed:', err)
-  process.exit(1)
-})
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main().catch((err) => {
+    console.error('[generate-static-routes] failed:', err)
+    process.exit(1)
+  })
+}

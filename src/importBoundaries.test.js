@@ -49,6 +49,15 @@ function violation(from, to) {
   if (layer === 'setup' && /^tuners\//.test(to) && to !== REGISTRY && to !== DOMAINS) return 'setup reads tuners only through domains.js and the registry'
   if (layer === 'setup' && to.startsWith('views/')) return 'setup never imports views'
   if (to.startsWith('setup/') && layer !== 'setup' && from !== 'router.js') return 'only the router imports setup'
+  // The static page text is a composition root the build loads: tuners only
+  // through domains.js and the registry, plain-JS ui modules, no Vue of its
+  // own, and nothing in the app imports it.
+  if (layer === 'static') {
+    if (to === 'vue' || to.endsWith('.vue')) return 'static is plain JS, no Vue'
+    if (/^tuners\//.test(to) && to !== REGISTRY && to !== DOMAINS) return 'static reads tuners only through domains.js and the registry'
+    if (/^(setup|views)\//.test(to) || to === 'router.js' || to === 'main.js') return 'static never imports the app'
+  }
+  if (to.startsWith('static/') && layer !== 'static') return 'only the build imports static'
   const own = tunerOf(from)
   const other = tunerOf(to)
   if (own && other && own !== other) return 'tuners never import each other'
@@ -62,7 +71,7 @@ const sources = files(SRC)
 
 describe('import boundaries', () => {
   it('scans every layer', () => {
-    for (const layer of ['core/', 'ui/', 'setup/', 'tuners/swap/', 'tuners/systemd/']) {
+    for (const layer of ['core/', 'ui/', 'setup/', 'static/', 'tuners/swap/', 'tuners/systemd/']) {
       expect(sources.some((f) => f.startsWith(layer)), layer).toBe(true)
     }
   })
@@ -77,6 +86,13 @@ describe('import boundaries', () => {
     expect(violation('views/LandingView.vue', 'setup/steps.js')).toBeTruthy()
     expect(violation('setup/steps.js', DOMAINS)).toBeNull()
     expect(violation('router.js', 'setup/SetupView.vue')).toBeNull()
+    expect(violation('static/pages.js', DOMAINS)).toBeNull()
+    expect(violation('static/pages.js', 'ui/richText.js')).toBeNull()
+    expect(violation('static/pages.js', 'tuners/swap/defs.js')).toBeTruthy()
+    expect(violation('static/pages.js', 'ui/RichText.vue')).toBeTruthy()
+    expect(violation('static/pages.js', 'setup/steps.js')).toBeTruthy()
+    expect(violation('main.js', 'static/index.js')).toBeTruthy()
+    expect(violation('ui/TunerPage.vue', 'static/html.js')).toBeTruthy()
   })
 
   it('keeps every import inside the allowed direction', () => {

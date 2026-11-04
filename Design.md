@@ -239,9 +239,58 @@ plus `sitemap.xml`. Crawlers that don't run JavaScript therefore see the
 correct link previews. Each sitemap `<lastmod>` is the last commit to that
 page's own sources (a tuner's `src/tuners/<id>/` folder; the landing view and
 the registry for `/`), so a deploy doesn't mark every page changed. CI checks
-out the full history for this; in a shallow clone the build date is used. Every page shares one card image, `og-image.png`
+out the full history for this; in a shallow clone the build date is used.
+
+**Static page text.** Crawlers and readers that don't run JavaScript (search
+and AI crawlers, text browsers) also get each page's substance. The
+`src/static/` layer (§9) builds one neutral document per route (`pageDoc`:
+headings, rich-text paragraphs, lists, definition rows, code blocks) and two
+serializers write it: `toHtml` (semantic HTML in one `<main
+class="static-doc">`, every text and attribute escaped, links only from https
+`link` segments, glossary terms as `<dfn>` with their definitions in a
+Glossary section at the end of the page, never a `title` tooltip) and
+`toMarkdown`. The last
+postbuild step (`scripts/static-content.mjs`, which loads the layer through a
+Vite server's `ssrLoadModule`) puts the HTML inside each route's `<div
+id="app">`, `dist/index.html` included; `app.mount()` replaces it, with no
+hydration. A tuner page says, in order: title and intro, "Do I need this?",
+the profile fields and the default profile, each section with its parameters
+visible under the default profile in full (name, short and long description,
+tuning tip, default, range, options, context note, docs link) and the others
+named with their short description, the presets with what each changes from
+the default profile, the graph blurbs, the config `generateConfig` writes for
+the default profile (one build date for every page) with its install, check
+and undo steps, and the About content. `/` lists every tuner, `/setup` its
+steps; the legal pages get none. The build also writes `dist/<tuner>.md`,
+`dist/index.md`, `dist/llms.txt` (llmstxt.org) and `dist/llms-full.txt`, adds
+a `<link rel="alternate" type="text/markdown">` to each tuner's head, appends
+`_headers` rules for those files (Markdown as `text/markdown`, `noindex`, a
+canonical `Link` to the HTML page; the llms files as `text/plain`), and fails
+when a tuner's doc misses a parameter or preset. Like the generated config,
+this text is **built from definitions, never from state**. The static HTML
+is styled by `.static-doc` in `main.css` and shows until the module script
+runs.
+
+Every page shares one card image, `og-image.png`
 (1200×630), which `npm run gen:icons` renders from `public/og-image.svg`: X,
 LinkedIn and Facebook don't show SVG previews. Edit the SVG, then regenerate.
+
+Unknown paths return a real 404: the same step writes a static `dist/404.html`
+(no scripts, no ads, `noindex`, links to every live tuner), which Cloudflare
+Pages serves with status 404. There is no SPA fallback, because every route is
+prerendered. The router's catch-all only handles in-app navigation.
+
+**Crawler policy.** `public/robots.txt` welcomes search and retrieval bots
+(the ones that fetch a page to answer a question and link back: OAI-SearchBot,
+ChatGPT-User, PerplexityBot, Perplexity-User, Claude-SearchBot, Claude-User,
+plus Googlebot and Bingbot) and disallows AI training crawlers (GPTBot,
+ClaudeBot, CCBot, Google-Extended, Applebot-Extended, meta-externalagent,
+Bytespider). robots.txt is voluntary, so this states intent rather than
+enforcing it. A named group ignores the `*` group, so each group that allows
+`/` repeats the `/imprint` and `/privacy` disallows; `src/robots.test.js` pins
+all of this. Cloudflare's managed robots.txt / AI-bot blocking must not be
+enabled in a way that contradicts the policy (for example by blocking the
+search bots or overwriting this file).
 
 ### Ads and consent
 
@@ -256,8 +305,8 @@ dashed placeholder.
 ### Hosting and deploy
 
 Static site on Cloudflare Pages. GitHub Actions runs the tests and the build
-on every push and PR, and deploys `main`. `public/_redirects` provides the SPA
-fallback. `public/_headers` sets frame blocking, `nosniff`, `base-uri`,
+on every push and PR, and deploys `main`. `public/_redirects` has no SPA
+fallback (unknown paths get the 404 page, see Routes, SEO and build). `public/_headers` sets frame blocking, `nosniff`, `base-uri`,
 `object-src` and a Permissions-Policy. There is deliberately no `script-src` CSP, because AdSense
 and the CMP load from a changing set of Google domains.
 
@@ -763,6 +812,7 @@ src/
     <id>/         everything specific to one tuner
   views/       non-tuner pages (landing, legal)
   setup/       the guided setup, a composition root (§5 "Guided setup")
+  static/      the static page text the build writes (§5 "Routes, SEO and build")
 ```
 
 - `tuners/<id>` may import `core` and `ui`.
@@ -772,6 +822,13 @@ src/
 - `core` is plain JS: no `vue` import and no `.vue` files.
 - Tuners never import each other. When two tuners need the same thing,
   promote it to `core`/`ui`.
+- `static` is a composition root like `setup`: it reads tuners only through
+  `tuners/domains.js` and the registry, may import `core`, `routes-meta.js`
+  and plain-JS `ui` modules (`richText.js`, `glossary.js`, `descParts.js`,
+  `needThis.js`, `installGuide.js`, `controls/meta.js`), never `vue` or a
+  `.vue` file, and nothing in `src/` imports it: only the build (and tests)
+  does, so the SPA bundle doesn't change. Text the page and the static layer
+  both show lives in those plain-JS modules, never copied.
 - Enforced by `src/importBoundaries.test.js`, which scans import statements,
   since the project has no ESLint. Test files are exempt: shared-code tests
   mount real tuners as fixtures.

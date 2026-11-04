@@ -2,10 +2,12 @@
 /**
  * Numbered steps for installing generated files: save, apply, check, and how
  * to undo. Shared by the tuner output and the guided setup; the commands
- * come from core/output/installSteps.js (Design.md §7 "Export steps").
+ * come from core/output/installSteps.js and the text around them from
+ * ui/installGuide.js, which the static page text shares (Design.md §7
+ * "Export steps").
  */
 import { computed, ref } from 'vue'
-import { installSteps } from '@/core/output/installSteps.js'
+import { installGuide } from '@/ui/installGuide.js'
 import { copyText } from '@/ui/fileActions.js'
 
 const props = defineProps({
@@ -14,21 +16,7 @@ const props = defineProps({
   combined: { type: Boolean, default: false },
 })
 
-const steps = computed(() => installSteps(props.files))
-const many = computed(() => props.files.length > 1)
-
-const saveText = computed(() => {
-  if (!many.value) return 'Save the output as this file. Open it in an editor as root, paste, and save:'
-  return props.combined
-    ? 'Save each part of the output, from its ===== banner to the next, as its own file. Open each in an editor as root, paste, and save:'
-    : 'Save each file at its path. Open each in an editor as root, paste the file\'s text, and save:'
-})
-
-const groups = computed(() => [
-  { id: 'save', title: many.value ? 'Save the files' : 'Save the file', text: saveText.value, commands: steps.value.save },
-  { id: 'apply', title: many.value ? 'Apply them now' : 'Apply it now', text: 'Load the settings without rebooting:', commands: steps.value.apply },
-  { id: 'check', title: 'Check a value', text: many.value ? 'Each command prints a value the files set:' : 'This prints a value the file sets:', commands: steps.value.check },
-])
+const guide = computed(() => installGuide(props.files, { combined: props.combined }))
 
 /** Which command was copied last, and whether the copy worked. */
 const copied = ref({ command: null, ok: false })
@@ -47,7 +35,7 @@ const copyLabel = (command) =>
 <template>
   <div class="space-y-3 text-sm text-slate-700">
     <ol class="space-y-3">
-      <li v-for="(group, i) in groups.filter((g) => g.commands.length)" :key="group.id" class="flex gap-3">
+      <li v-for="(group, i) in guide.groups" :key="group.id" class="flex gap-3">
         <span
           aria-hidden="true"
           class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white"
@@ -71,11 +59,11 @@ const copyLabel = (command) =>
 
     <div class="rounded border border-slate-200 bg-slate-50 p-3">
       <p>
-        <span class="font-semibold text-slate-900">If something goes wrong:</span>
-        delete the {{ many ? 'files' : 'file' }}{{ steps.reboot ? ' and reboot. The values already applied stay set until the reboot.' : ' and reload systemd.' }}
+        <span class="font-semibold text-slate-900">{{ guide.undoTitle }}</span>
+        {{ guide.undoText }}
       </p>
       <ul class="mt-1.5 space-y-1">
-        <li v-for="command in steps.undo" :key="command" class="flex items-center gap-2">
+        <li v-for="command in guide.undo" :key="command" class="flex items-center gap-2">
           <code class="min-w-0 flex-1 break-all rounded bg-white px-2 py-1 font-mono text-xs text-slate-900">{{ command }}</code>
           <button
             type="button"

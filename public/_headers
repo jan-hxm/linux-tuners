@@ -3,6 +3,10 @@
 # No full script-src CSP: AdSense + Google's CMP load from a long, changing list
 # of Google domains. These cover clickjacking and the cheap wins without
 # risking breaking ad serving. (HSTS is implicit: .dev is on the HSTS preload list.)
+#
+# The build appends one block per Markdown copy (/swap.md, …: text/markdown,
+# noindex, a canonical Link to the HTML page) and for /llms.txt and
+# /llms-full.txt to dist/_headers (scripts/static-content.mjs).
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff

@@ -16,8 +16,8 @@ provide(TUNER_DOMAIN_KEY, { id: 'machine', profile: MACHINE_PROFILE, presetsById
 </script>
 
 <template>
-  <div class="space-y-3">
-    <p class="text-sm text-slate-700">
+  <div class="space-y-4">
+    <p class="max-w-3xl text-[15px] leading-relaxed text-ink-2">
       Enter the machine once. Every step starts from it: the role picks each tuner's workload, and RAM, the kernel, systemd and the cgroup version size the defaults. A step can still change a value for itself.
     </p>
     <ProfileForm />

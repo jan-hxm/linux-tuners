@@ -41,7 +41,7 @@ const COPY = 'min-h-9 shrink-0 border border-rule-strong px-2.5 text-[13px] font
 
 <template>
   <div class="text-[15px] leading-[1.55] text-ink-2">
-    <ol class="space-y-5">
+    <ol class="space-y-4">
       <li
         v-for="(group, i) in guide.groups"
         :key="group.id"
@@ -70,7 +70,7 @@ const COPY = 'min-h-9 shrink-0 border border-rule-strong px-2.5 text-[13px] font
     </ol>
 
     <!-- Undo, set apart from the steps. -->
-    <div class="mt-8 border-t border-rule-strong" :class="NOTE">
+    <div class="mt-6 border-t border-rule-strong" :class="NOTE">
       <span aria-hidden="true" />
       <div class="min-w-0 space-y-2">
         <p>

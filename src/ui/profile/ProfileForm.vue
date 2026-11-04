@@ -61,8 +61,8 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
       </button>
     </header>
 
-    <form v-if="!collapsed" class="space-y-7 pt-6" @submit.prevent="apply">
-      <div v-for="(row, r) in rows" :key="r" :class="{ 'grid gap-x-8 gap-y-7 sm:grid-cols-2': row.half }">
+    <form v-if="!collapsed" class="space-y-5 pt-4" @submit.prevent="apply">
+      <div v-for="(row, r) in rows" :key="r" :class="{ 'grid gap-x-8 gap-y-5 sm:grid-cols-2': row.half }">
         <div v-for="f in row.fields" :key="f.key">
           <NumberPickField
             v-if="f.type === 'number'"
@@ -161,7 +161,7 @@ const selectedNote = (field) => field.options.find((o) => o.value === draft[fiel
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 border-t border-rule pt-4">
+      <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 border-t border-rule pt-3">
         <span v-if="dirty" class="text-sm text-mine-text">Unsaved changes</span>
         <button
           type="submit"

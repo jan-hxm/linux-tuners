@@ -197,7 +197,7 @@ function countSummary(section) {
     <section
       v-for="section in shownSections"
       :key="section.id"
-      class="mt-12"
+      class="mt-10"
       :aria-labelledby="`section-title-${section.id}`"
     >
       <div class="border-b" :class="isOpen(section) ? 'border-ink pb-3' : 'border-rule pb-4'">

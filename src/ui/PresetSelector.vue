@@ -69,11 +69,11 @@ function apply(preset) {
 
     <!-- Hairline rows; the applied preset sits on the selected tint with a
          filled verdigris dot, like a radio. -->
-    <ul class="mt-4 grid grid-cols-1 gap-x-8 border-t border-ink sm:grid-cols-2 xl:grid-cols-3">
+    <ul class="mt-3 grid grid-cols-1 gap-x-8 border-t border-ink sm:grid-cols-2 xl:grid-cols-3">
       <li v-for="preset in PRESETS" :key="preset.id" class="flex min-w-0 flex-col border-b border-rule">
         <button
           type="button"
-          class="flex flex-1 items-start gap-3.5 px-2 py-3.5 text-left text-ink"
+          class="flex flex-1 items-start gap-3.5 px-2 py-2.5 text-left text-ink"
           :aria-pressed="isActive(preset)"
           :class="isActive(preset) ? 'bg-fit-tint' : 'hover:bg-paper-hover'"
           @click="apply(preset)"
@@ -95,7 +95,7 @@ function apply(preset) {
         <button
           v-if="diffsByPreset[preset.id].length"
           type="button"
-          class="inline-flex min-h-9 items-center gap-2 self-start px-2 pb-1.5 text-[13px] text-ink-2 underline underline-offset-[3px] hover:text-ink"
+          class="inline-flex min-h-6 items-center gap-2 self-start px-2 pb-1.5 text-[13px] text-ink-2 underline underline-offset-[3px] hover:text-ink"
           :aria-expanded="previewId === preset.id"
           :aria-controls="panelId"
           :aria-label="`${preset.label}: ${changeCount(preset)}, show what would change`"
@@ -103,7 +103,7 @@ function apply(preset) {
         >
           {{ changeCount(preset) }}<PlusMinus :open="previewId === preset.id" />
         </button>
-        <span v-else class="inline-flex min-h-9 items-center px-2 pb-1.5 text-[13px] text-quiet">Matches current values</span>
+        <span v-else class="inline-flex min-h-6 items-center px-2 pb-1.5 text-[13px] text-quiet">Matches current values</span>
       </li>
     </ul>
 

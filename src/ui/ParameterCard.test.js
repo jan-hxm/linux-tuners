@@ -2,7 +2,7 @@
 // (Pin the DOM environment explicitly rather than relying solely on
 // environmentMatchGlobs — with a shared module graph across node + happy-dom
 // files, glob-based env selection can race when files batch into one worker.)
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
@@ -12,6 +12,7 @@ import { swapDomain } from '@/tuners/swap/index.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { splitFirstSentence } from './firstSentence.js'
+import { DESC_PARTS } from './descParts.js'
 import RichText from './RichText.vue'
 
 function mountCard(paramKey) {
@@ -262,6 +263,54 @@ describe('ParameterCard layers (Design.md §7)', () => {
     expect(items.length).toBeLessThanOrEqual(3)
     // The origin note is always the last one.
     expect(items.at(-1).text()).toContain('Kernel default')
+  })
+
+  describe("by the card's own width", () => {
+    // A ResizeObserver that reports the given width as soon as it observes.
+    const stubWidth = (px) =>
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(cb) { this.cb = cb }
+          observe() { this.cb([{ contentRect: { width: px } }]) }
+          disconnect() {}
+        },
+      )
+    afterEach(() => vi.unstubAllGlobals())
+
+    it('holds two notes on a card too narrow for the wide margin: the first layer note and the origin', async () => {
+      stubWidth(768) // beside the graph column at 1280px
+      useTunerStoreFor(swapDomain)
+      const wrapper = mountCard('swappiness')
+      await nextTick()
+      const items = marginItems(wrapper)
+      expect(items).toHaveLength(2)
+      expect(items.at(-1).text()).toContain('Kernel default')
+      expect(wrapper.findAll('h4').map((h) => h.text())).toEqual(['What it does'])
+      // The second goes to Learn more, numbered on from the margin's two.
+      await learnMore(wrapper).trigger('click')
+      expect(wrapper.findAll('h4').map((h) => h.text())).toEqual(['What it does', 'When to change it', 'Watch out', 'Rule of thumb'])
+      expect(wrapper.text()).toContain('[3]When to change it')
+    })
+
+    it.each(Object.keys(swapDomain.defsByKey))('on a narrow card, offers Learn more for %s exactly when a note is left for it', async (key) => {
+      stubWidth(768)
+      useTunerStoreFor(swapDomain)
+      const def = swapDomain.defsByKey[key]
+      const wrapper = mountCard(key)
+      await nextTick()
+      const layers = DESC_PARTS.filter(({ key: k }) => def.longDesc[k]?.length).length + (def.tuningTip ? 1 : 0)
+      expect(marginItems(wrapper)).toHaveLength(Math.min(layers, 1) + 1)
+      expect(learnMore(wrapper) !== undefined).toBe(layers > 1 || Boolean(def.dangerousIfZero))
+    })
+
+    it('keeps three notes on a wide card', async () => {
+      stubWidth(1216)
+      useTunerStoreFor(swapDomain)
+      const wrapper = mountCard('swappiness')
+      await nextTick()
+      expect(marginItems(wrapper)).toHaveLength(3)
+    })
   })
 
   it('renders longDesc as rich text, with glossary terms as buttons', async () => {

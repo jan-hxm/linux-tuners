@@ -14,10 +14,10 @@ defineProps({
 </script>
 
 <template>
-  <section id="about" class="border-t border-ink pt-4">
+  <section id="about" class="border-t border-ink pt-3">
     <h2 class="text-[26px] font-medium leading-tight tracking-[-0.02em] text-ink">{{ about.heading }}</h2>
 
-    <div class="mt-6 max-w-[70ch] space-y-8 text-base leading-relaxed text-ink-2">
+    <div class="mt-4 max-w-[70ch] space-y-6 text-base leading-relaxed text-ink-2">
       <p v-for="(para, i) in about.intro" :key="`intro-${i}`"><RichText :text="para" /></p>
 
       <section v-for="section in about.sections" :key="section.title" class="border-t border-rule pt-3">

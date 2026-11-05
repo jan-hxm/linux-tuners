@@ -7,6 +7,7 @@ import { nextTick } from 'vue'
 import SliderControl from './SliderControl.vue'
 import MarkKey from './MarkKey.vue'
 import MarkGlyph from './MarkGlyph.vue'
+import { scaleTicks } from './scale.js'
 
 const def = { key: 'x', step: 1, kernelDefault: 60, zones: [{ label: 'low', min: 0, max: 50 }, { label: 'high', min: 51, max: 200 }] }
 const range = { min: 0, max: 200 }
@@ -38,10 +39,51 @@ describe('SliderControl', () => {
     expect(w.find('[data-mark="default"]').exists()).toBe(false)
   })
 
-  it('sits the fit bar beside the default tick when they share a value', () => {
+  it('centres the fit bar and the taller default tick on a shared value', () => {
     const w = mountSlider({ fitValue: 60 })
-    expect(w.get('[data-mark="fit"]').classes()).toContain('translate-x-px')
-    expect(w.get('[data-mark="default"]').classes()).toContain('-translate-x-1/2')
+    const fit = w.get('[data-mark="fit"]')
+    const tick = w.get('[data-mark="default"]')
+    expect(fit.classes()).toContain('-translate-x-1/2')
+    expect(tick.classes()).toContain('-translate-x-1/2')
+    expect(fit.attributes('style')).toBe(tick.attributes('style'))
+    expect(tick.classes()).toContain('h-[30px]')
+    expect(fit.classes()).toContain('h-6')
+  })
+
+  it.each([
+    [{ min: 0, max: 200 }, 1, 60],
+    [{ min: 10, max: 110 }, 1, 60],
+    [{ min: 0, max: 2147483647 }, 1, 1073741824],
+    [{ min: 5, max: 1005 }, 25, 255],
+    [{ min: 1000, max: 5000 }, 100, 3300],
+  ])('puts every mark on its value for range %j step %i', async (r, step, v) => {
+    const d = { ...def, step, kernelDefault: v, zones: undefined }
+    const w = mountSlider({ def: d, range: r, value: v, fitValue: v })
+    await w.setProps({ changed: true })
+    const thumbPct = ((v - r.min) / (r.max - r.min)) * 100
+    const left = (el) => parseFloat(/left:\s*([\d.]+)%/.exec(el.attributes('style'))[1])
+    for (const m of ['default', 'fit', 'mine']) {
+      const el = w.get(`[data-mark="${m}"]`)
+      expect(left(el)).toBeCloseTo(thumbPct, 9)
+      expect(el.classes()).toContain('-translate-x-1/2')
+      expect(el.classes().filter((c) => /translate-x/.test(c))).toEqual(['-translate-x-1/2'])
+    }
+    // The fill ends on the value too (it starts at the left edge, no shift).
+    expect(parseFloat(/width:\s*([\d.]+)%/.exec(w.get('[data-mark="fill"]').attributes('style'))[1])).toBeCloseTo(thumbPct, 9)
+    // Major ticks and their numbers share the tick's left; only the edge rule shifts the number.
+    const ticks = scaleTicks(r)
+    const nums = w.findAll('span.font-mono')
+    expect(nums).toHaveLength(ticks.major.filter((t) => t.label).length)
+    ticks.major.filter((t) => t.label).forEach((t, i) => {
+      const st = nums[i].attributes('style')
+      expect(left(nums[i])).toBeCloseTo(t.pct, 9)
+      const want = t.pct <= 8 ? 'translateX(0)' : t.pct >= 92 ? 'translateX(-100%)' : 'translateX(-50%)'
+      expect(st.replace(/\s/g, '')).toContain(`transform:${want}`.replace(/\s/g, ''))
+    })
+    w.findAll('[data-mark="major"]').forEach((el, i) => {
+      expect(left(el)).toBeCloseTo(ticks.major[i].pct, 9)
+      expect(el.classes()).toContain('-translate-x-1/2')
+    })
   })
 
   it('emits update on input and leaves the DOM value alone (uncontrolled)', async () => {

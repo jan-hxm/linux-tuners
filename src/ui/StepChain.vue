@@ -19,6 +19,7 @@
  * @property {string} [href]        a link to the step; without one the step is a button
  * @property {{ label: string, mark: string, cls: string, seg?: string, error?: boolean } | null} [status]
  */
+import { followInPageLink } from '@/ui/inPageLink.js'
 
 defineProps({
   /** @type {import('vue').PropType<ChainStep[]>} */
@@ -52,7 +53,7 @@ function segment(step, i, current) {
         class="flex min-h-11 w-full flex-col items-start justify-center py-1 pr-3 text-left text-[15px] hover:bg-paper-hover"
         :class="[segment(step, i, current), i === current ? 'font-medium text-ink' : 'text-ink-2']"
         :aria-current="i === current ? currentAttr : undefined"
-        @click="step.href ? undefined : emit('select', i)"
+        @click="step.href ? followInPageLink($event, step.href.slice(1)) : emit('select', i)"
       >
         <span class="flex w-full min-w-0 items-baseline gap-2.5">
           <span class="font-mono text-[13px]" :class="i === current ? 'text-fit-text' : 'text-quiet'">{{ step.mark }}</span>

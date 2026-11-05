@@ -1,6 +1,7 @@
 import { computed, nextTick } from 'vue'
 import { useScrollSpy } from '@/ui/useScrollSpy.js'
 import { settingAnchorId, groupAnchorId } from '@/ui/useParameterView.js'
+import { focusAnchor } from '@/ui/inPageLink.js'
 
 /**
  * @typedef {object} OutlineSetting
@@ -30,14 +31,7 @@ function issueLevel(issues) {
 
 const ISSUE_WORDS = { error: 'error', warn: 'warning' }
 
-/** Scrolls an anchor under the sticky bars (its scroll-mt) and focuses it. */
-export function focusAnchor(id) {
-  const el = document.getElementById(id)
-  if (!el) return
-  const reduce = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  el.scrollIntoView?.({ block: 'start', behavior: reduce ? 'auto' : 'smooth' })
-  el.focus({ preventScroll: true })
-}
+export { focusAnchor }
 
 /**
  * The settings outline (Design.md §7 "Settings outline"): the steps, under

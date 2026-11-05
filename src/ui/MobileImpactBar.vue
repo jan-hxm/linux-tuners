@@ -9,6 +9,8 @@
  * graphs. Each metric gets a column, its label over its value, so all of
  * them fit at 320px. See Design.md §7.
  */
+import { followInPageLink } from '@/ui/inPageLink.js'
+
 defineProps({
   /** @type {{id:string,label:string,value:string,band:string}[]} */
   impact: { type: Array, default: () => [] },
@@ -46,6 +48,7 @@ function bandClass(band) {
       <!-- Outside the live list, so it isn't re-announced on every change. -->
       <a
         :href="`#${graphsId}`"
+        @click="followInPageLink($event, graphsId)"
         class="inline-flex min-h-11 shrink-0 items-center border border-rule-strong px-3 text-[13px] font-medium text-ink hover:bg-paper-hover"
       >Graphs <span aria-hidden="true">&nbsp;↑</span></a>
     </div>

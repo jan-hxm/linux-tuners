@@ -39,6 +39,7 @@ import UndoToast from '@/ui/UndoToast.vue'
 import IssueAnnouncer from '@/ui/IssueAnnouncer.vue'
 import AdSlot from '@/ui/AdSlot.vue'
 import RichText from '@/ui/RichText.vue'
+import { followInPageLink } from '@/ui/inPageLink.js'
 import NeedThisBox from '@/ui/NeedThisBox.vue'
 import { useScrollSpy } from '@/ui/useScrollSpy.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY, PROFILE_DRAFT_KEY, PARAMETER_VIEW_KEY } from '@/ui/useActiveTuner.js'
@@ -159,7 +160,7 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
           <RichText :text="page.intro" :code-class="INTRO_CODE" />
         </p>
         <p class="mt-1 text-sm">
-          <a href="#about" class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]">About this tuner</a>
+          <a href="#about" @click="followInPageLink($event, 'about')" class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]">About this tuner</a>
         </p>
       </div>
       <div class="flex min-w-0 max-w-full flex-wrap items-center gap-x-3.5 gap-y-1 border-y border-rule py-1.5">

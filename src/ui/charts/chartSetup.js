@@ -15,6 +15,8 @@ import {
 } from 'chart.js'
 import { watch } from 'vue'
 import { PALETTE } from './palette.js'
+import { FONT_SANS, FONT_MONO } from '../theme.js'
+import { zonesPlugin, endLabelsPlugin, probePlugin } from './plugins.js'
 
 Chart.register(
   CategoryScale,
@@ -25,14 +27,27 @@ Chart.register(
   Tooltip,
   Legend,
   Filler,
+  zonesPlugin,
+  endLabelsPlugin,
+  probePlugin,
 )
 
-// Smaller global defaults — chart titles/legends are heavy and the GraphPanel
-// already has its own headers.
-Chart.defaults.font.family =
-  'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
-Chart.defaults.font.size = 11
+// The page's type (Design.md §7): words in the sans stack, and the numbers on
+// the axes in mono, like the numbers on a slider's scale. 13px is the floor
+// for meaningful text. No chart titles or legends: GraphPanel and each chart
+// carry their own.
+Chart.defaults.font.family = FONT_SANS.join(', ')
+Chart.defaults.font.size = 13
+Chart.defaults.scale.ticks.font = { family: FONT_MONO.join(', '), size: 13 }
+// Category labels are words (TasksChart's limits), so they stay in sans.
+Chart.defaults.scales.category.ticks.font = { family: FONT_SANS.join(', '), size: 13 }
 Chart.defaults.plugins.legend.display = false
+// The probe replaces Chart.js's tooltip and hover (ChartFrame handles the
+// pointer, the keys and touch), so the chart takes no events of its own.
+// Nothing animates, so prefers-reduced-motion has nothing to stop.
+Chart.defaults.plugins.tooltip.enabled = false
+Chart.defaults.events = []
+Chart.defaults.animation = false
 
 // Tick, title and grid colours follow the scheme. Synchronous, so the defaults
 // change before ChartFrame rebuilds its chart.

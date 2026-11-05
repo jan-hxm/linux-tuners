@@ -4,6 +4,7 @@ import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
 import { optionLabel } from '@/core/profile.js'
 import { copyText } from '@/ui/fileActions.js'
+import { trapTab } from '@/ui/focusTrap.js'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
@@ -86,22 +87,7 @@ function onKey(e) {
 // Trap Tab within the dialog while it's open (aria-modal alone does not stop
 // focus escaping to the page behind the overlay).
 function onTrapKeydown(e) {
-  if (e.key !== 'Tab') return
-  const root = panel.value
-  if (!root) return
-  const focusables = root.querySelectorAll(
-    'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-  )
-  if (!focusables.length) return
-  const first = focusables[0]
-  const last = focusables[focusables.length - 1]
-  if (e.shiftKey && document.activeElement === first) {
-    e.preventDefault()
-    last.focus()
-  } else if (!e.shiftKey && document.activeElement === last) {
-    e.preventDefault()
-    first.focus()
-  }
+  trapTab(e, panel.value)
 }
 
 onMounted(() => window.addEventListener('keydown', onKey))
@@ -121,111 +107,110 @@ watch(isOpen, async (open) => {
 
 <template>
   <Teleport to="body">
+    <!-- The backdrop dims the page in either scheme. -->
     <div
       v-if="isOpen"
-      class="light-palette fixed inset-0 z-40 bg-slate-900/30"
+      class="fixed inset-0 z-40 bg-black/40"
       aria-hidden="true"
       @click="close"
     />
     <div
       v-if="isOpen && def"
       ref="panel"
-      class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col overflow-y-auto border-l border-slate-200 bg-white shadow-xl"
+      class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col overflow-y-auto border-l border-ink bg-paper text-ink"
       role="dialog"
       aria-modal="true"
       :aria-label="`Reference for ${def.sysctlName}`"
       @keydown="onTrapKeydown"
     >
-      <div class="sticky top-0 flex items-start justify-between gap-3 border-b border-slate-200 bg-white p-4">
+      <div class="sticky top-0 flex items-start justify-between gap-3 border-b border-ink bg-paper px-5 pb-4 pt-5">
         <div class="min-w-0">
-          <p class="text-xs uppercase tracking-wide text-slate-500">Reference</p>
-          <h2 class="text-base font-semibold text-slate-900">{{ def.title }}</h2>
-          <p class="break-all font-mono text-sm text-slate-700">{{ def.sysctlName }}</p>
-          <p class="mt-1 text-xs text-slate-600">{{ def.shortDesc }}</p>
+          <p class="text-[13px] text-quiet">Reference</p>
+          <h2 class="mt-1 text-xl font-medium leading-snug text-ink">{{ def.title }}</h2>
+          <p class="mt-0.5 break-all font-mono text-sm text-ink-2">{{ def.sysctlName }}</p>
+          <p class="mt-2 text-[15px] leading-[1.55] text-ink-2">{{ def.shortDesc }}</p>
         </div>
         <button
           ref="closeBtn"
           type="button"
-          class="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
+          class="inline-flex min-h-11 shrink-0 items-center gap-2 border border-rule-strong px-3 text-sm font-medium hover:bg-paper-hover"
           @click="close"
-        >Close ✕</button>
+        >Close <svg aria-hidden="true" width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l10 10M12 2 2 12" /></svg></button>
       </div>
 
-      <div class="space-y-5 p-4 text-sm text-slate-800">
-        <section>
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Range</h3>
-          <p class="mt-1 text-xs text-slate-700">
+      <div class="space-y-6 px-5 py-5 text-[15px] leading-[1.55] text-ink-2">
+        <section class="border-t border-rule pt-2.5">
+          <h3 class="text-[13px] font-medium text-quiet">Range</h3>
+          <p class="mt-1">
             {{ rangeText.accepts }}
-            {{ domain.defaultLabel }}: <span class="font-mono">{{ rangeText.kernelDefault }}</span>.
+            {{ domain.defaultLabel }}: <span class="font-mono text-ink">{{ rangeText.kernelDefault }}</span>.
             <template v-if="def.kernelDefaultNote">{{ def.kernelDefaultNote }}</template>
           </p>
         </section>
 
-        <section v-if="tryCommand">
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Try it now</h3>
-          <p class="mt-1 text-xs text-slate-700">Sets the current value until the next reboot. The generated file makes it permanent.</p>
-          <div class="mt-1 flex items-start gap-2">
-            <code class="min-w-0 flex-1 break-all rounded bg-slate-50 p-2 font-mono text-xs leading-snug text-slate-800">{{ tryCommand }}</code>
+        <section v-if="tryCommand" class="border-t border-rule pt-2.5">
+          <h3 class="text-[13px] font-medium text-quiet">Try it now</h3>
+          <p class="mt-1">Sets the current value until the next reboot. The generated file makes it permanent.</p>
+          <div class="mt-2 flex items-start gap-2">
+            <code class="min-w-0 flex-1 break-all bg-paper-hover px-2 py-1.5 font-mono text-[13px] leading-snug text-ink">{{ tryCommand }}</code>
             <button
               type="button"
-              class="shrink-0 rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
+              class="min-h-9 shrink-0 border border-rule-strong px-2.5 text-[13px] font-medium text-ink hover:bg-paper-hover"
               @click="copyCommand"
-            >{{ copyStatus === 'ok' ? 'Copied ✓' : copyStatus === 'fail' ? 'Copy failed' : 'Copy' }}</button>
+            >{{ copyStatus === 'ok' ? 'Copied' : copyStatus === 'fail' ? 'Copy failed' : 'Copy' }}</button>
           </div>
           <p class="sr-only" aria-live="polite">{{ copyStatus === 'ok' ? 'Copied to clipboard.' : copyStatus === 'fail' ? 'Clipboard write failed.' : '' }}</p>
         </section>
 
-        <section v-if="contextNote">
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ domain.context.label }} context</h3>
-          <p class="mt-1 rounded bg-sky-50 p-2 text-xs leading-relaxed text-sky-900">
-            {{ contextNote }}
-          </p>
+        <section v-if="contextNote" class="border-t border-rule pt-2.5">
+          <h3 class="text-[13px] font-medium text-quiet">{{ domain.context.label }} context</h3>
+          <p class="mt-1">{{ contextNote }}</p>
         </section>
 
-        <section v-if="formula">
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ formula.title }}</h3>
-          <pre class="mt-1 rounded bg-slate-50 p-2 text-xs leading-snug text-slate-800 overflow-x-auto" tabindex="0" aria-label="Formula"><code>{{ formula.lines.join('\n') }}</code></pre>
-          <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+        <section v-if="formula" class="border-t border-rule pt-2.5">
+          <h3 class="text-[13px] font-medium text-quiet">{{ formula.title }}</h3>
+          <pre class="mt-2 overflow-x-auto bg-paper-hover p-2.5 font-mono text-[13px] leading-snug text-ink" tabindex="0" aria-label="Formula"><code>{{ formula.lines.join('\n') }}</code></pre>
+          <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
             <template v-for="row in formula.values" :key="row.label">
-              <dt class="text-slate-600">{{ row.label }}</dt>
-              <dd class="font-mono text-slate-900">{{ row.v }}</dd>
+              <dt class="text-quiet">{{ row.label }}</dt>
+              <dd class="font-mono text-ink">{{ row.v }}</dd>
             </template>
           </dl>
         </section>
 
-        <section>
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Defaults by workload <span class="text-slate-500">(for current hardware)</span>
+        <section class="border-t border-rule pt-2.5">
+          <h3 class="text-[13px] font-medium text-quiet">
+            Defaults by workload (for current hardware)
           </h3>
-          <table class="mt-1 w-full text-xs">
+          <table class="mt-2 w-full text-sm">
             <thead>
-              <tr class="text-left text-slate-500">
-                <th class="font-medium">Workload</th>
-                <th class="font-medium">Default</th>
+              <tr class="text-left text-quiet">
+                <th class="pb-1 font-medium">Workload</th>
+                <th class="pb-1 font-medium">Default</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="row in workloadComparison"
                 :key="row.workload"
-                class="border-t border-slate-100"
-                :class="{ 'bg-slate-50': row.current }"
+                class="border-t border-rule"
+                :class="{ 'bg-fit-tint text-ink': row.current }"
               >
-                <td class="py-1">
+                <td class="py-1.5 pr-3">
                   {{ row.label }}
-                  <span v-if="row.current" class="text-xs text-slate-500">(current)</span>
+                  <span v-if="row.current" class="text-quiet">(current)</span>
                 </td>
-                <td class="py-1 font-mono">{{ row.formatted }}</td>
+                <td class="py-1.5 font-mono">{{ row.formatted }}</td>
               </tr>
             </tbody>
           </table>
         </section>
 
-        <section>
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sources</h3>
-          <ul class="mt-1 text-xs">
-            <li><a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="inline-flex min-h-6 items-center text-sky-700 underline">{{ domain.docsLabel }} ↗</a></li>
-            <li v-if="contextNote"><a :href="domain.context.url" target="_blank" rel="noopener" class="inline-flex min-h-6 items-center text-sky-700 underline">{{ domain.context.label }} guidance ↗</a></li>
+        <section class="border-t border-rule pt-2.5">
+          <h3 class="text-[13px] font-medium text-quiet">Sources</h3>
+          <ul class="mt-1">
+            <li><a :href="def.kernelDocsUrl" target="_blank" rel="noopener" class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]">{{ domain.docsLabel }} ↗</a></li>
+            <li v-if="contextNote"><a :href="domain.context.url" target="_blank" rel="noopener" class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]">{{ domain.context.label }} guidance ↗</a></li>
           </ul>
         </section>
       </div>

@@ -6,7 +6,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
-import { LIVE_TUNERS } from '@/tuners/registry.js'
+import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
+import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
+import { LANDING_COPY, tunerFacts } from '@/ui/landing.js'
 import { ROUTES_META } from '@/routes-meta.js'
 import { pageDoc } from './pages.js'
 import { docTexts } from './nodes.js'
@@ -129,6 +131,27 @@ describe('static pages of every route', () => {
   it('links the landing page to every live tuner', () => {
     const html = toHtml(pageDoc('/', { now: NOW }))
     for (const t of LIVE_TUNERS) expect(html).toContain(`href="https://linux-tuners.dev${t.path}"`)
+  })
+
+  // The same story as the live page (views/LandingView.vue), from the same copy.
+  it('tells the landing page story: hero, key, why, the roles and every tuner with its question', () => {
+    const doc = pageDoc('/', { now: NOW })
+    const all = docTexts(doc).join('\n')
+    const md = toMarkdown(doc)
+    expect(doc.blocks[0]).toEqual({ kind: 'heading', level: 1, text: LANDING_COPY.hero.title })
+    for (const s of [LANDING_COPY.hero.lead, LANDING_COPY.why.heading, LANDING_COPY.start.heading, ...LANDING_COPY.key.marks.map((m) => m.label)]) {
+      expect(all).toContain(s)
+    }
+    for (const r of MACHINE_ROLES) {
+      const { recommended } = tunersForRole(LIVE_TUNERS, r.value)
+      expect(all, r.value).toContain(`${r.label}: ${recommended.length} tuners, in this order.`)
+    }
+    for (const t of LIVE_TUNERS) {
+      const domain = TUNER_DOMAINS.find((d) => d.id === t.id)
+      expect(md, t.id).toContain(t.question)
+      for (const path of tunerFacts(domain).writes) expect(md, t.id).toContain(path)
+    }
+    for (const t of PLANNED_TUNERS) expect(all).toContain(t.title)
   })
 
   it('builds each page from definitions only: the same input, the same text', () => {

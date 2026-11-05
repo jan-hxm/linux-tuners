@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { pctOf, inRange, scaleTicks } from './scale.js'
 
 const props = defineProps({
   def: { type: Object, required: true },
@@ -7,6 +8,12 @@ const props = defineProps({
   range: { type: Object, required: true },
   labelId: { type: String, required: true },
   valueText: { type: String, required: true },
+  // The value that fits the profile (the store's profileDefaults), drawn as
+  // the verdigris bar; null draws none.
+  fitValue: { type: Number, default: null },
+  // The value differs from fitValue (the card's "changed by you" state),
+  // which adds the ochre dot above the scale.
+  changed: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update'])
 
@@ -138,27 +145,36 @@ function onTouchEnd() {
   }, 80)
 }
 
-// Filled portion of the slider track, 0–100%. Drives the gradient/progress fill
-// in the scoped styles below. Reactive on the store value, so it follows drags,
-// preset applies, and inline edits alike. Updating this (a style custom property)
-// mid-drag is safe — unlike rewriting the input's `value`, it doesn't cancel the
-// drag (see the selfWrite note above).
-const pct = computed(() => {
-  const { min, max } = props.range
-  if (max <= min) return 0
-  const clamped = Math.max(min, Math.min(max, props.value))
-  return ((clamped - min) / (max - min)) * 100
-})
+// Where the value sits on the scale, 0-100%. Drives the ink fill and the
+// "changed by you" dot. Reactive on the store value, so it follows drags,
+// preset applies and inline edits alike. Updating a style mid-drag is safe;
+// unlike rewriting the input's `value`, it doesn't cancel the drag (see the
+// selfWrite note above).
+const pct = computed(() => pctOf(props.value, props.range))
 
-// A tick under the track where the default sits, when it's inside the range.
-// The 16px thumb's centre travels from 8px to 100% - 8px, so the tick uses
-// the same inset to line up with the thumb at that value.
-const defaultPct = computed(() => {
-  const { min, max } = props.range
-  const d = props.def.kernelDefault
-  if (typeof d !== 'number' || max <= min || d < min || d > max) return null
-  return ((d - min) / (max - min)) * 100
-})
+// The three marks (Design.md §7): a thin ink tick at the kernel (or systemd)
+// default, a heavier verdigris bar at the value that fits the profile, and an
+// ochre dot above the scale at the value once it differs from that. Each is
+// drawn only inside the range. The dot never replaces the thumb: the thumb
+// is the handle, the dot says whose value it is.
+const defaultPct = computed(() => (inRange(props.def.kernelDefault, props.range) ? pctOf(props.def.kernelDefault, props.range) : null))
+const fitPct = computed(() => (inRange(props.fitValue, props.range) ? pctOf(props.fitValue, props.range) : null))
+// Where the fit bar and the default tick share a value both stay centred on
+// it (a mark never moves off its value); the tick is drawn taller and on top.
+const fitBesideDefault = computed(() => fitPct.value !== null && fitPct.value === defaultPct.value)
+
+const ticks = computed(() => scaleTicks(props.range))
+const labelledTicks = computed(() => ticks.value.major.filter((t) => t.label))
+
+/**
+ * Keeps the numbers inside the scale: one at or near the start begins at its
+ * tick, one at or near the end finishes at it, the rest are centred on theirs.
+ */
+function labelShift(p) {
+  if (p <= 8) return 'translateX(0)'
+  if (p >= 92) return 'translateX(-100%)'
+  return 'translateX(-50%)'
+}
 
 /** The zone holding the value: the first whose min..max does. */
 const currentZone = computed(() =>
@@ -167,126 +183,178 @@ const currentZone = computed(() =>
 </script>
 
 <template>
-  <div class="relative mt-3">
-    <input
-      ref="sliderEl"
-      type="range"
-      :min="range.min"
-      :max="range.max"
-      :step="def.step"
-      :aria-labelledby="labelId"
-      :aria-valuetext="valueText"
-      class="range-slider"
-      :style="{ '--range-pct': pct + '%' }"
-      @input="setValue($event.target.value)"
-      @touchstart.passive="onTouchStart"
-      @touchmove.passive="onTouchMove"
-      @touchend="onTouchEnd"
-      @touchcancel="onTouchEnd"
-    />
-    <span
-      v-if="defaultPct !== null"
-      aria-hidden="true"
-      class="pointer-events-none absolute top-[15px] h-1.5 w-0.5 -translate-x-1/2 rounded-full bg-slate-400"
-      :style="{ left: `calc(8px + (100% - 16px) * ${defaultPct / 100})` }"
-    />
-    <ul v-if="def.zones" class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+  <div class="mt-4">
+    <!-- 80px tall whatever the value, so the card holds its height mid-drag.
+         The marks sit in a box inset by half the thumb (12px), the stretch
+         the thumb's centre travels, so a mark lines up with the thumb at its
+         value. -->
+    <div class="relative h-20">
+      <div aria-hidden="true" class="pointer-events-none absolute inset-x-3 inset-y-0">
+        <span class="absolute inset-x-0 top-[33px] h-px bg-rule-strong" />
+        <span data-mark="fill" class="absolute left-0 top-[32px] h-0.5 bg-ink" :style="{ width: `${pct}%` }" />
+        <span
+          v-for="p in ticks.minor"
+          :key="`m${p}`"
+          class="absolute top-[27px] h-1.5 w-px -translate-x-1/2 bg-rule-strong"
+          :style="{ left: `${p}%` }"
+        />
+        <span
+          v-for="t in ticks.major"
+          :key="`M${t.value}`"
+          data-mark="major"
+          class="absolute top-[22px] h-[11px] w-px -translate-x-1/2 bg-ink"
+          :style="{ left: `${t.pct}%` }"
+        />
+        <span
+          v-if="fitPct !== null"
+          data-mark="fit"
+          class="absolute top-[9px] z-10 h-6 w-1 -translate-x-1/2 bg-fit"
+          :style="{ left: `${fitPct}%` }"
+        />
+        <!-- Where the default shares a value with the fit bar, the bar stays
+             whole and on top: the default becomes two short ink notches, one
+             just above and one just below it, centred on the same value and
+             never crossing it. -->
+        <template v-if="defaultPct !== null && fitBesideDefault">
+          <span
+            data-mark="default"
+            class="absolute top-[5px] h-0.5 w-2.5 -translate-x-1/2 bg-ink"
+            :style="{ left: `${defaultPct}%` }"
+          />
+          <span
+            data-mark="default-cap"
+            class="absolute top-[35px] h-0.5 w-2.5 -translate-x-1/2 bg-ink"
+            :style="{ left: `${defaultPct}%` }"
+          />
+        </template>
+        <span
+          v-else-if="defaultPct !== null"
+          data-mark="default"
+          class="absolute top-[15px] h-[18px] w-0.5 -translate-x-1/2 bg-ink"
+          :style="{ left: `${defaultPct}%` }"
+        />
+        <span
+          v-if="changed"
+          data-mark="mine"
+          class="absolute top-0 h-[9px] w-[9px] -translate-x-1/2 rounded-full bg-mine"
+          :style="{ left: `${pct}%` }"
+        />
+        <span
+          v-for="t in labelledTicks"
+          :key="`l${t.value}`"
+          class="absolute top-[58px] whitespace-nowrap font-mono text-[13px] leading-none text-quiet"
+          :style="{ left: `${t.pct}%`, transform: labelShift(t.pct) }"
+        >{{ t.label }}</span>
+      </div>
+      <!-- No :value binding: see the selfWrite note in the script. Above
+           every mark (the fit bar is z-10): the thumb is the handle. -->
+      <input
+        ref="sliderEl"
+        type="range"
+        :min="range.min"
+        :max="range.max"
+        :step="def.step"
+        :aria-labelledby="labelId"
+        :aria-valuetext="valueText"
+        class="range-slider absolute inset-x-0 top-[11px] z-20"
+        @input="setValue($event.target.value)"
+        @touchstart.passive="onTouchStart"
+        @touchmove.passive="onTouchMove"
+        @touchend="onTouchEnd"
+        @touchcancel="onTouchEnd"
+      />
+    </div>
+    <!-- Zones stay a list rather than labels under their stretch, which is
+         mostly too narrow for them (Design.md §7). -->
+    <ul v-if="def.zones" class="flex flex-wrap gap-x-[18px] gap-y-1 text-[13px]">
       <li
         v-for="z in def.zones"
         :key="z.label"
-        :class="z === currentZone ? 'font-semibold text-slate-900' : 'font-medium text-slate-500'"
+        :class="z === currentZone ? 'font-semibold text-ink' : 'text-quiet'"
       >{{ z.label }}</li>
     </ul>
   </div>
 </template>
 
 <style scoped>
-/* Custom range slider in the page's slate palette. Native `accent-color` only
- * tints the control; here we shape the track and thumb and draw a filled
- * progress portion up to --range-pct (set inline from the reactive `pct`).
- * Colours are the themed slate variables from tailwind.config.js, so the
- * slider follows dark mode like the classes around it (Design.md §7).
+/* The input is only the handle: its track is transparent over the printed
+ * scale, and its thumb is what says "drag me" (Design.md §7): a
+ * filled ink disc of 24px with a 3px paper ring on a 44px tall hit area,
+ * larger on hover and while dragged. The focus ring is the global one from
+ * main.css, around the hit area. Colours are the theme tokens, so the slider
+ * follows dark mode.
  */
 .range-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 1.25rem; /* generous hit area; visual track is thinner */
+  height: 44px;
+  margin: 0;
   background: transparent;
-  cursor: pointer;
+  cursor: grab;
   /* Let the browser own vertical panning so a downward scroll that starts on a
    * slider scrolls the page instead of being captured as a value change. Only
    * deliberate horizontal drags adjust the value. Critical on mobile, where the
    * full-width sliders otherwise swallow scroll gestures. */
   touch-action: pan-y;
 }
-.range-slider:focus {
-  outline: none;
+.range-slider:active {
+  cursor: grabbing;
 }
 
-/* Track — WebKit/Blink. Gradient gives the filled-then-empty look. */
 .range-slider::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 9999px;
-  background: linear-gradient(
-    to right,
-    rgb(var(--c-slate-900)) 0%,
-    rgb(var(--c-slate-900)) var(--range-pct, 0%),
-    rgb(var(--c-slate-200)) var(--range-pct, 0%),
-    rgb(var(--c-slate-200)) 100%
-  );
+  height: 44px;
+  background: transparent;
 }
-/* Track + progress — Firefox draws the fill for us via ::-moz-range-progress. */
 .range-slider::-moz-range-track {
-  height: 6px;
-  border-radius: 9999px;
-  background: rgb(var(--c-slate-200));
+  height: 44px;
+  background: transparent;
 }
 .range-slider::-moz-range-progress {
-  height: 6px;
-  border-radius: 9999px;
-  background: rgb(var(--c-slate-900));
+  background: transparent;
 }
 
-/* Thumb */
 .range-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 16px;
-  width: 16px;
-  margin-top: -5px; /* centre the 16px thumb on the 6px track */
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  margin-top: 10px; /* centre the thumb in the 44px track */
   border-radius: 9999px;
-  background: rgb(var(--c-slate-900));
-  border: 2px solid rgb(var(--c-white));
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px rgb(var(--c-slate-300));
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  background: rgb(var(--t-ink));
+  border: 3px solid rgb(var(--t-paper));
+  /* A 1px ink ring outside the paper one, so the thumb reads over any mark. */
+  box-shadow: 0 0 0 1px rgb(var(--t-ink));
+  transition: transform 0.12s ease;
 }
 .range-slider::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
   border-radius: 9999px;
-  background: rgb(var(--c-slate-900));
-  border: 2px solid rgb(var(--c-white));
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 1px rgb(var(--c-slate-300));
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  background: rgb(var(--t-ink));
+  border: 3px solid rgb(var(--t-paper));
+  box-shadow: 0 0 0 1px rgb(var(--t-ink));
+  transition: transform 0.12s ease;
 }
 
-.range-slider:hover::-webkit-slider-thumb {
-  transform: scale(1.15);
+/* Larger on hover and while dragged. A transform rather than a new size, so
+ * the thumb's centre, and the marks lined up with it, stay put. */
+.range-slider:hover::-webkit-slider-thumb,
+.range-slider:active::-webkit-slider-thumb {
+  transform: scale(1.25);
 }
-.range-slider:hover::-moz-range-thumb {
-  transform: scale(1.15);
-}
-.range-slider:active::-webkit-slider-thumb,
-.range-slider:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 4px rgba(15, 23, 42, 0.2);
-}
-.range-slider:active::-moz-range-thumb,
-.range-slider:focus-visible::-moz-range-thumb {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25), 0 0 0 4px rgba(15, 23, 42, 0.2);
+.range-slider:hover::-moz-range-thumb,
+.range-slider:active::-moz-range-thumb {
+  transform: scale(1.25);
 }
 
+/* One rule per engine: a selector list with a pseudo-element the browser
+ * doesn't know is dropped whole. */
 @media (prefers-reduced-motion: reduce) {
-  .range-slider::-webkit-slider-thumb,
+  .range-slider::-webkit-slider-thumb {
+    transition: none;
+  }
   .range-slider::-moz-range-thumb {
     transition: none;
   }

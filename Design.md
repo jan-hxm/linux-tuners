@@ -114,9 +114,26 @@ Chart.js loads only when a chart first renders: each tuner's chart tab component
 `defineAsyncComponent` in its `index.js`; `Filler` is needed for `fill: true`; the
 Chart.js chunk is about 176 kB raw / 62 kB gzip, and the shared entry chunk went from
 298 / 109 kB gzip to 126 / 49 kB gzip, Nov 2026), lz-string for URL state.
-Tests use Vitest + @vue/test-utils. Tests under `src/ui/` and
-`src/tuners/*/components/` run in happy-dom, as does any test that pins it with
-a `// @vitest-environment happy-dom` comment; model code runs in node.
+Tests use Vitest + @vue/test-utils. A test that needs a DOM names happy-dom
+in its own file (`// @vitest-environment happy-dom` on the first line);
+everything else runs in node. There are no environment path globs: Vitest
+matches them case-sensitively against absolute paths, so a run started from a
+lowercase drive letter (`c:\...`, as some Windows shells and editors start it)
+ran DOM tests in node; `src/testEnvironment.test.js` fails on a DOM test
+without the comment. `src/testSetup.js` puts every test on a path of its own,
+so a tuner store's debounced hash write left over from one test can't seed
+the next test's store. The axe sweep cases have a 30 s timeout, since they
+take several seconds each under a full parallel run.
+
+Type is self-hosted: Host Grotesk 400, 500 and 600 for everything a person
+reads and Fragment Mono 400 for everything the machine reads (keys, values,
+paths, the file, the `[n]` marks), as committed Latin woff2 subsets in
+`src/assets/fonts/` with their `OFL.txt` (64,760 bytes of woff2 in all),
+`font-display: swap`, and metric-matched local fallback faces in `main.css`,
+so the swap barely moves the text. There is no 700 weight. The prerendered
+pages and the 404 use the system stacks (no webfont before the app loads).
+See [§10](#rules-for-the-page-the-build-and-the-deploy) for why they are
+never loaded from a font service.
 
 ### Domain modules behind a shared store and UI
 
@@ -145,7 +162,7 @@ asserts the required fields in dev and tests. It is listed in
   metrics) take the store as an argument.
 - **Page shell:** `src/ui/TunerPage.vue` takes only the domain; the router
   renders it for each live tuner, so tuners have no `View.vue`. It renders the
-  profile form, the hero, step chain, the four steps, the graph tabs, ad slot,
+  profile form, the title block, step chain, the four steps, the graph tabs, ad slot,
   `AboutSection`, `InfoDrawer` and the mobile impact bar, whose metrics come
   from the simulation's `impactSummary`. All page copy and the About content are data in
   `src/tuners/<id>/about.js` (`PAGE`, `ABOUT`), with a small inline markup
@@ -181,7 +198,7 @@ a watcher push store changes to the DOM only when they come from outside the
 slider (preset, profile change, URL restore, the card's click-to-type edit).
 
 The track also holds still on screen while it's dragged. Its card keeps its
-height (the source line always shows, and Reset keeps its space while hidden),
+height (the origin note always shows, and "Back to X" keeps its space while hidden),
 and a change that resizes something above it (a validation message in an
 earlier card, a section's issue count wrapping its header on a phone) is undone
 by scrolling: after the DOM updates, `commit` scrolls the window by however far
@@ -237,8 +254,10 @@ the head tags client-side, and `npm run build` runs a postbuild step
 with the route's title, OG/Twitter tags, JSON-LD and canonical URL baked in,
 plus `sitemap.xml`. Crawlers that don't run JavaScript therefore see the
 correct link previews. Each sitemap `<lastmod>` is the last commit to that
-page's own sources (a tuner's `src/tuners/<id>/` folder; the landing view and
-the registry for `/`), so a deploy doesn't mark every page changed. CI checks
+page's own sources (a tuner's `src/tuners/<id>/` folder; for `/` the landing
+view, its copy in `src/ui/landing.js`, its example setting
+(`LandingSpecimen.vue`, `landingExample.js`) and the registry; for `/setup`
+`src/setup/` and the registry), so a deploy doesn't mark every page changed. CI checks
 out the full history for this; in a shallow clone the build date is used.
 
 **Static page text.** Crawlers and readers that don't run JavaScript (search
@@ -318,20 +337,35 @@ and the CMP load from a changing set of Google domains.
 The tuners answer "what should this one setting be". The guided setup answers
 "what should I set on this machine, and in what order". It has two parts:
 
-- **The landing page explains the bigger picture.** A role picker ("what is
-  this machine?") reorders the tuner cards into the setup order for that
-  role. Each card gets one line on why the tuner matters for that role. Tuners
-  that don't apply to the role move under "Optional for this machine" and are
-  not hidden. The hero lists three plain trust points (runs in the browser and
-  sends nothing, every value cites its source, the output says how to apply and
-  undo), live cards carry no status badge, and the ad sits below the tuner grid
-  so the role picker stays near the top on a phone. A "Start guided setup" button opens `/setup` with the role already
-  chosen. The page is still prerendered with every card, so crawlers and
-  no-JS visitors see the same content as before. The picked role lives in the
-  query (`/?role=database`), so Back and a shared link keep it; a value that
-  isn't a known role (`isMachineRole`) reads as no role, which shows every
-  card. `tunersForRole` in `core/machineRoles.js` does the split. The router
-  keeps the scroll position when only the query changes.
+- **The landing page explains the bigger picture.** In order: the hero
+  (headline, lead, "Pick your machine type", which jumps to the role list,
+  "Browse tuners", and one trust line) beside a live specimen setting
+  (`vm.swappiness` for a desktop with 16 GiB RAM and 8 GiB NVMe swap,
+  `LANDING_EXAMPLE` next to the swap profile, its value from
+  `deriveDefaults`, so the fit bar and the kernel-default tick sit apart);
+  the key to the three marks; "Why" (a forum thread's one number against
+  this site's answer); "What is this machine for?", a role radiogroup beside
+  the route for the picked role; and "Or open one tuner directly", a table of
+  every live tuner with the question it answers (the registry's `question`),
+  its setting count and the files it writes, then the planned tuners and the
+  ad. The route lists the tuners that matter for the role in setup order,
+  each with its `why` line, and "Usually fine to leave" names the rest
+  below it, so nothing is hidden. The copy is plain data in
+  `src/ui/landing.js`, which the static text (`static/pages.js`) reads too.
+  There is no setup button in the hero. **"Start guided setup" sits in the
+  route's header row** beside its summary ("Database: 9 tuners, in this
+  order."), sticky under the site header from `lg` up and at the bottom
+  of the screen on a phone while the roles are in view, and opens `/setup`
+  with the role. The rule behind it holds for the whole site: never place a
+  primary action below content whose length depends on data. The table's
+  setting counts and file paths come from every domain, so they load (about
+  93 kB gzip) when the table scrolls into view. The page is still
+  prerendered in full, so crawlers and no-JS visitors see the same story.
+  The picked role lives in the query (`/?role=database`), so Back and a
+  shared link keep it; a value that isn't a known role (`isMachineRole`)
+  reads as no role, which shows every tuner. `tunersForRole` in
+  `core/machineRoles.js` does the split. The router keeps the scroll
+  position when only the query changes.
 - **`/setup` walks through a whole machine.** The user enters the machine
   profile once. Then each tuner is a step, and the last step shows every file
   for the system. One step shows at a time, with a step list beside it (above
@@ -512,9 +546,17 @@ walk that feeds facts forward) and `link.js` are plain JS, tested under Node;
 per tuner.
 
 **Route.** `/setup` is an indexed page in `routes-meta.js`. Its sitemap
-sources are `src/setup/` and the registry. The landing hero's "Start guided
-setup" button opens it, with `?role=` when a role is picked, and a second
-link under the role picker does the same.
+sources are `src/setup/` and the registry. The landing route's "Start guided
+setup" button opens it, with `?role=` when a role is picked, and the site
+header's "Start setup" opens it fresh.
+
+**Page.** The steps sit on the shared step chain (`ui/StepChain.vue`, the
+same segments as the tuner page's, §7) as buttons marked
+`aria-current="step"`. A step's state is said in text with a mark in front
+("– Skipped", "× Blocked", "! 5 to check"), never by colour alone: a skipped
+step's segment is dashed, a blocked one's is `error`. Back and Next are a
+secondary and a primary button under the step, and the files step reads like
+a tuner's export.
 
 ## 6. Adding a tuner
 
@@ -553,7 +595,7 @@ must follow them, and existing UI must not regress.
   panel's `#graphs` anchor, outside its `aria-live` list so it isn't
   re-announced.
 - **Each tuner page opens with a "Do I need this?" box** (`NeedThisBox`, under
-  the hero, collapsible, open by default). It is built from the registry's
+  the title block and the step chain, collapsible, open by default). It is built from the registry's
   `setup` block: `why`, the `roles` (as `MACHINE_ROLES` labels) and
   `defaultsFine`, which every live tuner must set (registry test). Change the
   wording in the registry, never in the component.
@@ -572,51 +614,134 @@ must follow them, and existing UI must not regress.
   switches are `h-6 w-11`, and chips get `min-h-6`. Links inside running text
   are exempt; a list of links with tighter than 24 px line pitch is not.
 - **No page-level sideways scroll down to 320px.** Whatever can be wider than
-  a phone handles it itself: the header nav scrolls inside its own box (keeps
-  the current tuner in view, and fades the edge that has more links past it,
-  since its scrollbar is hidden), a profile field's quick picks are a select
+  a phone handles it itself: the header is one row (logo, Tuners
+  button, Start setup; the logo text and the current tuner's name hide on the
+  narrowest widths) and its tuner panel scrolls within the viewport, a profile field's quick picks are a select
   below `sm` instead of rows of chips, selects are capped at `max-w-full`,
   segmented controls wrap with growing segments, a card's value wraps under
   its name, and parameter names break after `.`, `_`, `-` or `/` (`<wbr>`).
   A one-column grid says `grid-cols-1` (`minmax(0, 1fr)`): an implicit `auto`
   column grows to its widest child's min-content, as the tune step's did with
   `GraphPanel`.
-- **The "Jump to" step chain shows where you are.** `useScrollSpy` marks the
-  step in view with `aria-current="location"` at every width. From `lg` up the
-  chain sticks under the site header (it's a sibling of the hero, not inside
-  it, so it can); on phones it stays put, since the impact bar already takes
-  space. The sticky offsets and anchor `scroll-mt` are built from
-  `--site-header-h` and `--step-chain-h` in `assets/main.css`, measured values
-  to update whenever either bar's height changes.
+- **The step chain shows where you are.** Steps are segments on a line
+  (`ui/StepChain.vue`, shared with `/setup`): the current one a thick `fit`
+  segment, the ones behind it `rule-strong`, the ones ahead `rule`, each
+  with its mono number and label. On a tuner page the segments are links,
+  and `useScrollSpy` marks the step in view with `aria-current="location"`
+  at every width. The site header is one row (`--site-header-h`, 61px): logo,
+  a "Tuners" disclosure button (`aria-expanded`, `aria-controls`, +/- mark),
+  the current tuner's name after a "/", Glossary (only if a `glossary` route
+  exists) and Start setup. The button opens a full-width panel of every live
+  tuner (name and registry `question`, the current one `aria-current="page"`
+  with a `fit` top rule) and an "All tuners" link. It is a disclosure, not a
+  modal: no focus trap; Escape closes it and refocuses the button, as does a
+  click outside, choosing a link or any route change. From `lg` up the chain sticks under the site header (it's
+  a sibling of the title block, not inside it, so it can); on phones it
+  stays put, since the impact bar already takes space. The sticky offsets
+  and anchor `scroll-mt` are built from `--site-header-h` and
+  `--step-chain-h` in `assets/main.css`, measured values to update whenever
+  either bar's height changes, so the tuner chain truncates its labels to
+  one line. The step labels are the profile step's own word ("Hardware" on
+  swap), Preset, Tune and Export.
+- **The settings outline keeps the reader's place** (`ui/outline/`). It
+  lists Preset, Tune and Export, under Tune each group shown and under each
+  group every card shown, by its def `title` on one line, in a
+  `<nav aria-label="Settings outline">` of nested lists. What is in view
+  (`useScrollSpy` over the group and card anchors, only while the tune step
+  is current) is a thick `fit` segment on the outline's line, as in the step
+  chain, with `aria-current="location"`. A changed setting carries the
+  `mine` dot and one with a warning or error its mark, both also said in the
+  link's name ("…, changed by you, warning"). Hidden advanced cards and a
+  collapsed group are one "+N advanced" / "+N settings" line that opens them
+  as the group's own button does and focuses the first card that appeared.
+  A pick scrolls the card's anchor (a `role="group"` wrapper with
+  `tabindex="-1"` in `ParameterPanel`, `setting-<key>`, with the sticky bars'
+  `scroll-mt`) into view, smoothly unless the reader prefers reduced motion,
+  and moves focus to it; the links never follow their hash, since the hash
+  holds the shared-link state. The list is built from the defs, the store
+  and the panel's view (`ui/useParameterView.js`, which `TunerPage` creates
+  and provides so the panel and the outline show the same cards), never from
+  a tuner id. From `xl` up it is a sticky rail left of the steps (12rem,
+  with its own padded scroll box) whose one toggle button (`aria-expanded`)
+  collapses it to a 2.5rem ruler of ticks, one link per card named by its
+  title, the one in view a thick `fit` tick and changed ones with the dot.
+  The rail starts expanded only where the settings column keeps the card's
+  40rem margin layout beside it and the graph column
+  (`railStartsExpanded`): with graphs it starts collapsed at 1280px
+  (column 43.5rem) and expanded at 1440 and 1920px (40rem, since the page's
+  measure stops growing at 86rem); without graphs it is expanded at every
+  `xl` width (62rem at 1280px). The reader's toggle lasts for the visit, in
+  memory only (no storage key). Below `xl` an "Outline" button beside the
+  step chain opens the same list in a focus-trapping drawer from the left
+  (`ui/focusTrap.js`, shared with `InfoDrawer`), which closes on a pick and
+  puts focus on the card, or on Escape and returns focus to the button.
 - **Tablists need roving tabindex *and* arrow-key handling**
   (Left/Right/Home/End), as in `GraphPanel`'s `onTabKeydown`.
 - **Modals and drawers trap focus, close on Escape, and restore focus to the
   element that opened them** (`InfoDrawer`). `aria-modal` alone doesn't trap
   focus.
+- **The page has one measure.** The header, the footer and every page that
+  fills the width (landing, tuners, setup) use `PAGE_WIDTH`
+  (`ui/layout/pageWidth.js`: 86rem with the same gutters), so their left
+  edges line up; the legal pages keep a narrower reading measure inside it.
 - **Canvas charts get `role="img"`** and a reactive plain-language
   `aria-label` summary: render them inside `ui/charts/ChartFrame.vue`, which
   requires the label. The visible legend isn't an alternative for assistive
   technology. The frame wraps the canvas in an `aria-hidden` box, since
   vue-chartjs gives the canvas an unlabelled `role="img"` of its own.
+- **One chart look, built once** (`ui/charts/chartStyle.js` and the
+  `zones`, `endLabels` and `probe` plugins in `ui/charts/plugins.js`).
+  Charts describe their series, zones and probe stops as data and never set
+  a colour, width or dash themselves. The main series is a 2.75px line in
+  its owner's tone (`fit` while it comes from the profile, `mine` once the
+  visitor changed one of its parameters, via `useSeriesTone`; `ink` with no
+  parameters) over a 10% fill; a comparison (the kernel default) is a thin
+  dashed `quiet` line; a range is a shaded band or, for danger, an `error`
+  hatch, and only a single threshold stays a dashed line. A bar that
+  carries meaning meets 3:1 on paper in both schemes: a tone too faint for
+  that (`rule`) is drawn as a `quiet` outline instead. Where the data is
+  flat for most of an axis, `focusRange` starts the axis a margin before
+  the change, and the axis title and the summary say the range shown. Only
+  horizontal `rule` hairlines; units go in the ticks and y titles are
+  dropped (the caption names the quantity); in-plot text is at most a short
+  end label per series, and the zones are named in the `ChartLegend` key.
+  Everything else is in the probe's tooltip: hover, a tap or the arrow keys
+  (the frame is focusable; Home/End, PageUp/PageDown, Escape) rest a
+  crosshair with a dot on each series, or an outline on a bar, and a
+  compact square tooltip (title, one value line, a short zone note only
+  when it adds something) floats over the plot in the top corner farthest
+  from the crosshair, and moves (bottom corner, clear of the crosshair, or
+  below the frame) so it never covers the probed point, a series' dot or
+  the probed bar (`placeTip`). A chart's height is
+  `clamp(11rem, 30vh, 15rem)` (bars 7rem), and the sticky graph column is
+  never taller than the viewport below the sticky bars: past that it
+  scrolls on its own and only then becomes a focusable, named region. Keyboard moves are
+  announced through a polite live region beside the image, after 300 ms.
+  Chart.js's own tooltip, hover events and animation are off.
 - **No global keyboard shortcuts that clash with the browser.** For example,
   the old `Ctrl+Shift+C` copy binding overrode devtools.
-- **Type size and contrast floors:** meaningful text is at least `text-xs`
-  (12px) and at least `text-slate-500` on white, or on `slate-50`; on a
-  `bg-slate-100` chip use `text-slate-600` (slate-500 there is 4.3:1).
-  `text-[10px]`/`text-[11px]` and `text-slate-400` are only for decorative
-  chrome (status pills, hero eyebrows in the hero's slate-900 corner).
-  Text on the hero's lighter end (slate-700) is `text-slate-300` or lighter:
-  slate-400 there is 4.1:1. `theme.test.js` pins the hero and ring pairs.
+- **Type size and contrast floors.** Nothing meaningful is smaller than
+  13px (`text-[13px]`, the captions, `[n]` marks and chart ticks); body text
+  is 15 to 19px, and no headline is bolder than 500. Text uses only the text
+  tokens (`ink`, `ink-2`, `quiet`, `fit-text`, `mine-text`, `error`), each
+  at least 4.5:1 on every surface token (`paper`, `paper-hover`, `fit-tint`,
+  `mine-tint`) in both schemes; primary buttons are `paper` on `ink` (hover
+  `ink-2`). Marks (the kernel-default tick, the fit bar, the "yours" dot,
+  the error frame, the focus ring) use `ink`, `fit`, `mine` and `error`, at
+  least 3:1 on every surface. `rule` and `rule-strong` are hairlines beside a
+  text label, never the only carrier of meaning (dark `rule-strong` is
+  2.2:1 on paper). `theme.test.js` measures every pair, so a shade change
+  that breaks one fails the suite. A disabled control may fall below the
+  floor (`opacity-50`), as WCAG allows.
 - **Focus rings stay visible on every surface.** `main.css` gives every
-  control a 2px `slate-900` outline 2px outside it (it follows the scheme).
-  Two classes adjust it for their subtree: `surface-inverse` on surfaces that
-  are dark by design (the heroes, the step chain, the undo toast) turns the
-  ring `white`, which would otherwise vanish into them; `focus-inset` on a box
-  that clips its children (segmented controls, the header's scrolling nav)
-  draws the ring 2px inside the control in its text colour, which contrasts
-  with its fill whether selected or not. A box that scrolls on its own (a
-  `pre` with `overflow-x-auto`) gets `tabindex="0"` and an `aria-label`, so
-  keyboards can scroll it.
+  control a 2px `ink` outline 2px outside it, square, following the scheme.
+  There are no dark-by-design surfaces any more, so there is no per-surface
+  override: a control filled with `ink` (a primary button, the selected
+  segment) shows the ring past a 2px `paper` gap. A box that clips its
+  children leaves room for the ring instead (the header panel scrolls, so its links sit inside padding). A box that scrolls on its own
+  (a `pre` with `overflow-x-auto`, the landing table) gets `tabindex="0"`
+  and an `aria-label`, so keyboards can scroll it. Don't restyle the ring
+  per component.
 - **State changes are announced, not only drawn.** The undo toast's
   `aria-live="polite"` region reads "Applied the X preset." (or the reset or
   machine-profile message) after a snap, and preset buttons carry
@@ -628,39 +753,63 @@ must follow them, and existing UI must not regress.
   every route, every setup step, and each tuner with every disclosure open, a
   preset applied, each graph tab and the drawer, and fails on any serious or
   critical violation. happy-dom has no layout, so rules that need it (colour
-  contrast, label-in-name, scrollable regions) are skipped there. The first
-  sweep (November 2026) also ran axe in headless Edge over the built site
-  in both schemes at 1280 and 375 px, with every layer open, and checked each
-  focus ring's contrast and clipping; it found and fixed the invisible ring on
-  the dark hero and toast, rings clipped by segmented controls and the header
-  nav, the value button's name not containing its value (2.5.3), the
-  unlabelled chart canvases, low-contrast `.dev`, help-code, "Last updated",
-  ad-label and hero text, a scrollable `pre` keyboards couldn't reach, and the
-  drawer's `aside`/`header` landmarks. Rerun that browser pass after a visual
-  change; the happy-dom test only guards structure.
+  contrast, label-in-name, scrollable regions) are skipped there. Rerun the
+  browser pass after a visual change; the happy-dom test only guards
+  structure. The browser pass runs axe in headless Edge over the built site
+  (`vite preview`) in both schemes at 1280 and 375 px: every route and the
+  404, every setup step, each tuner with every layer open (the show-all
+  switch, every collapsed section, Learn more, every margin note's "more"
+  and `[n]` toggle, a preset preview) and with the drawer open. It also
+  tabs through every page and checks each focus ring: present, 3:1 against
+  what is behind it, and not clipped by a scrolling or clipping box. The
+  first pass (November 2026) found the invisible ring on the dark hero and
+  toast, rings clipped by segmented controls and the header nav, the value
+  button's name not containing its value (2.5.3), unlabelled chart
+  canvases, several low-contrast texts, a scrollable `pre` keyboards
+  couldn't reach, and the drawer's landmarks. The pass after the redesign
+  (November 2026: 132 states, about 6,500 focus stops) found a value
+  button whose name didn't contain its bracketed second reading (2.5.3,
+  fixed: the name now reads the value as shown), header links whose ring
+  ran under the nav's edge fade at 375 px (fixed, above) and a landing
+  heading that skipped a level; after the fixes it reports no serious or
+  critical violation and no focus problem in either scheme or width.
 - **Dark mode follows the system** (`prefers-color-scheme`; there is no
-  toggle). Components keep their light-mode classes and use no `dark:`
-  variants: `tailwind.config.js` points `white` and the slate, amber, red,
-  emerald, green, sky and violet families at CSS variables, and under the dark
-  scheme each takes the colour `ui/theme.js` maps it to. Slate is mapped for
-  surfaces and text (white cards turn slate-900 on a slate-950 page, and
-  `text-slate-500` turns slate-400, so the contrast floor above holds; see
-  `theme.test.js`). The tints mirror (`-100` to `-900`), so a `bg-slate-800
-  text-white` button turns light with dark text. A colour outside those
-  families doesn't follow the scheme, so use them. Surfaces that are dark by
-  design (the hero and step chain, the drawer backdrop, the amber "customised"
-  badge) carry `light-palette`, which brings the light values back for that
-  subtree. Scoped CSS uses the variables too (`rgb(var(--c-slate-900))`, as the
-  range slider does), and text fields and selects get the card colour from a
-  base rule in `main.css`.
-- **One accent colour, sky.** Primary buttons (copy, a profile's apply) and
-  selected states (the active preset, segmented and pick options, the current
-  page in the header nav, whose first entry "All tuners" is the landing page's,
-  the open graph tab) use `bg-sky-700 text-white`, hover
-  `bg-sky-800`, or a `border-sky-600` underline. Text links are `text-sky-700`
-  and the charts' info tone is sky-500. Fills use 700 because white on sky-500
-  is under 3:1; `theme.test.js` checks the fill contrast in both schemes.
-  Secondary buttons stay outlined slate.
+  toggle). Light and dark are designed equally. The colour tokens in
+  `ui/theme.js` are `[light, dark]` pairs; `tailwind.config.js` writes them
+  to CSS variables (`--t-<name>`, light on `:root`, dark under the media
+  query) and offers them as the **only** Tailwind colours (plus
+  `transparent`, `current`, `inherit` and the drawer's `black` scrim), so
+  components use no `dark:` variants and can't reach for another palette.
+  Scoped CSS uses the variables too (`rgb(var(--t-ink))`, as the range
+  slider does), text fields and selects get `paper` from a zero-specificity
+  base rule in `main.css` (a `bg-*` class wins), and the browser chrome gets
+  one `theme-color` per scheme. The chart palette (`ui/charts/palette.js`)
+  reads the same tokens and swaps sets with the scheme. `theme.test.js`
+  fails if a source uses one of Tailwind's colour families, white as a
+  colour class, the removed `surface-inverse`, `focus-inset` or
+  `light-palette` hooks, the old `--c-*` variables or a legacy chart tone.
+- **Ink and paper, then three marks.** The page is ink on paper, divided
+  by hairlines (`rule`; a section or group starts with an `ink` rule), with
+  no cards, shadows, gradients or rounded corners (the round shapes are the
+  "yours" dot, radio dots and the slider thumb). Primary buttons are an
+  `ink` fill with `paper` text, square, at least 44px tall (Copy at least
+  52px); secondary buttons a 1px `rule-strong` border; text buttons are
+  underlined 3px below. Selected states (the active preset, a picked role or
+  option) use `fit-tint` with a `fit` mark, a selected segment the `ink`
+  fill, the current tuner in the header an `ink` underline (and, in the Tuners panel, a `fit` top rule). Colour
+  otherwise means one thing each: `fit` (verdigris) marks what fits the
+  visitor's machine, `mine` (ochre) appears only once the visitor changes
+  something, and `error` is for blocking issues only. A warning (legal but
+  odd) is `mine-text` with a warning sign; an info note is `ink-2`. Every
+  place that shows where a value comes from (the slider, the card, the
+  margin, the file preview, the graphs, the landing key) uses the same three
+  marks, which differ in shape as well as hue: the kernel (or systemd)
+  default is a thin `ink` tick, "fits your machine" a heavier `fit` bar,
+  "changed by you" a round `mine` dot. Charts name a tone, never a hex:
+  `ink` for the main series, `quiet` and `rule` for context, `fit` for what
+  comes from the profile, `mine` for the visitor's value, `error` for
+  danger; a line chart's key is `ui/charts/ChartLegend.vue`, drawn from the
+  same palette.
 - **Segmented or radio-style button groups** use `role="radiogroup"` plus
   `role="radio"` and `aria-checked` on each option.
 - **Profile forms auto-collapse after the first apply**, or start collapsed
@@ -669,20 +818,37 @@ must follow them, and existing UI must not regress.
   with an Apply button, so nobody has to scroll back up.
 - **Copy and share feedback** changes the button state and announces the
   result through an `aria-live="polite"` region.
-- **Three layers per parameter.** The card, always visible, shows the def's
-  plain-language `title` above its sysctl name, the value, the one-line
-  `shortDesc` and the zones. The control is labelled by the title and the name
-  together. "Learn more" on the card is the beginner layer: `longDesc` in its
-  labelled parts (`ui/descParts.js`: "What it does", always there, then "When
-  to change it" and "Watch out" where the def has them), the rule of thumb and
-  the context note. The drawer is the pro reference and doesn't repeat
-  `longDesc`: the accepted range and the kernel default with its version note,
-  a "Try it now" command that sets the current value until the next reboot
-  (the domain's `tryCommand`: `sudo sysctl -w`, or `echo | sudo tee` for a
-  sysfs file; systemd and block I/O have none, since their settings are
-  directives and udev rules), the context note, the formula with live values,
-  defaults by workload (named by the profile's option labels), and the sources. The contract suite checks every def's
-  title and parts.
+- **Three layers per parameter: the column, the margin and the drawer.**
+  A setting sits in the main column between hairlines: the def's
+  plain-language `title` above its sysctl name, the value (large, mono,
+  underlined in `fit` or `mine`), the control and the one-line `shortDesc`.
+  The control is labelled by the title and the name together. Its reasons
+  sit beside it in a **margin** of numbered notes (`[1]`, `[2]`, ...), built
+  from today's data in the order of the layers: the `longDesc` parts
+  (`ui/descParts.js`: "What it does", then "When to change it" and "Watch
+  out" where the def has them), the rule of thumb, the context note, and
+  last the origin note (below). Each note shows its **first sentence**
+  (`ui/firstSentence.js`) with a "more" button (`aria-expanded`) that opens
+  the rest in place; the notes don't depend on the value, so dragging never
+  changes their height. The margin holds **at most three notes**: the first
+  two and the origin note. The card is a size container and lays itself out
+  by its own width, never by tuner: from 40rem the margin sits beside the
+  column, 16.25rem wide and growing towards **30rem** while the column keeps
+  at least 34rem; a card narrower than that clamp's floor (52.75rem, beside
+  the graph column or on a phone) holds **two notes**, the first and the
+  origin note; below 40rem the notes become `[n]` toggle buttons under the
+  column that open each note in place (the Tufte pattern). The margin's last
+  line holds "Learn more" (the remaining notes, in place), the docs link and
+  "Full reference", which opens the **drawer**: the pro reference, which
+  doesn't repeat `longDesc`: the accepted range and the kernel default with
+  its version note, a "Try it now" command that sets the current value
+  until the next reboot (the domain's `tryCommand`: `sudo sysctl -w`, or
+  `echo | sudo tee` for a sysfs file; systemd and block I/O have none, since
+  their settings are directives and udev rules), the context note, the
+  formula with live values, defaults by workload (named by the profile's
+  option labels), and the sources. The contract suite checks every def's
+  title and parts. Reactive notes that change with the value are planned
+  separately (TODO.md).
 - **Essential and advanced parameters.** Every def has a `tier`. Each
   section of `ParameterPanel` shows its essential cards and a "Show N
   advanced" button (`aria-expanded`) for the rest. An advanced card is always
@@ -714,31 +880,36 @@ must follow them, and existing UI must not regress.
   with no card is hidden; a polite live line counts the cards
   shown, and when none is left an empty state says why, with a "Clear
   filter" button that returns focus to the field. "Compact" drops each
-  card's descriptions, source line, range and Learn more, and the section
+  card's description, margin, range and Learn more, and the section
   summaries (the name opens the
   drawer, which keeps the reference) and puts name, value and control on one
   row from `sm` up; on a phone the control wraps under the name and value.
-  Issues and Reset stay. The filter text never enters the shared link, and
+  Issues and "Back to X" stay. The filter text never enters the shared link, and
   only "Compact" is remembered ([§5 Viewer
   preferences](#viewer-preferences)). No keyboard shortcut opens the filter.
-- **Where a value comes from.** Every card names its default in a line under
-  its description ("Kernel default 60"), and adds the profile's when it
-  differs ("Kernel default 60 · for your profile 10"; the domain's `defaultLabel` names whose
-  default it is, "systemd default" for systemd, and the drawer uses it too),
-  with the def's `kernelDefaultNote` under it, since many defaults scale with
-  RAM or differ by distribution and the number alone would claim too much.
-  The line always shows, so the card doesn't change height mid-drag. When
-  the value differs from the profile's default (the store's
-  `profileDefaults`), a "Reset" button under the value sets it back (it is
-  `invisible` otherwise, keeping its space and leaving the tab order); it is an ordinary edit, so it needs no undo. A slider marks
-  the kernel default with a tick under its track when it is inside the range,
-  and emphasises the zone that holds the value: `def.zones` are
-  `{ label, min, max }`, and a zone that depends on another parameter
-  ("below MemoryMax") has no bounds. The zone labels stay a list under the
-  track rather than sitting under their stretch: most stretches are too
-  narrow for their label (swappiness 0–10 is 5 % of the track, a weight's
-  1–50 under 1 %). The old violet "workload" badge said only that the
-  profile moved the default, which the line now says with numbers.
+- **Where a value comes from.** The origin note, always the margin's last,
+  says it in words: "Kernel default 60, which also fits your machine.",
+  "Kernel default 60. Fits your machine: 10." or, once the value moved, "You
+  moved this from 10 to 30. Kernel default 60." in `mine-text` (the domain's
+  `defaultLabel` names whose default it is, "systemd default" for systemd,
+  and the drawer uses it too), with the def's `kernelDefaultNote` under it,
+  since many defaults scale with RAM or differ by distribution and the
+  number alone would claim too much. Only its words change, so the card
+  keeps its height mid-drag. When the value differs from the profile's
+  default (the store's `profileDefaults`), a **"Back to X"** button beside
+  the value sets it back, X being the profile's value (it is `invisible`
+  otherwise, keeping its space and leaving the tab order); it is an ordinary
+  edit, so it needs no undo. A slider is a printed scale with major and
+  minor ticks and numbers, a 24px `ink` thumb with a `paper` ring (44px hit
+  area, `grab` cursor) and an `ink` fill up to it, and carries the three
+  marks inside the range: the default tick, the fit bar and, once the value
+  differs, the "yours" dot above the scale, which never replaces the thumb.
+  Each group's header shows the marks' key (`MarkKey`). `def.zones` are
+  `{ label, min, max }` and the zone holding the value is emphasised; a zone
+  that depends on another parameter ("below MemoryMax") has no bounds. The
+  zone labels stay a list under the track rather than under their stretch:
+  most stretches are too narrow for their label (swappiness 0-10 is 5 % of
+  the track, a weight's 1-50 under 1 %).
 - **Export steps.** Above the output, `InstallSteps` numbers what to do
   with it: save the file (with `mkdir -p` for the systemd drop-in folders,
   which may not exist yet), apply it now, check one value, and, set apart,
@@ -770,6 +941,14 @@ must follow them, and existing UI must not regress.
   generated config. Use a comma, colon, semicolon or parentheses instead. En
   dashes in numeric ranges (`0–200`) are fine. Code comments and docs are
   exempt.
+- **A quiet voice.** No exclamation marks, no jokes in controls, no emoji,
+  and no icons as ornament. Warnings carry a sign (`!` or the warning icon)
+  as well as their colour, and a step or note state is said in words ("2
+  changed by you", "Skipped", "5 to check"), never by colour alone. The
+  footer's author note is the maintainer's approved text, signed `jan-hxm`,
+  and is not rewritten; the colophon's testing claim says only what
+  `vm/README.md` covers, kept as data in `ui/layout/testedOn.js`, which
+  `testedOn.test.js` checks against `vm/lib/images.mjs`.
 - **Glossary terms.** A term that recurs across tuners (page cache,
   anonymous memory, reclaim, watermark, kswapd, dirty page, writeback, OOM
   killer, cgroup, namespace, eBPF, conntrack, file descriptor, THP, huge page,
@@ -781,7 +960,7 @@ must follow them, and existing UI must not regress.
   under the text; a second press or Escape hides it, and it is never a
   `title` tooltip. Mark a term at its first appearance in each card's
   `longDesc` (or About block), not every occurrence, and not where the card
-  is itself about that term. Don't mark terms in the hero intro, profile help
+  is itself about that term. Don't mark terms in the tuner intro, profile help
   or anything else inside a label or button. Definitions are plain text with
   no markup. The contract suite fails on an id the glossary doesn't have, and
   `glossary.test.js` on an entry no copy uses.
@@ -901,7 +1080,7 @@ so that a new variant is an addition rather than an edit to shared code.
   - `format`: the emitted text, which throws on a value of the wrong shape.
     The card's display text stays the tuner's `formatValue`.
   - `equals`: used by `differingKeys` for the preset diff, the "customised"
-    flag and the card's source line and Reset.
+    flag and the card's origin note and "Back to X".
 
   Serialization, the store, the preset logic and the config writers call the
   type and never assume a number. This keeps the
@@ -938,7 +1117,7 @@ so that a new variant is an addition rather than an edit to shared code.
   list can't express uses the `profile` slot of `TunerPage`; Block I/O
   avoided needing one by making a profile one kind of disk.
 - **Page shell** (`ui/TunerPage.vue`). Renders the whole page from the
-  domain alone: profile form, hero, step chain, the four steps, graph tabs, ad
+  domain alone: profile form, title block, step chain, the four steps, graph tabs, ad
   slot, about section, info drawer, and the mobile impact bar with its spacer.
   It has a `profile` slot for a profile the field list can't express. This
   keeps the [§7](#7-uiux-and-accessibility-conventions) guardrails in one
@@ -1020,9 +1199,14 @@ so that a new variant is an addition rather than an edit to shared code.
 
 - `id`
 - `status`: `live` or `planned`
-- landing-card text (`title`, `blurb`, `keys`)
-- for live entries: `path` (`/<id>`), `navLabel`, `route` metadata and the
-  `setup` block ([§5 Guided setup](#guided-setup))
+- `title`, plus `blurb` and `keys`, which the static page text and
+  `llms.txt` print for each tuner
+- for live entries: `path` (`/<id>`), `navLabel`, `route` metadata, the
+  `setup` block ([§5 Guided setup](#guided-setup)) and `question`, the one
+  question the tuner answers ("Does it swap too early, or freeze when memory
+  runs out?"), which leads the landing table's row. The wording is approved
+  by the maintainer; `registry.test.js` checks every live entry has one,
+  ending with "?" and without an em dash. Planned entries have none.
 
 Array order is the landing, nav and guided-setup order. It must stay plain data with no Vue
 or `@/` imports, because the postbuild script reads it under Node. The router,
@@ -1030,7 +1214,7 @@ or `@/` imports, because the postbuild script reads it under Node. The router,
 from it. `registry.test.js` checks the shape and that the live ids match
 `TUNER_DOMAINS` and `TUNER_VIEWS`.
 
-A `planned` entry renders only a "Coming soon" card and gets no route. That
+A `planned` entry is only named on the landing page ("Coming next") and gets no route. That
 makes the [no-thin-pages rule](#6-adding-a-tuner) mechanical rather than
 something to remember. The lazy `import()` of each live tuner's domain module
 stays in `router.js` (`TUNER_DOMAIN_LOADERS`, keyed by id), next to the
@@ -1292,6 +1476,17 @@ These hold for every tuner and every output writer (§9 `core/output`):
   restores the hash as strictly as any shared link.
 - No new network request, cookie, storage key or third-party origin (script,
   style, font, frame) without a Design.md decision and a privacy policy update.
+- **Fonts are self-hosted, never loaded from a font service.** Google Fonts
+  (or any font CDN) would be a third-party origin that sees every visitor's
+  IP address, which needs a privacy policy change (a German court held
+  embedding Google Fonts without consent to breach the GDPR, LG München I,
+  2022). The redesign's typefaces, Host
+  Grotesk (400, 500, 600) and Fragment Mono (400), both under the SIL Open
+  Font License, are committed as Latin woff2 subsets in `src/assets/fonts/`
+  with their `OFL.txt` and served from this origin: 64,760 bytes of woff2
+  in all (Host Grotesk 13,600 + 13,676 + 13,632, Fragment Mono 23,852), no
+  npm font package. `theme.test.js` fails if `main.css` names a font origin
+  or a face without `font-display: swap`.
 - `public/_headers` only gets stricter. The missing `script-src` CSP is the
   one accepted trade-off (§5 Hosting and deploy).
 - New dependencies need a reason a few lines of our own code can't cover.

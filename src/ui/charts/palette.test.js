@@ -3,9 +3,8 @@ import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import colors from 'tailwindcss/colors.js'
-import { PALETTE, LIGHT, DARK, tone } from './palette.js'
-import { darkColour } from '../theme.js'
+import { PALETTE, LIGHT, DARK, tone, tint, textTone } from './palette.js'
+import { TOKENS } from '../theme.js'
 
 const SRC = fileURLToPath(new URL('../..', import.meta.url))
 const COLOUR_LITERAL = /#[0-9a-f]{3,8}\b|rgba?\(/i
@@ -27,19 +26,32 @@ function chartSources() {
 
 describe('palette', () => {
   it('resolves known tones and rejects unknown ones', () => {
-    expect(tone('danger')).toBe(PALETTE.danger)
+    expect(tone('error')).toBe(PALETTE.error)
     expect(() => tone('purple')).toThrow(/Unknown chart tone/)
   })
 
-  // The Tailwind colour each tone is, so legends styled with Tailwind classes match.
-  const SOURCES = { ink: ['slate', 900], muted: ['slate', 500], faint: ['slate', 300], ok: ['green', 600], info: ['sky', 500], warn: ['amber', 600], danger: ['red', 600] }
+  // The token each design tone is, so legends styled with token classes match.
+  const TOKEN_SOURCES = {
+    ink: 'ink', quiet: 'quiet', rule: 'rule', fit: 'fit', mine: 'mine', error: 'error', text: 'quiet', grid: 'rule',
+    paper: 'paper', inkText: 'ink', ink2Text: 'ink-2', fitText: 'fit-text', mineText: 'mine-text', errorText: 'error',
+  }
 
-  it('uses the Tailwind colours, mapped like the classes in dark mode', () => {
-    for (const [name, [family, shade]] of Object.entries(SOURCES)) {
-      expect(LIGHT[name], name).toBe(colors[family][shade])
-      const dark = darkColour(family, shade)
-      expect(DARK[name], name).toBe(dark === 'white' ? colors.white : colors[dark[0]][dark[1]])
+  it('takes the design tones from the semantic tokens in both schemes', () => {
+    for (const [name, token] of Object.entries(TOKEN_SOURCES)) {
+      expect(LIGHT[name], name).toBe(TOKENS[token][0])
+      expect(DARK[name], name).toBe(TOKENS[token][1])
     }
+  })
+
+  it('derives soft fills and text tones from the tones', () => {
+    expect(tint('ink', 0.1)).toBe('rgba(22, 22, 22, 0.1)')
+    expect(textTone('fit')).toBe(PALETTE.fitText)
+    expect(textTone('mine')).toBe(PALETTE.mineText)
+    expect(textTone('quiet')).toBe(PALETTE.ink2Text)
+  })
+
+  it('offers no tone outside the tokens', () => {
+    expect(Object.keys(LIGHT).sort()).toEqual(Object.keys(TOKEN_SOURCES).sort())
     expect(Object.keys(DARK).sort()).toEqual(Object.keys(LIGHT).sort())
   })
 

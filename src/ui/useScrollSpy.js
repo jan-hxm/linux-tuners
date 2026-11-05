@@ -1,4 +1,4 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 /**
  * Which of the given page sections the reader is in, for highlighting an
@@ -6,18 +6,23 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
  * fraction of the way down the viewport; above the first section the first
  * one counts, and past the bottom of the last one none does.
  *
- * @param {string[]} ids section element ids, in page order
+ * The ids may be a getter, for sections that come and go (the settings the
+ * outline lists): the spy measures again after the list changes and the DOM
+ * has updated.
+ *
+ * @param {string[] | (() => string[])} ids section element ids, in page order
  * @param {{ line?: number }} [options] line as a fraction of the viewport height
  * @returns {import('vue').Ref<string|null>}
  */
 export function useScrollSpy(ids, { line = 0.3 } = {}) {
-  const active = ref(ids[0] ?? null)
+  const list = typeof ids === 'function' ? ids : () => ids
+  const active = ref(list()[0] ?? null)
   let frame = 0
 
   function update() {
     frame = 0
     const y = window.innerHeight * line
-    const sections = ids.map((id) => document.getElementById(id)).filter(Boolean)
+    const sections = list().map((id) => document.getElementById(id)).filter(Boolean)
     if (!sections.length) return
     let current = sections[0]
     for (const el of sections) {
@@ -30,6 +35,8 @@ export function useScrollSpy(ids, { line = 0.3 } = {}) {
   function schedule() {
     if (!frame) frame = requestAnimationFrame(update)
   }
+
+  if (typeof ids === 'function') watch(list, schedule, { flush: 'post' })
 
   onMounted(() => {
     window.addEventListener('scroll', schedule, { passive: true })

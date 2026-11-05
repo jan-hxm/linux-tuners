@@ -8,6 +8,8 @@ const props = defineProps({
   range: { type: Object, default: null },
   // Part of the shared control contract; unused here.
   valueText: { type: String, default: '' },
+  fitValue: { type: Number, default: null },
+  changed: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update'])
 
@@ -21,13 +23,15 @@ const segments = computed(() =>
 </script>
 
 <template>
-  <!-- Wraps onto more rows when the segments are wider than the card (phones);
-       the 1px gaps over the slate background draw the dividers, and the
-       segments grow so a short row leaves no gap. -->
+  <!-- Square and hairline: the 1px gaps over the rule-strong background draw
+       the dividers. Wraps onto more rows when the segments are wider than the
+       card (phones), and the segments grow so a short row leaves no gap.
+       Nothing clips, so the focused segment lifts above its neighbours and
+       keeps the global focus ring outside it. -->
   <div
     role="radiogroup"
     :aria-labelledby="labelId"
-    class="focus-inset mt-3 flex w-fit max-w-full flex-wrap gap-px overflow-hidden rounded border border-slate-300 bg-slate-300"
+    class="mt-4 flex w-fit max-w-full flex-wrap gap-px border border-rule-strong bg-rule-strong"
   >
     <button
       v-for="seg in segments"
@@ -35,8 +39,8 @@ const segments = computed(() =>
       type="button"
       role="radio"
       :aria-checked="value === seg.value"
-      class="flex-auto px-3 py-1 text-xs"
-      :class="value === seg.value ? 'bg-sky-700 text-white' : 'bg-white hover:bg-slate-50'"
+      class="min-h-11 flex-auto px-3.5 text-sm focus-visible:relative focus-visible:z-10"
+      :class="value === seg.value ? 'bg-ink font-medium text-paper' : 'bg-paper text-ink hover:bg-paper-hover'"
       @click="emit('update', seg.value)"
     >
       {{ seg.label }}

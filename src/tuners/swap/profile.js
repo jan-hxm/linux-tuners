@@ -127,3 +127,22 @@ export const PROFILE = {
 
 /** Default hardware spec used before the user submits the form. */
 export const DEFAULT_HARDWARE = /** @type {HardwareSpec} */ (profileDefaults(PROFILE.fields))
+
+/**
+ * The landing page's live specimen (Design.md §5 "Guided setup"): one setting,
+ * shown for an example machine, a desktop with 16 GiB RAM and 8 GiB NVMe
+ * swap, the other fields at their defaults. A desktop puts the value that
+ * fits (deriveDefaults) visibly apart from the kernel default, where
+ * DEFAULT_HARDWARE's general server lands on it. Plain data: the landing page
+ * reads it and never writes it to a store or the URL.
+ */
+export const LANDING_EXAMPLE = Object.freeze({
+  key: 'swappiness',
+  hardware: /** @type {HardwareSpec} */ (Object.freeze({
+    ...DEFAULT_HARDWARE,
+    ramGiB: 16,
+    swapGiB: 8,
+    swapDevice: 'nvme-ssd',
+    workload: 'desktop',
+  })),
+})

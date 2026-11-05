@@ -16,25 +16,25 @@ import { RouterLink } from 'vue-router'
 </script>
 
 <template>
-  <section class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
+  <section class="mx-auto max-w-[70ch] space-y-8 px-4 py-8 font-sans sm:px-6 sm:py-12">
     <header>
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Privacy policy</h1>
-      <p class="mt-1 text-xs text-slate-500">
+      <h1 class="text-3xl font-semibold tracking-tight text-ink">Privacy policy</h1>
+      <p class="mt-2 text-sm text-quiet">
         Information on the processing of personal data per Art. 13 GDPR
       </p>
-      <p class="mt-1 text-xs text-slate-500">Last updated: November 2026</p>
+      <p class="mt-2 text-sm text-quiet">Last updated: November 2026</p>
     </header>
 
-    <section class="space-y-2 text-sm leading-relaxed text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">1. Controller</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-sm font-semibold uppercase tracking-wide text-quiet">1. Controller</h2>
       <p>
         The data controller within the meaning of the GDPR is the person named in the
-        <RouterLink to="/imprint" class="text-sky-700 underline">Imprint</RouterLink>.
+        <RouterLink to="/imprint" class="text-ink underline underline-offset-[3px]">Imprint</RouterLink>.
       </p>
     </section>
 
-    <section class="space-y-2 text-sm leading-relaxed text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">2. Hosting and provision of the website</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-sm font-semibold uppercase tracking-wide text-quiet">2. Hosting and provision of the website</h2>
       <p>
         This website is a purely static single-page application. All tuner configuration happens in the
         browser; no personal data entered by users is processed, stored, or transmitted to third parties
@@ -47,7 +47,7 @@ import { RouterLink } from 'vue-router'
         attacks (DDoS protection, bot detection).
       </p>
       <p><strong>Data processed:</strong> When the page is accessed, Cloudflare processes the following technically required data:</p>
-      <ul class="list-disc space-y-1 pl-5">
+      <ul class="list-disc space-y-1 pl-5 marker:text-quiet">
         <li>IP address</li>
         <li>Date and time of the request</li>
         <li>Requested URL</li>
@@ -68,18 +68,18 @@ import { RouterLink } from 'vue-router'
         <strong>Retention:</strong> Cloudflare typically deletes access logs within a few days (usually
         within seven days), unless longer retention is necessary to investigate security incidents.
       </p>
-      <p class="text-xs leading-relaxed text-slate-600">
+      <p class="text-[15px] leading-relaxed text-quiet">
         Further information:
-        <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener" class="text-sky-700 underline">Cloudflare privacy policy</a>
+        <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener" class="text-ink underline underline-offset-[3px]">Cloudflare privacy policy</a>
         ·
-        <a href="https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" target="_blank" rel="noopener" class="text-sky-700 underline">Cloudflare cookies</a>
+        <a href="https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" target="_blank" rel="noopener" class="text-ink underline underline-offset-[3px]">Cloudflare cookies</a>
         ·
-        <a href="https://www.cloudflare.com/cloudflare-customer-dpa/" target="_blank" rel="noopener" class="text-sky-700 underline">Data Processing Addendum</a>
+        <a href="https://www.cloudflare.com/cloudflare-customer-dpa/" target="_blank" rel="noopener" class="text-ink underline underline-offset-[3px]">Data Processing Addendum</a>
       </p>
     </section>
 
-    <section class="space-y-2 text-sm leading-relaxed text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">3. URL hash, a display preference and security cookies</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-sm font-semibold uppercase tracking-wide text-quiet">3. URL hash, a display preference and security cookies</h2>
       <p>
         The application optionally encodes the current tuner state in the URL hash (fragment), so you can
         share or bookmark configurations. The hash is processed exclusively client-side and is never
@@ -88,10 +88,10 @@ import { RouterLink } from 'vue-router'
       <p>
         <strong>Display preferences:</strong> If you turn on <em>Show all parameters</em> on a tuner page,
         your browser's local storage keeps the entry
-        <code class="rounded bg-slate-100 px-1 font-mono text-[12px]">linux-tuners:show-all-parameters</code>
-        with the value <code class="rounded bg-slate-100 px-1 font-mono text-[12px]">1</code>, so the switch
+        <code class="bg-paper-hover px-1 font-mono text-[14px]">linux-tuners:show-all-parameters</code>
+        with the value <code class="bg-paper-hover px-1 font-mono text-[14px]">1</code>, so the switch
         stays on next time. The <em>Compact</em> switch does the same with
-        <code class="rounded bg-slate-100 px-1 font-mono text-[12px]">linux-tuners:compact-parameters</code>.
+        <code class="bg-paper-hover px-1 font-mono text-[14px]">linux-tuners:compact-parameters</code>.
         Turning a switch off removes its entry. They are read only by this site's code in your
         browser, are never transmitted, and contain no personal data. Storing them is strictly necessary to
         provide the setting you asked for and is permitted without consent per § 25 (2) (2) TTDSG.
@@ -99,21 +99,21 @@ import { RouterLink } from 'vue-router'
       <p>
         <strong>Cloudflare security cookies:</strong> The hosting provider (see section 2) may set
         technically required cookies to detect automated requests, in particular
-        <code class="rounded bg-slate-100 px-1 font-mono text-[12px]">__cf_bm</code>
+        <code class="bg-paper-hover px-1 font-mono text-[14px]">__cf_bm</code>
         (Cloudflare Bot Management, ~30-minute lifetime) and optionally
-        <code class="rounded bg-slate-100 px-1 font-mono text-[12px]">cf_clearance</code>
+        <code class="bg-paper-hover px-1 font-mono text-[14px]">cf_clearance</code>
         (after security checks). These cookies serve solely to ensure secure operation of the site and are
         permitted without consent per § 25 (2) (2) TTDSG. A full overview is published by Cloudflare at
-        <a href="https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" target="_blank" rel="noopener" class="text-sky-700 underline">developers.cloudflare.com</a>.
+        <a href="https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" target="_blank" rel="noopener" class="text-ink underline underline-offset-[3px]">developers.cloudflare.com</a>.
       </p>
-      <p class="text-xs text-slate-500">
+      <p class="text-[15px] text-quiet">
         Cookies and local storage set by Google's consent management platform and by Google AdSense are
         described in section 4.
       </p>
     </section>
 
-    <section class="space-y-2 text-sm leading-relaxed text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">4. Advertising via Google AdSense and consent management</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-sm font-semibold uppercase tracking-wide text-quiet">4. Advertising via Google AdSense and consent management</h2>
       <p>
         To help fund this site, advertisements are embedded via Google AdSense. Provider is
         <strong>Google Ireland Limited</strong>, Gordon House, Barrow Street, Dublin 4, Ireland ("Google").
@@ -153,20 +153,20 @@ import { RouterLink } from 'vue-router'
         AdSense script will not personalise ads on subsequent page loads; previously-set AdSense cookies
         can additionally be removed via your browser settings.
       </p>
-      <p class="text-xs leading-relaxed text-slate-600">
+      <p class="text-[15px] leading-relaxed text-quiet">
         Further information:
-        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="text-sky-700 underline">Google privacy policy</a>
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="text-ink underline underline-offset-[3px]">Google privacy policy</a>
         ·
-        <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener" class="text-sky-700 underline">How Google uses data from partner sites</a>
+        <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener" class="text-ink underline underline-offset-[3px]">How Google uses data from partner sites</a>
         ·
-        <a href="https://adssettings.google.com" target="_blank" rel="noopener" class="text-sky-700 underline">Google ad settings / opt-out</a>
+        <a href="https://adssettings.google.com" target="_blank" rel="noopener" class="text-ink underline underline-offset-[3px]">Google ad settings / opt-out</a>
       </p>
     </section>
 
-    <section class="space-y-2 text-sm leading-relaxed text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">5. Rights of the data subject</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-sm font-semibold uppercase tracking-wide text-quiet">5. Rights of the data subject</h2>
       <p>You have the right at any time to:</p>
-      <ul class="list-disc space-y-1 pl-5">
+      <ul class="list-disc space-y-1 pl-5 marker:text-quiet">
         <li>Access (Art. 15 GDPR)</li>
         <li>Rectification (Art. 16 GDPR)</li>
         <li>Erasure (Art. 17 GDPR)</li>
@@ -177,12 +177,12 @@ import { RouterLink } from 'vue-router'
       </ul>
       <p>
         Please direct requests to the email address listed in the
-        <RouterLink to="/imprint" class="text-sky-700 underline">Imprint</RouterLink>.
+        <RouterLink to="/imprint" class="text-ink underline underline-offset-[3px]">Imprint</RouterLink>.
       </p>
     </section>
 
-    <section class="space-y-2 text-sm leading-relaxed text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">6. Right to lodge a complaint with a supervisory authority</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-sm font-semibold uppercase tracking-wide text-quiet">6. Right to lodge a complaint with a supervisory authority</h2>
       <p>
         You have the right to lodge a complaint with a data-protection supervisory authority regarding
         the processing of your personal data. A list of the responsible German authorities is available
@@ -191,13 +191,13 @@ import { RouterLink } from 'vue-router'
           href="https://www.bfdi.bund.de/DE/Service/Anschriften/Laender/Laender-node.html"
           target="_blank"
           rel="noopener"
-          class="text-sky-700 underline"
+          class="text-ink underline underline-offset-[3px]"
         >bfdi.bund.de</a>.
       </p>
     </section>
 
-    <section class="space-y-2 text-sm leading-relaxed text-slate-800">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">7. Changes to this privacy policy</h2>
+    <section class="space-y-3 text-[17px] leading-relaxed text-ink-2">
+      <h2 class="border-t border-rule pt-6 text-sm font-semibold uppercase tracking-wide text-quiet">7. Changes to this privacy policy</h2>
       <p>
         We update this privacy policy when the functionality of the website changes (e.g. integration of
         advertising or external services). The current version is always available on this page.

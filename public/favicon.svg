@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Favicon / app icon for linux-tuners.dev. Square mark reusing the OG image's
-  slider motif (slate background, sky-blue accent knob) so it stays legible at
-  16px while sharing visual language with og-image.svg.
+  Favicon / app icon for linux-tuners.dev: the tick motif of the Scale redesign
+  (a short ruler with one tall verdigris tick), light on an ink square so it
+  reads on light and dark browser tabs. Square, no rounded corners. Heavy
+  strokes keep it legible at 16px. Rasterized by `npm run gen:icons`.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="linux-tuners.dev">
-  <rect width="64" height="64" rx="12" fill="#0f172a"/>
-
-  <!-- Slider track -->
-  <rect x="10" y="30" width="44" height="4" rx="2" fill="#475569"/>
-  <rect x="10" y="30" width="30" height="4" rx="2" fill="#0ea5e9"/>
-
-  <!-- Knob -->
-  <circle cx="40" cy="32" r="8" fill="white"/>
-  <circle cx="40" cy="32" r="3" fill="#0ea5e9"/>
+  <rect width="64" height="64" fill="#161616"/>
+  <!-- Ruler: baseline and four short ticks -->
+  <rect x="6" y="44" width="52" height="4" fill="#ECECE8"/>
+  <rect x="10.5" y="32" width="3" height="12" fill="#ECECE8"/>
+  <rect x="20.5" y="36" width="3" height="8" fill="#ECECE8"/>
+  <rect x="40.5" y="36" width="3" height="8" fill="#ECECE8"/>
+  <rect x="50.5" y="32" width="3" height="12" fill="#ECECE8"/>
+  <!-- The one tall tick -->
+  <rect x="28" y="12" width="8" height="32" fill="#4FB8A3"/>
 </svg>

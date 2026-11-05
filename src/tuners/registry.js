@@ -18,6 +18,9 @@
  * @property {'live'|'planned'} status
  * @property {string}  title     Landing-card title
  * @property {string}  blurb     Landing-card text
+ * @property {string}  [question] The problem the tuner answers, as a question
+ *                               (live only): the first column of the landing
+ *                               page's tuner table
  * @property {string[]} keys     Example keys shown on the card
  * @property {string}  [path]    Route path (live only), e.g. '/swap'
  * @property {string}  [navLabel] Header nav label (live only)
@@ -36,6 +39,7 @@ export const TUNERS = [
   {
     id: 'swap',
     status: 'live',
+    question: 'Does it swap too early, or freeze when memory runs out?',
     path: '/swap',
     navLabel: 'Swap & memory',
     title: 'Swap & memory',
@@ -59,6 +63,7 @@ export const TUNERS = [
   {
     id: 'security',
     status: 'live',
+    question: 'Can any local user read kernel addresses or trace other processes?',
     path: '/security',
     navLabel: 'Security',
     title: 'Security hardening',
@@ -82,6 +87,7 @@ export const TUNERS = [
   {
     id: 'filesystem',
     status: 'live',
+    question: 'Do you see "too many open files" or inotify limit errors?',
     path: '/filesystem',
     navLabel: 'Filesystem',
     title: 'Filesystem & file descriptors',
@@ -105,6 +111,7 @@ export const TUNERS = [
   {
     id: 'kernel',
     status: 'live',
+    question: 'Does it run out of processes, or hang after a crash?',
     path: '/kernel',
     navLabel: 'Kernel',
     title: 'Kernel limits & panics',
@@ -128,6 +135,7 @@ export const TUNERS = [
   {
     id: 'systemd',
     status: 'live',
+    question: 'Does one service take the CPU, memory or disk from the others?',
     path: '/systemd',
     navLabel: 'systemd',
     title: 'systemd & resource limits',
@@ -151,6 +159,7 @@ export const TUNERS = [
   {
     id: 'network',
     status: 'live',
+    question: 'Does it drop connections under load, or fall short of the link speed?',
     path: '/network',
     navLabel: 'Network',
     title: 'Network stack',
@@ -174,6 +183,7 @@ export const TUNERS = [
   {
     id: 'block-io',
     status: 'live',
+    question: 'Does each disk use a scheduler and read-ahead that suit it?',
     path: '/block-io',
     navLabel: 'Block I/O',
     title: 'Block I/O & storage',
@@ -197,6 +207,7 @@ export const TUNERS = [
   {
     id: 'hugepages',
     status: 'live',
+    question: 'Does your database or VM host ask for huge pages?',
     path: '/hugepages',
     navLabel: 'Huge pages',
     title: 'Huge pages & memory layout',
@@ -220,6 +231,7 @@ export const TUNERS = [
   {
     id: 'sysv-ipc',
     status: 'live',
+    question: 'Does Oracle, Db2 or older middleware ask for higher IPC limits?',
     path: '/sysv-ipc',
     navLabel: 'IPC',
     title: 'System V IPC & shared memory',

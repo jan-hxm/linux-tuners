@@ -108,10 +108,10 @@ export function watermarkBars(hw, params) {
     totalMiB,
     // Segment widths and palette tones for the stacked bar.
     segments: [
-      { label: 'reserved (≤ min)', mib: lv.minMiB, tone: 'danger' },
-      { label: 'direct-reclaim (min → low)', mib: lv.lowMiB - lv.minMiB, tone: 'warn' },
-      { label: 'kswapd (low → high)', mib: lv.highMiB - lv.lowMiB, tone: 'info' },
-      { label: 'usable (> high)', mib: lv.usableMiB, tone: 'ok' },
+      { label: 'reserved (≤ min)', mib: lv.minMiB, tone: 'error' },
+      { label: 'direct-reclaim (min → low)', mib: lv.lowMiB - lv.minMiB, tone: 'ink' },
+      { label: 'kswapd (low → high)', mib: lv.highMiB - lv.lowMiB, tone: 'quiet' },
+      { label: 'usable (> high)', mib: lv.usableMiB, tone: 'rule' },
     ],
     zoneInfoSnippet: renderZoneInfo(lv, totalMiB),
   }

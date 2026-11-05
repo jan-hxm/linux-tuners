@@ -2,28 +2,36 @@
 import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
-import { tone } from '@/ui/charts/palette.js'
+import ChartLegend from '@/ui/charts/ChartLegend.vue'
+import { barChartOptions, barKind, barLegendTone, barSegment, barStop } from '@/ui/charts/chartStyle.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import * as simulation from '../simulation.js'
 
 const { memoryBudget: memory } = useTunerSimulation(useActiveTuner(), simulation)
 
-const chartData = computed(() => {
-  const m = memory.value
-  // Stacked horizontal bar across total RAM, in MiB — one segment per zone
+/** What each zone means, by the simulation's segment label. */
+const MEANING = {
+  'normal use': 'unthrottled',
+  'throttle (MemoryHigh→Max)': 'throttled and reclaimed hard',
+  'above MemoryMax (OOM)': 'out of reach, OOM kill at the cap',
+}
+
+// The error zone is a danger zone, so it is hatched.
+const hatched = (s) => s.tone === 'error'
+
+const chartData = computed(() => ({
+  // Stacked horizontal bar across total RAM, in MiB: one segment per zone
   // (normal / throttle band / above hard cap).
-  return {
-    labels: ['Slice memory budget'],
-    datasets: m.segments.map((s) => ({
-      label: s.label,
-      data: [s.mib],
-      backgroundColor: tone(s.tone),
-      borderWidth: 0,
-      stack: 'mem',
-    })),
-  }
-})
+  labels: ['Slice memory budget'],
+  datasets: memory.value.segments.map((s) =>
+    barSegment({ label: s.label, data: [s.mib], tone: s.tone, hatch: hatched(s), stack: 'mem' }),
+  ),
+}))
+
+const legend = computed(() =>
+  memory.value.segments.map((s) => ({ label: s.label, tone: barLegendTone(s.tone, hatched(s)), kind: barKind(s.tone, hatched(s)) })),
+)
 
 // Text alternative for screen readers.
 const summary = computed(() => {
@@ -37,43 +45,30 @@ const summary = computed(() => {
 
 const chartOptions = computed(() => {
   const m = memory.value
-  return {
-    indexAxis: 'y',
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: false,
-    scales: {
-      x: {
-        stacked: true,
-        min: 0,
-        max: m.totalMiB,
-        title: { display: true, text: 'GiB of RAM' },
-        ticks: { callback: (v) => `${(v / 1024).toFixed(0)}` },
-      },
-      y: { stacked: true, display: false },
-    },
-    plugins: {
-      legend: { display: true, position: 'bottom', labels: { boxWidth: 10, boxHeight: 10 } },
-      tooltip: {
-        callbacks: { label: (item) => `${item.dataset.label}: ${(item.parsed.x / 1024).toFixed(2)} GiB` },
-      },
-    },
-  }
+  return barChartOptions({
+    stacked: true,
+    x: { min: 0, max: m.totalMiB, format: (v) => `${(v / 1024).toFixed(0)} GiB` },
+    stops: m.segments.map((s, i) =>
+      barStop(i, 0, s.label, [
+        `${(s.mib / 1024).toFixed(2)} GiB, ${((s.mib / m.totalMiB) * 100).toFixed(0)}% of RAM`,
+        ...(MEANING[s.label] ? [MEANING[s.label]] : []),
+      ]),
+    ),
+  })
 })
 </script>
 
 <template>
   <div class="space-y-3">
-    <ChartFrame :aria-label="summary" height="8rem">
+    <ChartFrame :aria-label="summary" height="7rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
-    <div class="flex flex-wrap gap-3 text-xs text-slate-600">
-      <span>
-        <code class="font-mono">MemoryHigh</code> throttles the slice; <code class="font-mono">MemoryMax</code> is the hard OOM cap.
-      </span>
-      <span v-if="memory.noLimits" class="rounded bg-amber-50 px-2 py-0.5 text-amber-800">
-        No memory limits set; the slice can use all of RAM.
-      </span>
-    </div>
+    <ChartLegend :items="legend" />
+    <p class="text-[13px] text-ink-2">
+      <code class="font-mono">MemoryHigh</code> throttles the slice; <code class="font-mono">MemoryMax</code> is the hard OOM cap.
+    </p>
+    <p v-if="memory.noLimits" class="flex gap-1.5 text-[13px] text-mine-text">
+      <span aria-hidden="true" class="font-mono">!</span>No memory limits set; the slice can use all of RAM.
+    </p>
   </div>
 </template>

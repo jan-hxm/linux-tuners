@@ -23,7 +23,6 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('%s view', (id, domain) => {
   beforeEach(async () => {
     View = await TUNER_VIEWS[id]()
     setActivePinia(createPinia())
-    history.replaceState(null, '', '/')
     warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     error = vi.spyOn(console, 'error').mockImplementation(() => {})
   })
@@ -84,7 +83,6 @@ describe('a tuner without graphs', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
-    history.replaceState(null, '', '/')
   })
 
   it('defaults to no tabs and no default tab', () => {
@@ -103,10 +101,10 @@ describe('a tuner without graphs', () => {
     const wrapper = mount(TunerPage, { props: { domain }, global: { stubs } })
     const tune = wrapper.find('#tune')
     expect(tune.find('[role="tablist"]').exists()).toBe(false)
-    expect(tune.find('.lg\:col-span-3').exists()).toBe(false)
+    expect(tune.find('#graphs').exists()).toBe(false)
     expect(tune.text()).toContain(domain.sections[0].title)
     expect(wrapper.find('[aria-label="Live impact summary"]').exists()).toBe(false)
-    expect(wrapper.find('.h-16.lg\:hidden').exists()).toBe(false)
+    expect(wrapper.find('.h-24.lg\:hidden').exists()).toBe(false)
     wrapper.unmount()
   })
 })

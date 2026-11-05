@@ -2,28 +2,29 @@
 import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
-import { tone } from '@/ui/charts/palette.js'
+import ChartLegend from '@/ui/charts/ChartLegend.vue'
+import { barChartOptions, barKind, barLegendTone, barSegment, barStop } from '@/ui/charts/chartStyle.js'
+import { useSeriesTone } from '@/ui/charts/useSeriesTone.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import * as simulation from '../simulation.js'
 
 const { cpuShares: cpu } = useTunerSimulation(useActiveTuner(), simulation)
+// The tuned slice's share is the visitor's value: fit, or mine once changed.
+const sliceTone = useSeriesTone(['cpu_weight'])
+const toneOf = (s) => (s.isTarget ? sliceTone.value : s.tone)
 
-const chartData = computed(() => {
-  const c = cpu.value
+const chartData = computed(() => ({
   // One horizontal stacked bar; each slice is its own dataset so the stack
   // renders as proportional CPU shares under contention.
-  return {
-    labels: ['CPU under contention'],
-    datasets: c.segments.map((s) => ({
-      label: s.slice,
-      data: [s.pct],
-      backgroundColor: tone(s.tone),
-      borderWidth: 0,
-      stack: 'cpu',
-    })),
-  }
-})
+  labels: ['CPU under contention'],
+  datasets: cpu.value.segments.map((s) => barSegment({ label: s.slice, data: [s.pct], tone: toneOf(s), stack: 'cpu' })),
+}))
+
+const legend = computed(() => [
+  { label: 'the tuned slice', tone: sliceTone.value, kind: 'fill' },
+  { label: 'sibling slices', tone: barLegendTone('rule'), kind: barKind('rule') },
+])
 
 // Text alternative for screen readers.
 const summary = computed(() => {
@@ -35,37 +36,33 @@ const summary = computed(() => {
   return `CPU shares chart: under contention a saturated CPU splits by CPUWeight as ${parts.join(', ')}.${cap}`
 })
 
-const chartOptions = computed(() => ({
-  indexAxis: 'y',
-  responsive: true,
-  maintainAspectRatio: false,
-  animation: false,
-  scales: {
-    x: { stacked: true, min: 0, max: 100, title: { display: true, text: '% of CPU time' }, ticks: { stepSize: 20 } },
-    y: { stacked: true, display: false },
-  },
-  plugins: {
-    legend: { display: true, position: 'bottom', labels: { boxWidth: 10, boxHeight: 10 } },
-    tooltip: {
-      callbacks: { label: (item) => `${item.dataset.label}: ${item.parsed.x}%` },
-    },
-  },
-}))
+const chartOptions = computed(() =>
+  barChartOptions({
+    stacked: true,
+    x: { min: 0, max: 100, stepSize: 20, format: (v) => `${v}%` },
+    stops: cpu.value.segments.map((s, i) =>
+      barStop(i, 0, s.slice, [
+        `${s.pct}% of CPU time`,
+        s.isTarget ? `tuned slice, CPUWeight ${s.weight}` : `sibling, CPUWeight ${s.weight}`,
+      ]),
+    ),
+  }),
+)
 </script>
 
 <template>
   <div class="space-y-3">
-    <ChartFrame :aria-label="summary" height="8rem">
+    <ChartFrame :aria-label="summary" height="7rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
-    <div class="flex flex-wrap gap-3 text-xs text-slate-600">
-      <span>
-        When the CPU is saturated, sibling slices split it in proportion to their
-        <code class="font-mono">CPUWeight</code>. With the CPU idle, weight has no effect.
-      </span>
-      <span v-if="cpu.quotaCores !== null" class="rounded bg-amber-50 px-2 py-0.5 text-amber-800">
-        Hard cap: CPUQuota limits this slice to ~{{ cpu.quotaCores.toFixed(1) }} of {{ cpu.cores }} cores regardless of weight.
-      </span>
-    </div>
+    <ChartLegend :items="legend" />
+    <p class="text-[13px] text-ink-2">
+      When the CPU is saturated, sibling slices split it in proportion to their
+      <code class="font-mono">CPUWeight</code>. With the CPU idle, weight has no effect.
+    </p>
+    <p v-if="cpu.quotaCores !== null" class="flex gap-1.5 text-[13px] text-mine-text">
+      <span aria-hidden="true" class="font-mono">!</span>
+      <span>Hard cap: CPUQuota limits this slice to ~{{ cpu.quotaCores.toFixed(1) }} of {{ cpu.cores }} cores regardless of weight.</span>
+    </p>
   </div>
 </template>

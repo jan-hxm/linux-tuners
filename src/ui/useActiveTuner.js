@@ -46,3 +46,10 @@ function required(key, what) {
   if (!value) throw new Error(`No tuner ${what} provided; render inside TunerPage or provide it`)
   return value
 }
+
+/**
+ * Optional: which groups and cards the tune step shows
+ * (ui/useParameterView.js). TunerPage provides it so ParameterPanel and the
+ * settings outline agree; without it, ParameterPanel keeps its own.
+ */
+export const PARAMETER_VIEW_KEY = Symbol('parameter-view')

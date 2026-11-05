@@ -20,6 +20,7 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { LIVE_TUNERS } from '../src/tuners/registry.js'
+import { TOKENS, FONT_SANS } from '../src/ui/theme.js'
 
 import {
   ROUTES_META,
@@ -31,16 +32,21 @@ import {
 } from '../src/routes-meta.js'
 import { writeStaticContent } from './static-content.mjs'
 
+// The 404 page loads no CSS bundle, so it gets the design's paper and ink and
+// the system part of the sans stack: no webfont on a page the app never runs.
+const SYSTEM_SANS = FONT_SANS.filter((family) => !family.includes('Host Grotesk')).join(', ')
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT_DIR = path.resolve(__dirname, '..')
 const DIST_DIR = path.join(ROOT_DIR, 'dist')
 
 // The files a page's content comes from, for its sitemap <lastmod>. A tuner
-// page is its own src/tuners/<id>/ folder; the landing cards come from the
-// registry, and the guided setup is its own folder and the registry. Shared UI
+// page is its own src/tuners/<id>/ folder; the landing page is its view, its
+// copy (src/ui/landing.js), its example setting and the registry; the guided
+// setup is its own folder and the registry. Shared UI
 // is left out, or every tweak would mark every page changed.
 const PAGE_SOURCES = {
-  '/': ['src/views/LandingView.vue', 'src/tuners/registry.js'],
+  '/': ['src/views/LandingView.vue', 'src/ui/landing.js', 'src/views/LandingSpecimen.vue', 'src/views/landingExample.js', 'src/tuners/registry.js'],
   '/setup': ['src/setup', 'src/tuners/registry.js'],
 }
 const sourcesFor = (route) => PAGE_SOURCES[route.path] ?? [`src/tuners/${route.name}`]
@@ -110,14 +116,14 @@ export function render404() {
     <meta name="robots" content="noindex" />
     <title>Page not found | ${escapeHtml(SITE_NAME)}</title>
     <style>
-      body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #0f172a; line-height: 1.5; }
+      body { margin: 0; font-family: ${SYSTEM_SANS}; background: ${TOKENS.paper[0]}; color: ${TOKENS.ink[0]}; line-height: 1.5; }
       main { max-width: 36rem; margin: 0 auto; padding: 3rem 1rem; }
-      h1 { font-size: 1.5rem; margin: 0 0 0.75rem; }
-      a { color: #1d4ed8; }
+      h1 { font-size: 1.5rem; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 0.75rem; }
+      a { color: inherit; text-underline-offset: 3px; }
+      a:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
       ul { padding-left: 1.25rem; }
       @media (prefers-color-scheme: dark) {
-        body { background: #0f172a; color: #e2e8f0; }
-        a { color: #93c5fd; }
+        body { background: ${TOKENS.paper[1]}; color: ${TOKENS.ink[1]}; }
       }
     </style>
   </head>

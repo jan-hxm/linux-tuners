@@ -10,6 +10,8 @@ import { useRoute } from 'vue-router'
 import SetupMachine from './SetupMachine.vue'
 import SetupStep from './SetupStep.vue'
 import SetupFiles from './SetupFiles.vue'
+import StepChain from '@/ui/StepChain.vue'
+import { PAGE_WIDTH } from '@/ui/layout/pageWidth.js'
 import { SETUP_STEPS } from './steps.js'
 import { useSetupStore, useStepStore } from './useSetupStore.js'
 
@@ -41,15 +43,23 @@ const current = ref(0)
 const panel = computed(() => PANELS[current.value])
 const heading = ref(null)
 
-/** A step's state in the step list. */
+/**
+ * A step's state in the step list, said in text with a mark in front, so it
+ * never rests on colour alone: "Skipped", "Blocked" or "N to check".
+ */
 function status(p) {
   if (!p.step) return null
-  if (setup.skipped.includes(p.id)) return { label: 'Skipped', cls: 'bg-slate-100 text-slate-700' }
+  if (setup.skipped.includes(p.id)) return { label: 'Skipped', mark: '–', cls: 'text-quiet', seg: 'border-dashed border-rule-strong' }
   const store = useStepStore(p.id)
-  if (store.blocked) return { label: 'Blocked', cls: 'bg-red-100 text-red-800' }
-  if (store.issues.length) return { label: `${store.issues.length} to check`, cls: 'bg-amber-100 text-amber-800' }
+  if (store.blocked) return { label: 'Blocked', mark: '×', cls: 'font-medium text-error', seg: 'border-error', error: true }
+  if (store.issues.length) return { label: `${store.issues.length} to check`, mark: '!', cls: 'text-ink-2', seg: '' }
   return null
 }
+
+/** The step list: each step with its number and, where it has one, its status. */
+const CHAIN = computed(() =>
+  PANELS.map((p, i) => ({ id: p.id, label: p.title, mark: String(i + 1).padStart(2, '0'), status: status(p) })),
+)
 
 async function go(index) {
   current.value = Math.max(0, Math.min(PANELS.length - 1, index))
@@ -62,58 +72,43 @@ const goto = (id) => go(PANELS.findIndex((p) => p.id === id))
 </script>
 
 <template>
-  <section class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-    <header class="light-palette surface-inverse overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-5 py-5 text-white shadow-sm sm:px-6 sm:py-6">
-      <p class="text-xs uppercase tracking-widest text-slate-400">Guided setup</p>
-      <h1 class="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">Tune a whole Linux machine</h1>
-      <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-200">
+  <section class="pb-16 pt-10" :class="PAGE_WIDTH">
+    <header class="border-t border-ink pt-4">
+      <p class="font-mono text-[13px] text-quiet">Guided setup</p>
+      <h1 class="mt-2 text-[26px] font-medium leading-tight tracking-[-0.02em] text-ink sm:text-[34px]">Tune a whole Linux machine</h1>
+      <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-2">
         Describe the machine once, then go through every tuner in the order that matters: memory first, then security, the limits, and the settings those limits bound. Each step starts from values for your machine, and the last step gives you every file. Nothing leaves your browser; the link holds the whole setup.
       </p>
     </header>
 
-    <div class="grid gap-6 lg:grid-cols-4 lg:items-start">
-      <nav aria-label="Setup steps" class="lg:sticky lg:top-[calc(var(--site-header-h)+1rem)]">
-        <ol class="flex flex-wrap gap-1 lg:flex-col">
-          <li v-for="(p, i) in PANELS" :key="p.id">
-            <button
-              type="button"
-              class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm"
-              :class="i === current ? 'bg-sky-700 text-white' : 'text-slate-700 hover:bg-slate-100'"
-              :aria-current="i === current ? 'step' : undefined"
-              @click="go(i)"
-            >
-              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold" :class="i === current ? 'bg-white text-sky-800' : 'bg-slate-200 text-slate-700'">{{ i + 1 }}</span>
-              <span class="min-w-0 flex-1">{{ p.title }}</span>
-              <span v-if="status(p)" class="shrink-0 rounded-full px-1.5 py-0.5 text-xs font-medium" :class="status(p).cls">{{ status(p).label }}</span>
-            </button>
-          </li>
-        </ol>
-      </nav>
+    <!-- Step list: one segment per step on a scale, the current step thick. -->
+    <nav aria-label="Setup steps" class="mt-8">
+      <StepChain :steps="CHAIN" :current="current" grid-class="grid-cols-2 gap-x-2 sm:grid-cols-3 lg:grid-cols-6" @select="go" />
+    </nav>
 
-      <div class="space-y-4 lg:col-span-3">
-        <h2 ref="heading" tabindex="-1" class="scroll-mt-20 text-lg font-semibold text-slate-900 focus:outline-none">
-          Step {{ current + 1 }} of {{ PANELS.length }}: {{ panel.title }}
-        </h2>
+    <div class="mt-10 space-y-6">
+      <h2 ref="heading" tabindex="-1" class="scroll-mt-20 text-[22px] font-medium leading-tight tracking-[-0.01em] text-ink focus:outline-none">
+        Step {{ current + 1 }} of {{ PANELS.length }}: {{ panel.title }}
+      </h2>
 
-        <SetupMachine v-if="panel.id === 'machine'" />
-        <SetupFiles v-else-if="panel.id === 'files'" @goto="goto" />
-        <SetupStep v-else :key="panel.id" :step="panel.step" :num="current + 1" />
+      <SetupMachine v-if="panel.id === 'machine'" />
+      <SetupFiles v-else-if="panel.id === 'files'" @goto="goto" />
+      <SetupStep v-else :key="panel.id" :step="panel.step" :num="current + 1" />
 
-        <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
-          <button
-            v-if="current > 0"
-            type="button"
-            class="rounded border border-slate-300 px-4 py-1.5 text-sm hover:bg-slate-50"
-            @click="go(current - 1)"
-          >← {{ PANELS[current - 1].title }}</button>
-          <span v-else />
-          <button
-            v-if="current < PANELS.length - 1"
-            type="button"
-            class="rounded bg-sky-700 px-4 py-1.5 text-sm font-medium text-white hover:bg-sky-800"
-            @click="go(current + 1)"
-          >{{ PANELS[current + 1].title }} →</button>
-        </div>
+      <div class="flex items-center justify-between gap-3 border-t border-rule pt-4">
+        <button
+          v-if="current > 0"
+          type="button"
+          class="min-h-11 border border-rule-strong px-4 text-sm font-medium text-ink hover:bg-paper-hover"
+          @click="go(current - 1)"
+        >← {{ PANELS[current - 1].title }}</button>
+        <span v-else />
+        <button
+          v-if="current < PANELS.length - 1"
+          type="button"
+          class="min-h-11 bg-ink px-5 text-[15px] font-medium text-paper hover:bg-ink-2"
+          @click="go(current + 1)"
+        >{{ PANELS[current + 1].title }} →</button>
       </div>
     </div>
   </section>

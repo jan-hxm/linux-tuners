@@ -3,22 +3,9 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { TOKENS, SURFACE_TOKENS, TEXT_TOKENS, MARK_TOKENS, FONT_SANS, FONT_MONO } from './theme.js'
+import { TOKENS, SURFACE_TOKENS, TEXT_TOKENS, MARK_TOKENS, FONT_SANS, FONT_MONO, contrast } from './theme.js'
 import tailwindConfig from '../../tailwind.config.js'
 import { render404 } from '../../scripts/generate-static-routes.mjs'
-
-/** WCAG relative luminance contrast of two hex colours. */
-function contrast(a, b) {
-  const lum = (hex) => {
-    const [r, g, b] = hex.match(/[0-9a-f]{2}/gi).map((h) => {
-      const c = parseInt(h, 16) / 255
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-    })
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-  }
-  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x)
-  return (hi + 0.05) / (lo + 0.05)
-}
 
 // The colour families the redesign replaced (Design.md §7). Tailwind's
 // palette isn't offered any more, so such a class would silently do nothing;

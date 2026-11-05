@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
 import ChartLegend from '@/ui/charts/ChartLegend.vue'
-import { comparisonSeries, lineChartOptions, mainSeries, ownerLabel, threshold, xStop } from '@/ui/charts/chartStyle.js'
+import { comparisonSeries, lineChartOptions, mainSeries, threshold, xStop } from '@/ui/charts/chartStyle.js'
 import { useSeriesTone } from '@/ui/charts/useSeriesTone.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
@@ -47,20 +47,15 @@ const summary = computed(() => {
 
 const chartOptions = computed(() => {
   const c = curve.value
-  const owner = ownerLabel(seriesTone.value)
-  const Owner = owner.charAt(0).toUpperCase() + owner.slice(1)
   const capped = (gbps) => gbps >= c.linkGbps * 0.999
   return lineChartOptions({
     x: { min: 0, max: c.points.at(-1).rttMs, title: 'round trip, ms' },
-    y: { min: 0, max: c.linkGbps * 1.05, title: 'Gbit/s, one connection' },
+    y: { min: 0, max: c.linkGbps * 1.05, format: (v) => `${v} Gbit/s` },
     zones: [threshold('x', c.rttMs, 'fit'), threshold('y', c.linkGbps, 'ink')],
     stops: c.points.map((p) =>
       xStop(p.rttMs, `At ${p.rttMs} ms round trip${p.rttMs === c.rttMs ? ', your path' : ''}`, [
-        `${Owner}: ${formatRate(p.tunedGbps * 1e9)}`,
-        `Kernel default: ${formatRate(p.defaultGbps * 1e9)}`,
-        capped(p.tunedGbps)
-          ? `The ${formatRate(c.linkBps)} link is the limit, not the buffer.`
-          : 'The receive buffer is the limit, not the link.',
+        `${formatRate(p.tunedGbps * 1e9)}, default ${formatRate(p.defaultGbps * 1e9)}`,
+        ...(capped(p.tunedGbps) ? ['the link is the limit'] : []),
       ]),
     ),
   })
@@ -69,7 +64,7 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-2">
-    <ChartFrame :aria-label="summary">
+    <ChartFrame :aria-label="summary" height="20rem">
       <Line :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <ChartLegend :items="LEGEND" />

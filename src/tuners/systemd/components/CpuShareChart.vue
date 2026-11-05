@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
 import ChartLegend from '@/ui/charts/ChartLegend.vue'
-import { barChartOptions, barSegment, barStop } from '@/ui/charts/chartStyle.js'
+import { barChartOptions, barKind, barLegendTone, barSegment, barStop } from '@/ui/charts/chartStyle.js'
 import { useSeriesTone } from '@/ui/charts/useSeriesTone.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
@@ -23,7 +23,7 @@ const chartData = computed(() => ({
 
 const legend = computed(() => [
   { label: 'the tuned slice', tone: sliceTone.value, kind: 'fill' },
-  { label: 'sibling slices', tone: 'rule', kind: 'fill' },
+  { label: 'sibling slices', tone: barLegendTone('rule'), kind: barKind('rule') },
 ])
 
 // Text alternative for screen readers.
@@ -42,8 +42,8 @@ const chartOptions = computed(() =>
     x: { min: 0, max: 100, stepSize: 20, format: (v) => `${v}%` },
     stops: cpu.value.segments.map((s, i) =>
       barStop(i, 0, s.slice, [
-        `${s.pct}% of CPU time under contention`,
-        s.isTarget ? `The tuned slice, CPUWeight ${s.weight}.` : `A sibling slice at the default CPUWeight ${s.weight}.`,
+        `${s.pct}% of CPU time`,
+        s.isTarget ? `tuned slice, CPUWeight ${s.weight}` : `sibling, CPUWeight ${s.weight}`,
       ]),
     ),
   }),
@@ -52,7 +52,7 @@ const chartOptions = computed(() =>
 
 <template>
   <div class="space-y-3">
-    <ChartFrame :aria-label="summary" height="8rem">
+    <ChartFrame :aria-label="summary" height="12rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <ChartLegend :items="legend" />

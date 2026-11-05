@@ -14,7 +14,8 @@
  * - Probe stops: where the crosshair can rest, each with the plain words its
  *   tooltip says (ChartFrame shows them on hover, tap and arrow keys).
  */
-import { tint, tone, textTone } from './palette.js'
+import { DARK, LIGHT, tint, tone, textTone } from './palette.js'
+import { contrast } from '../theme.js'
 
 export const MAIN_WIDTH = 2.75
 export const COMPARISON_DASH = [4, 4]
@@ -22,6 +23,18 @@ export const THRESHOLD_DASH = [4, 4]
 /** Alpha of the area under the main series, and of a shaded band. */
 export const AREA_ALPHA = 0.1
 export const BAND_ALPHA = 0.14
+/**
+ * Room above the plot for the probe's tooltip (ChartFrame puts it there, so
+ * it never covers the plot or the point it describes).
+ */
+export const TIP_ROOM = 72
+/** The contrast a mark that carries meaning needs against paper (WCAG 1.4.11). */
+export const MARK_CONTRAST = 3
+
+/** True when a tone is strong enough on paper, in both schemes, to carry meaning as a fill. */
+export function isMarkTone(name) {
+  return [LIGHT, DARK].every((set) => contrast(set[name], set.paper) >= MARK_CONTRAST)
+}
 
 /** The end label's words for the main series, by its owner tone. */
 export function ownerLabel(name) {
@@ -70,22 +83,61 @@ export function comparisonSeries({ data, label, endLabel = null, tension = 0.2 }
 
 /**
  * One segment of a stacked bar, or a plain bar. A danger segment is hatched
- * in its tone; the others are solid. A paper hairline separates neighbours of
- * the same tone. `tone` may be one tone per bar (a plain, unstacked dataset).
+ * in its tone; the others are solid. A tone too faint on paper to carry
+ * meaning (`rule`) becomes an outlined segment instead: a `quiet` border over
+ * a soft fill, so every bar meets 3:1 in both schemes. `markTone` names the
+ * tone that carries the bar (its fill, or its border). A paper hairline
+ * separates solid neighbours. `tone` may be one tone per bar (a plain,
+ * unstacked dataset).
  * @param {{ label: string, data: number[], tone: string | string[], hatch?: boolean, stack?: string }} o
  */
 export function barSegment({ label, data, tone: name, hatch = false, stack }) {
-  const fill = (n) => (hatch ? hatchFill(n) : tone(n))
+  const names = Array.isArray(name) ? name : [name]
+  const look = names.map((n) => {
+    if (hatch) return { fill: hatchFill(n), border: tone(n), width: 1, mark: n }
+    if (isMarkTone(n)) return { fill: tone(n), border: tone('paper'), width: { right: 2 }, mark: n }
+    return { fill: tint('quiet', BAND_ALPHA), border: tone('quiet'), width: 1.5, mark: 'quiet' }
+  })
+  const pick = (key) => (Array.isArray(name) ? look.map((l) => l[key]) : look[0][key])
   return {
     label,
     data,
-    backgroundColor: Array.isArray(name) ? name.map(fill) : fill(name),
-    borderColor: hatch && !Array.isArray(name) ? tone(name) : tone('paper'),
-    borderWidth: hatch ? 1 : { right: 2 },
+    backgroundColor: pick('fill'),
+    borderColor: pick('border'),
+    borderWidth: pick('width'),
     borderSkipped: false,
     maxBarThickness: 44,
+    markTone: pick('mark'),
     ...(stack ? { stack } : {}),
   }
+}
+
+/** The legend swatch kind for a bar segment drawn by `barSegment`. */
+export function barKind(name, hatch = false) {
+  return hatch ? 'hatch' : isMarkTone(name) ? 'fill' : 'outline'
+}
+
+/** The legend swatch tone for a bar segment drawn by `barSegment`. */
+export const barLegendTone = (name, hatch = false) => (hatch || isMarkTone(name) ? name : 'quiet')
+
+/**
+ * The part of an axis worth showing, from the data: when everything before
+ * `from` (the first point or zone of interest) is flat and takes most of the
+ * width, start a margin before it so the change gets the room. The margin is
+ * half the span still shown (at least `minMargin`), and the start is rounded
+ * down to a whole `step`. Returns `{ min, max, zoomed }`.
+ * @param {{ min: number, max: number, from: number, minMargin?: number, step?: number, keepWhole?: number }} o
+ */
+export function focusRange({ min, max, from, minMargin = 1, step = 1, keepWhole = 0.35 }) {
+  if (!Number.isFinite(from) || from <= min + (max - min) * keepWhole) return { min, max, zoomed: false }
+  const start = Math.max(min, Math.floor((from - Math.max((max - from) * 0.5, minMargin)) / step) * step)
+  return { min: start, max, zoomed: start > min }
+}
+
+/** The x of the last flat point before a series first rises above its start. */
+export function firstRise(data) {
+  const i = data.findIndex((p) => p.y > data[0].y)
+  return i <= 0 ? Infinity : data[i - 1].x
 }
 
 /** A range on one axis, shaded in a tone. Zones are drawn under the series. */
@@ -152,7 +204,7 @@ export function lineChartOptions({ x, y, zones = [], stops = [] }) {
   return {
     ...BASE,
     parsing: false,
-    layout: { padding: { top: 8, right: 4 } },
+    layout: { padding: { top: TIP_ROOM, right: 4 } },
     scales: { x: bottomAxis(x), y: sideAxis(y) },
     plugins: { zones: { items: zones }, probe: { stops } },
   }
@@ -166,6 +218,7 @@ export function barChartOptions({ x, stacked = false, categories = false, stops 
   return {
     ...BASE,
     indexAxis: 'y',
+    layout: { padding: { top: TIP_ROOM } },
     scales: {
       x: { ...bottomAxis(x), stacked },
       y: { stacked, display: categories, grid: { display: false }, border: { display: false } },

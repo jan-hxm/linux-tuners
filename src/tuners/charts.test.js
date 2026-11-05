@@ -8,7 +8,8 @@ import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useTunerStoreFor } from '@/core/createTunerStore.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
-import { PALETTE } from '@/ui/charts/palette.js'
+import { PALETTE, LIGHT, DARK } from '@/ui/charts/palette.js'
+import { contrast } from '@/ui/theme.js'
 import { MAIN_WIDTH } from '@/ui/charts/chartStyle.js'
 import { swapDomain } from './swap/index.js'
 import { systemdDomain } from './systemd/index.js'
@@ -68,11 +69,38 @@ describe('live charts', () => {
       const { chart } = mountChart(component, domain)
       for (const stop of chart().options.plugins.probe.stops) {
         expect(stop.title.length).toBeGreaterThan(0)
+        // Compact: one value line, and at most one short note.
         expect(stop.lines.length).toBeGreaterThan(0)
+        expect(stop.lines.length).toBeLessThanOrEqual(2)
+        if (stop.lines[1]) expect(stop.lines[1].length).toBeLessThanOrEqual(40)
         for (const text of [stop.title, ...stop.lines]) expect(text).not.toMatch(/—/)
       }
       for (const ds of chart().data.datasets) if (ds.endLabel) expect(ds.endLabel.text).not.toMatch(/—/)
     })
+  })
+
+  it.each(CHARTS.filter((c) => c[3] === 'bar'))('%s draws every bar in a tone with 3:1 on paper, in both schemes', async (_n, component, domain) => {
+    const { store, chart } = mountChart(component, domain)
+    // Limits set, so every zone a chart can draw is there.
+    if (domain === systemdDomain) {
+      store.setParam('memory_high', 70)
+      store.setParam('memory_max', 85)
+      await nextTick()
+    }
+    const tones = chart().data.datasets.flatMap((ds) => [ds.markTone].flat())
+    expect(tones.length).toBeGreaterThan(0)
+    for (const t of tones) {
+      for (const set of [LIGHT, DARK]) expect(contrast(set[t], set.paper), `${t}`).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('shows the part of the swap curve that changes, and says so', () => {
+    const { wrapper, chart } = mountChart(PressureChart, swapDomain)
+    const { x } = chart().options.scales
+    expect(x.min).toBeGreaterThan(50)
+    expect(x.title.text).toMatch(new RegExp(`${x.min} to 100% shown`))
+    expect(wrapper.get('[role="img"]').attributes('aria-label')).toMatch(new RegExp(`from ${x.min}% to 100%`))
+    expect(chart().options.plugins.probe.stops.every((s) => s.x >= x.min)).toBe(true)
   })
 
   it('colours the swap curve fit, then mine once changed, with the kernel default beside it', async () => {

@@ -208,17 +208,29 @@ const currentZone = computed(() =>
         <span
           v-if="fitPct !== null"
           data-mark="fit"
-          class="absolute top-[9px] h-6 w-1 -translate-x-1/2 bg-fit"
+          class="absolute top-[9px] z-10 h-6 w-1 -translate-x-1/2 bg-fit"
           :style="{ left: `${fitPct}%` }"
         />
-        <!-- After the fit bar so it draws on top. Where the two share a value
-             both are centred on it and the tick is taller than the bar, so it
-             shows above and below it. -->
+        <!-- Where the default shares a value with the fit bar, the bar stays
+             whole and on top: the default becomes two short ink notches, one
+             just above and one just below it, centred on the same value and
+             never crossing it. -->
+        <template v-if="defaultPct !== null && fitBesideDefault">
+          <span
+            data-mark="default"
+            class="absolute top-[5px] h-0.5 w-2.5 -translate-x-1/2 bg-ink"
+            :style="{ left: `${defaultPct}%` }"
+          />
+          <span
+            data-mark="default-cap"
+            class="absolute top-[35px] h-0.5 w-2.5 -translate-x-1/2 bg-ink"
+            :style="{ left: `${defaultPct}%` }"
+          />
+        </template>
         <span
-          v-if="defaultPct !== null"
+          v-else-if="defaultPct !== null"
           data-mark="default"
-          class="absolute w-0.5 -translate-x-1/2 bg-ink"
-          :class="fitBesideDefault ? 'top-[6px] h-[30px]' : 'top-[15px] h-[18px]'"
+          class="absolute top-[15px] h-[18px] w-0.5 -translate-x-1/2 bg-ink"
           :style="{ left: `${defaultPct}%` }"
         />
         <span

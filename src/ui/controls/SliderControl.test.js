@@ -39,15 +39,26 @@ describe('SliderControl', () => {
     expect(w.find('[data-mark="default"]').exists()).toBe(false)
   })
 
-  it('centres the fit bar and the taller default tick on a shared value', () => {
+  it('keeps the fit bar whole and puts the default notches above and below it', () => {
     const w = mountSlider({ fitValue: 60 })
     const fit = w.get('[data-mark="fit"]')
-    const tick = w.get('[data-mark="default"]')
-    expect(fit.classes()).toContain('-translate-x-1/2')
-    expect(tick.classes()).toContain('-translate-x-1/2')
-    expect(fit.attributes('style')).toBe(tick.attributes('style'))
-    expect(tick.classes()).toContain('h-[30px]')
+    const top = w.get('[data-mark="default"]')
+    const bottom = w.get('[data-mark="default-cap"]')
+    for (const el of [fit, top, bottom]) {
+      expect(el.classes()).toContain('-translate-x-1/2')
+      expect(el.attributes('style')).toBe(fit.attributes('style'))
+    }
     expect(fit.classes()).toContain('h-6')
+    // Fit bar spans 9px..33px; the notches end before it and start after it.
+    expect(top.classes()).toContain('top-[5px]')
+    expect(bottom.classes()).toContain('top-[35px]')
+    expect(top.classes()).toContain('h-0.5')
+  })
+
+  it('draws a single default tick when it does not share the fit value', () => {
+    const w = mountSlider({ fitValue: 100 })
+    expect(w.find('[data-mark="default-cap"]').exists()).toBe(false)
+    expect(w.get('[data-mark="default"]').classes()).toContain('h-[18px]')
   })
 
   it.each([

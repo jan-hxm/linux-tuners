@@ -246,7 +246,8 @@ const currentZone = computed(() =>
           :style="{ left: `${t.pct}%`, transform: labelShift(t.pct) }"
         >{{ t.label }}</span>
       </div>
-      <!-- No :value binding: see the selfWrite note in the script. -->
+      <!-- No :value binding: see the selfWrite note in the script. Above
+           every mark (the fit bar is z-10): the thumb is the handle. -->
       <input
         ref="sliderEl"
         type="range"
@@ -255,7 +256,7 @@ const currentZone = computed(() =>
         :step="def.step"
         :aria-labelledby="labelId"
         :aria-valuetext="valueText"
-        class="range-slider absolute inset-x-0 top-[11px]"
+        class="range-slider absolute inset-x-0 top-[11px] z-20"
         @input="setValue($event.target.value)"
         @touchstart.passive="onTouchStart"
         @touchmove.passive="onTouchMove"

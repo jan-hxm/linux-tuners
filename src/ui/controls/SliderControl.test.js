@@ -33,6 +33,13 @@ describe('SliderControl', () => {
     expect(w.findAll('input[type="range"]')).toHaveLength(1)
   })
 
+  it('stacks the thumb above every mark', () => {
+    const w = mountSlider({ fitValue: 60 })
+    const z = (cls) => Number(/(?:^|\s)z-(\d+)/.exec(cls)?.[1] ?? 0)
+    const input = z(w.get('input[type="range"]').attributes('class'))
+    for (const mark of w.findAll('[data-mark]')) expect(input).toBeGreaterThan(z(mark.attributes('class')))
+  })
+
   it('leaves a mark outside the range off the scale', () => {
     const w = mountSlider({ fitValue: 500, def: { ...def, kernelDefault: -1 } })
     expect(w.find('[data-mark="fit"]').exists()).toBe(false)

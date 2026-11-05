@@ -293,6 +293,9 @@ runs.
 Every page shares one card image, `og-image.png`
 (1200×630), which `npm run gen:icons` renders from `public/og-image.svg`: X,
 LinkedIn and Facebook don't show SVG previews. Edit the SVG, then regenerate.
+The renderer has no Host Grotesk, so the script outlines every `<text>` (here
+and in `logo.svg`) from the self-hosted woff2 files with fontkit first. Keep
+each `<text>` start-anchored, plain, and with its attributes on the element.
 
 Unknown paths return a real 404: the same step writes a static `dist/404.html`
 (no scripts, no ads, `noindex`, links to every live tuner), which Cloudflare

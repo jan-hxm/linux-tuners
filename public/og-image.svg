@@ -4,7 +4,9 @@
   background, ink text, and the tick motif as a ruler along the bottom. Large
   type and few elements so it stays readable as a thumbnail. Pages link
   og-image.png, rendered from this file by `npm run gen:icons`, because X,
-  LinkedIn and Facebook don't show SVG previews.
+  LinkedIn and Facebook don't show SVG previews. The script outlines each
+  <text> in the self-hosted Host Grotesk, so keep the attributes on the
+  <text> itself.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="linux-tuners.dev | hardware-aware Linux config tuners">
   <rect width="1200" height="630" fill="#FAFAF8"/>
@@ -18,11 +20,9 @@
   <text x="146" y="100" fill="#161616" font-family="'Host Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="600" letter-spacing="-0.4">linux-tuners.dev</text>
 
   <!-- Headline -->
-  <g fill="#161616" font-family="'Host Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="88" font-weight="600" letter-spacing="-2.5">
-    <text x="76" y="236">Understand every</text>
-    <text x="76" y="330">setting before you</text>
-    <text x="76" y="424">change it.</text>
-  </g>
+  <text x="76" y="236" fill="#161616" font-family="'Host Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="88" font-weight="600" letter-spacing="-2.5">Understand every</text>
+  <text x="76" y="330" fill="#161616" font-family="'Host Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="88" font-weight="600" letter-spacing="-2.5">setting before you</text>
+  <text x="76" y="424" fill="#161616" font-family="'Host Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="88" font-weight="600" letter-spacing="-2.5">change it.</text>
   <text x="80" y="492" fill="#4A4A46" font-family="'Host Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="34" font-weight="500">Linux config tuners with the reason beside every value.</text>
 
   <!-- Ruler: baseline, minor and major ticks, one tall verdigris tick -->

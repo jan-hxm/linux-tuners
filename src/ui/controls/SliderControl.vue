@@ -159,8 +159,8 @@ const pct = computed(() => pctOf(props.value, props.range))
 // is the handle, the dot says whose value it is.
 const defaultPct = computed(() => (inRange(props.def.kernelDefault, props.range) ? pctOf(props.def.kernelDefault, props.range) : null))
 const fitPct = computed(() => (inRange(props.fitValue, props.range) ? pctOf(props.fitValue, props.range) : null))
-// Where the fit bar and the default tick share a spot, the bar sits just
-// right of the tick instead of hiding it.
+// Where the fit bar and the default tick share a value both stay centred on
+// it (a mark never moves off its value); the tick is drawn taller and on top.
 const fitBesideDefault = computed(() => fitPct.value !== null && fitPct.value === defaultPct.value)
 
 const ticks = computed(() => scaleTicks(props.range))
@@ -206,17 +206,20 @@ const currentZone = computed(() =>
           :style="{ left: `${t.pct}%` }"
         />
         <span
-          v-if="defaultPct !== null"
-          data-mark="default"
-          class="absolute top-[15px] h-[18px] w-0.5 -translate-x-1/2 bg-ink"
-          :style="{ left: `${defaultPct}%` }"
-        />
-        <span
           v-if="fitPct !== null"
           data-mark="fit"
-          class="absolute top-[9px] h-6 w-1 bg-fit"
-          :class="fitBesideDefault ? 'translate-x-px' : '-translate-x-1/2'"
+          class="absolute top-[9px] h-6 w-1 -translate-x-1/2 bg-fit"
           :style="{ left: `${fitPct}%` }"
+        />
+        <!-- After the fit bar so it draws on top. Where the two share a value
+             both are centred on it and the tick is taller than the bar, so it
+             shows above and below it. -->
+        <span
+          v-if="defaultPct !== null"
+          data-mark="default"
+          class="absolute w-0.5 -translate-x-1/2 bg-ink"
+          :class="fitBesideDefault ? 'top-[6px] h-[30px]' : 'top-[15px] h-[18px]'"
+          :style="{ left: `${defaultPct}%` }"
         />
         <span
           v-if="changed"

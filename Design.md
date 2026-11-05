@@ -614,9 +614,9 @@ must follow them, and existing UI must not regress.
   switches are `h-6 w-11`, and chips get `min-h-6`. Links inside running text
   are exempt; a list of links with tighter than 24 px line pitch is not.
 - **No page-level sideways scroll down to 320px.** Whatever can be wider than
-  a phone handles it itself: the header nav scrolls inside its own box (keeps
-  the current tuner in view, and fades the edge that has more links past it,
-  since its scrollbar is hidden), a profile field's quick picks are a select
+  a phone handles it itself: the header is one row (logo, Tuners
+  button, Start setup; the logo text and the current tuner's name hide on the
+  narrowest widths) and its tuner panel scrolls within the viewport, a profile field's quick picks are a select
   below `sm` instead of rows of chips, selects are capped at `max-w-full`,
   segmented controls wrap with growing segments, a card's value wraps under
   its name, and parameter names break after `.`, `_`, `-` or `/` (`<wbr>`).
@@ -628,7 +628,14 @@ must follow them, and existing UI must not regress.
   segment, the ones behind it `rule-strong`, the ones ahead `rule`, each
   with its mono number and label. On a tuner page the segments are links,
   and `useScrollSpy` marks the step in view with `aria-current="location"`
-  at every width. From `lg` up the chain sticks under the site header (it's
+  at every width. The site header is one row (`--site-header-h`, 61px): logo,
+  a "Tuners" disclosure button (`aria-expanded`, `aria-controls`, +/- mark),
+  the current tuner's name after a "/", Glossary (only if a `glossary` route
+  exists) and Start setup. The button opens a full-width panel of every live
+  tuner (name and registry `question`, the current one `aria-current="page"`
+  with a `fit` top rule) and an "All tuners" link. It is a disclosure, not a
+  modal: no focus trap; Escape closes it and refocuses the button, as does a
+  click outside, choosing a link or any route change. From `lg` up the chain sticks under the site header (it's
   a sibling of the title block, not inside it, so it can); on phones it
   stays put, since the impact bar already takes space. The sticky offsets
   and anchor `scroll-mt` are built from `--site-header-h` and
@@ -670,9 +677,7 @@ must follow them, and existing UI must not regress.
   There are no dark-by-design surfaces any more, so there is no per-surface
   override: a control filled with `ink` (a primary button, the selected
   segment) shows the ring past a 2px `paper` gap. A box that clips its
-  children leaves room for the ring instead (the header's scrolling nav has
-  4px of padding, and a focused link scrolls clear of its edge fades: the
-  nav's `scroll-padding` is the fade's width). A box that scrolls on its own
+  children leaves room for the ring instead (the header panel scrolls, so its links sit inside padding). A box that scrolls on its own
   (a `pre` with `overflow-x-auto`, the landing table) gets `tabindex="0"`
   and an `aria-label`, so keyboards can scroll it. Don't restyle the ring
   per component.
@@ -730,7 +735,7 @@ must follow them, and existing UI must not regress.
   52px); secondary buttons a 1px `rule-strong` border; text buttons are
   underlined 3px below. Selected states (the active preset, a picked role or
   option) use `fit-tint` with a `fit` mark, a selected segment the `ink`
-  fill, the current page in the header nav an `ink` underline. Colour
+  fill, the current tuner in the header an `ink` underline (and, in the Tuners panel, a `fit` top rule). Colour
   otherwise means one thing each: `fit` (verdigris) marks what fits the
   visitor's machine, `mine` (ochre) appears only once the visitor changes
   something, and `error` is for blocking issues only. A warning (legal but

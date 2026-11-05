@@ -3,77 +3,64 @@ import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
 import ChartLegend from '@/ui/charts/ChartLegend.vue'
-import { PALETTE } from '@/ui/charts/palette.js'
-import { useActiveTuner } from '@/ui/useActiveTuner.js'
+import { band, comparisonSeries, hatchZone, lineChartOptions, mainSeries, ownerLabel, xStop } from '@/ui/charts/chartStyle.js'
+import { useSeriesTone } from '@/ui/charts/useSeriesTone.js'
+import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import * as simulation from '../simulation.js'
 
+/** The parameters the curve is drawn from. */
+const KEYS = ['swappiness', 'min_free_kbytes', 'watermark_scale_factor']
+
 const LEGEND = [
-  { label: 'swap usage', tone: 'ink' },
-  { label: 'kswapd band', tone: 'quiet', dash: true },
-  { label: 'direct reclaim / OOM', tone: 'error', dash: true },
+  { label: 'kswapd band', tone: 'quiet', kind: 'band' },
+  { label: 'direct reclaim, OOM risk', tone: 'error', kind: 'hatch' },
 ]
 
-const { pressureCurve: pressure } = useTunerSimulation(useActiveTuner(), simulation)
+const store = useActiveTuner()
+const domain = useTunerDomain()
+const { pressureCurve: pressure } = useTunerSimulation(store, simulation)
+const seriesTone = useSeriesTone(KEYS)
+
+// The same curve with the kernel's defaults, for comparison; not drawn while
+// it is the same curve.
+const stock = computed(() => {
+  const params = { ...store.params }
+  for (const k of KEYS) params[k] = domain.defsByKey[k].kernelDefault
+  return simulation.pressureCurve(store.hardware, params)
+})
+const showStock = computed(() => stock.value.points.some((pt, i) => pt.swapUsage !== pressure.value.points[i]?.swapUsage))
+
+const pct = (v) => `${Math.round(v)}%`
+
+// Which part of the curve a memory fill falls in, in plain words.
+function zoneAt(fill, p) {
+  if (p.noSwap) return 'Swap is off, so nothing is swapped.'
+  if (fill < p.highFillPct) return 'Below the kswapd band: memory is free, little swapping.'
+  if (fill < p.lowFillPct) return 'In the kswapd band: kswapd reclaims in the background.'
+  if (fill < p.minFillPct) return 'Past the low watermark: reclaim gets harder.'
+  return 'Past the min watermark: direct reclaim stalls programs, OOM risk.'
+}
 
 const chartData = computed(() => {
   const p = pressure.value
-  // Threshold markers drawn as two-point datasets that span the full Y range.
-  const verticalMarker = (x, color, dash) => ({
-    label: '',
-    data: [
-      { x, y: 0 },
-      { x, y: 100 },
-    ],
-    borderColor: color,
-    borderDash: dash,
-    borderWidth: 1.5,
-    pointRadius: 0,
-    fill: false,
-    showLine: true,
-  })
-
   const datasets = [
-    {
-      label: 'Swap usage %',
+    mainSeries({
+      label: 'swap use',
       data: p.points.map((pt) => ({ x: pt.memFill, y: pt.swapUsage })),
-      borderColor: PALETTE.ink,
-      backgroundColor: PALETTE.inkFill,
-      borderWidth: 2,
-      pointRadius: 0,
-      fill: true,
-      tension: 0.2,
-    },
-    // Kswapd band: two boundary lines + filled area between via the same
-    // dataset's fill. We achieve this with paired dummy datasets.
-    {
-      label: 'kswapd band (high watermark)',
-      data: [
-        { x: p.highFillPct, y: 0 },
-        { x: p.highFillPct, y: 100 },
-      ],
-      borderColor: PALETTE.quiet,
-      borderDash: [4, 3],
-      borderWidth: 1,
-      pointRadius: 0,
-      fill: false,
-      showLine: true,
-    },
-    {
-      label: 'kswapd band (low watermark)',
-      data: [
-        { x: p.lowFillPct, y: 0 },
-        { x: p.lowFillPct, y: 100 },
-      ],
-      borderColor: PALETTE.quiet,
-      borderDash: [4, 3],
-      borderWidth: 1,
-      pointRadius: 0,
-      fill: false,
-      showLine: true,
-    },
-    verticalMarker(p.minFillPct, PALETTE.error, [2, 2]),
+      tone: seriesTone.value,
+      endLabel: `${ownerLabel(seriesTone.value)}: ${store.params.swappiness}`,
+    }),
   ]
+  if (showStock.value) {
+    datasets.push(
+      comparisonSeries({
+        label: 'kernel default',
+        data: stock.value.points.map((pt) => ({ x: pt.memFill, y: pt.swapUsage })),
+        endLabel: `kernel default ${domain.defsByKey.swappiness.kernelDefault}`,
+      }),
+    )
+  }
   return { datasets }
 })
 
@@ -90,42 +77,22 @@ const summary = computed(() => {
   )
 })
 
-const chartOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  parsing: false,
-  animation: false,
-  scales: {
-    x: {
-      type: 'linear',
-      min: 0,
-      max: 100,
-      title: { display: true, text: 'Memory fill %' },
-      ticks: { stepSize: 10 },
-    },
-    y: {
-      type: 'linear',
-      min: 0,
-      max: 100,
-      title: { display: true, text: 'Estimated swap usage %' },
-      ticks: { stepSize: 20 },
-    },
-  },
-  plugins: {
-    tooltip: {
-      callbacks: {
-        title: (items) => `mem fill ${items[0].parsed.x.toFixed(0)}%`,
-        label: (item) => {
-          if (item.datasetIndex === 0) return `swap: ${item.parsed.y.toFixed(1)}%`
-          if (item.datasetIndex === 1) return `high watermark`
-          if (item.datasetIndex === 2) return `low watermark`
-          if (item.datasetIndex === 3) return `min watermark (direct reclaim → OOM)`
-          return ''
-        },
-      },
-    },
-  },
-}))
+const chartOptions = computed(() => {
+  const p = pressure.value
+  const stockPoints = stock.value.points
+  return lineChartOptions({
+    x: { min: 0, max: 100, title: 'memory fill', stepSize: 20, format: pct },
+    y: { min: 0, max: 100, title: 'swap in use', stepSize: 25, format: pct },
+    zones: [band('x', p.highFillPct, p.lowFillPct), hatchZone('x', p.minFillPct, 100)],
+    stops: p.points.map((pt, i) =>
+      xStop(pt.memFill, `At ${pct(pt.memFill)} memory fill`, [
+        `${pct(pt.swapUsage)} of swap in use`,
+        ...(showStock.value ? [`Kernel default: ${pct(stockPoints[i].swapUsage)}`] : []),
+        zoneAt(pt.memFill, p),
+      ]),
+    ),
+  })
+})
 </script>
 
 <template>

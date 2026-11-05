@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { PALETTE, LIGHT, DARK, tone } from './palette.js'
+import { PALETTE, LIGHT, DARK, tone, tint, textTone } from './palette.js'
 import { TOKENS } from '../theme.js'
 
 const SRC = fileURLToPath(new URL('../..', import.meta.url))
@@ -31,19 +31,27 @@ describe('palette', () => {
   })
 
   // The token each design tone is, so legends styled with token classes match.
-  const TOKEN_SOURCES = { ink: 'ink', quiet: 'quiet', rule: 'rule', fit: 'fit', mine: 'mine', error: 'error', text: 'quiet', grid: 'rule' }
+  const TOKEN_SOURCES = {
+    ink: 'ink', quiet: 'quiet', rule: 'rule', fit: 'fit', mine: 'mine', error: 'error', text: 'quiet', grid: 'rule',
+    paper: 'paper', inkText: 'ink', ink2Text: 'ink-2', fitText: 'fit-text', mineText: 'mine-text', errorText: 'error',
+  }
 
   it('takes the design tones from the semantic tokens in both schemes', () => {
     for (const [name, token] of Object.entries(TOKEN_SOURCES)) {
       expect(LIGHT[name], name).toBe(TOKENS[token][0])
       expect(DARK[name], name).toBe(TOKENS[token][1])
     }
-    expect(LIGHT.inkFill).toBe('rgba(22, 22, 22, 0.08)')
-    expect(DARK.inkFill).toBe('rgba(236, 236, 232, 0.08)')
+  })
+
+  it('derives soft fills and text tones from the tones', () => {
+    expect(tint('ink', 0.1)).toBe('rgba(22, 22, 22, 0.1)')
+    expect(textTone('fit')).toBe(PALETTE.fitText)
+    expect(textTone('mine')).toBe(PALETTE.mineText)
+    expect(textTone('quiet')).toBe(PALETTE.ink2Text)
   })
 
   it('offers no tone outside the tokens', () => {
-    expect(Object.keys(LIGHT).sort()).toEqual([...Object.keys(TOKEN_SOURCES), 'inkFill'].sort())
+    expect(Object.keys(LIGHT).sort()).toEqual(Object.keys(TOKEN_SOURCES).sort())
     expect(Object.keys(DARK).sort()).toEqual(Object.keys(LIGHT).sort())
   })
 

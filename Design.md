@@ -650,6 +650,23 @@ must follow them, and existing UI must not regress.
   requires the label. The visible legend isn't an alternative for assistive
   technology. The frame wraps the canvas in an `aria-hidden` box, since
   vue-chartjs gives the canvas an unlabelled `role="img"` of its own.
+- **One chart look, built once** (`ui/charts/chartStyle.js` and the
+  `zones`, `endLabels` and `probe` plugins in `ui/charts/plugins.js`).
+  Charts describe their series, zones and probe stops as data and never set
+  a colour, width or dash themselves. The main series is a 2.75px line in
+  its owner's tone (`fit` while it comes from the profile, `mine` once the
+  visitor changed one of its parameters, via `useSeriesTone`; `ink` with no
+  parameters) over a 10% fill; a comparison (the kernel default) is a thin
+  dashed `quiet` line; a range is a shaded band or, for danger, an `error`
+  hatch, and only a single threshold stays a dashed line. Only horizontal
+  `rule` hairlines; in-plot text is at most a short end label per series,
+  and the zones are named in the `ChartLegend` key. Everything else is in
+  the probe's tooltip: hover, a tap or the arrow keys (the frame is
+  focusable; Home/End, PageUp/PageDown, Escape) rest a crosshair with a dot
+  on each series, or an outline on a bar, and a square hairline tooltip
+  says what that point means and which zone it is in. Keyboard moves are
+  announced through a polite live region beside the image, after 300 ms.
+  Chart.js's own tooltip, hover events and animation are off.
 - **No global keyboard shortcuts that clash with the browser.** For example,
   the old `Ctrl+Shift+C` copy binding overrode devtools.
 - **Type size and contrast floors.** Nothing meaningful is smaller than

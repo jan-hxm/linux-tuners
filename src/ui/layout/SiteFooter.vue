@@ -34,7 +34,7 @@ const year = new Date().getFullYear()
       <div class="text-sm leading-relaxed text-quiet">
         <p>
           <span class="font-medium text-ink">Colophon.</span>
-          Set in Host Grotesk and Fragment Mono. Defaults are quoted from kernel.org and the systemd manuals. The output is applied and read back on {{ testedOnText() }}.
+          Defaults are quoted from kernel.org and the systemd manuals. The output is applied and read back on {{ testedOnText() }}.
         </p>
         <nav aria-label="Footer" class="mt-3.5 flex flex-wrap gap-x-5 gap-y-1">
           <RouterLink v-if="hasGlossary" :to="{ name: 'glossary' }" :class="linkClass">Glossary</RouterLink>

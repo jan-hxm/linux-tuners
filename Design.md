@@ -636,6 +636,38 @@ must follow them, and existing UI must not regress.
   either bar's height changes, so the tuner chain truncates its labels to
   one line. The step labels are the profile step's own word ("Hardware" on
   swap), Preset, Tune and Export.
+- **The settings outline keeps the reader's place** (`ui/outline/`). It
+  lists Preset, Tune and Export, under Tune each group shown and under each
+  group every card shown, by its def `title` on one line, in a
+  `<nav aria-label="Settings outline">` of nested lists. What is in view
+  (`useScrollSpy` over the group and card anchors, only while the tune step
+  is current) is a thick `fit` segment on the outline's line, as in the step
+  chain, with `aria-current="location"`. A changed setting carries the
+  `mine` dot and one with a warning or error its mark, both also said in the
+  link's name ("…, changed by you, warning"). Hidden advanced cards and a
+  collapsed group are one "+N advanced" / "+N settings" line that opens them
+  as the group's own button does and focuses the first card that appeared.
+  A pick scrolls the card's anchor (a `role="group"` wrapper with
+  `tabindex="-1"` in `ParameterPanel`, `setting-<key>`, with the sticky bars'
+  `scroll-mt`) into view, smoothly unless the reader prefers reduced motion,
+  and moves focus to it; the links never follow their hash, since the hash
+  holds the shared-link state. The list is built from the defs, the store
+  and the panel's view (`ui/useParameterView.js`, which `TunerPage` creates
+  and provides so the panel and the outline show the same cards), never from
+  a tuner id. From `xl` up it is a sticky rail left of the steps (12rem,
+  with its own padded scroll box) whose one toggle button (`aria-expanded`)
+  collapses it to a 2.5rem ruler of ticks, one link per card named by its
+  title, the one in view a thick `fit` tick and changed ones with the dot.
+  The rail starts expanded only where the settings column keeps the card's
+  40rem margin layout beside it and the graph column
+  (`railStartsExpanded`): with graphs it starts collapsed at 1280px
+  (column 43.5rem) and expanded at 1440 and 1920px (40rem, since the page's
+  measure stops growing at 86rem); without graphs it is expanded at every
+  `xl` width (62rem at 1280px). The reader's toggle lasts for the visit, in
+  memory only (no storage key). Below `xl` an "Outline" button beside the
+  step chain opens the same list in a focus-trapping drawer from the left
+  (`ui/focusTrap.js`, shared with `InfoDrawer`), which closes on a pick and
+  puts focus on the card, or on Escape and returns focus to the button.
 - **Tablists need roving tabindex *and* arrow-key handling**
   (Left/Right/Home/End), as in `GraphPanel`'s `onTabKeydown`.
 - **Modals and drawers trap focus, close on Escape, and restore focus to the

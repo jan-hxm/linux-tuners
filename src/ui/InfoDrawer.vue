@@ -4,6 +4,7 @@ import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
 import { optionLabel } from '@/core/profile.js'
 import { copyText } from '@/ui/fileActions.js'
+import { trapTab } from '@/ui/focusTrap.js'
 
 const tuner = useActiveTuner()
 const domain = useTunerDomain()
@@ -86,22 +87,7 @@ function onKey(e) {
 // Trap Tab within the dialog while it's open (aria-modal alone does not stop
 // focus escaping to the page behind the overlay).
 function onTrapKeydown(e) {
-  if (e.key !== 'Tab') return
-  const root = panel.value
-  if (!root) return
-  const focusables = root.querySelectorAll(
-    'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-  )
-  if (!focusables.length) return
-  const first = focusables[0]
-  const last = focusables[focusables.length - 1]
-  if (e.shiftKey && document.activeElement === first) {
-    e.preventDefault()
-    last.focus()
-  } else if (!e.shiftKey && document.activeElement === last) {
-    e.preventDefault()
-    first.focus()
-  }
+  trapTab(e, panel.value)
 }
 
 onMounted(() => window.addEventListener('keydown', onKey))

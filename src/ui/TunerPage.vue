@@ -17,7 +17,7 @@
  * tabs gets a full-width tune step and no impact bar. The router renders this
  * directly for each live tuner.
  */
-import { provide, computed, inject, nextTick } from 'vue'
+import { provide, computed, inject, nextTick, ref, onMounted, onBeforeUnmount } from 'vue'
 import { RouterLink, routerKey } from 'vue-router'
 import { useTunerStoreFor } from '@/core/createTunerStore.js'
 import { optionLabel } from '@/core/profile.js'
@@ -41,7 +41,11 @@ import AdSlot from '@/ui/AdSlot.vue'
 import RichText from '@/ui/RichText.vue'
 import NeedThisBox from '@/ui/NeedThisBox.vue'
 import { useScrollSpy } from '@/ui/useScrollSpy.js'
-import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY, PROFILE_DRAFT_KEY } from '@/ui/useActiveTuner.js'
+import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY, PROFILE_DRAFT_KEY, PARAMETER_VIEW_KEY } from '@/ui/useActiveTuner.js'
+import { useParameterView } from '@/ui/useParameterView.js'
+import { useOutline, railStartsExpanded } from '@/ui/outline/useOutline.js'
+import OutlineRail from '@/ui/outline/OutlineRail.vue'
+import OutlineDrawer from '@/ui/outline/OutlineDrawer.vue'
 
 const props = defineProps({
   /** @type {import('@/core/types.js').TunerDomain} */
@@ -55,6 +59,10 @@ provide(TUNER_DOMAIN_KEY, props.domain)
 // opened from a shared link starts on the summary line: its profile is set.
 const profileDraft = useProfileDraft(store, props.domain.profile, { collapsed: store.restoredFromLink })
 provide(PROFILE_DRAFT_KEY, profileDraft)
+// Which groups and cards the tune step shows, shared by the panel and the
+// settings outline so they always agree.
+const parameterView = useParameterView(store, props.domain)
+provide(PARAMETER_VIEW_KEY, parameterView)
 
 const graphTabs = props.domain.graphTabs
 const hasGraphs = graphTabs.length > 0
@@ -79,6 +87,31 @@ const activeIndex = computed(() => {
   const i = STEPS.findIndex((step) => step.id === activeStep.value)
   return i === -1 ? STEPS.length : i
 })
+
+// The settings outline (Design.md §7 "Settings outline"): a rail left of the
+// steps from xl up, a drawer from the step chain below that. It lists the
+// steps after the profile, the groups and the cards shown.
+const OUTLINE_STEPS = STEPS.slice(1)
+const outline = useOutline(store, props.domain, parameterView, { activeStep })
+// Expanded only where the settings column keeps the card's margin layout
+// beside it; the viewer's choice lasts for the visit, in memory only.
+const railExpanded = ref(false)
+const railToggled = ref(false)
+const stepsGrid = ref(null)
+function fitRail() {
+  if (railToggled.value || !stepsGrid.value) return
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+  railExpanded.value = railStartsExpanded(stepsGrid.value.clientWidth / rem, hasGraphs)
+}
+function setRailExpanded(on) {
+  railToggled.value = true
+  railExpanded.value = on
+}
+onMounted(() => {
+  fitRail()
+  window.addEventListener('resize', fitRail, { passive: true })
+})
+onBeforeUnmount(() => window.removeEventListener('resize', fitRail))
 
 // The machine this page tunes, as the profile form's collapsed summary says it.
 const profileSummary = computed(() =>
@@ -147,53 +180,78 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
       aria-label="Steps"
       class="mt-6 bg-paper lg:sticky lg:top-[var(--site-header-h)] lg:z-20"
     >
-      <StepChain :steps="STEPS" :current="activeIndex" current-attr="location" truncate />
+      <div class="flex items-stretch gap-x-2">
+        <StepChain class="min-w-0 flex-1" :steps="STEPS" :current="activeIndex" current-attr="location" truncate />
+        <div class="flex xl:hidden">
+          <OutlineDrawer :outline="outline" :steps="OUTLINE_STEPS" :active-step="activeStep" />
+        </div>
+      </div>
     </nav>
 
-    <div class="mt-8">
-      <NeedThisBox :tuner-id="domain.id" />
+    <!-- From xl up the settings outline sits in a sticky rail left of the
+         steps; the steps keep a grid-cols-1 column below that. -->
+    <div
+      ref="stepsGrid"
+      class="grid grid-cols-1 xl:grid-cols-[auto_minmax(0,1fr)] xl:gap-x-8"
+    >
+      <div class="hidden xl:col-start-1 xl:row-start-1 xl:block">
+        <div class="sticky top-[calc(var(--site-header-h)+var(--step-chain-h)+1.5rem)] mt-8">
+          <OutlineRail
+            :expanded="railExpanded"
+            :outline="outline"
+            :steps="OUTLINE_STEPS"
+            :active-step="activeStep"
+            @update:expanded="setRailExpanded"
+          />
+        </div>
+      </div>
+      <div class="min-w-0 xl:col-start-2 xl:row-start-1">
+        <div class="mt-8">
+          <NeedThisBox :tuner-id="domain.id" />
+        </div>
+
+        <section :id="page.profileStep.id" class="mt-12" :class="STEP_SCROLL">
+          <StepHeader :num="1" :title="page.profileStep.title" :subtitle="page.profileStep.subtitle" />
+          <div class="mt-4">
+            <slot name="profile"><ProfileForm /></slot>
+          </div>
+        </section>
+
+        <section id="preset" class="mt-12" :class="STEP_SCROLL">
+          <StepHeader :num="2" title="Pick a starting point" subtitle="Optional: jump to a tuned baseline for your workload, then fine-tune." />
+          <div class="mt-4">
+            <PresetSelector />
+          </div>
+        </section>
+
+        <section id="tune" class="mt-12" :class="STEP_SCROLL">
+          <StepHeader :num="3" title="Tune and preview" :subtitle="page.tuneSubtitle" />
+          <ProfileDraftNotice class="mt-4" />
+          <div v-if="hasGraphs" class="mt-6 grid grid-cols-1 gap-y-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start lg:gap-x-12">
+            <!-- The graphs: open above the settings on a narrow screen, a sticky
+                 column beside them from lg up. The settings come first in the
+                 reading order. -->
+            <div
+              :id="GRAPHS_ID"
+              class="min-w-0 scroll-mt-16 max-lg:order-first lg:sticky lg:col-start-2 lg:row-start-1 lg:top-[calc(var(--site-header-h)+var(--step-chain-h)+1.5rem)] lg:self-start"
+            >
+              <GraphPanel :tabs="graphTabs" :impact="impact" />
+            </div>
+            <div class="min-w-0 lg:col-start-1 lg:row-start-1">
+              <ParameterPanel />
+            </div>
+          </div>
+          <ParameterPanel v-else class="mt-6" />
+        </section>
+
+        <section id="export" class="mt-12" :class="STEP_SCROLL">
+          <StepHeader :num="4" :title="page.exportStep.title" :subtitle="page.exportStep.subtitle" />
+          <div class="mt-4">
+            <ConfigOutput />
+          </div>
+        </section>
+      </div>
     </div>
-
-    <section :id="page.profileStep.id" class="mt-12" :class="STEP_SCROLL">
-      <StepHeader :num="1" :title="page.profileStep.title" :subtitle="page.profileStep.subtitle" />
-      <div class="mt-4">
-        <slot name="profile"><ProfileForm /></slot>
-      </div>
-    </section>
-
-    <section id="preset" class="mt-12" :class="STEP_SCROLL">
-      <StepHeader :num="2" title="Pick a starting point" subtitle="Optional: jump to a tuned baseline for your workload, then fine-tune." />
-      <div class="mt-4">
-        <PresetSelector />
-      </div>
-    </section>
-
-    <section id="tune" class="mt-12" :class="STEP_SCROLL">
-      <StepHeader :num="3" title="Tune and preview" :subtitle="page.tuneSubtitle" />
-      <ProfileDraftNotice class="mt-4" />
-      <div v-if="hasGraphs" class="mt-6 grid grid-cols-1 gap-y-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start lg:gap-x-12">
-        <!-- The graphs: open above the settings on a narrow screen, a sticky
-             column beside them from lg up. The settings come first in the
-             reading order. -->
-        <div
-          :id="GRAPHS_ID"
-          class="min-w-0 scroll-mt-16 max-lg:order-first lg:sticky lg:col-start-2 lg:row-start-1 lg:top-[calc(var(--site-header-h)+var(--step-chain-h)+1.5rem)] lg:self-start"
-        >
-          <GraphPanel :tabs="graphTabs" :impact="impact" />
-        </div>
-        <div class="min-w-0 lg:col-start-1 lg:row-start-1">
-          <ParameterPanel />
-        </div>
-      </div>
-      <ParameterPanel v-else class="mt-6" />
-    </section>
-
-    <section id="export" class="mt-12" :class="STEP_SCROLL">
-      <StepHeader :num="4" :title="page.exportStep.title" :subtitle="page.exportStep.subtitle" />
-      <div class="mt-4">
-        <ConfigOutput />
-      </div>
-    </section>
 
     <div class="mt-12 empty:hidden">
       <AdSlot :slot="page.adSlot" :label="`${domain.id} tuner footer`" />

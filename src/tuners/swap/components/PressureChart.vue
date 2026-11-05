@@ -115,7 +115,7 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-2">
-    <ChartFrame :aria-label="summary" height="20rem">
+    <ChartFrame :aria-label="summary">
       <Line :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <ChartLegend :items="LEGEND" />

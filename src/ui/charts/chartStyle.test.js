@@ -6,7 +6,6 @@ import { PALETTE, tint } from './palette.js'
 import {
   MAIN_WIDTH,
   band,
-  TIP_ROOM,
   barChartOptions,
   barKind,
   barSegment,
@@ -87,11 +86,6 @@ describe('chart style', () => {
     expect(typeof danger.backgroundColor).toBe('function')
     expect(danger.backgroundColor.hatchTone).toBe('error')
     expect(barSegment({ label: 'two', data: [1, 2], tone: ['ink', 'quiet'] }).backgroundColor).toEqual([PALETTE.ink, PALETTE.quiet])
-  })
-
-  it('keeps room above the plot for the tooltip', () => {
-    expect(lineChartOptions({ x: {}, y: {} }).layout.padding.top).toBe(TIP_ROOM)
-    expect(barChartOptions({ x: {} }).layout.padding.top).toBe(TIP_ROOM)
   })
 
   it('focuses the axis on where the data changes', () => {

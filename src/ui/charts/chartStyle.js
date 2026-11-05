@@ -23,11 +23,6 @@ export const THRESHOLD_DASH = [4, 4]
 /** Alpha of the area under the main series, and of a shaded band. */
 export const AREA_ALPHA = 0.1
 export const BAND_ALPHA = 0.14
-/**
- * Room above the plot for the probe's tooltip (ChartFrame puts it there, so
- * it never covers the plot or the point it describes).
- */
-export const TIP_ROOM = 72
 /** The contrast a mark that carries meaning needs against paper (WCAG 1.4.11). */
 export const MARK_CONTRAST = 3
 
@@ -204,7 +199,7 @@ export function lineChartOptions({ x, y, zones = [], stops = [] }) {
   return {
     ...BASE,
     parsing: false,
-    layout: { padding: { top: TIP_ROOM, right: 4 } },
+    layout: { padding: { top: 8, right: 4 } },
     scales: { x: bottomAxis(x), y: sideAxis(y) },
     plugins: { zones: { items: zones }, probe: { stops } },
   }
@@ -218,7 +213,7 @@ export function barChartOptions({ x, stacked = false, categories = false, stops 
   return {
     ...BASE,
     indexAxis: 'y',
-    layout: { padding: { top: TIP_ROOM } },
+    layout: { padding: { top: 4 } },
     scales: {
       x: { ...bottomAxis(x), stacked },
       y: { stacked, display: categories, grid: { display: false }, border: { display: false } },

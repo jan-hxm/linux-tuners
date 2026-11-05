@@ -40,7 +40,7 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-3">
-    <ChartFrame :aria-label="summary" height="12rem">
+    <ChartFrame :aria-label="summary" height="7rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-[13px] text-ink-2">

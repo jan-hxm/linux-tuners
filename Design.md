@@ -709,8 +709,13 @@ must follow them, and existing UI must not regress.
   (the frame is focusable; Home/End, PageUp/PageDown, Escape) rest a
   crosshair with a dot on each series, or an outline on a bar, and a
   compact square tooltip (title, one value line, a short zone note only
-  when it adds something) sits in the room kept above the plot, on the far
-  side of the crosshair, so it never covers the point. Keyboard moves are
+  when it adds something) floats over the plot in the top corner farthest
+  from the crosshair, and moves (bottom corner, clear of the crosshair, or
+  below the frame) so it never covers the probed point, a series' dot or
+  the probed bar (`placeTip`). A chart's height is
+  `clamp(11rem, 30vh, 15rem)` (bars 7rem), and the sticky graph column is
+  never taller than the viewport below the sticky bars: past that it
+  scrolls on its own and only then becomes a focusable, named region. Keyboard moves are
   announced through a polite live region beside the image, after 300 ms.
   Chart.js's own tooltip, hover events and animation are off.
 - **No global keyboard shortcuts that clash with the browser.** For example,

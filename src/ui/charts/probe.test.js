@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { nearestStop, stepIndex, stopText, valueAt } from './probe.js'
+import { nearestStop, placeTip, stepIndex, stopText, valueAt } from './probe.js'
 
 /** A chart double: x and y map 1:1 to pixels, one series. */
 const fakeChart = (data) => ({
+  width: 100,
+  height: 100,
   data: { datasets: [{ data, probeDot: true }] },
   isDatasetVisible: () => true,
   scales: { x: { getPixelForValue: (v) => v }, y: { getPixelForValue: (v) => v } },
@@ -49,5 +51,29 @@ describe('probe', () => {
     expect(stopText({ title: 'At 80% memory fill', lines: ['32% of swap in use', 'In the kswapd band.'] })).toBe(
       'At 80% memory fill. 32% of swap in use. In the kswapd band.',
     )
+  })
+
+  // y pixels are the values here, so a series at y=v sits v px from the top.
+  const overlaps = (t, w, h, x, y) => x >= t.left && x <= t.left + w && y >= t.top && y <= t.top + h
+
+  it('floats the tooltip in the top corner farthest from the crosshair', () => {
+    const chart = fakeChart([{ x: 0, y: 90 }, { x: 100, y: 90 }])
+    expect(placeTip(chart, { x: 80, title: '', lines: [] }, 30, 20)).toEqual({ left: 4, top: 4 })
+    expect(placeTip(chart, { x: 10, title: '', lines: [] }, 30, 20)).toEqual({ left: 66, top: 4 })
+  })
+
+  it('moves the tooltip off the point it describes', () => {
+    // A wide tooltip and a point in the top corner: the top spot would cover it.
+    const chart = fakeChart([{ x: 0, y: 5 }, { x: 100, y: 5 }])
+    const stop = { x: 50, title: '', lines: [] }
+    const t = placeTip(chart, stop, 60, 20)
+    expect(overlaps(t, 60, 20, 50, 5)).toBe(false)
+    expect(t.top).toBe(76)
+  })
+
+  it('puts the tooltip below the frame when a bar fills the plot', () => {
+    const el = { getProps: () => ({ x: 100, base: 0, y: 50, height: 90, width: 0 }) }
+    const chart = { ...fakeChart([]), options: { indexAxis: 'y' }, getDatasetMeta: () => ({ data: [el] }) }
+    expect(placeTip(chart, { element: { datasetIndex: 0, index: 0 }, title: '', lines: [] }, 40, 20).top).toBe(104)
   })
 })

@@ -16,11 +16,17 @@ import { nextTick, onBeforeUnmount, ref, useId } from 'vue'
 import { Chart } from 'chart.js'
 import './chartSetup.js'
 import { prefersDark } from './palette.js'
-import { anchorOf, nearestStop, stepIndex, stopText, stopsOf } from './probe.js'
+import { anchorOf, nearestStop, placeTip, stepIndex, stopText, stopsOf } from './probe.js'
 
 defineProps({
   ariaLabel: { type: String, required: true },
-  height: { type: String, default: '16rem', validator: (v) => /^\d+(\.\d+)?rem$/.test(v) },
+  // A rem height, or a clamp() of rems around a vh share, so a chart in the
+  // sticky graph column shrinks on a short viewport.
+  height: {
+    type: String,
+    default: 'clamp(11rem, 30vh, 15rem)',
+    validator: (v) => /^\d+(\.\d+)?rem$/.test(v) || /^clamp\(\d+(\.\d+)?rem, \d+vh, \d+(\.\d+)?rem\)$/.test(v),
+  },
 })
 
 /** How long the keyboard has to rest on a stop before it is announced. */
@@ -54,24 +60,19 @@ function show(index, from) {
   }
 }
 
-// Put the tooltip in the room above the plot (chartStyle.js keeps it free),
-// beside the crosshair on the side away from it, so it never covers the plot
-// or the point it describes. Runs again after the chart updates (new data, a
-// resize), so the words follow.
+// Float the tooltip over the plot, in the top corner farthest from the
+// crosshair, moved wherever it would cover the probed point (probe.js
+// placeTip). Runs again after the chart updates (new data, a resize), so the
+// words follow.
 function place(chart) {
   const stop = stopsOf(chart)[current]
-  const a = stop && anchorOf(chart, stop)
-  if (!a) return hide()
-  tip.value = { title: stop.title, value: stop.lines[0], note: stop.lines[1], left: a.x, top: 0, ready: false }
+  if (!stop || !anchorOf(chart, stop)) return hide()
+  tip.value = { title: stop.title, value: stop.lines[0], note: stop.lines[1], left: 0, top: 0, ready: false }
   nextTick(() => {
     const el = frame.value?.querySelector('[data-chart-tip]')
     if (!el || !tip.value) return
-    const w = el.offsetWidth
-    const h = el.offsetHeight
-    const W = chart.width
-    const left = a.x > W / 2 ? a.x - 8 - w : a.x + 8
-    const top = Math.max(0, (chart.chartArea?.top ?? h) - h - 6)
-    tip.value = { ...tip.value, left: Math.min(Math.max(0, left), Math.max(0, W - w)), top, ready: true }
+    const spot = placeTip(chart, stop, el.offsetWidth, el.offsetHeight)
+    if (spot) tip.value = { ...tip.value, ...spot, ready: true }
   })
 }
 

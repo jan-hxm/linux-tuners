@@ -82,25 +82,25 @@ function bandClass(band) {
       :id="`tabpanel-${activeTab}`"
       role="tabpanel"
       :aria-labelledby="`tab-${activeTab}`"
-      class="pt-5"
+      class="pt-3"
     >
       <component :is="activeComponent" />
 
-      <p class="mt-3 border-t border-rule pt-3 text-[15px] leading-[1.55] text-ink-2">{{ activeBlurb }}</p>
+      <p class="mt-2 border-t border-rule pt-2 text-[15px] leading-[1.5] text-ink-2">{{ activeBlurb }}</p>
 
       <!-- Impact numbers, one hairline row each. -->
-      <ul v-if="impact.length" class="mt-4">
+      <ul v-if="impact.length" class="mt-2">
         <li
           v-for="metric in impact"
           :key="metric.id"
-          class="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-rule py-2 last:border-b"
+          class="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-rule py-1.5 last:border-b"
         >
           <span class="text-[13px] text-quiet">{{ metric.label }}</span>
           <span class="font-mono text-[15px]" :class="bandClass(metric.band)">{{ metric.value }}</span>
         </li>
       </ul>
 
-      <p class="mt-3 text-[13px] text-quiet">{{ intro }}</p>
+      <p class="mt-2 text-[13px] text-quiet">{{ intro }}</p>
     </div>
   </section>
 </template>

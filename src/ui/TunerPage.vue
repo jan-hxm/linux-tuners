@@ -75,6 +75,25 @@ const page = props.domain.page
 /** The graph panel's anchor, the mobile impact bar's jump target. */
 const GRAPHS_ID = 'graphs'
 
+// The sticky graph column scrolls on its own once it is taller than the
+// viewport (lg up). Only then is it a focusable, named region, so the
+// keyboard can scroll it; otherwise it would be a stray tab stop.
+const graphsEl = ref(null)
+const graphsScroll = ref(false)
+let graphsObserver
+function measureGraphs() {
+  const el = graphsEl.value
+  graphsScroll.value = Boolean(el && el.scrollHeight > el.clientHeight + 1)
+}
+onMounted(() => {
+  if (typeof ResizeObserver === 'undefined' || !graphsEl.value) return
+  graphsObserver = new ResizeObserver(measureGraphs)
+  graphsObserver.observe(graphsEl.value)
+  if (graphsEl.value.firstElementChild) graphsObserver.observe(graphsEl.value.firstElementChild)
+  measureGraphs()
+})
+onBeforeUnmount(() => graphsObserver?.disconnect())
+
 const STEPS = [
   { num: 1, label: page.profileStep.label, id: page.profileStep.id },
   { num: 2, label: 'Preset', id: 'preset' },
@@ -231,10 +250,17 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
           <div v-if="hasGraphs" class="mt-6 grid grid-cols-1 gap-y-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start lg:gap-x-12">
             <!-- The graphs: open above the settings on a narrow screen, a sticky
                  column beside them from lg up. The settings come first in the
-                 reading order. -->
+                 reading order. The column is never taller than the viewport
+                 below the sticky bars: past that it scrolls on its own, and it
+                 is focusable so the keyboard can scroll it too (its tabs and
+                 chart take the arrow keys). -->
             <div
               :id="GRAPHS_ID"
-              class="min-w-0 scroll-mt-16 max-lg:order-first lg:sticky lg:col-start-2 lg:row-start-1 lg:top-[calc(var(--site-header-h)+var(--step-chain-h)+1.5rem)] lg:self-start"
+              class="min-w-0 scroll-mt-16 max-lg:order-first lg:sticky lg:col-start-2 lg:row-start-1 lg:top-[calc(var(--site-header-h)+var(--step-chain-h)+1.5rem)] lg:max-h-[calc(100vh-var(--site-header-h)-var(--step-chain-h)-2.5rem)] lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:p-1 lg:-m-1"
+              ref="graphsEl"
+              :role="graphsScroll ? 'region' : undefined"
+              :aria-label="graphsScroll ? 'Live simulation, scrollable' : undefined"
+              :tabindex="graphsScroll ? 0 : undefined"
             >
               <GraphPanel :tabs="graphTabs" :impact="impact" />
             </div>

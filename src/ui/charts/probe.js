@@ -119,3 +119,44 @@ export function stepIndex(key, current, count) {
 export function stopText(stop) {
   return [stop.title, ...stop.lines].map((s) => s.replace(/[.:]?$/, '.')).join(' ')
 }
+
+/** What the tooltip must never cover: the probed bar, or each series' dot (with a margin). */
+export function keepOut(chart, stop) {
+  const a = anchorOf(chart, stop)
+  if (!a) return []
+  if (a.box) return [a.box]
+  const pad = 8
+  const dots = stop.x === undefined ? [] : dotsAt(chart, stop.x).map((d) => chart.scales.y.getPixelForValue(d.y))
+  return [a.y, ...dots].map((y) => ({ left: a.x - pad, right: a.x + pad, top: y - pad, bottom: y + pad }))
+}
+
+const overlaps = (r, s) => r.left < s.right && r.right > s.left && r.top < s.bottom && r.bottom > s.top
+
+/**
+ * Where a w x h tooltip goes, in frame pixels: floating over the plot in the
+ * top corner farthest from the crosshair, else the bottom corner on that
+ * side, else shifted clear of the crosshair, else just below the frame. It
+ * never covers the probed point (or bar) or a series' dot at that stop.
+ */
+export function placeTip(chart, stop, w, h) {
+  const a = anchorOf(chart, stop)
+  if (!a) return null
+  const avoid = keepOut(chart, stop)
+  const { left, right, top, bottom } = chart.chartArea
+  const inset = 4
+  const farLeft = a.x > (left + right) / 2
+  const x = farLeft ? left + inset : right - w - inset
+  const clear = farLeft ? (a.box?.left ?? a.x - 8) - 10 - w : (a.box?.right ?? a.x + 8) + 10
+  const candidates = [
+    { left: x, top: top + inset },
+    { left: x, top: bottom - h - inset },
+    { left: clear, top: top + inset },
+    { left: clear, top: bottom - h - inset },
+  ]
+  const fits = (c) =>
+    c.left >= 0 && c.left + w <= chart.width && !avoid.some((r) => overlaps({ left: c.left, right: c.left + w, top: c.top, bottom: c.top + h }, r))
+  const spot = candidates.find(fits)
+  if (spot) return spot
+  // Nowhere clear on the plot (a bar across the whole width): below the frame.
+  return { left: Math.min(Math.max(0, a.x - w / 2), Math.max(0, chart.width - w)), top: chart.height + 4 }
+}

@@ -6,8 +6,9 @@
  * above the parameter list, out of view while a phone user tunes. This bar pins the same `impact` metrics to the bottom of
  * the viewport on small screens, restoring live feedback. Hidden at `lg` where
  * the real graph panel is visible. A link at its end jumps up to the full
- * graphs. Each metric gets a column, its label over its value, so all of
- * them fit at 320px. See Design.md §7.
+ * graphs. Each metric gets a column, its label over its value; a value
+ * never breaks (each column is at least as wide as its value), and the
+ * columns wrap to a second row before a value would. See Design.md §7.
  */
 import { followInPageLink } from '@/ui/inPageLink.js'
 
@@ -32,15 +33,15 @@ function bandClass(band) {
     aria-label="Live impact summary"
   >
     <div class="flex items-center gap-3">
-      <ul class="grid min-w-0 flex-1 auto-cols-fr grid-flow-col gap-3" aria-live="polite">
+      <ul class="flex min-w-0 flex-1 flex-wrap gap-x-3 gap-y-1.5" aria-live="polite">
         <li
           v-for="metric in impact"
           :key="metric.id"
-          class="flex min-w-0 flex-col items-start gap-0.5"
+          class="flex flex-1 basis-0 flex-col items-start gap-0.5"
         >
           <span class="text-[13px] leading-tight text-quiet">{{ metric.label }}</span>
           <span
-            class="max-w-full break-words font-mono text-[13px] leading-tight"
+            class="whitespace-nowrap font-mono text-[13px] leading-tight"
             :class="bandClass(metric.band)"
           >{{ metric.value }}</span>
         </li>
@@ -49,7 +50,7 @@ function bandClass(band) {
       <a
         :href="`#${graphsId}`"
         @click="followInPageLink($event, graphsId)"
-        class="inline-flex min-h-11 shrink-0 items-center border border-rule-strong px-3 text-[13px] font-medium text-ink hover:bg-paper-hover"
+        class="inline-flex min-h-11 shrink-0 items-center border border-rule-strong px-2.5 text-[13px] font-medium text-ink hover:bg-paper-hover"
       >Graphs <span aria-hidden="true">&nbsp;↑</span></a>
     </div>
   </div>

@@ -291,7 +291,7 @@ function openInDrawer() {
           </div>
           <button
             type="button"
-            class="min-h-11 shrink-0 border border-rule-strong px-3.5 text-sm font-medium text-ink hover:bg-paper-hover"
+            class="min-h-11 shrink-0 border border-fit px-3.5 text-sm font-medium text-fit-text hover:bg-fit-tint"
             :class="{ invisible: !changed }"
             :aria-label="`${backLabel}, ${def.title}`"
             @click="backToDefault"

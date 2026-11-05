@@ -40,3 +40,16 @@ export const MARK_TOKENS = ['ink', 'fit', 'mine', 'error']
  */
 export const FONT_SANS = ['"Host Grotesk"', '"Host Grotesk Fallback"', 'ui-sans-serif', 'system-ui', '-apple-system', '"Segoe UI"', 'Roboto', 'Arial', 'sans-serif']
 export const FONT_MONO = ['"Fragment Mono"', '"Fragment Mono Fallback"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace']
+
+/** WCAG relative luminance contrast of two hex colours. */
+export function contrast(a, b) {
+  const lum = (hex) => {
+    const [r, g, b] = hex.match(/[0-9a-f]{2}/gi).map((h) => {
+      const c = parseInt(h, 16) / 255
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    })
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x)
+  return (hi + 0.05) / (lo + 0.05)
+}

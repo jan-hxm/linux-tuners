@@ -1,7 +1,7 @@
 <script setup>
 /**
  * The key under a chart, drawn like the canvas (chartStyle.js): a line, a
- * dashed line, a shaded band, a solid fill or a hatch, in the item's tone
+ * dashed line, a shaded band, a solid fill, an outlined fill or a hatch, in the item's tone
  * from the palette, so it matches the chart in both schemes. The words carry
  * the meaning, so it never rests on colour alone.
  */
@@ -10,7 +10,7 @@ import { BAND_ALPHA } from './chartStyle.js'
 
 defineProps({
   /**
-   * `kind` is 'line' (default), 'dash', 'band', 'fill' or 'hatch'; `dash: true`
+   * `kind` is 'line' (default), 'dash', 'band', 'fill', 'outline' or 'hatch'; `dash: true`
    * is short for kind 'dash'.
    * @type {import('vue').PropType<{ label: string, tone: string, kind?: string, dash?: boolean }[]>}
    */
@@ -24,6 +24,7 @@ function swatch(item) {
   if (kind === 'dash') return { class: 'h-0 w-4 border-t-2 border-dashed', style: { borderColor: color } }
   if (kind === 'band') return { class: 'h-3 w-3', style: { background: tint(item.tone, BAND_ALPHA * 2) } }
   if (kind === 'fill') return { class: 'h-3 w-3', style: { background: color } }
+  if (kind === 'outline') return { class: 'h-3 w-3 border-[1.5px]', style: { borderColor: color, background: tint(item.tone, BAND_ALPHA) } }
   return {
     class: 'h-3 w-3 border',
     style: { borderColor: color, background: `repeating-linear-gradient(-45deg, ${color} 0 1px, transparent 1px 4px)` },

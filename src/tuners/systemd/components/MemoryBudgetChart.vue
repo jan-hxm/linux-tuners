@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
 import ChartLegend from '@/ui/charts/ChartLegend.vue'
-import { barChartOptions, barSegment, barStop } from '@/ui/charts/chartStyle.js'
+import { barChartOptions, barKind, barLegendTone, barSegment, barStop } from '@/ui/charts/chartStyle.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import * as simulation from '../simulation.js'
@@ -12,9 +12,9 @@ const { memoryBudget: memory } = useTunerSimulation(useActiveTuner(), simulation
 
 /** What each zone means, by the simulation's segment label. */
 const MEANING = {
-  'normal use': 'The slice runs unthrottled.',
-  'throttle (MemoryHigh→Max)': 'Past MemoryHigh the kernel throttles the slice and reclaims its memory hard.',
-  'above MemoryMax (OOM)': 'Out of reach: at MemoryMax the OOM killer stops processes in the slice.',
+  'normal use': 'unthrottled',
+  'throttle (MemoryHigh→Max)': 'throttled and reclaimed hard',
+  'above MemoryMax (OOM)': 'out of reach, OOM kill at the cap',
 }
 
 // The error zone is a danger zone, so it is hatched.
@@ -30,7 +30,7 @@ const chartData = computed(() => ({
 }))
 
 const legend = computed(() =>
-  memory.value.segments.map((s) => ({ label: s.label, tone: s.tone, kind: hatched(s) ? 'hatch' : 'fill' })),
+  memory.value.segments.map((s) => ({ label: s.label, tone: barLegendTone(s.tone, hatched(s)), kind: barKind(s.tone, hatched(s)) })),
 )
 
 // Text alternative for screen readers.
@@ -60,7 +60,7 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-3">
-    <ChartFrame :aria-label="summary" height="8rem">
+    <ChartFrame :aria-label="summary" height="12rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <ChartLegend :items="legend" />

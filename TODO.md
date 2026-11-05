@@ -8,6 +8,7 @@ details are kept in the local, gitignored `PRIVATE.md`, not here.
 ## 1. Next
 
 - [ ] **Reactive margin notes.** The margin notes are built from today's data and don't change with the value ([Design.md §7](Design.md#7-uiux-and-accessibility-conventions) "Three layers per parameter"). Let them answer back: give zones an optional plain-text `note` (`{ label, min, max, note }`) so the note for the current zone changes as the value moves (data first, no tuner-specific code in the card); optionally let a domain explain a derived default in one line built from the profile's option labels ("database, 64 GiB, swap on NVMe, so 10"). Contract tests: every note is plain text with no em dash, and every zone with a note has bounds. Notes update in an `aria-live="polite"` region, debounced like `IssueAnnouncer` so a drag doesn't chatter. Today's notes are long paragraphs cut to their first sentence, so shorter notes written for the margin belong here too.
+- [ ] **Finer swap pressure samples near full memory.** `pressureCurve` samples memory fill in 1% steps, but on a typical machine the kswapd band and the min watermark sit within the last 1% (99.3 to 99.6% on 16 GiB). The chart now zooms the axis to that range (`focusRange`), so the curve shows only three samples there and starts rising at 99%, before the band. Sample more densely near the watermarks (simulation change, keep the tests).
 
 ## 2. Open questions for the maintainer
 

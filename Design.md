@@ -697,13 +697,20 @@ must follow them, and existing UI must not regress.
   visitor changed one of its parameters, via `useSeriesTone`; `ink` with no
   parameters) over a 10% fill; a comparison (the kernel default) is a thin
   dashed `quiet` line; a range is a shaded band or, for danger, an `error`
-  hatch, and only a single threshold stays a dashed line. Only horizontal
-  `rule` hairlines; in-plot text is at most a short end label per series,
-  and the zones are named in the `ChartLegend` key. Everything else is in
-  the probe's tooltip: hover, a tap or the arrow keys (the frame is
-  focusable; Home/End, PageUp/PageDown, Escape) rest a crosshair with a dot
-  on each series, or an outline on a bar, and a square hairline tooltip
-  says what that point means and which zone it is in. Keyboard moves are
+  hatch, and only a single threshold stays a dashed line. A bar that
+  carries meaning meets 3:1 on paper in both schemes: a tone too faint for
+  that (`rule`) is drawn as a `quiet` outline instead. Where the data is
+  flat for most of an axis, `focusRange` starts the axis a margin before
+  the change, and the axis title and the summary say the range shown. Only
+  horizontal `rule` hairlines; units go in the ticks and y titles are
+  dropped (the caption names the quantity); in-plot text is at most a short
+  end label per series, and the zones are named in the `ChartLegend` key.
+  Everything else is in the probe's tooltip: hover, a tap or the arrow keys
+  (the frame is focusable; Home/End, PageUp/PageDown, Escape) rest a
+  crosshair with a dot on each series, or an outline on a bar, and a
+  compact square tooltip (title, one value line, a short zone note only
+  when it adds something) sits in the room kept above the plot, on the far
+  side of the crosshair, so it never covers the point. Keyboard moves are
   announced through a polite live region beside the image, after 300 ms.
   Chart.js's own tooltip, hover events and animation are off.
 - **No global keyboard shortcuts that clash with the browser.** For example,

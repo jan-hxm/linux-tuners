@@ -31,8 +31,7 @@ const chartOptions = computed(() => {
     x: { min: 0, max: 100, title: 'of kernel.pid_max', format: (v) => `${v}%` },
     stops: t.bars.map((b, i) =>
       barStop(0, i, b.label, [
-        `${b.value.toLocaleString('en-US')} tasks`,
-        `${b.pct}% of kernel.pid_max (${t.pidMax.toLocaleString('en-US')}).`,
+        `${b.value.toLocaleString('en-US')} tasks, ${b.pct}% of pid_max`,
       ]),
     ),
   })
@@ -41,7 +40,7 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-3">
-    <ChartFrame :aria-label="summary" height="8rem">
+    <ChartFrame :aria-label="summary" height="12rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-[13px] text-ink-2">

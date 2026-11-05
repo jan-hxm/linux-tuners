@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
 import ChartLegend from '@/ui/charts/ChartLegend.vue'
-import { barChartOptions, barSegment, barStop } from '@/ui/charts/chartStyle.js'
+import { barChartOptions, barKind, barLegendTone, barSegment, barStop } from '@/ui/charts/chartStyle.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import * as simulation from '../simulation.js'
@@ -12,10 +12,10 @@ const { watermarkBars: watermarks } = useTunerSimulation(useActiveTuner(), simul
 
 /** What each zone means, by the simulation's segment label. */
 const MEANING = {
-  'reserved (≤ min)': "Kept back for the kernel's own urgent allocations.",
-  'direct-reclaim (min → low)': 'Below low kswapd is woken; at min, programs reclaim directly and stall.',
-  'kswapd (low → high)': 'kswapd reclaims in the background until free memory is back above high.',
-  'usable (> high)': 'Free for programs and the page cache, no reclaim pressure.',
+  'reserved (≤ min)': 'kept for the kernel',
+  'direct-reclaim (min → low)': 'programs stall to reclaim',
+  'kswapd (low → high)': 'kswapd reclaims in the background',
+  'usable (> high)': 'free, no reclaim',
 }
 
 const gib = (mib) => `${(mib / 1024).toFixed(1)} GiB`
@@ -31,7 +31,7 @@ const chartData = computed(() => ({
 }))
 
 const legend = computed(() =>
-  watermarks.value.segments.map((s) => ({ label: s.label, tone: s.tone, kind: hatched(s) ? 'hatch' : 'fill' })),
+  watermarks.value.segments.map((s) => ({ label: s.label, tone: barLegendTone(s.tone, hatched(s)), kind: barKind(s.tone, hatched(s)) })),
 )
 
 // Text alternative for screen readers.
@@ -49,7 +49,7 @@ const chartOptions = computed(() => {
     x: { min: 0, max: total, format: (v) => `${(v / 1024).toFixed(0)} GiB` },
     stops: segments.map((s, i) =>
       barStop(i, 0, s.label, [
-        `${s.mib.toLocaleString('en-US')} MiB (${gib(s.mib)}), ${((s.mib / total) * 100).toFixed(1)}% of RAM`,
+        `${gib(s.mib)}, ${((s.mib / total) * 100).toFixed(1)}% of RAM`,
         ...(MEANING[s.label] ? [MEANING[s.label]] : []),
       ]),
     ),
@@ -59,7 +59,7 @@ const chartOptions = computed(() => {
 
 <template>
   <div class="space-y-3">
-    <ChartFrame :aria-label="summary" height="8rem">
+    <ChartFrame :aria-label="summary" height="12rem">
       <Bar :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <ChartLegend :items="legend" />

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
 import ChartLegend from '@/ui/charts/ChartLegend.vue'
-import { band, comparisonSeries, hatchZone, lineChartOptions, mainSeries, ownerLabel, xStop } from '@/ui/charts/chartStyle.js'
+import { band, comparisonSeries, firstRise, focusRange, hatchZone, lineChartOptions, mainSeries, ownerLabel, xStop } from '@/ui/charts/chartStyle.js'
 import { useSeriesTone } from '@/ui/charts/useSeriesTone.js'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
@@ -33,13 +33,20 @@ const showStock = computed(() => stock.value.points.some((pt, i) => pt.swapUsage
 
 const pct = (v) => `${Math.round(v)}%`
 
-// Which part of the curve a memory fill falls in, in plain words.
+// The fill range worth showing: everything before the curve rises (or the
+// kswapd band starts) is flat at 0, so the axis starts a margin before it.
+const range = computed(() => {
+  const p = pressure.value
+  const points = p.points.map((pt) => ({ x: pt.memFill, y: pt.swapUsage }))
+  return focusRange({ min: 0, max: 100, from: Math.min(firstRise(points), p.noSwap ? Infinity : p.highFillPct) })
+})
+
+// The zone a memory fill falls in, said only past the kswapd band's start.
 function zoneAt(fill, p) {
-  if (p.noSwap) return 'Swap is off, so nothing is swapped.'
-  if (fill < p.highFillPct) return 'Below the kswapd band: memory is free, little swapping.'
-  if (fill < p.lowFillPct) return 'In the kswapd band: kswapd reclaims in the background.'
-  if (fill < p.minFillPct) return 'Past the low watermark: reclaim gets harder.'
-  return 'Past the min watermark: direct reclaim stalls programs, OOM risk.'
+  if (p.noSwap || fill < p.highFillPct) return null
+  if (fill < p.lowFillPct) return 'in the kswapd band'
+  if (fill < p.minFillPct) return 'past the low watermark'
+  return 'direct reclaim, OOM risk'
 }
 
 const chartData = computed(() => {
@@ -73,31 +80,42 @@ const summary = computed(() => {
   return (
     `Swap pressure chart: estimated swap usage stays near zero until about ${p.highFillPct.toFixed(0)}% memory fill, ` +
     `then ramps up through the kswapd band, climbing steeply past the low watermark near ${p.lowFillPct.toFixed(0)}% ` +
-    `and approaching direct reclaim and OOM around ${p.minFillPct.toFixed(0)}%.`
+    `and approaching direct reclaim and OOM around ${p.minFillPct.toFixed(0)}%.` +
+    (range.value.zoomed ? ` The chart shows memory fill from ${range.value.min}% to 100%, where that happens.` : '')
   )
 })
 
 const chartOptions = computed(() => {
   const p = pressure.value
+  const r = range.value
   const stockPoints = stock.value.points
   return lineChartOptions({
-    x: { min: 0, max: 100, title: 'memory fill', stepSize: 20, format: pct },
-    y: { min: 0, max: 100, title: 'swap in use', stepSize: 25, format: pct },
+    x: {
+      min: r.min,
+      max: r.max,
+      title: r.zoomed ? `memory fill, ${r.min} to ${r.max}% shown` : 'memory fill',
+      stepSize: r.zoomed ? undefined : 20,
+      format: (v) => `${+v.toFixed(1)}%`,
+    },
+    y: { min: 0, max: 100, stepSize: 25, format: pct },
     zones: [band('x', p.highFillPct, p.lowFillPct), hatchZone('x', p.minFillPct, 100)],
-    stops: p.points.map((pt, i) =>
-      xStop(pt.memFill, `At ${pct(pt.memFill)} memory fill`, [
-        `${pct(pt.swapUsage)} of swap in use`,
-        ...(showStock.value ? [`Kernel default: ${pct(stockPoints[i].swapUsage)}`] : []),
-        zoneAt(pt.memFill, p),
-      ]),
-    ),
+    stops: p.points
+      .map((pt, i) => ({ pt, stock: stockPoints[i] }))
+      .filter(({ pt }) => pt.memFill >= r.min)
+      .map(({ pt, stock: s }) => {
+        const value = showStock.value
+          ? `${pct(pt.swapUsage)} of swap, default ${pct(s.swapUsage)}`
+          : `${pct(pt.swapUsage)} of swap in use`
+        const zone = zoneAt(pt.memFill, p)
+        return xStop(pt.memFill, `At ${pct(pt.memFill)} memory fill`, zone ? [value, zone] : [value])
+      }),
   })
 })
 </script>
 
 <template>
   <div class="space-y-2">
-    <ChartFrame :aria-label="summary">
+    <ChartFrame :aria-label="summary" height="20rem">
       <Line :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <ChartLegend :items="LEGEND" />

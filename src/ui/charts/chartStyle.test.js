@@ -6,8 +6,12 @@ import { PALETTE, tint } from './palette.js'
 import {
   MAIN_WIDTH,
   band,
+  TIP_ROOM,
   barChartOptions,
+  barKind,
   barSegment,
+  firstRise,
+  focusRange,
   comparisonSeries,
   hatchZone,
   lineChartOptions,
@@ -72,11 +76,34 @@ describe('chart style', () => {
     expect(o.indexAxis).toBe('y')
     expect(o.scales.x.grid.display).toBe(false)
     expect(o.scales.y.display).toBe(false)
-    const solid = barSegment({ label: 'ok', data: [1], tone: 'rule' })
-    expect(solid.backgroundColor).toBe(PALETTE.rule)
+    const solid = barSegment({ label: 'ok', data: [1], tone: 'ink' })
+    expect(solid.backgroundColor).toBe(PALETTE.ink)
+    // rule is too faint on paper to carry a bar, so it becomes a quiet outline.
+    const faint = barSegment({ label: 'free', data: [1], tone: 'rule' })
+    expect(faint.borderColor).toBe(PALETTE.quiet)
+    expect(faint.markTone).toBe('quiet')
+    expect([barKind('rule'), barKind('ink'), barKind('error', true)]).toEqual(['outline', 'fill', 'hatch'])
     const danger = barSegment({ label: 'oom', data: [1], tone: 'error', hatch: true })
     expect(typeof danger.backgroundColor).toBe('function')
     expect(danger.backgroundColor.hatchTone).toBe('error')
     expect(barSegment({ label: 'two', data: [1, 2], tone: ['ink', 'quiet'] }).backgroundColor).toEqual([PALETTE.ink, PALETTE.quiet])
+  })
+
+  it('keeps room above the plot for the tooltip', () => {
+    expect(lineChartOptions({ x: {}, y: {} }).layout.padding.top).toBe(TIP_ROOM)
+    expect(barChartOptions({ x: {} }).layout.padding.top).toBe(TIP_ROOM)
+  })
+
+  it('focuses the axis on where the data changes', () => {
+    const flatThenRise = [0, 1, 2, 3].map((i) => ({ x: i * 33, y: i === 3 ? 50 : 0 }))
+    expect(firstRise(flatThenRise)).toBe(66)
+    expect(firstRise([{ x: 0, y: 0 }, { x: 1, y: 0 }])).toBe(Infinity)
+    // The change is at 99 of 0..100: show 98..100.
+    expect(focusRange({ min: 0, max: 100, from: 99 })).toEqual({ min: 98, max: 100, zoomed: true })
+    // A wide band starting at 80: a margin of half the rest, rounded down.
+    expect(focusRange({ min: 0, max: 100, from: 80 })).toEqual({ min: 70, max: 100, zoomed: true })
+    // Early change, or none: the whole axis.
+    expect(focusRange({ min: 0, max: 100, from: 20 })).toEqual({ min: 0, max: 100, zoomed: false })
+    expect(focusRange({ min: 0, max: 100, from: Infinity })).toEqual({ min: 0, max: 100, zoomed: false })
   })
 })

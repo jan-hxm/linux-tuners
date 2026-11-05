@@ -41,11 +41,11 @@ const summary = computed(() => {
   return `Dirty writeback chart: over a 120-second constant write workload, ${stall}. Background flush threshold is ${d.bgLine}% of available memory.`
 })
 
-// What is happening at one second, in plain words.
+// What is happening at one second, said only once something happens.
 function stateAt(p, d) {
-  if (p.stall) return `At the ${d.ratioLine}% ceiling: writes stall until the flusher catches up.`
-  if (p.dirty >= d.bgLine) return `Above the ${d.bgLine}% background threshold: the flusher writes back.`
-  return `Below the ${d.bgLine}% background threshold: pages wait in memory.`
+  if (p.stall) return 'writes stall'
+  if (p.dirty >= d.bgLine) return 'flusher writing back'
+  return null
 }
 
 const chartOptions = computed(() => {
@@ -54,16 +54,16 @@ const chartOptions = computed(() => {
   const yMax = Math.max(d.ratioLine + 5, 25)
   return lineChartOptions({
     x: { min: 0, max: d.points.at(-1).t, title: 'seconds', stepSize: 20 },
-    y: { min: 0, max: yMax, title: 'dirty, % of RAM', format: (v) => `${v}%` },
+    y: { min: 0, max: yMax, format: (v) => `${v}%` },
     zones: [threshold('y', d.bgLine), hatchZone('y', d.ratioLine, yMax)],
-    stops: d.points.map((p) => xStop(p.t, `At ${p.t} s`, [`${p.dirty.toFixed(1)}% of RAM dirty`, stateAt(p, d)])),
+    stops: d.points.map((p) => xStop(p.t, `At ${p.t} s`, [`${p.dirty.toFixed(1)}% of RAM dirty`, stateAt(p, d)].filter(Boolean))),
   })
 })
 </script>
 
 <template>
   <div class="space-y-2">
-    <ChartFrame :aria-label="summary">
+    <ChartFrame :aria-label="summary" height="20rem">
       <Line :data="chartData" :options="chartOptions" />
     </ChartFrame>
     <ChartLegend :items="LEGEND" />

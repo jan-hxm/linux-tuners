@@ -27,7 +27,7 @@ defineProps({
 const ANNOUNCE_DELAY = 300
 
 const frame = ref(null)
-const tip = ref(null) // { title, lines, left, top, ready }
+const tip = ref(null) // { title, value, note, left, top, ready }
 const announcement = ref('')
 const hintId = `chart-hint-${useId()}`
 let current = null // the active stop's index
@@ -54,30 +54,23 @@ function show(index, from) {
   }
 }
 
-// Put the tooltip beside the stop: right of the crosshair (left past the
-// middle), above or below a bar, then nudged to stay inside the frame. Runs
-// again after the chart updates (new data, a resize), so the words follow.
+// Put the tooltip in the room above the plot (chartStyle.js keeps it free),
+// beside the crosshair on the side away from it, so it never covers the plot
+// or the point it describes. Runs again after the chart updates (new data, a
+// resize), so the words follow.
 function place(chart) {
   const stop = stopsOf(chart)[current]
   const a = stop && anchorOf(chart, stop)
   if (!a) return hide()
-  tip.value = { title: stop.title, lines: stop.lines, left: a.x, top: a.y, ready: false }
+  tip.value = { title: stop.title, value: stop.lines[0], note: stop.lines[1], left: a.x, top: 0, ready: false }
   nextTick(() => {
     const el = frame.value?.querySelector('[data-chart-tip]')
     if (!el || !tip.value) return
     const w = el.offsetWidth
     const h = el.offsetHeight
     const W = chart.width
-    const H = chart.height
-    let left
-    let top
-    if (a.box) {
-      left = a.x - w / 2
-      top = a.box.top - 8 - h >= 0 ? a.box.top - 8 - h : a.box.bottom + 8
-    } else {
-      left = a.x > W / 2 ? a.x - 14 - w : a.x + 14
-      top = Math.min(Math.max(0, a.y > H * 0.45 ? a.y - 14 - h : a.y + 14), Math.max(0, H - h))
-    }
+    const left = a.x > W / 2 ? a.x - 8 - w : a.x + 8
+    const top = Math.max(0, (chart.chartArea?.top ?? h) - h - 6)
     tip.value = { ...tip.value, left: Math.min(Math.max(0, left), Math.max(0, W - w)), top, ready: true }
   })
 }
@@ -174,18 +167,12 @@ onBeforeUnmount(() => {
         v-if="tip"
         aria-hidden="true"
         data-chart-tip
-        class="pointer-events-none absolute z-10 w-max max-w-[17rem] border border-ink bg-paper px-3 py-2"
+        class="pointer-events-none absolute z-10 w-max whitespace-nowrap border border-ink bg-paper px-2.5 py-1.5"
         :style="{ left: `${tip.left}px`, top: `${tip.top}px`, visibility: tip.ready ? 'visible' : 'hidden' }"
       >
         <p class="text-[13px] leading-snug text-ink-2">{{ tip.title }}</p>
-        <p
-          v-for="(line, i) in tip.lines"
-          :key="i"
-          class="mt-0.5 leading-snug text-ink"
-          :class="i === 0 ? 'font-mono text-[14px]' : 'text-[13px]'"
-        >
-          {{ line }}
-        </p>
+        <p class="font-mono text-[14px] leading-snug text-ink">{{ tip.value }}</p>
+        <p v-if="tip.note" class="text-[13px] leading-snug text-ink-2">{{ tip.note }}</p>
       </div>
     </div>
     <p :id="hintId" class="sr-only">Use the left and right arrow keys to read the chart point by point.</p>

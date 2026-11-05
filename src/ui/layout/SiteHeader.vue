@@ -1,82 +1,104 @@
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { LIVE_TUNERS } from '@/tuners/registry.js'
 import TickLogo from './TickLogo.vue'
 import { PAGE_WIDTH } from './pageWidth.js'
 
-// On a phone the tuner links don't fit, so the nav scrolls sideways on its
-// own instead of widening the page. Keep the current tuner's link in view, and
-// fade an edge while there are more links past it, since the scrollbar is
-// hidden (Design.md §7).
-const nav = ref(null)
+// One row: logo, a "Tuners" disclosure button, the current tuner's name, the
+// Glossary link (only once that route exists) and Start setup. The button opens
+// a full-width panel listing every live tuner with its question. It is a
+// disclosure, not a modal: no focus trap, Escape and a click outside close it
+// (Design.md §7).
 const route = useRoute()
-const linkClass = 'inline-flex min-h-9 shrink-0 items-center whitespace-nowrap border-b-2 border-transparent px-2 text-ink-2 hover:text-ink'
-const more = ref({ before: false, after: false })
+const router = useRouter()
+const root = ref(null)
+const button = ref(null)
+const open = ref(false)
+const hasGlossary = computed(() => router.hasRoute('glossary'))
+const current = computed(() => LIVE_TUNERS.find((t) => t.path === route.path) ?? null)
+const label = (t) => t.navLabel ?? t.title
 
-function updateFades() {
-  const el = nav.value
-  if (!el) return
-  const max = el.scrollWidth - el.clientWidth
-  more.value = { before: el.scrollLeft > 1, after: el.scrollLeft < max - 1 }
+function close({ refocus = false } = {}) {
+  open.value = false
+  if (refocus) nextTick(() => button.value?.focus())
 }
 
-function revealActive() {
-  nextTick(() => {
-    nav.value?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-    updateFades()
-  })
+function onKeydown(event) {
+  if (open.value && event.key === 'Escape') close({ refocus: true })
 }
-
-// A link reached with Tab scrolls clear of the edge fades, so its whole
-// focus ring shows (the nav's scroll-padding is the fade's width).
-function revealFocused(event) {
-  event.target.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
+function onPointerDown(event) {
+  if (open.value && root.value && !root.value.contains(event.target)) close()
 }
 
 onMounted(() => {
-  revealActive()
-  window.addEventListener('resize', updateFades)
+  document.addEventListener('keydown', onKeydown)
+  document.addEventListener('pointerdown', onPointerDown)
 })
-onBeforeUnmount(() => window.removeEventListener('resize', updateFades))
-watch(() => route.path, revealActive)
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeydown)
+  document.removeEventListener('pointerdown', onPointerDown)
+})
+watch(() => route.fullPath, () => close())
 </script>
 
 <template>
-  <!-- Static on a phone, where the logo row and the tuner nav stack into two
-       rows; sticky from lg up, where it is the single row that
-       --site-header-h (main.css) measures. -->
-  <header class="z-30 border-b border-rule bg-paper lg:sticky lg:top-0">
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 py-2 lg:flex-nowrap" :class="PAGE_WIDTH">
-      <RouterLink to="/" class="order-1 flex shrink-0 items-center gap-2.5 whitespace-nowrap text-base font-semibold tracking-tight text-ink">
+  <!-- Sticky from lg up; --site-header-h (main.css) measures this one row. The
+       panel is absolutely placed under it, so it never changes that height. -->
+  <header ref="root" class="relative z-30 border-b border-rule bg-paper lg:sticky lg:top-0">
+    <div class="flex items-center gap-x-3 py-2 sm:gap-x-6" :class="PAGE_WIDTH">
+      <RouterLink to="/" aria-current-value="false" class="flex shrink-0 items-center gap-2.5 whitespace-nowrap text-base font-semibold tracking-tight text-ink">
         <TickLogo />
-        <span>linux-tuners.dev</span>
+        <span class="max-[420px]:sr-only">linux-tuners.dev</span>
       </RouterLink>
-      <RouterLink
-        to="/setup"
-        class="order-2 ml-auto inline-flex min-h-11 shrink-0 items-center whitespace-nowrap bg-ink px-4 text-[15px] font-medium text-paper hover:bg-ink-2 lg:order-3 lg:ml-0"
-      >Start setup</RouterLink>
-      <div class="relative order-3 min-w-0 basis-full lg:order-2 lg:flex-1 lg:basis-auto">
-        <nav ref="nav" aria-label="Tuners" class="flex min-w-0 scroll-px-9 items-center gap-1 overflow-x-auto px-1 py-1 text-[15px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:justify-end" @scroll.passive="updateFades" @focusin="revealFocused">
-          <!-- The landing page's own entry, so the nav shows where you are there too.
-               Exact match only: every page sits under "/". -->
-          <RouterLink
-            to="/"
-            :class="linkClass"
-            active-class=""
-            exact-active-class="!border-ink !text-ink font-medium"
-          >All tuners</RouterLink>
-          <RouterLink
-            v-for="tuner in LIVE_TUNERS"
-            :key="tuner.id"
-            :to="tuner.path"
-            :class="linkClass"
-            active-class="!border-ink !text-ink font-medium"
-          >{{ tuner.navLabel }}</RouterLink>
-        </nav>
-        <span v-if="more.before" data-fade="before" aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-paper to-transparent" />
-        <span v-if="more.after" data-fade="after" aria-hidden="true" class="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-paper to-transparent" />
+      <button
+        ref="button"
+        type="button"
+        class="inline-flex min-h-11 shrink-0 items-center gap-2.5 border border-rule px-3.5 text-[15px] font-medium text-ink hover:bg-paper-hover sm:px-3.5"
+        :class="open ? 'bg-paper-hover' : ''"
+        :aria-expanded="open ? 'true' : 'false'"
+        aria-controls="tuners-menu"
+        @click="open = !open"
+      >Tuners<span aria-hidden="true" class="font-mono text-[15px] text-ink-2">{{ open ? '−' : '+' }}</span></button>
+      <p v-if="current" class="m-0 hidden min-w-0 items-center gap-2.5 text-[15px] text-ink-2 sm:flex">
+        <span aria-hidden="true" class="text-quiet">/</span>
+        <span aria-current="page" class="truncate border-b-2 border-ink py-2 text-ink">{{ label(current) }}</span>
+      </p>
+      <div class="ml-auto flex shrink-0 items-center gap-1">
+        <RouterLink v-if="hasGlossary" :to="{ name: 'glossary' }" class="hidden min-h-11 items-center px-3 text-[15px] text-ink-2 hover:text-ink sm:inline-flex">Glossary</RouterLink>
+        <RouterLink
+          to="/setup"
+          class="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap bg-ink px-4 text-[15px] font-medium text-paper hover:bg-ink-2"
+        >Start setup</RouterLink>
       </div>
+    </div>
+    <div
+      v-show="open"
+      id="tuners-menu"
+      class="absolute inset-x-0 top-full max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-ink bg-paper"
+    >
+      <nav aria-label="Tuners" :class="PAGE_WIDTH" class="py-4">
+        <ul class="m-0 grid list-none grid-cols-1 gap-x-8 p-0 sm:grid-cols-2 lg:grid-cols-3">
+          <li v-for="tuner in LIVE_TUNERS" :key="tuner.id">
+            <RouterLink
+              :to="tuner.path"
+              class="block px-3 py-3.5 hover:bg-paper-hover"
+              :class="current?.id === tuner.id ? 'border-t-[3px] border-fit' : 'border-t border-rule'"
+              :aria-current="current?.id === tuner.id ? 'page' : undefined"
+              @click="close()"
+            >
+              <span class="block text-base font-medium text-ink">{{ label(tuner) }}</span>
+              <span v-if="tuner.question" class="mt-1 block text-sm leading-snug text-ink-2">{{ tuner.question }}</span>
+            </RouterLink>
+          </li>
+        </ul>
+        <RouterLink
+          to="/"
+          class="mt-2 inline-flex min-h-11 items-center px-3 text-[15px] font-medium text-ink underline underline-offset-4"
+          :aria-current="route.path === '/' ? 'page' : undefined"
+          @click="close()"
+        >All tuners</RouterLink>
+      </nav>
     </div>
   </header>
 </template>

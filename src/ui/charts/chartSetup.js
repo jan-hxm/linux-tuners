@@ -16,6 +16,7 @@ import {
 import { watch } from 'vue'
 import { PALETTE } from './palette.js'
 import { FONT_SANS, FONT_MONO } from '../theme.js'
+import { zonesPlugin, endLabelsPlugin, probePlugin } from './plugins.js'
 
 Chart.register(
   CategoryScale,
@@ -26,6 +27,9 @@ Chart.register(
   Tooltip,
   Legend,
   Filler,
+  zonesPlugin,
+  endLabelsPlugin,
+  probePlugin,
 )
 
 // The page's type (Design.md §7): words in the sans stack, and the numbers on
@@ -38,6 +42,12 @@ Chart.defaults.scale.ticks.font = { family: FONT_MONO.join(', '), size: 13 }
 // Category labels are words (TasksChart's limits), so they stay in sans.
 Chart.defaults.scales.category.ticks.font = { family: FONT_SANS.join(', '), size: 13 }
 Chart.defaults.plugins.legend.display = false
+// The probe replaces Chart.js's tooltip and hover (ChartFrame handles the
+// pointer, the keys and touch), so the chart takes no events of its own.
+// Nothing animates, so prefers-reduced-motion has nothing to stop.
+Chart.defaults.plugins.tooltip.enabled = false
+Chart.defaults.events = []
+Chart.defaults.animation = false
 
 // Tick, title and grid colours follow the scheme. Synchronous, so the defaults
 // change before ChartFrame rebuilds its chart.

@@ -3,62 +3,33 @@ import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
 import ChartFrame from '@/ui/charts/ChartFrame.vue'
 import ChartLegend from '@/ui/charts/ChartLegend.vue'
-import { PALETTE } from '@/ui/charts/palette.js'
+import { hatchZone, lineChartOptions, mainSeries, threshold, xStop } from '@/ui/charts/chartStyle.js'
+import { useSeriesTone } from '@/ui/charts/useSeriesTone.js'
 import { useActiveTuner } from '@/ui/useActiveTuner.js'
 import { useTunerSimulation } from '@/ui/useTunerSimulation.js'
 import * as simulation from '../simulation.js'
 
+/** The parameters the timeline is drawn from. */
+const KEYS = ['dirty_ratio', 'dirty_background_ratio', 'dirty_writeback_centisecs', 'dirty_expire_centisecs']
+
 const LEGEND = [
-  { label: 'dirty pages', tone: 'ink' },
-  { label: 'bg flush', tone: 'quiet', dash: true },
-  { label: 'stall ceiling', tone: 'error', dash: true },
+  { label: 'background flush', tone: 'quiet', kind: 'dash' },
+  { label: 'writes stall', tone: 'error', kind: 'hatch' },
 ]
 
 const { dirtyTimeline: dirty } = useTunerSimulation(useActiveTuner(), simulation)
+const seriesTone = useSeriesTone(KEYS)
 
-const chartData = computed(() => {
-  const d = dirty.value
-  return {
-    datasets: [
-      {
-        label: 'Dirty pages (% RAM)',
-        data: d.points.map((p) => ({ x: p.t, y: p.dirty })),
-        borderColor: PALETTE.ink,
-        backgroundColor: PALETTE.inkFill,
-        borderWidth: 2,
-        pointRadius: 0,
-        fill: true,
-        tension: 0.1,
-      },
-      {
-        label: 'background flush threshold',
-        data: [
-          { x: 0, y: d.bgLine },
-          { x: d.points.at(-1).t, y: d.bgLine },
-        ],
-        borderColor: PALETTE.quiet,
-        borderDash: [4, 3],
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: false,
-        showLine: true,
-      },
-      {
-        label: 'synchronous stall ceiling',
-        data: [
-          { x: 0, y: d.ratioLine },
-          { x: d.points.at(-1).t, y: d.ratioLine },
-        ],
-        borderColor: PALETTE.error,
-        borderDash: [4, 3],
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: false,
-        showLine: true,
-      },
-    ],
-  }
-})
+const chartData = computed(() => ({
+  datasets: [
+    mainSeries({
+      label: 'dirty pages',
+      data: dirty.value.points.map((p) => ({ x: p.t, y: p.dirty })),
+      tone: seriesTone.value,
+      tension: 0.1,
+    }),
+  ],
+}))
 
 // Text alternative for screen readers.
 const summary = computed(() => {
@@ -70,44 +41,23 @@ const summary = computed(() => {
   return `Dirty writeback chart: over a 120-second constant write workload, ${stall}. Background flush threshold is ${d.bgLine}% of available memory.`
 })
 
+// What is happening at one second, in plain words.
+function stateAt(p, d) {
+  if (p.stall) return `At the ${d.ratioLine}% ceiling: writes stall until the flusher catches up.`
+  if (p.dirty >= d.bgLine) return `Above the ${d.bgLine}% background threshold: the flusher writes back.`
+  return `Below the ${d.bgLine}% background threshold: pages wait in memory.`
+}
+
 const chartOptions = computed(() => {
   const d = dirty.value
-  // Cap Y so the stall ceiling has visible room above it.
+  // Cap Y so the stall zone has visible room above the ceiling.
   const yMax = Math.max(d.ratioLine + 5, 25)
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    parsing: false,
-    animation: false,
-    scales: {
-      x: {
-        type: 'linear',
-        min: 0,
-        max: d.points.at(-1).t,
-        title: { display: true, text: 'time (s)' },
-        ticks: { stepSize: 20 },
-      },
-      y: {
-        type: 'linear',
-        min: 0,
-        max: yMax,
-        title: { display: true, text: 'dirty memory (% RAM)' },
-      },
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          title: (items) => `t = ${items[0].parsed.x}s`,
-          label: (item) => {
-            if (item.datasetIndex === 0) return `dirty: ${item.parsed.y.toFixed(1)}%`
-            if (item.datasetIndex === 1) return `bg flush threshold (${d.bgLine}%)`
-            if (item.datasetIndex === 2) return `stall ceiling (${d.ratioLine}%)`
-            return ''
-          },
-        },
-      },
-    },
-  }
+  return lineChartOptions({
+    x: { min: 0, max: d.points.at(-1).t, title: 'seconds', stepSize: 20 },
+    y: { min: 0, max: yMax, title: 'dirty, % of RAM', format: (v) => `${v}%` },
+    zones: [threshold('y', d.bgLine), hatchZone('y', d.ratioLine, yMax)],
+    stops: d.points.map((p) => xStop(p.t, `At ${p.t} s`, [`${p.dirty.toFixed(1)}% of RAM dirty`, stateAt(p, d)])),
+  })
 })
 </script>
 

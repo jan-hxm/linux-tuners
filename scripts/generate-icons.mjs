@@ -4,9 +4,11 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import * as fontkit from 'fontkit'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const publicDir = resolve(root, 'public')
+const fontDir = resolve(root, 'src/assets/fonts')
 
 const targets = [
   // Square mark — favicons, PWA, AdSense logo upload
@@ -22,8 +24,40 @@ const targets = [
   { src: 'og-image.svg', out: 'og-image.png', width: 1200, height: 630 },
 ]
 
+// The renderer has no Host Grotesk installed and would fall back to Arial, so
+// every <text> is drawn as outlines from the site's own font files first.
+const fonts = new Map()
+function hostGrotesk(weight) {
+  if (!fonts.has(weight)) fonts.set(weight, fontkit.openSync(resolve(fontDir, `host-grotesk-latin-${weight}.woff2`)))
+  return fonts.get(weight)
+}
+
+const attr = (attrs, name) => attrs.match(new RegExp(`(?:^|\\s)${name}="([^"]*)"`))?.[1]
+
+/** One <text> (attributes on the element, start-anchored, plain text) as a <path>. */
+function outline(attrs, text) {
+  const font = hostGrotesk(attr(attrs, 'font-weight') ?? '400')
+  const size = Number(attr(attrs, 'font-size'))
+  const spacing = Number(attr(attrs, 'letter-spacing') ?? 0)
+  const scale = size / font.unitsPerEm
+  const run = font.layout(text)
+  let x = Number(attr(attrs, 'x'))
+  const y = Number(attr(attrs, 'y'))
+  const d = run.glyphs
+    .map((glyph, i) => {
+      const pos = run.positions[i]
+      const path = glyph.path.scale(scale, -scale).translate(x + pos.xOffset * scale, y - pos.yOffset * scale).toSVG()
+      x += pos.xAdvance * scale + spacing
+      return path
+    })
+    .join('')
+  return `<path fill="${attr(attrs, 'fill') ?? '#000'}" d="${d}"/>`
+}
+
+const outlineText = (svg) => svg.replace(/<text\b([^>]*)>([^<]*)<\/text>/g, (_, attrs, text) => outline(attrs, text))
+
 for (const t of targets) {
-  const svg = await readFile(resolve(publicDir, t.src))
+  const svg = Buffer.from(outlineText(await readFile(resolve(publicDir, t.src), 'utf8')))
   const pipeline = sharp(svg, { density: 384 })
   if (t.size) {
     pipeline.resize(t.size, t.size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })

@@ -14,7 +14,9 @@ import { LIVE_TUNERS } from './tuners/registry.js'
 
 export const SITE_ORIGIN = 'https://linux-tuners.dev'
 export const SITE_NAME = 'linux-tuners.dev'
-export const OG_IMAGE_PATH = '/og-image.png'
+// Bump v whenever og-image.png changes: Discord, Slack, LinkedIn and Facebook
+// cache link previews by image URL and would keep showing the old card.
+export const OG_IMAGE_PATH = '/og-image.png?v=2'
 export const DEFAULT_LOCALE = 'en_US'
 
 /**

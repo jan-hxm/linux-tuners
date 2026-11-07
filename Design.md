@@ -292,7 +292,9 @@ runs.
 
 Every page shares one card image, `og-image.png`
 (1200×630), which `npm run gen:icons` renders from `public/og-image.svg`: X,
-LinkedIn and Facebook don't show SVG previews. Edit the SVG, then regenerate.
+LinkedIn and Facebook don't show SVG previews. Edit the SVG, then regenerate
+and bump the `?v=` in `OG_IMAGE_PATH` (and `index.html`), since link previews
+are cached by image URL.
 The renderer has no Host Grotesk, so the script outlines every `<text>` (here
 and in `logo.svg`) from the self-hosted woff2 files with fontkit first. Keep
 each `<text>` start-anchored, plain, and with its attributes on the element.

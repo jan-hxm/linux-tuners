@@ -7,7 +7,9 @@
  * mark pair in both schemes.
  *
  * Measured adjustments to the spec: dark `quiet` is #90908A (the spec's
- * #8E8E88 is 4.44:1 on `fit-tint`, under the 4.5:1 text floor).
+ * #8E8E88 is 4.44:1 on `fit-tint`, under the 4.5:1 text floor) and dark
+ * `rule-strong` is #72726E (the old #4E4E4A was 2.2:1 on paper; this is the
+ * darkest neutral of the family at 3:1 on every surface).
  */
 export const TOKENS = Object.freeze({
   paper: ['#FAFAF8', '#151514'], // page background
@@ -16,7 +18,7 @@ export const TOKENS = Object.freeze({
   'ink-2': ['#4A4A46', '#B8B8B2'], // second text (descriptions)
   quiet: ['#6B6B66', '#90908A'], // labels, captions, [n] marks
   rule: ['#DEDED9', '#2E2E2B'], // hairlines between rows
-  'rule-strong': ['#8C8C86', '#4E4E4A'], // secondary button borders, minor ticks
+  'rule-strong': ['#8C8C86', '#72726E'], // secondary button borders, minor ticks (3:1 on every surface)
   fit: ['#1F7A6B', '#4FB8A3'], // "fits your machine" mark, selected radio dot
   'fit-text': ['#1A6658', '#5CC9B4'], // "fits your machine" text
   'fit-tint': ['#EEF4F2', '#1A2C28'], // selected row background

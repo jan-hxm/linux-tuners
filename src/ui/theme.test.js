@@ -68,10 +68,10 @@ describe('semantic tokens (Design.md §7)', () => {
   })
 
   it('keeps every mark (tick, bar, dot, focus ring) at 3:1 on every surface, in both schemes', () => {
-    // `rule` and `rule-strong` are hairlines, minor ticks and secondary button
-    // borders beside a text label, not marks, so they have no floor here.
+    // `rule` is a hairline beside a text label, so it has no floor here;
+    // `rule-strong` (secondary button borders, minor ticks) is held to 3:1 too.
     for (const [scheme, label] of SCHEMES) {
-      for (const mark of MARK_TOKENS) {
+      for (const mark of [...MARK_TOKENS, 'rule-strong']) {
         for (const bg of SURFACE_TOKENS) {
           expect(contrast(TOKENS[mark][scheme], TOKENS[bg][scheme]), `${mark} on ${bg}, ${label}`).toBeGreaterThanOrEqual(3)
         }

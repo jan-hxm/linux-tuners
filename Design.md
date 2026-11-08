@@ -736,9 +736,10 @@ must follow them, and existing UI must not regress.
   `mine-tint`) in both schemes; primary buttons are `paper` on `ink` (hover
   `ink-2`). Marks (the kernel-default tick, the fit bar, the "yours" dot,
   the error frame, the focus ring) use `ink`, `fit`, `mine` and `error`, at
-  least 3:1 on every surface. `rule` and `rule-strong` are hairlines beside a
-  text label, never the only carrier of meaning (dark `rule-strong` is
-  2.2:1 on paper). `theme.test.js` measures every pair, so a shade change
+  least 3:1 on every surface. `rule-strong` (secondary button borders, minor
+  ticks) also holds 3:1 on every surface in both schemes (dark is `#72726E`,
+  3.8:1 on paper); `rule` is a hairline beside a text label, never the only
+  carrier of meaning. `theme.test.js` measures every pair, so a shade change
   that breaks one fails the suite. A disabled control may fall below the
   floor (`opacity-50`), as WCAG allows.
 - **Focus rings stay visible on every surface.** `main.css` gives every

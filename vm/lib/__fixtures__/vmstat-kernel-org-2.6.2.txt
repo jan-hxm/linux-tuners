@@ -1,0 +1,31 @@
+# /proc/vmstat, kernel 2.6.2 (2004), with the single "allocstall" counter
+# that 4.8 split into allocstall_<zone>. Martin Bligh's test captures on
+# kernel.org:
+# https://www.kernel.org/pub/linux/kernel/people/mbligh/andrew/tio.2.6.2-8p-ext2-1024-1024-block.04-02-17_12.30.37/proc/vmstat.before.009
+# Copied verbatim.
+---
+nr_dirty 5998
+nr_writeback 0
+nr_unstable 0
+nr_page_table_pages 76
+nr_mapped 1311
+nr_slab 2623
+pgpgin 32446271
+pgpgout 31458233
+pswpin 0
+pswpout 0
+pgalloc 18521617
+pgfree 18538261
+pgactivate 1958528
+pgdeactivate 1838162
+pgfault 6468885
+pgmajfault 781
+pgscan 14573260
+pgrefill 2232931
+pgsteal 13815929
+pginodesteal 0
+kswapd_steal 13813032
+kswapd_inodesteal 2206
+pageoutrun 87757
+allocstall 83
+pgrotated 4867

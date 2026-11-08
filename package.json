@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:vm": "vitest run --config vitest.vm.config.js"
+    "test:vm": "vitest run --config vitest.vm.config.js",
+    "vm:capture": "node vm/capture.mjs"
   },
   "dependencies": {
     "chart.js": "^4.6.1",

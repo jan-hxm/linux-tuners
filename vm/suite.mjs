@@ -24,6 +24,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { VM } from './lib/vm.mjs'
 import { IMAGES } from './lib/images.mjs'
 import { PERF_OPEN, BPF_MAP, py } from './lib/probes.mjs'
+import { loadProbes, readEvidence, runProbes, staleProbes } from './lib/probeKinds.mjs'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { isEmitted } from '@/tuners/security/calculations.js'
 import { kernelFileMax, kernelWatches } from '@/tuners/filesystem/calculations.js'
@@ -969,6 +970,22 @@ libc.syscall(250, 7, -4)
         // And at boot.
         await vm.reboot()
         expect(await vm.sysctls(Object.keys(want))).toEqual(want)
+      })
+    })
+
+    // Last, so the probes run on the same VM: the learning pages' evidence
+    // (npm run vm:capture) still holds on this kernel. Values the suite's
+    // writes change compare by shape only (probeKinds.mjs `compare`).
+    describe('learn evidence is fresh', () => {
+      it('every guide probe reads as captured, on the same kernel', async () => {
+        const probes = await loadProbes()
+        if (!Object.keys(probes).length) return
+        const evidence = readEvidence(id)
+        expect(evidence, `${id}: no src/learn/evidence/${id}.json; run npm run vm:capture ${id}`).not.toBeNull()
+        const kernel = (await vm.run('uname -r')).stdout.trim()
+        expect(kernel, `${id}: evidence is from ${evidence.kernel}; run npm run vm:capture ${id}`).toBe(evidence.kernel)
+        const stale = staleProbes(probes, evidence.probes, await runProbes(vm, probes))
+        expect(stale.map((s) => `${s} on ${id}`)).toEqual([])
       })
     })
   })

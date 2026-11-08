@@ -10,9 +10,9 @@ import { fileURLToPath } from 'node:url'
 import {
   KINDS, GUEST, TUNERS_DIR, checkProbe, evidenceEntry, evidenceFile, loadProbes, parseZoneinfo,
   readEvidence, runProbes, sortedEvidence, staleProbes, staleReason,
-} from '../vm/lib/probeKinds.mjs'
+} from './probeKinds.mjs'
 
-const ROOT = fileURLToPath(new URL('..', import.meta.url))
+const ROOT = fileURLToPath(new URL('../..', import.meta.url))
 const FIXTURES = join(ROOT, 'vm', 'lib', '__fixtures__')
 /** A fixture's text after its "# source" header and the "---" line. */
 const fixture = (name) => readFileSync(join(FIXTURES, name), 'utf8').replace(/\r\n/g, '\n').split('\n---\n').slice(1).join('\n---\n')

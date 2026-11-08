@@ -150,4 +150,20 @@ export const GLOSSARY = Object.freeze({
     definition:
       'The kernel stopping the whole machine on purpose because it cannot safely go on. Every program stops with it; the kernel.panic setting decides whether the machine then reboots on its own.',
   },
+  // sysv-ipc guide
+  'sysv-ipc': {
+    term: 'System V IPC',
+    definition:
+      'Three older kernel tools that let programs on one machine work together: shared memory segments, semaphores and message queues. Programs create them with calls such as shmget(), semget() and msgget(), and the kernel limits how many of each may exist.',
+  },
+  'shm-segment': {
+    term: 'Shared memory segment',
+    definition:
+      'A block of memory that the kernel lets several programs use at once. A change one program makes is visible to the others. A segment exists until it is removed, even when no program has it attached.',
+  },
+  semaphore: {
+    term: 'Semaphore',
+    definition:
+      'A counter that programs use to take turns or to wait for each other. A program that needs the counter to be higher than it is waits until another program raises it. System V semaphores are created in groups called sets.',
+  },
 })

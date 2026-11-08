@@ -265,6 +265,7 @@ export const TUNERS = [
   {
     id: 'sysv-ipc',
     status: 'live',
+    guide: { slug: 'ipc', status: 'draft' },
     question: 'Does Oracle, Db2 or older middleware ask for higher IPC limits?',
     path: '/sysv-ipc',
     navLabel: 'IPC',

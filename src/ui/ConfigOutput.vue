@@ -13,7 +13,7 @@ import { copyText, downloadText, downloadNames } from '@/ui/fileActions.js'
 import { differingKeys } from '@/core/valueTypes.js'
 import InstallSteps from '@/ui/InstallSteps.vue'
 import PlusMinus from '@/ui/PlusMinus.vue'
-import { installGuide } from '@/ui/installGuide.js'
+import { nextStepSentence } from '@/ui/installGuide.js'
 import { settingsSummary } from '@/ui/settingsSummary.js'
 
 const tuner = useActiveTuner()
@@ -81,10 +81,7 @@ const shareStatus = ref('idle')
 const copied = ref(false)
 watch(output, () => (copied.value = false))
 const copyLabel = computed(() => (files.value.length > 1 ? 'Copy all files' : 'Copy the file'))
-const nextStep = computed(() => {
-  const title = installGuide(files.value, { combined: files.value.length > 1 }).groups[0]?.title
-  return title ? ` Next: ${title.charAt(0).toLowerCase()}${title.slice(1)}.` : ''
-})
+const nextStep = computed(() => nextStepSentence(files.value, { combined: files.value.length > 1 }))
 
 // The confirmations reset after a moment; the timers are cleared on unmount.
 const timers = {}

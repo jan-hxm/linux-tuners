@@ -11,6 +11,7 @@ import { combineFiles } from '@/core/output/files.js'
 import { copyText, downloadText, downloadNames } from '@/ui/fileActions.js'
 import InstallSteps from '@/ui/InstallSteps.vue'
 import PlusMinus from '@/ui/PlusMinus.vue'
+import { nextStepSentence } from '@/ui/installGuide.js'
 import { settingsSummary } from '@/ui/settingsSummary.js'
 import { machineHeader } from './machineProfile.js'
 import { SETUP_STEPS } from './steps.js'
@@ -56,6 +57,7 @@ async function copyAll() {
   await copy('all', combined.value)
   copied.value = status.value.all === 'ok'
 }
+const nextStep = computed(() => nextStepSentence(allFiles.value, { combined: true }))
 const copyLink = () => copy('link', `${window.location.origin}${window.location.pathname}#${setup.linkHash()}`)
 
 const copyLabel = (key, idle) => ({ ok: 'Copied', fail: 'Copy failed' })[status.value[key]] ?? idle
@@ -111,7 +113,7 @@ const SMALL = 'inline-flex min-h-11 items-center border border-rule-strong px-3 
         </div>
 
         <div aria-live="polite" class="mt-2 min-h-6 text-sm">
-          <p v-if="status.all === 'ok'" class="text-fit-text">Copied to clipboard. Next: save the files, then apply them.</p>
+          <p v-if="status.all === 'ok'" class="text-fit-text">Copied to clipboard.{{ nextStep }}</p>
           <p v-else-if="status.all === 'fail'" class="text-error">Clipboard write failed. Open a file below and copy it by hand.</p>
           <p v-if="status.link === 'ok'" class="text-fit-text">Link to this setup copied.</p>
           <p v-else-if="status.link === 'fail'" class="text-error">Clipboard write failed, but the URL bar already holds the current setup.</p>

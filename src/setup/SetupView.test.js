@@ -62,6 +62,21 @@ describe('SetupView', () => {
     wrapper.unmount()
   })
 
+  it('names the first install step after Copy all, like the tuner page', async () => {
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText: vi.fn().mockResolvedValue() } })
+    const wrapper = await setupAt('/setup')
+    for (let i = 0; i <= SETUP_STEPS.length; i++) {
+      await wrapper.findAll('button').find((b) => b.text().endsWith('→')).trigger('click')
+    }
+    expect(heading(wrapper)).toContain('Files')
+    await wrapper.findAll('button').find((b) => /^Copy all \d+ files$/.test(b.text())).trigger('click')
+    await flushPromises()
+    const live = wrapper.get('[aria-live="polite"]')
+    expect(live.text()).toContain('Copied to clipboard. Next: save the files.')
+    expect(live.text()).not.toContain('then apply')
+    vi.unstubAllGlobals()
+  })
+
   it('starts from the role the landing page picked, and marks the skipped steps', async () => {
     const wrapper = await setupAt('/setup?role=desktop')
     const setup = useSetupStore()

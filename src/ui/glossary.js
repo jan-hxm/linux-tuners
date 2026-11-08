@@ -99,4 +99,55 @@ export const GLOSSARY = Object.freeze({
     definition:
       'Non-uniform memory access: on machines with several CPU sockets (and some large single CPUs), each group of cores has memory attached to it that is faster to reach than the memory of the other groups. Each group with its memory is a NUMA node.',
   },
+  // swap guide
+  swap: {
+    term: 'Swap',
+    definition:
+      'Space on a disk, or in compressed RAM, where the kernel moves program memory when RAM runs short. Reading it back is slower than reading RAM. swapon --show lists the swap a machine has.',
+  },
+  page: {
+    term: 'Page',
+    definition:
+      'The fixed-size block the kernel manages memory in, usually 4 KiB on x86. RAM, file cache and swap are all handed out and counted in pages.',
+  },
+  'memory-zone': {
+    term: 'Memory zone',
+    definition:
+      'A range of RAM the kernel manages on its own, such as DMA32 or Normal on x86. Each zone has its own free-memory watermarks, listed in /proc/zoneinfo.',
+  },
+  readahead: {
+    term: 'Readahead',
+    definition:
+      'Reading a few neighbouring pages along with the one a program asked for, on the guess that it needs them next. A right guess saves later reads; a wrong one costs time and memory.',
+  },
+  zram: {
+    term: 'zram',
+    definition:
+      'A swap device in compressed RAM. Swapped-out pages are compressed and kept in memory instead of on a disk, so reading them back needs no disk access.',
+  },
+  'dentry-cache': {
+    term: 'Dentry and inode caches',
+    definition:
+      'The kernel keeps the file names it has looked up (dentries) in memory, with file details such as size and owner (inodes). The next lookup of the same path then skips the disk.',
+  },
+  'flusher-thread': {
+    term: 'Flusher thread',
+    definition:
+      'A kernel thread that writes dirty pages to disk in the background, so the programs that changed them can carry on. It also wakes on a timer to write out data that has waited too long.',
+  },
+  overcommit: {
+    term: 'Overcommit',
+    definition:
+      'Promising programs more memory than RAM and swap hold, on the bet that they will not all use what they asked for. Memory a program has asked for but not yet written to takes no RAM.',
+  },
+  'commit-limit': {
+    term: 'Commit limit',
+    definition:
+      'The most memory the kernel will promise in total when overcommit is strict (vm.overcommit_memory = 2). It is all of swap plus a share of RAM. /proc/meminfo shows it as CommitLimit, and what has been promised as Committed_AS.',
+  },
+  'kernel-panic': {
+    term: 'Kernel panic',
+    definition:
+      'The kernel stopping the whole machine on purpose because it cannot safely go on. Every program stops with it; the kernel.panic setting decides whether the machine then reboots on its own.',
+  },
 })

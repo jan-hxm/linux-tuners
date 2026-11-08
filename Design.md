@@ -364,8 +364,11 @@ The tuners answer "what should this one setting be". The guided setup answers
   of the screen on a phone while the roles are in view, and opens `/setup`
   with the role. The rule behind it holds for the whole site: never place a
   primary action below content whose length depends on data. The table's
-  setting counts and file paths come from every domain, so they load (about
-  93 kB gzip) when the table scrolls into view. The page is still
+  setting counts and file paths are stored in the registry (`settingCount`,
+  `writes`, [§9 Registry](#registry)), so the landing route loads no domain
+  module for them: every domain together is about 93 kB gzip, more than the
+  page itself. `importBoundaries.test.js` keeps `LandingView.vue` from
+  importing `tuners/domains.js`. The page is still
   prerendered in full, so crawlers and no-JS visitors see the same story.
   The picked role lives in the query (`/?role=database`), so Back and a
   shared link keep it; a value that isn't a known role (`isMachineRole`)
@@ -1215,6 +1218,14 @@ so that a new variant is an addition rather than an edit to shared code.
   runs out?"), which leads the landing table's row. The wording is approved
   by the maintainer; `registry.test.js` checks every live entry has one,
   ending with "?" and without an em dash. Planned entries have none.
+- for live entries, the landing table's facts: `settingCount` (the domain's
+  `parameterKeys.length`) and `writes` (the distinct file paths its
+  `generateConfig` writes for the default profile, in order). They are
+  derived values stored as data so the landing page and the static text need
+  no domain module for them. A guard in `contract.test.js` ("registry facts")
+  loads every domain and checks both against what it produces; its failure
+  names the entry and field to update and the value to put there, so a new
+  setting or a renamed file can't leave the table stale.
 
 Array order is the landing, nav and guided-setup order. It must stay plain data with no Vue
 or `@/` imports, because the postbuild script reads it under Node. The router,
@@ -1250,6 +1261,9 @@ over **every** registered tuner and checks:
 - No displayed string (defs, presets, validation messages, about content, the
   generated config) contains an em dash ([§8](#8-copy-conventions)).
 - Each live tuner's page mounts without console errors.
+- The registry's `settingCount` and `writes` for the tuner equal its
+  `parameterKeys.length` and the paths its default config writes
+  ([Registry](#registry)).
 
 A new tuner gets this coverage for free. Its own `*.test.js` files cover only
 its math and its cross-parameter rules.

@@ -1,20 +1,15 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import LandingView from './LandingView.vue'
 import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
 import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
-import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { swapDomain } from '@/tuners/swap/index.js'
 import { LANDING_EXAMPLE } from '@/tuners/swap/profile.js'
-import { tunerFacts } from '@/ui/landing.js'
 
 const Empty = { template: '<div />' }
 
-// No IntersectionObserver: the table loads its numbers on mount.
-beforeEach(() => vi.stubGlobal('IntersectionObserver', undefined))
-afterEach(() => vi.unstubAllGlobals())
 
 async function landingAt(path) {
   const router = createRouter({
@@ -176,18 +171,16 @@ describe('LandingView tuner table', () => {
     const region = wrapper.get('#tuners [role="region"]')
     expect(region.attributes('tabindex')).toBe('0')
     expect(region.attributes('aria-label')).toBeTruthy()
-    await vi.waitFor(() => expect(region.get('table').attributes('aria-busy')).toBe('false'))
 
     const rows = region.findAll('tbody tr')
     expect(rows).toHaveLength(LIVE_TUNERS.length)
     LIVE_TUNERS.forEach((t, i) => {
-      const domain = TUNER_DOMAINS.find((d) => d.id === t.id)
       const cells = rows[i].findAll('td')
       expect(cells[0].get('a').text()).toBe(t.question)
       expect(cells[0].get('a').attributes('href')).toBe(t.path)
       expect(cells[1].text()).toBe(t.title)
-      expect(cells[2].text()).toBe(String(domain.parameterKeys.length))
-      expect(cells[3].findAll('span').map((s) => s.text())).toEqual(tunerFacts(domain).writes)
+      expect(cells[2].text()).toBe(String(t.settingCount))
+      expect(cells[3].findAll('span').map((s) => s.text())).toEqual(t.writes)
     })
   })
 

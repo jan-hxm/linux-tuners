@@ -780,3 +780,21 @@ describe('guided setup output', () => {
     expect(new Set(names).size).toBe(names.length)
   })
 })
+
+describe('registry facts', () => {
+  // The landing table prints each tuner's setting count and file paths from
+  // the registry, so it loads no domain module (Design.md §9 "Registry").
+  // They must equal what the domain itself produces for its default profile.
+  const ENTRIES = Object.fromEntries(LIVE_TUNERS.map((t) => [t.id, t]))
+  const where = (id, field) => `src/tuners/registry.js, the '${id}' entry's ${field}`
+
+  it.each(TUNER_DOMAINS.map((d) => [d.id, d]))('stores the setting count and file paths of %s', (id, domain) => {
+    const entry = ENTRIES[id]
+    const settingCount = domain.parameterKeys.length
+    const hardware = domain.defaultHardware
+    const files = configFor(domain, { hardware, params: domain.deriveDefaults(hardware) })
+    const writes = [...new Set(files.map((f) => f.path))]
+    expect(entry.settingCount, `Update ${where(id, 'settingCount')} to ${settingCount}`).toBe(settingCount)
+    expect(entry.writes, `Update ${where(id, 'writes')} to ${JSON.stringify(writes)}`).toEqual(writes)
+  })
+})

@@ -1,12 +1,12 @@
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { computed, defineAsyncComponent, onMounted, shallowRef } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AdSlot from '@/ui/AdSlot.vue'
 import { PAGE_WIDTH } from '@/ui/layout/pageWidth.js'
 import MarkGlyph from '@/ui/controls/MarkGlyph.vue'
 import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
 import { MACHINE_ROLES, isMachineRole, tunersForRole } from '@/core/machineRoles.js'
-import { LANDING_COPY as COPY, routeSummary, tunerFacts } from '@/ui/landing.js'
+import { LANDING_COPY as COPY, routeSummary } from '@/ui/landing.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -67,35 +67,12 @@ const exampleLine = computed(() => {
   return { name: def.sysctlName, value: domain.formatValue(domain.deriveDefaults(hardware)[key], def, hardware) }
 })
 
+onMounted(loadExample)
+
 // --- The tuner table -----------------------------------------------------
 //
-// The setting counts and file paths come from each domain, loaded once the
-// table comes near the screen: every domain together is far larger than this
-// page. Before that the cells stay empty (the prerendered page has them).
-const facts = shallowRef(null)
-const table = ref(null)
-let observer = null
-async function loadFacts() {
-  observer?.disconnect()
-  observer = null
-  if (facts.value) return
-  const { TUNER_DOMAINS } = await import('@/tuners/domains.js')
-  facts.value = Object.fromEntries(TUNER_DOMAINS.map((d) => [d.id, tunerFacts(d)]))
-}
-
-onMounted(() => {
-  loadExample()
-  if (typeof IntersectionObserver === 'undefined' || !table.value) {
-    loadFacts()
-    return
-  }
-  observer = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && loadFacts(), {
-    rootMargin: '600px 0px',
-  })
-  observer.observe(table.value)
-})
-onBeforeUnmount(() => observer?.disconnect())
-
+// Each row's setting count and file paths are stored in the registry, so the
+// table needs no domain module (Design.md §9 "Registry").
 const plannedLine = PLANNED_TUNERS.length
   ? `${COPY.tuners.planned}: ${PLANNED_TUNERS.map((t) => t.title).join(', ')}.`
   : ''
@@ -238,8 +215,8 @@ const secondaryButton = 'inline-flex min-h-11 items-center justify-center border
     <section id="tuners" aria-labelledby="tuners-heading" class="scroll-mt-4 lg:scroll-mt-[calc(var(--site-header-h)+1rem)] pt-20 sm:pt-28">
       <h2 id="tuners-heading" class="text-[26px] font-medium leading-tight tracking-[-0.02em] text-ink sm:text-[34px]">{{ COPY.tuners.heading }}</h2>
       <!-- A wide table scrolls in its own box, never the page (Design.md §7). -->
-      <div ref="table" class="mt-7 overflow-x-auto" tabindex="0" role="region" :aria-label="COPY.tuners.tableLabel">
-        <table class="w-full min-w-[52rem] border-collapse text-base" :aria-busy="!facts">
+      <div class="mt-7 overflow-x-auto" tabindex="0" role="region" :aria-label="COPY.tuners.tableLabel">
+        <table class="w-full min-w-[52rem] border-collapse text-base">
           <thead>
             <tr class="border-y border-b-rule border-t-ink text-left text-[13px] text-quiet">
               <th scope="col" class="py-2.5 pr-4 font-medium">{{ COPY.tuners.columns.question }}</th>
@@ -254,9 +231,9 @@ const secondaryButton = 'inline-flex min-h-11 items-center justify-center border
                 <RouterLink :to="tuner.path" class="font-medium text-ink underline-offset-[3px] hover:underline">{{ tuner.question }}</RouterLink>
               </td>
               <td class="px-4 py-4 text-ink-2">{{ tuner.title }}</td>
-              <td class="px-4 py-4 text-right font-mono text-sm text-ink-2">{{ facts?.[tuner.id].settings }}</td>
+              <td class="px-4 py-4 text-right font-mono text-sm text-ink-2">{{ tuner.settingCount }}</td>
               <td class="py-4 pl-4 font-mono text-sm text-ink-2">
-                <span v-for="path in facts?.[tuner.id].writes ?? []" :key="path" class="block whitespace-nowrap">{{ path }}</span>
+                <span v-for="path in tuner.writes" :key="path" class="block whitespace-nowrap">{{ path }}</span>
               </td>
             </tr>
           </tbody>

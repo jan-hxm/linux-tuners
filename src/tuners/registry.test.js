@@ -53,9 +53,11 @@ describe('tuner registry', () => {
     expect(new Set(questions).size).toBe(questions.length)
   })
 
-  it('gives planned tuners no path, nav entry, route or question', () => {
+  it('gives planned tuners no path, nav entry, route, question or table facts', () => {
     for (const t of PLANNED_TUNERS) {
       expect(t.question, t.id).toBeUndefined()
+      expect(t.settingCount, t.id).toBeUndefined()
+      expect(t.writes, t.id).toBeUndefined()
       expect(t.path, t.id).toBeUndefined()
       expect(t.navLabel, t.id).toBeUndefined()
       expect(t.route, t.id).toBeUndefined()

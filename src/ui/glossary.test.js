@@ -23,8 +23,13 @@ describe('glossary (Design.md §8)', () => {
     }
   })
 
-  it('has no entry that no tuner copy uses', () => {
+  it('has no entry that no tuner copy or guide uses', () => {
     const used = new Set()
+    // The learning guides (src/tuners/<id>/learn.js) use glossary terms too.
+    const guides = Object.values(import.meta.glob('/src/tuners/*/learn.js', { eager: true, import: 'LEARN' }))
+    for (const text of strings(guides)) {
+      for (const seg of parseRichText(text)) if (seg.type === 'term') used.add(seg.id)
+    }
     for (const domain of TUNER_DOMAINS) {
       const copy = [domain.page, domain.about, ...Object.values(domain.defsByKey).map((d) => d.longDesc)]
       for (const text of strings(copy)) {

@@ -46,8 +46,10 @@
  * @property {number}         kernelMax      Highest value the kernel accepts
  * @property {number}         step           Slider step granularity
  * @property {string}         unit           Display unit (' ', 'kB', '%', 'cs', 'mode')
- * @property {{label:string, min?:number, max?:number}[]} [zones]  Optional zone annotations under the slider;
- *                                           the first zone whose min..max holds the value is emphasised
+ * @property {{label:string, min?:number, max?:number, note?:string}[]} [zones]  Optional zone annotations under the slider;
+ *                                           the first zone whose min..max holds the value is emphasised.
+ *                                           `note` is one plain sentence the card shows while the value
+ *                                           is in that zone (needs numeric min and max)
  * @property {boolean}        [dangerousIfZero] Highlight zero as a danger value
  */
 
@@ -86,10 +88,10 @@ export const PARAMETER_DEFS = [
     step: 1,
     unit: '',
     zones: [
-      { label: '0–10: latency-sensitive', min: 0, max: 10 },
-      { label: '10–60: balanced', min: 10, max: 60 },
-      { label: '60–100: swap-friendly', min: 60, max: 100 },
-      { label: '100–200: fast swap only', min: 100, max: 200 },
+      { label: '0–10: latency-sensitive', min: 0, max: 10, note: 'Swap only under real pressure. Programs stay in RAM and file cache goes first.' },
+      { label: '10–60: balanced', min: 10, max: 60, note: 'Swap counts as costlier than rereading files, so the kernel leans toward dropping file cache.' },
+      { label: '60–100: swap-friendly', min: 60, max: 100, note: 'Swap and file cache are weighed closer to equally, and 100 treats them the same.' },
+      { label: '100–200: fast swap only', min: 100, max: 200, note: 'Swap counts as cheaper than rereading files, which only suits fast swap such as zram.' },
     ],
   },
   {
@@ -175,9 +177,9 @@ export const PARAMETER_DEFS = [
     step: 1,
     unit: '',
     zones: [
-      { label: 'below 100: keep metadata', min: 0, max: 99 },
-      { label: '100: balanced', min: 100, max: 100 },
-      { label: 'above 100: reclaim aggressively', min: 101, max: 500 },
+      { label: 'below 100: keep metadata', min: 0, max: 99, note: 'File names and details stay cached longer; at 0 they are never freed and memory can run out.' },
+      { label: '100: balanced', min: 100, max: 100, note: 'File names and details are freed at a fair rate next to file cache.' },
+      { label: 'above 100: reclaim aggressively', min: 101, max: 500, note: 'File names and details are freed sooner than file cache.' },
     ],
     dangerousIfZero: true,
   },

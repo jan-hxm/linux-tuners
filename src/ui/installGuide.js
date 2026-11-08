@@ -45,3 +45,15 @@ export function installGuide(files, { combined = false } = {}) {
 
   return { groups, undoTitle: 'If something goes wrong:', undoText, undo: steps.undo }
 }
+
+/**
+ * The "Next: ..." sentence after a copy, naming the first install step, with
+ * a leading space so it follows "Copied to clipboard." directly. Empty when
+ * no step has commands. Shared by the tuner page and the guided setup.
+ * @param {import('@/core/output/files.js').ConfigFile[]} files
+ * @param {{ combined?: boolean }} [options]
+ */
+export function nextStepSentence(files, options) {
+  const title = installGuide(files, options).groups[0]?.title
+  return title ? ` Next: ${title.charAt(0).toLowerCase()}${title.slice(1)}.` : ''
+}

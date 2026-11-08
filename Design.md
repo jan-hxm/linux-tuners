@@ -520,7 +520,9 @@ drop-ins, the huge pages sysctl.d and tmpfiles.d files). A combined copy uses
 `combineFiles`, with one header for the machine profile, built from the
 machine fields' option labels. A blocked step's
 files are left out, and the step is named in their place. Under the files,
-the shared export steps (§7) cover every included file at once. There is no
+the shared export steps (§7) cover every included file at once, and "Copy all"
+confirms with the same "Next: ..." line as a tuner page (`nextStepSentence` in
+`ui/installGuide.js`, naming the first install step). There is no
 install script and no archive. A script would put executable directives in
 the output (§10). An archive would need a zip writer to save four clicks.
 A contract test checks that no two tuners write the same sysctl key, sysfs

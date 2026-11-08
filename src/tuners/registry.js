@@ -39,6 +39,16 @@
  *                               recommended for, the line the landing card shows
  *                               for them, and when the defaults are fine (the
  *                               "Do I need this?" box on the tuner page)
+ * @property {{ slug: string, status: 'draft' | 'live' }} [guide]
+ *                               The tuner's study guide (live only), at
+ *                               /learn/<slug> (Design.md §5 "Learning pages").
+ *                               Its data is src/tuners/<id>/learn.js and its
+ *                               loader is in src/learn/guides.js. Only a
+ *                               `live` guide gets a route, the "How it works"
+ *                               links and the header's Learn link; a `draft`
+ *                               changes nothing on the site. Flip it only once
+ *                               the guide's evidence is captured and a person
+ *                               has read it as a beginner.
  */
 
 /** @type {TunerEntry[]} */
@@ -68,6 +78,7 @@ export const TUNERS = [
       why: 'How eagerly the kernel swaps, how much memory it keeps free, and when dirty pages reach the disk. Every machine has these, and the defaults ignore its RAM.',
       defaultsFine: 'A small desktop or a lightly loaded machine that never runs short of memory or writes large files.',
     },
+    guide: { slug: 'memory', status: 'draft' },
   },
   {
     id: 'security',

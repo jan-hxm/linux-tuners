@@ -19,6 +19,13 @@ import { installGuide } from '@/ui/installGuide.js'
 import { controlMetaFor } from '@/ui/controls/meta.js'
 import { LANDING_COPY, routeSummary } from '@/ui/landing.js'
 import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
+import { LIVE_GUIDES, LEARN_INDEX_ROUTE, guideFacts, loadGuide } from '@/learn/guides.js'
+import { IMAGES_ORDER, valueFor } from '@/learn/evidence.js'
+import {
+  answerText, backedByText, cardGroups, defName, defTitle, edgeRows, formatValue, noText, numberedSources, probeRef,
+  refName, settingText, splitFootnotes, stackRefs,
+} from '@/ui/learn/figureText.js'
+import { settingHref } from '@/ui/focusSetting.js'
 import { text, code, bold, link, rich, heading, paragraph, list, defs, codeBlock, joinSegments } from './nodes.js'
 
 const DOMAINS_BY_ID = Object.fromEntries(TUNER_DOMAINS.map((d) => [d.id, d]))
@@ -233,19 +240,193 @@ export function setupDoc() {
   return { title: meta.ogTitle ?? meta.title, url: pageUrl(meta.path), blocks }
 }
 
+// ── Study guides ──────────────────────────────────────────────────────────
+
+/**
+ * @typedef {Object} LoadedGuide  A live guide with its data, as loadStaticGuides() gives it
+ * @property {import('@/learn/guides.js').LiveGuide} entry
+ * @property {import('@/learn/schema.js').Guide} learn
+ * @property {Record<string, import('@/learn/evidence.js').EvidenceFile>} evidence
+ * @property {Record<string, any>} [defsByKey]  the tuner's defs; the domain's unless a test gives its own
+ */
+
+/**
+ * Every live guide with its data, for pageDoc. The guides load lazily (one
+ * chunk each in the app), so the build awaits them once before it writes.
+ * @param {import('@/learn/guides.js').LiveGuide[]} [entries]
+ * @returns {Promise<LoadedGuide[]>}
+ */
+export async function loadStaticGuides(entries = LIVE_GUIDES) {
+  return Promise.all(entries.map(async (entry) => {
+    const { learn, evidence } = await loadGuide(entry)
+    const domain = entry.domain ? await entry.domain() : DOMAINS_BY_ID[entry.tunerId]
+    return { entry, learn, evidence, defsByKey: domain?.defsByKey ?? {} }
+  }))
+}
+
+/** One value on every image: "Debian 13, kernel 6.12.48: 2,000 pages", or "not measured". */
+function measuredRow(ref, evidence) {
+  const parts = IMAGES_ORDER.map((img) => {
+    const r = valueFor(ref, img.id, evidence)
+    const where = r.kernel ? `${img.label}, kernel ${r.kernel}` : img.label
+    return `${where}: ${formatValue(r, ref.unit)}`
+  })
+  return { term: [code(refName(ref))], desc: [text(`${parts.join('; ')}.`)] }
+}
+
+/** A figure as lists: its parts, then each value it shows on every kernel. */
+function figureBlocks(figure, evidence, defsByKey) {
+  const blocks = [heading(3, figure.title)]
+  let refs = []
+  if (figure.kind === 'stack') {
+    blocks.push(paragraph(text('Layers from the top:')))
+    blocks.push(list(figure.layers.map((layer) => {
+      const items = layer.kind === 'bands'
+        ? (layer.bands ?? []).map((b) => b.text)
+        : (layer.nodes ?? []).map((n) => [n.text, n.sub].filter(Boolean).join(', '))
+      return [bold(`${layer.label}:`), text(` ${items.join('; ')}.`)]
+    })))
+    refs = stackRefs(figure)
+  } else if (figure.kind === 'timeline') {
+    blocks.push(paragraph(text('A schematic timeline: the order is real, the distances are not.')))
+    blocks.push(paragraph(text(`Lines from the top: ${figure.lines.map((l) => l.label).join(', ')}.`)))
+    blocks.push(list([...figure.events].sort((a, b) => a.at - b.at).map((e) => [text(e.label)]), { ordered: true }))
+    refs = figure.lines.map((l) => l.value)
+  } else if (figure.kind === 'sideBySide') {
+    blocks.push(list(figure.states.map((st) => [bold(`${st.label}:`), text(` ${settingText(st.setting, defsByKey)}, ${st.lit} of ${st.cells} lit.`)])))
+    const backed = backedByText(figure.backedBy)
+    if (backed) blocks.push(paragraph(text(backed)))
+  }
+  if (refs.length) blocks.push(paragraph(text('Measured on each kernel:')), defs(refs.map((r) => measuredRow(r, evidence))))
+  return blocks
+}
+
+/** A body paragraph with its `[^id]` marks as `[n]`, numbered as on the page. */
+function bodyParagraph(para, sources) {
+  const segments = splitFootnotes(para).flatMap((part) => {
+    if (part.text) return rich(part.text)
+    const n = sources.find((s) => s.id === part.note)?.n
+    return n ? [text(`[${n}]`)] : []
+  })
+  return paragraph(segments)
+}
+
+/** A card's measured value on every kernel, for the Start here list. */
+function cardMeasured(card, evidence) {
+  if (!card.probe) return ''
+  const values = IMAGES_ORDER.map((img) => `${img.label} ${formatValue(valueFor(probeRef(card.probe), img.id, evidence))}`)
+  return ` Measured: ${values.join(', ')}.`
+}
+
+/**
+ * One guide's page: the header, Start here, the chapter map and every
+ * chapter in the template order, figures as lists with their measured values
+ * and the kernel each was measured on, and the chooser as the static flow.
+ * @param {LoadedGuide} guide
+ * @returns {import('./nodes.js').Doc}
+ */
+export function learnDoc({ entry, learn, evidence, defsByKey = {} }) {
+  const url = pageUrl(entry.path)
+  const tune = (key) => pageUrl(settingHref(entry.tunerPath, key))
+  const blocks = [
+    heading(1, learn.title),
+    paragraph(rich(learn.lead)),
+    paragraph(text(guideFacts(learn, IMAGES_ORDER.length).join(' · '))),
+    paragraph(link(`Tune these settings in the ${entry.tunerTitle} tuner`, pageUrl(entry.tunerPath))),
+    heading(2, 'Start here'),
+    paragraph(rich(learn.parts.picture)),
+    list(cardGroups(learn.parts).flatMap((g) => g.cards.map((c) => [
+      bold(`${g.label ? `${g.label}, ` : ''}${c.title}:`),
+      text(` ${c.does}${cardMeasured(c, evidence)}`),
+    ]))),
+  ]
+  const edges = edgeRows(learn.parts)
+  if (edges.length) blocks.push(paragraph(text('How the parts connect:')), list(edges.map((e) => [text(e.text)])))
+
+  blocks.push(heading(2, 'The chapters'), list(learn.chapters.map((ch) => [
+    link(ch.title, `${url}#${ch.id}`),
+    text(': '),
+    ...rich(ch.oneLine),
+    text(' Settings: '),
+    ...joinSegments(ch.pins.map((p) => [code(defName(p.key, defsByKey))]), ', '),
+    text('.'),
+  ]), { ordered: true }))
+
+  for (const ch of learn.chapters) {
+    const sources = numberedSources(ch)
+    blocks.push(
+      heading(2, ch.title),
+      paragraph(rich(ch.oneLine)),
+      heading(3, 'Picture it'),
+      paragraph(rich(ch.picture.text)),
+      paragraph(bold('Where the picture stops:'), text(' '), rich(ch.picture.limit)),
+      ...figureBlocks(ch.figure, evidence, defsByKey),
+      ...ch.body.map((para) => bodyParagraph(para, sources)),
+      heading(3, 'Settings here'),
+      defs(ch.pins.map((pin) => ({
+        term: [code(defName(pin.key, defsByKey))],
+        desc: [
+          ...(defTitle(pin.key, defsByKey) ? [bold(`${defTitle(pin.key, defsByKey)}.`), text(' ')] : []),
+          ...rich(pin.here),
+          text(' '),
+          link('Tune it', tune(pin.key)),
+        ],
+      }))),
+      heading(3, 'Should you change it?'),
+      list(ch.choose.map((q, i) => [
+        bold(q.q),
+        text(' How to check: '),
+        code(q.check),
+        text(' ('),
+        ...rich(q.hint),
+        text(`). Yes: ${answerText(q.yes, defsByKey)} No: ${noText(ch.choose, i, defsByKey)}`),
+      ]), { ordered: true }),
+      heading(3, "What you notice if it's wrong"),
+      defs([
+        { term: [text('Too low')], desc: rich(ch.symptoms.low) },
+        { term: [text('Too high')], desc: rich(ch.symptoms.high) },
+      ]),
+      heading(3, 'Look on your machine'),
+      codeBlock(ch.look.cmd),
+      paragraph(text('Look for '), rich(ch.look.for), text('.')),
+      heading(3, 'Sources'),
+      list(sources.map((src) => [text(`[${src.n}] `), link(src.label, src.url)])),
+    )
+  }
+  return { title: learn.title, url, blocks }
+}
+
+/** The /learn index: every live guide with its lead, facts and tuner. */
+export function learnIndexDoc(guides) {
+  const blocks = [heading(1, LEARN_INDEX_ROUTE.ogTitle), paragraph(text(LEARN_INDEX_ROUTE.description))]
+  for (const { entry, learn } of guides) {
+    blocks.push(
+      heading(2, learn.title),
+      paragraph(rich(learn.lead)),
+      paragraph(text(guideFacts(learn, IMAGES_ORDER.length).join(' · '))),
+      paragraph(link(`Read ${learn.title}`, pageUrl(entry.path)), text(' · '), link(`Open the ${entry.tunerTitle} tuner`, pageUrl(entry.tunerPath))),
+    )
+  }
+  return { title: LEARN_INDEX_ROUTE.ogTitle, url: pageUrl(LEARN_INDEX_ROUTE.path), blocks }
+}
+
 /**
  * The doc for a route, or null for a page with no static text (the legal pages).
  *
  * @param {string} path  A path from ROUTES_META
- * @param {{ now: Date }} options
+ * @param {{ now: Date, guides?: LoadedGuide[] }} options  `guides`: the live
+ *   guides with their data (loadStaticGuides()); without them a learn route has no doc
  * @returns {import('./nodes.js').Doc | null}
  */
-export function pageDoc(path, { now }) {
+export function pageDoc(path, { now, guides = [] }) {
   const entry = LIVE_TUNERS.find((t) => t.path === path)
+  const guide = guides.find((g) => g.entry.path === path)
   const doc =
     path === '/' ? landingDoc()
     : path === '/setup' ? setupDoc()
     : entry ? tunerDoc(DOMAINS_BY_ID[entry.id], entry, { now })
+    : path === LEARN_INDEX_ROUTE.path && guides.length ? learnIndexDoc(guides)
+    : guide ? learnDoc(guide)
     : null
   return doc && withGlossary(doc)
 }

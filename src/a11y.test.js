@@ -9,6 +9,10 @@
 // contrast, label-in-name, scrollable regions) don't run here: contrast pairs
 // are pinned in ui/theme.test.js, and Design.md §7 says when to rerun axe in a
 // real browser.
+//
+// The study guides have no live guide yet, so this file flips the fixture
+// guide to live (src/learn/__fixtures__/demoKit.js): the /learn index and
+// /learn/demo join the route sweep, and get their own pass in light and dark.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -19,6 +23,27 @@ import { ROUTES_META } from './routes-meta.js'
 import { routes } from './router.js'
 import { LIVE_TUNERS } from './tuners/registry.js'
 import { SETUP_STEPS } from './setup/steps.js'
+
+vi.mock('@/learn/guides.js', async (importOriginal) => {
+  const { mockGuides } = await import('@/learn/__fixtures__/demoKit.js')
+  return mockGuides(await importOriginal())
+})
+
+const LEARN_PATHS = ROUTES_META.map((r) => r.path).filter((p) => p === '/learn' || p.startsWith('/learn/'))
+
+/** The viewer's colour scheme, as matchMedia reports it. */
+function setScheme(dark) {
+  vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
+    matches: dark && query.includes('dark'),
+    media: query,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    onchange: null,
+    dispatchEvent: () => false,
+  }))
+}
 
 // Chart.js needs a real canvas, so ChartFrame, the one component that draws
 // it, is stubbed (it has its own test, which covers its label). The graph tab
@@ -73,6 +98,21 @@ describe('axe sweep', { timeout: 30_000 }, () => {
   it.each(ROUTES_META.map((r) => r.path))('%s has no serious or critical violations', async (path) => {
     await mountAt(path)
     expect(await violations()).toEqual([])
+  })
+
+  it('sweeps the learn pages of a live guide', () => {
+    expect(LEARN_PATHS).toEqual(['/learn', '/learn/demo'])
+  })
+
+  it.each(LEARN_PATHS.flatMap((p) => [[p, 'light'], [p, 'dark']]))('%s in %s, with the chapter rail open, has none', async (path, scheme) => {
+    setScheme(scheme === 'dark')
+    const w = await mountAt(path)
+    expect(await violations()).toEqual([])
+    const rail = w.find('nav[aria-label="Chapters"] button')
+    if (rail.exists()) {
+      await rail.trigger('click')
+      expect(await violations(), 'rail open').toEqual([])
+    }
   })
 
   it('every setup step has no serious or critical violations', async () => {

@@ -3,12 +3,10 @@ import {
   answerText, chooseStep, curvePath, edgeGeometry, edgeRows, figureLabel, formatValue, lineLevels, noText,
   numberedSources, partsMapLabel, pinRefs, safeHref, splitFootnotes, NOT_MEASURED, NOTHING_FITS,
 } from './figureText.js'
-// Until L1 merges: the local copy of the fixture and valueFor (PROGRESS.md).
-import { DEMO_DEFS, DEMO_LEARN } from './__fixtures__/demo.learn.js'
-import { valueFor } from './__fixtures__/valueFor.js'
+import { DEMO_DEFS, DEMO_LEARN, valueFor } from '@/learn/__fixtures__/demoKit.js'
 
 const on = (image) => (ref) => valueFor(ref, image)
-const [stackChapter, timelineChapter, sideChapter] = DEMO_LEARN.chapters
+const [stackChapter, timelineChapter, sideChapter, promiseChapter] = DEMO_LEARN.chapters
 
 describe('formatValue', () => {
   it('writes numbers with their unit and a singular for one', () => {
@@ -30,29 +28,30 @@ describe('formatValue', () => {
 describe('labels built from the data', () => {
   it('names every card, band and connection of the parts map', () => {
     const label = partsMapLabel(DEMO_LEARN.parts, on('debian-13'))
-    expect(label).toContain('RAM: Programs, ask for memory; Page cache, keeps file data, measured 67,584')
-    expect(label).toContain('DISK: Disk, holds files and swap.')
-    expect(label).toContain('Connections: Programs to Page cache: read files.')
-    expect(partsMapLabel(DEMO_LEARN.parts, on('debian-11'))).toContain('measured not measured')
+    expect(label).toContain('Memory: Programs, Ask the kernel for memory.; Page cache, Keeps file data in spare memory.')
+    expect(label).toContain('Reserve, Memory kept free for urgent requests., measured 4,000')
+    expect(label).toContain('Background: Worker, Frees memory in the background., measured yes')
+    expect(label).toContain('Connections: Programs to Page cache: read files into.')
+    expect(partsMapLabel(DEMO_LEARN.parts, on('arch'))).toContain('measured not measured')
   })
 
   it('reads a stack top down with its values and the selection', () => {
     const label = figureLabel(stackChapter.figure, on('debian-13'), { highlight: 'below-min' })
-    expect(label).toMatch(/^Free memory in one zone\. Layers from the top\. Free pages: /)
-    expect(label).toContain('Below min (selected)')
-    expect(label).toContain('Normal.min: 4,096 pages')
-    expect(figureLabel(stackChapter.figure, on('ubuntu-24.04'))).toContain('Normal.min: not measured')
+    expect(label).toMatch(/^Where the reserve sits\. Layers from the top\. Programs: /)
+    expect(label).toContain('Below min: the program waits (selected)')
+    expect(label).toContain('Normal.min: 2,000 pages')
+    expect(figureLabel(stackChapter.figure, on('arch'))).toContain('Normal.min: not measured')
   })
 
   it('says a timeline is schematic and lists its events in time order', () => {
     const label = figureLabel(timelineChapter.figure, on('debian-13'))
     expect(label).toContain('Schematic timeline, not to scale.')
-    expect(label).toContain('In order: background writing starts, then writers wait.')
+    expect(label).toContain('In order: A program stalls, then Worker wakes, then Worker sleeps.')
   })
 
   it('counts the lit cells of each side-by-side state', () => {
     expect(figureLabel(sideChapter.figure, on('debian-13'), { defsByKey: DEMO_DEFS }))
-      .toBe('Pages read per fault. Side by side. Cluster 0, demo.delta = 0: 1 of 8 lit. Cluster 3, demo.delta = 3: 8 of 8 lit.')
+      .toBe('Pages read per swap-in. Side by side. Batch off, demo.batch_order = 0: 1 of 8 lit. Batch of eight, demo.batch_order = 3: 8 of 8 lit.')
   })
 
   it('has no em dash in any label', () => {
@@ -66,29 +65,30 @@ describe('labels built from the data', () => {
 
 describe('geometry', () => {
   it('places a row edge between the facing card edges, from the grid tracks', () => {
-    const geo = edgeGeometry(DEMO_LEARN.parts, { from: 'apps', to: 'cache' }, '4rem', '3rem')
+    const geo = edgeGeometry(DEMO_LEARN.parts, { from: 'programs', to: 'cache' }, '4rem', '3rem')
     expect(geo.axis).toBe('x')
     expect(geo.reverse).toBe(false)
-    expect(geo.style.left).toBe('calc(1 * ((100% - 1 * 4rem) / 2) + 0 * 4rem)')
-    expect(geo.style.width).toBe('calc(0 * ((100% - 1 * 4rem) / 2) + 1 * 4rem)')
+    expect(geo.style.left).toBe('calc(1 * ((100% - 2 * 4rem) / 3) + 0 * 4rem)')
+    expect(geo.style.width).toBe('calc(0 * ((100% - 2 * 4rem) / 3) + 1 * 4rem)')
   })
 
   it('places a column edge and notes its direction', () => {
-    const geo = edgeGeometry(DEMO_LEARN.parts, { from: 'disk', to: 'reclaim' }, '4rem', '3rem')
+    const geo = edgeGeometry(DEMO_LEARN.parts, { from: 'worker', to: 'cache' }, '4rem', '3rem')
     expect(geo.axis).toBe('y')
     expect(geo.reverse).toBe(true)
   })
 
   it('draws no edge between cards that share neither a row nor a column', () => {
-    expect(edgeGeometry(DEMO_LEARN.parts, { from: 'apps', to: 'disk' }, '4rem', '3rem')).toBeNull()
-    expect(edgeGeometry(DEMO_LEARN.parts, { from: 'apps', to: 'nope' }, '4rem', '3rem')).toBeNull()
+    expect(edgeGeometry(DEMO_LEARN.parts, { from: 'programs', to: 'worker' }, '4rem', '3rem')).toBeNull()
+    expect(edgeGeometry(DEMO_LEARN.parts, { from: 'programs', to: 'nope' }, '4rem', '3rem')).toBeNull()
   })
 
   it('writes the phone rows as "A to B: label"', () => {
     expect(edgeRows(DEMO_LEARN.parts).map((r) => r.text)).toEqual([
-      'Programs to Page cache: read files',
-      'Page cache to Reclaim: when low',
-      'Reclaim to Disk: writes out',
+      'Programs to Page cache: read files into',
+      'Page cache to Reserve: leaves room for',
+      'Worker to Page cache: frees',
+      'Worker to Disk: writes to',
     ])
   })
 
@@ -100,31 +100,32 @@ describe('geometry', () => {
 
 describe('pins', () => {
   it('finds the values a pin points at by layer, band, node or line', () => {
-    expect(pinRefs(stackChapter.figure, { layer: 'levels' })).toHaveLength(2)
-    expect(pinRefs(stackChapter.figure, { layer: 'below-min' })).toHaveLength(2)
-    expect(pinRefs(stackChapter.figure, { layer: 'kswapd' })).toEqual([{ probe: 'demo.kswapd', path: '', unit: '' }])
-    expect(pinRefs(stackChapter.figure, { layer: 'direct' })).toEqual([])
-    expect(pinRefs(timelineChapter.figure, { layer: 'soft' })).toHaveLength(1)
-    expect(pinRefs(sideChapter.figure, { key: 'delta' })).toEqual([])
+    expect(pinRefs(stackChapter.figure, { layer: 'free-memory' })).toHaveLength(3)
+    expect(pinRefs(stackChapter.figure, { layer: 'below-min' })).toHaveLength(3)
+    expect(pinRefs(stackChapter.figure, { layer: 'kswapd' })).toEqual([{ probe: 'demo.worker', path: '', unit: '' }])
+    expect(pinRefs(stackChapter.figure, { layer: 'app' })).toEqual([])
+    expect(pinRefs(timelineChapter.figure, { layer: 'low' })).toHaveLength(1)
+    expect(pinRefs(sideChapter.figure, { key: 'batch_order' })).toEqual([])
   })
 })
 
 describe('chooser steps', () => {
   const choose = stackChapter.choose
+  const lastWithoutNo = [{ q: 'Is it slow?', check: 'free -m', hint: 'Look.', yes: { key: 'mode', dir: 'raise' } }]
 
   it('follows yes and no, and a missing no to the next question', () => {
-    expect(chooseStep(choose, 0, true)).toEqual({ result: { key: 'alpha', dir: 'raise' } })
+    expect(chooseStep(choose, 0, true)).toEqual({ result: { key: 'reserve_kbytes', dir: 'raise' } })
     expect(chooseStep(choose, 0, false)).toEqual({ next: 1 })
-    expect(chooseStep(choose, 1, false)).toEqual({ result: { key: 'beta', dir: 'lower' } })
-    expect(chooseStep(timelineChapter.choose, 0, false)).toEqual({ result: NOTHING_FITS })
+    expect(chooseStep(choose, 1, false)).toEqual({ result: { leave: true, why: 'The reserve is doing its job, so the default fits.' } })
+    expect(chooseStep(lastWithoutNo, 0, false)).toEqual({ result: NOTHING_FITS })
   })
 
   it('says each answer as a sentence', () => {
-    expect(answerText({ key: 'alpha', dir: 'raise' }, DEMO_DEFS)).toBe('Raise demo.alpha.')
+    expect(answerText({ key: 'reserve_kbytes', dir: 'raise' }, DEMO_DEFS)).toBe('Raise demo.reserve_kbytes.')
     expect(answerText({ key: 'zzz', dir: 'lower' }, DEMO_DEFS)).toBe('Lower zzz.')
     expect(answerText({ leave: true, why: 'it is fine.' })).toBe('Leave it as it is: it is fine.')
     expect(noText(choose, 0)).toBe('Go to question 2.')
-    expect(noText(timelineChapter.choose, 0)).toBe('Leave it as it is: none of these questions matched your machine.')
+    expect(noText(lastWithoutNo, 0)).toBe('Leave it as it is: none of these questions matched your machine.')
   })
 })
 
@@ -135,7 +136,7 @@ describe('footnotes and sources', () => {
   })
 
   it('numbers sources by first citation, then the rest', () => {
-    expect(numberedSources(stackChapter).map((s) => [s.id, s.n])).toEqual([['zones', 1], ['vm', 2]])
+    expect(numberedSources(promiseChapter).map((s) => [s.id, s.n])).toEqual([['proc', 1], ['vm', 2]])
   })
 
   it('allows only https and same-site links', () => {

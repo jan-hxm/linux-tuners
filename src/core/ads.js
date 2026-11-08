@@ -10,6 +10,7 @@
  *   VITE_ADSENSE_CLIENT=ca-pub-XXXXXXXXXXXXXXXX
  *   VITE_ADSENSE_SLOT_LANDING=XXXXXXXXXX
  *   VITE_ADSENSE_SLOT_SWAP=XXXXXXXXXX
+ *   VITE_ADSENSE_SLOT_LEARN=XXXXXXXXXX
  *
  * See `.env.example` and the AdSense console (https://www.google.com/adsense)
  * for how to obtain these values.
@@ -24,6 +25,8 @@ export const ADSENSE_CLIENT = import.meta.env.VITE_ADSENSE_CLIENT ?? ''
 export const AD_SLOTS = {
   landing: import.meta.env.VITE_ADSENSE_SLOT_LANDING ?? '',
   swap: import.meta.env.VITE_ADSENSE_SLOT_SWAP ?? '',
+  // The one slot at the end of each study guide (Design.md §5 "Ads and consent").
+  learn: import.meta.env.VITE_ADSENSE_SLOT_LEARN ?? '',
 }
 
 /**

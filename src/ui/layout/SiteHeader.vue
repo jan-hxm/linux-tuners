@@ -6,7 +6,7 @@ import TickLogo from './TickLogo.vue'
 import { PAGE_WIDTH } from './pageWidth.js'
 
 // One row: logo, a "Tuners" disclosure button, the current tuner's name, the
-// Glossary link (only once that route exists) and Start setup. The button opens
+// Learn and Glossary links (each only once its route exists) and Start setup. The button opens
 // a full-width panel listing every live tuner with its question. It is a
 // disclosure, not a modal: no focus trap, Escape and a click outside close it
 // (Design.md §7).
@@ -16,6 +16,9 @@ const root = ref(null)
 const button = ref(null)
 const open = ref(false)
 const hasGlossary = computed(() => router.hasRoute('glossary'))
+// The study guides' index exists only while a guide is live (src/router.js).
+const hasLearn = computed(() => router.hasRoute('learn'))
+const inLearn = computed(() => route.path === '/learn' || route.path.startsWith('/learn/'))
 const current = computed(() => LIVE_TUNERS.find((t) => t.path === route.path) ?? null)
 const label = (t) => t.navLabel ?? t.title
 
@@ -65,6 +68,13 @@ watch(() => route.fullPath, () => close())
         <span aria-current="page" class="truncate border-b-2 border-ink py-2 text-ink">{{ label(current) }}</span>
       </p>
       <div class="ml-auto flex shrink-0 items-center gap-1">
+        <RouterLink
+          v-if="hasLearn"
+          :to="{ name: 'learn' }"
+          class="hidden min-h-11 items-center px-3 text-[15px] hover:text-ink sm:inline-flex"
+          :class="inLearn ? 'text-ink underline underline-offset-4' : 'text-ink-2'"
+          :aria-current="inLearn ? 'page' : undefined"
+        >Learn</RouterLink>
         <RouterLink v-if="hasGlossary" :to="{ name: 'glossary' }" class="hidden min-h-11 items-center px-3 text-[15px] text-ink-2 hover:text-ink sm:inline-flex">Glossary</RouterLink>
         <RouterLink
           to="/setup"

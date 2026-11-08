@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
 import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
-import { LANDING_COPY, tunerFacts } from '@/ui/landing.js'
+import { LANDING_COPY } from '@/ui/landing.js'
 import { ROUTES_META } from '@/routes-meta.js'
 import { pageDoc } from './pages.js'
 import { docTexts } from './nodes.js'
@@ -147,9 +147,8 @@ describe('static pages of every route', () => {
       expect(all, r.value).toContain(`${r.label}: ${recommended.length} tuners, in this order.`)
     }
     for (const t of LIVE_TUNERS) {
-      const domain = TUNER_DOMAINS.find((d) => d.id === t.id)
       expect(md, t.id).toContain(t.question)
-      for (const path of tunerFacts(domain).writes) expect(md, t.id).toContain(path)
+      for (const path of t.writes) expect(md, t.id).toContain(path)
     }
     for (const t of PLANNED_TUNERS) expect(all).toContain(t.title)
   })

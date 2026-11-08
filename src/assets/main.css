@@ -1,5 +1,5 @@
-/* Self-hosted webfonts (Design.md §10): Latin subsets of Host
- * Grotesk 400/500/600 and Fragment Mono 400, under the SIL OFL (fonts/OFL.txt).
+/* Self-hosted webfonts (Design.md §10): Latin subsets of the
+ * Host Grotesk variable font (weights 400-600) and Fragment Mono 400, under the SIL OFL (fonts/OFL.txt).
  * Never load them from a third-party origin (Design.md §10). Vite fingerprints
  * the files. The subsets cover U+0000-00FF plus common punctuation, arrows and
  * maths signs; anything else falls through to the next font in the stack.
@@ -7,25 +7,9 @@
 @font-face {
   font-family: 'Host Grotesk';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 400 600;
   font-display: swap;
-  src: url('./fonts/host-grotesk-latin-400.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+2248, U+2260, U+2264-2265, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Host Grotesk';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('./fonts/host-grotesk-latin-500.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+2248, U+2260, U+2264-2265, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Host Grotesk';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('./fonts/host-grotesk-latin-600.woff2') format('woff2');
+  src: url('./fonts/host-grotesk-latin-wght.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+2248, U+2260, U+2264-2265, U+FEFF, U+FFFD;
 }
 @font-face {

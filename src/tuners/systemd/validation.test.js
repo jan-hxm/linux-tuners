@@ -25,14 +25,16 @@ describe('systemd validate', () => {
       default_limit_nofile_hard: 524288,
     })
     const issues = validate(hw, params)
-    expect(ids(issues)).toContain('nofile-soft-gt-hard')
+    expect(issues.find((i) => i.id === 'nofile-soft-gt-hard').fix).toBe(
+      'Lower the DefaultLimitNOFILE soft limit to 524288 or less, or raise the hard limit to 600000 or more.',
+    )
     expect(hasBlockingIssue(issues)).toBe(true)
   })
 
   it('blocks when MemoryHigh is above MemoryMax', () => {
     const { hw, params } = setup('general', { memory_high: 90, memory_max: 80 })
     const issues = validate(hw, params)
-    expect(ids(issues)).toContain('memhigh-gt-memmax')
+    expect(issues.find((i) => i.id === 'memhigh-gt-memmax').fix).toBe('Lower MemoryHigh below 80%, or raise MemoryMax above 90%.')
     expect(hasBlockingIssue(issues)).toBe(true)
   })
 

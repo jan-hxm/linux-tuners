@@ -67,6 +67,61 @@ const LOW_FACTS = Object.freeze(Object.fromEntries(MACHINE_FACTS.map((f) => [f, 
 // ── State builders ──────────────────────────────────────────────────────────
 
 /**
+ * The values a sweep tries for one key on a profile: an int's ends and
+ * middle, both bool states, each enum option, and each end of each tuple
+ * element with the others at `base`.
+ */
+function sweepValues(domain, key, hw, base) {
+  const def = domain.defsByKey[key]
+  const range = domain.rangeFor(key, hw)
+  switch (def.type ?? 'int') {
+    case 'bool':
+      return [0, 1]
+    case 'enum':
+      return range.options ?? def.options.map((o) => o.value)
+    case 'tuple':
+      return base.flatMap((_, i) => {
+        const { min, max } = elementRange(range, i)
+        return [min, max].map((v) => base.map((n, j) => (j === i ? v : n)))
+      })
+    default:
+      return [range.min, Math.round((range.min + range.max) / 2), range.max]
+  }
+}
+
+/**
+ * Every issue validate raises when one or two keys move to the values
+ * `sweepValues` tries, on every profile, with and without facts. Two keys
+ * at a time reach the rules that compare a pair (soft above hard, high above
+ * max); rules on one key or the profile need only one.
+ */
+function sweepIssues(domain) {
+  const seen = new Map()
+  for (const hw of profilesFor(domain)) {
+    const base = domain.deriveDefaults(hw)
+    const moves = domain.parameterKeys.flatMap((key) => sweepValues(domain, key, hw, base[key]).map((v) => [key, v]))
+    const run = (params) => {
+      for (const issue of [...domain.validate(hw, params), ...domain.validate(hw, params, LOW_FACTS)]) {
+        seen.set(`${issue.id} ${issue.fix}`, issue)
+      }
+    }
+    run(base)
+    moves.forEach(([k1, v1], i) => {
+      run({ ...base, [k1]: v1 })
+      for (const [k2, v2] of moves.slice(i + 1)) if (k2 !== k1) run({ ...base, [k1]: v1, [k2]: v2 })
+    })
+  }
+  return [...seen.values()]
+}
+
+/**
+ * A sentence of plain text, as the issue UI prints it: a capital first, a
+ * full stop last, and no line break, code span, tag or [[glossary]] markup,
+ * none of which it renders.
+ */
+const PLAIN_SENTENCE = /^[A-Z](?!.*\[\[)[^\n`<>]*\.$/
+
+/**
  * The default profile, each workload, each option of every other choice
  * field, and each `samples` value of a text field (such as an old kernel
  * version) with every workload.
@@ -687,6 +742,20 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
     })
   })
 
+  // Design.md §4 "Validation issues": a blocking issue says what to change.
+  describe('issue fixes', () => {
+    it('gives every blocking issue a fix, and every fix is one plain sentence', () => {
+      const issues = sweepIssues(domain)
+      for (const issue of issues) {
+        if (issue.blocking) expect(issue.fix, issue.id).toEqual(expect.any(String))
+        if (issue.fix === undefined) continue
+        expect(issue.fix, issue.id).toMatch(PLAIN_SENTENCE)
+        expect(issue.fix, issue.id).not.toContain(EM_DASH)
+        expect(issue.fix, issue.id).not.toBe(issue.message)
+      }
+    })
+  })
+
   describe('copy (Design.md §8)', () => {
     it('has no em dash in any displayed string or generated config', () => {
       const shown = [
@@ -703,8 +772,8 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('tuner contract: %s', (_id, d
         ...strings(domain.graphTabs.map(({ label, blurb }) => ({ label, blurb }))),
       ]
       for (const state of legitimateStates(domain)) {
-        shown.push(...domain.validate(state.hardware, state.params).map((i) => i.message))
-        shown.push(...domain.validate(state.hardware, state.params, LOW_FACTS).map((i) => i.message))
+        shown.push(...strings(domain.validate(state.hardware, state.params).map((i) => [i.message, i.fix])))
+        shown.push(...strings(domain.validate(state.hardware, state.params, LOW_FACTS).map((i) => [i.message, i.fix])))
         shown.push(combineFiles(configFor(domain, state)))
       }
       expect(shown.filter((s) => s.includes(EM_DASH))).toEqual([])
@@ -778,5 +847,23 @@ describe('guided setup output', () => {
     }
     const names = downloadNames(Object.keys(byPath))
     expect(new Set(names).size).toBe(names.length)
+  })
+})
+
+describe('registry facts', () => {
+  // The landing table prints each tuner's setting count and file paths from
+  // the registry, so it loads no domain module (Design.md §9 "Registry").
+  // They must equal what the domain itself produces for its default profile.
+  const ENTRIES = Object.fromEntries(LIVE_TUNERS.map((t) => [t.id, t]))
+  const where = (id, field) => `src/tuners/registry.js, the '${id}' entry's ${field}`
+
+  it.each(TUNER_DOMAINS.map((d) => [d.id, d]))('stores the setting count and file paths of %s', (id, domain) => {
+    const entry = ENTRIES[id]
+    const settingCount = domain.parameterKeys.length
+    const hardware = domain.defaultHardware
+    const files = configFor(domain, { hardware, params: domain.deriveDefaults(hardware) })
+    const writes = [...new Set(files.map((f) => f.path))]
+    expect(entry.settingCount, `Update ${where(id, 'settingCount')} to ${settingCount}`).toBe(settingCount)
+    expect(entry.writes, `Update ${where(id, 'writes')} to ${JSON.stringify(writes)}`).toEqual(writes)
   })
 })

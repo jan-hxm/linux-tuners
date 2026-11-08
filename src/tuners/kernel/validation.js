@@ -9,6 +9,7 @@
  * @property {'warn' | 'info'} level
  * @property {string[]} params    Parameter keys this issue relates to
  * @property {string}   message
+ * @property {string}   [fix]     What to change to resolve it, in one plain sentence
  * @property {boolean}  blocking  Always false here
  */
 
@@ -26,12 +27,13 @@ const BYTES_PER_KEY = 100
 export function validate(hw, p) {
   /** @type {ValidationIssue[]} */
   const issues = []
-  const warn = (id, params, message) => issues.push({ id, level: 'warn', blocking: false, params, message })
+  const warn = (id, params, message, fix) => issues.push({ id, level: 'warn', blocking: false, params, message, fix })
   const info = (id, params, message) => issues.push({ id, level: 'info', blocking: false, params, message })
 
   if (p.panic === 0 && (p.panic_on_oops === 1 || p.softlockup_panic === 1)) {
     warn('panic-no-reboot', ['panic', 'panic_on_oops', 'softlockup_panic'],
-      'With kernel.panic at 0, a panic stops the machine and it stays down until someone resets it. Set kernel.panic above 0 so a panic ends in a reboot.')
+      'With kernel.panic at 0, a panic stops the machine and it stays down until someone resets it.',
+      'Set kernel.panic above 0 so a panic ends in a reboot.')
   }
 
   if (p.panic_on_oops === 1 && hw.workload === 'desktop') {
@@ -57,11 +59,13 @@ export function validate(hw, p) {
     }
     if (p.threads_max < THREADS_LOW_WARN) {
       warn('threads-low', ['threads_max'],
-        `This is only right on a machine with ${formatSizeGiB(hw.ramGiB)} of RAM or less. On a bigger one the kernel's own limit is higher, and once more than ${p.threads_max.toLocaleString()} threads run nothing can fork, SSH logins included. Check the RAM in the profile, and that ps -eLf | wc -l shows far fewer threads.`)
+        `This is only right on a machine with ${formatSizeGiB(hw.ramGiB)} of RAM or less. On a bigger one the kernel's own limit is higher, and once more than ${p.threads_max.toLocaleString()} threads run nothing can fork, SSH logins included. Check the RAM in the profile, and that ps -eLf | wc -l shows far fewer threads.`,
+        `Raise kernel.threads-max to ${THREADS_LOW_WARN.toLocaleString()} or more, unless the machine is really that small.`)
     }
     if (threadStackRamShare(hw, p) > THREAD_RAM_WARN) {
       warn('thread-memory', ['threads_max'],
-        `Each thread pins 16 KiB of kernel stack, so this many could take ${Math.round(threadStackRamShare(hw, p) * 100)}% of RAM before the limit stops a fork bomb or a thread leak. The kernel default keeps it to an eighth.`)
+        `Each thread pins 16 KiB of kernel stack, so this many could take ${Math.round(threadStackRamShare(hw, p) * 100)}% of RAM before the limit stops a fork bomb or a thread leak. The kernel default keeps it to an eighth.`,
+        `Lower kernel.threads-max until their stacks take ${Math.round(THREAD_RAM_WARN * 100)}% of RAM or less.`)
     }
     info('tasks-max', ['threads_max'],
       `systemd sets each service's default TasksMax to 15% of the smaller of kernel.pid_max and this, ${defaultTasksMax(hw, p).toLocaleString()}, when it starts: after a reboot or systemctl daemon-reexec.`)

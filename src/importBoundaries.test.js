@@ -58,6 +58,9 @@ function violation(from, to) {
     if (/^(setup|views)\//.test(to) || to === 'router.js' || to === 'main.js') return 'static never imports the app'
   }
   if (to.startsWith('static/') && layer !== 'static') return 'only the build imports static'
+  // Every domain together is far larger than the landing page, whose tuner
+  // table reads the counts and paths the registry stores (Design.md §9 "Registry").
+  if (from === 'views/LandingView.vue' && to === DOMAINS) return 'the landing page reads tuner facts from the registry, not domains.js'
   const own = tunerOf(from)
   const other = tunerOf(to)
   if (own && other && own !== other) return 'tuners never import each other'
@@ -84,6 +87,7 @@ describe('import boundaries', () => {
     expect(violation('setup/steps.js', 'tuners/swap/defs.js')).toBeTruthy()
     expect(violation('setup/steps.js', 'tuners/swap/index.js')).toBeTruthy()
     expect(violation('views/LandingView.vue', 'setup/steps.js')).toBeTruthy()
+    expect(violation('views/LandingView.vue', DOMAINS)).toBeTruthy()
     expect(violation('setup/steps.js', DOMAINS)).toBeNull()
     expect(violation('router.js', 'setup/SetupView.vue')).toBeNull()
     expect(violation('static/pages.js', DOMAINS)).toBeNull()

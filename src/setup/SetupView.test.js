@@ -62,6 +62,21 @@ describe('SetupView', () => {
     wrapper.unmount()
   })
 
+  it('names the first install step after Copy all, like the tuner page', async () => {
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText: vi.fn().mockResolvedValue() } })
+    const wrapper = await setupAt('/setup')
+    for (let i = 0; i <= SETUP_STEPS.length; i++) {
+      await wrapper.findAll('button').find((b) => b.text().endsWith('→')).trigger('click')
+    }
+    expect(heading(wrapper)).toContain('Files')
+    await wrapper.findAll('button').find((b) => /^Copy all \d+ files$/.test(b.text())).trigger('click')
+    await flushPromises()
+    const live = wrapper.get('[aria-live="polite"]')
+    expect(live.text()).toContain('Copied to clipboard. Next: save the files.')
+    expect(live.text()).not.toContain('then apply')
+    vi.unstubAllGlobals()
+  })
+
   it('starts from the role the landing page picked, and marks the skipped steps', async () => {
     const wrapper = await setupAt('/setup?role=desktop')
     const setup = useSetupStore()
@@ -129,6 +144,26 @@ describe('SetupView', () => {
     expect(useStepStore(reader.id).facts[fact]).toBe(next)
     vi.advanceTimersByTime(300)
     expect(window.location.hash.length).toBeGreaterThan(1)
+    wrapper.unmount()
+  })
+
+  it('says how to fix a blocking issue, on its step and on the files step', async () => {
+    const wrapper = await setupAt('/setup')
+    const step = SETUP_STEPS.find((s) => s.id === 'swap')
+    expect(useSetupStore().skipped).not.toContain(step.id)
+    const store = useStepStore(step.id)
+    store.setParam('dirty_background_ratio', store.params.dirty_ratio)
+    await flushPromises()
+    const issue = store.issues.find((i) => i.blocking)
+    expect(issue.fix).toBeTruthy()
+    await stepButtons(wrapper).find((b) => b.text().includes(step.entry.title)).trigger('click')
+    expect(heading(wrapper)).toContain(step.entry.title)
+    expect(wrapper.text()).toContain(issue.fix)
+    await stepButtons(wrapper).find((b) => b.text().endsWith('Files')).trigger('click')
+    expect(heading(wrapper)).toContain('Files')
+    expect(heading(wrapper)).not.toContain('Filesystem')
+    expect(wrapper.text()).toContain(issue.message)
+    expect(wrapper.text()).toContain(issue.fix)
     wrapper.unmount()
   })
 

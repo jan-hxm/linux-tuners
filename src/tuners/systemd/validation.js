@@ -9,6 +9,7 @@
  * @property {ValidationLevel} level
  * @property {string[]}        params
  * @property {string}          message
+ * @property {string}          [fix]     What to change to resolve it, in one plain sentence
  * @property {boolean}         blocking
  */
 
@@ -34,6 +35,7 @@ export function validate(hw, p, facts = {}) {
       blocking: true,
       params: ['default_limit_nofile_soft', 'default_limit_nofile_hard'],
       message: 'DefaultLimitNOFILE soft limit must not exceed the hard limit.',
+      fix: `Lower the DefaultLimitNOFILE soft limit to ${p.default_limit_nofile_hard} or less, or raise the hard limit to ${p.default_limit_nofile_soft} or more.`,
     })
   }
 
@@ -48,6 +50,7 @@ export function validate(hw, p, facts = {}) {
       blocking: true,
       params: ['memory_high', 'memory_max'],
       message: 'MemoryHigh is above MemoryMax: the slice would be OOM-killed before the soft throttle ever engages.',
+      fix: `Lower MemoryHigh below ${p.memory_max}%, or raise MemoryMax above ${p.memory_high}%.`,
     })
   }
 
@@ -58,6 +61,7 @@ export function validate(hw, p, facts = {}) {
       blocking: false,
       params: ['memory_high', 'memory_max'],
       message: 'MemoryHigh equals MemoryMax: the slice gets no throttle runway before the hard OOM cap.',
+      fix: 'Lower MemoryHigh a few percent below MemoryMax.',
     })
   }
 
@@ -70,6 +74,7 @@ export function validate(hw, p, facts = {}) {
       blocking: false,
       params: [],
       message: 'These controls assume the cgroup v2 unified hierarchy. On cgroup v1, CPUWeight/MemoryMax/IOWeight/MemorySwapMax map to legacy controllers with different semantics or no effect.',
+      fix: 'Boot the machine with the cgroup v2 unified hierarchy (systemd.unified_cgroup_hierarchy=1 on the kernel command line).',
     })
   }
 
@@ -81,6 +86,7 @@ export function validate(hw, p, facts = {}) {
       blocking: false,
       params: ['default_memory_accounting', 'memory_high', 'memory_max'],
       message: 'MemoryHigh/MemoryMax are only enforced when memory accounting is enabled.',
+      fix: 'Turn on DefaultMemoryAccounting, or leave MemoryHigh and MemoryMax at 100%.',
     })
   }
 
@@ -93,6 +99,7 @@ export function validate(hw, p, facts = {}) {
       blocking: false,
       params: ['default_tasks_accounting', 'tasks_max', 'default_tasks_max'],
       message: 'TasksMax/DefaultTasksMax are only enforced when tasks accounting is enabled.',
+      fix: 'Turn on DefaultTasksAccounting.',
     })
   }
 
@@ -104,6 +111,7 @@ export function validate(hw, p, facts = {}) {
       blocking: false,
       params: ['default_limit_nofile_hard'],
       message: `The DefaultLimitNOFILE hard limit is above fs.nr_open from the filesystem step (${facts.nrOpen}), so units get ${facts.nrOpen} instead.`,
+      fix: `Lower the DefaultLimitNOFILE hard limit to ${facts.nrOpen} or less, or raise fs.nr_open in the filesystem step.`,
     })
   }
 
@@ -117,6 +125,7 @@ export function validate(hw, p, facts = {}) {
       blocking: false,
       params: tasksAbove,
       message: `${tasksAbove.map((k) => SYSTEMD_DEFS_BY_KEY[k].sysctlName).join(' and ')} ${tasksAbove.length > 1 ? 'are' : 'is'} above the smaller of kernel.pid_max and kernel.threads-max from the kernel step (${kernelTasks}), so the kernel stops new tasks first.`,
+      fix: `Lower ${tasksAbove.map((k) => SYSTEMD_DEFS_BY_KEY[k].sysctlName).join(' and ')} to ${kernelTasks} or less, or raise the smaller kernel limit in the kernel step.`,
     })
   }
 
@@ -139,6 +148,7 @@ export function validate(hw, p, facts = {}) {
       blocking: false,
       params: ['cpu_quota'],
       message: 'Capping system.slice below 100% (one core) can starve core daemons (journald, dbus, sshd).',
+      fix: 'Raise CPUQuota to 100% or more, or apply the cap to a different slice.',
     })
   }
 
@@ -150,6 +160,7 @@ export function validate(hw, p, facts = {}) {
       blocking: false,
       params: ['memory_max'],
       message: `MemoryMax at ${p.memory_max}% of RAM is very tight; the slice will be OOM-killed under normal load.`,
+      fix: 'Raise MemoryMax to 10% of RAM or more.',
     })
   }
 

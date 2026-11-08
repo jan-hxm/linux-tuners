@@ -5,6 +5,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import * as fontkit from 'fontkit'
+import wawoff2 from 'wawoff2'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const publicDir = resolve(root, 'public')
@@ -26,9 +27,12 @@ const targets = [
 
 // The renderer has no Host Grotesk installed and would fall back to Arial, so
 // every <text> is drawn as outlines from the site's own font files first.
+// fontkit can't apply variations to a woff2, so the variable file is unpacked
+// to TTF once and each weight the SVGs use is an instance of it.
+const variable = fontkit.create(Buffer.from(await wawoff2.decompress(await readFile(resolve(fontDir, 'host-grotesk-latin-wght.woff2')))))
 const fonts = new Map()
 function hostGrotesk(weight) {
-  if (!fonts.has(weight)) fonts.set(weight, fontkit.openSync(resolve(fontDir, `host-grotesk-latin-${weight}.woff2`)))
+  if (!fonts.has(weight)) fonts.set(weight, variable.getVariation({ wght: Number(weight) }))
   return fonts.get(weight)
 }
 

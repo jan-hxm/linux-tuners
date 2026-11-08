@@ -22,6 +22,13 @@
  *                               (live only): the first column of the landing
  *                               page's tuner table
  * @property {string[]} keys     Example keys shown on the card
+ * @property {number}  [settingCount] How many settings the tuner has (live
+ *                               only): the domain's parameterKeys.length
+ * @property {string[]} [writes] The files the tuner writes for its default
+ *                               profile (live only), in generateConfig order.
+ *                               Stored here so the landing table needs no
+ *                               domain module; contract.test.js checks both
+ *                               against the domain, so they can't drift
  * @property {string}  [path]    Route path (live only), e.g. '/swap'
  * @property {string}  [navLabel] Header nav label (live only)
  * @property {Object}  [route]   Route metadata (live only): title, description,
@@ -45,6 +52,8 @@ export const TUNERS = [
     title: 'Swap & memory',
     blurb: 'Hardware-aware tuning of vm.* sysctl parameters: swappiness, watermarks, dirty-page writeback, and OOM behaviour. Live graphs of swap pressure, watermark zones, and the dirty timeline.',
     keys: ['vm.swappiness', 'vm.min_free_kbytes', 'vm.watermark_scale_factor', 'vm.dirty_ratio', '…'],
+    settingCount: 12,
+    writes: ['/etc/sysctl.d/99-swap-tuning.conf'],
     route: {
       title: 'Swap & memory tuner | linux-tuners.dev',
       description:
@@ -69,6 +78,8 @@ export const TUNERS = [
     title: 'Security hardening',
     blurb: 'A hardening profile (CIS-benchmark style) that pulls security-relevant sysctls together from kernel, net, and fs, covering pointer and dmesg restrictions, ptrace scope, reverse-path filtering, SYN cookies, and link protections.',
     keys: ['kernel.kptr_restrict', 'kernel.yama.ptrace_scope', 'net.ipv4.tcp_syncookies', 'fs.protected_symlinks', '…'],
+    settingCount: 18,
+    writes: ['/etc/sysctl.d/99-security-hardening.conf'],
     route: {
       title: 'Security hardening tuner | linux-tuners.dev',
       description:
@@ -93,6 +104,8 @@ export const TUNERS = [
     title: 'Filesystem & file descriptors',
     blurb: 'Tune fs.* sysctls for file-heavy and event-driven workloads, covering the open-file ceilings, inotify watch limits for IDEs and Kubernetes nodes, and native AIO capacity for databases.',
     keys: ['fs.inotify.max_user_watches', 'fs.inotify.max_user_instances', 'fs.nr_open', 'fs.aio-max-nr', '…'],
+    settingCount: 6,
+    writes: ['/etc/sysctl.d/99-filesystem-tuning.conf'],
     route: {
       title: 'Filesystem & file descriptors tuner | linux-tuners.dev',
       description:
@@ -117,6 +130,8 @@ export const TUNERS = [
     title: 'Kernel limits & panics',
     blurb: 'Set the process and thread ceilings, the key quotas containers run into, whether a crashed machine reboots, and which kernel messages reach the console.',
     keys: ['kernel.threads-max', 'kernel.keys.maxkeys', 'kernel.panic', 'kernel.sysrq', '…'],
+    settingCount: 9,
+    writes: ['/etc/sysctl.d/99-kernel-tuning.conf'],
     route: {
       title: 'Kernel limits & panics tuner | linux-tuners.dev',
       description:
@@ -141,6 +156,8 @@ export const TUNERS = [
     title: 'systemd & resource limits',
     blurb: 'Tune systemd manager defaults and per-slice cgroup v2 resource control: accounting, task and FD limits, and CPU/memory/IO weights and caps for clustered and containerised Linux workloads.',
     keys: ['CPUWeight', 'MemoryMax', 'DefaultTasksMax', 'DefaultLimitNOFILE', '…'],
+    settingCount: 16,
+    writes: ['/etc/systemd/system.conf.d/99-resource-tuning.conf', '/etc/systemd/system/system.slice.d/50-resources.conf'],
     route: {
       title: 'systemd & resource limits tuner | linux-tuners.dev',
       description:
@@ -165,6 +182,8 @@ export const TUNERS = [
     title: 'Network stack',
     blurb: 'Tune net.core and net.ipv4 sysctls for throughput and latency, covering socket buffer sizes, the listen backlog, congestion control, TIME_WAIT reuse, and netfilter connection tracking.',
     keys: ['net.ipv4.tcp_rmem', 'net.ipv4.tcp_congestion_control', 'net.core.somaxconn', 'net.netfilter.nf_conntrack_max', '…'],
+    settingCount: 17,
+    writes: ['/etc/sysctl.d/99-network-tuning.conf'],
     route: {
       title: 'Network stack tuner | linux-tuners.dev',
       description:
@@ -189,6 +208,8 @@ export const TUNERS = [
     title: 'Block I/O & storage',
     blurb: 'Pick the I/O scheduler, request depth, read-ahead and merging for NVMe, SATA and virtual disks, written as udev rules that apply at boot and on hotplug.',
     keys: ['queue/scheduler', 'queue/nr_requests', 'queue/read_ahead_kb', 'queue/nomerges', '…'],
+    settingCount: 5,
+    writes: ['/etc/udev/rules.d/99-block-tuning-nvme.rules'],
     route: {
       title: 'Block I/O & storage tuner | linux-tuners.dev',
       description:
@@ -213,6 +234,8 @@ export const TUNERS = [
     title: 'Huge pages & memory layout',
     blurb: 'Tune huge page pools, Transparent Huge Pages and KSM for databases and VM hosts, plus the per-process memory map limit and NUMA zone reclaim. Writes a sysctl.d file and a tmpfiles.d file for the /sys settings.',
     keys: ['vm.nr_hugepages', 'transparent_hugepage/enabled', 'ksm/run', 'vm.max_map_count', '…'],
+    settingCount: 9,
+    writes: ['/etc/sysctl.d/99-hugepages-tuning.conf', '/etc/tmpfiles.d/99-hugepages-tuning.conf'],
     route: {
       title: 'Huge pages & memory layout tuner | linux-tuners.dev',
       description:
@@ -237,6 +260,8 @@ export const TUNERS = [
     title: 'System V IPC & shared memory',
     blurb: 'Set the System V shared memory, semaphore and message queue limits that Oracle, Db2 and older middleware check, without values from old guides lowering the kernel defaults.',
     keys: ['kernel.sem', 'kernel.shmmni', 'kernel.msgmnb', 'kernel.msgmax', '…'],
+    settingCount: 6,
+    writes: ['/etc/sysctl.d/99-sysv-ipc-tuning.conf'],
     route: {
       title: 'System V IPC & shared memory tuner | linux-tuners.dev',
       description:

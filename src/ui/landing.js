@@ -1,5 +1,5 @@
 /**
- * The landing page's copy and its tuner-table rows, as plain data and plain
+ * The landing page's copy and its route summary, as plain data and plain
  * JS. Both the live page (views/LandingView.vue) and its static text
  * (static/pages.js `landingDoc`, which also feeds index.md) read them, so a
  * reader without JavaScript gets the same story. Nothing here reads state.
@@ -66,27 +66,4 @@ export const LANDING_COPY = Object.freeze({
 export function routeSummary(roleLabel, count) {
   const tuners = count === 1 ? '1 tuner' : `${count} tuners`
   return roleLabel ? `${roleLabel}: ${tuners}, in this order.` : `${LANDING_COPY.start.anyMachine}: all ${tuners}, in setup order.`
-}
-
-// One fixed date: only the file paths are read, never the dated header.
-const PATHS_DATE = new Date(0)
-
-/**
- * A tuner table row's numbers, from the tuner's domain: how
- * many settings the tuner has, and the files it writes for its default
- * profile.
- *
- * @param {import('@/core/types.js').TunerDomain} domain
- * @returns {{ settings: number, writes: string[] }}
- */
-export function tunerFacts(domain) {
-  const hardware = domain.defaultHardware
-  const files = domain.generateConfig({
-    hardware,
-    params: domain.deriveDefaults(hardware),
-    presetLabel: null,
-    customised: false,
-    now: PATHS_DATE,
-  })
-  return { settings: domain.parameterKeys.length, writes: [...new Set(files.map((f) => f.path))] }
 }

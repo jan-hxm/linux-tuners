@@ -2,7 +2,7 @@
 /**
  * Says validation changes out loud (Design.md §7). A polite live region that,
  * once the values have settled (so a slider drag across a threshold doesn't
- * chatter), reads each issue that wasn't there before, and how many are left
+ * chatter), reads each issue that wasn't there before with its fix, and how many are left
  * when some clear. Issues already there when it mounts aren't read: they're
  * on the page, next to their cards.
  */
@@ -25,7 +25,7 @@ function announcement(issues) {
   if (added.length) {
     const read = added.slice(0, added.length > MAX_READ + 1 ? MAX_READ : added.length)
     const rest = added.length - read.length
-    const text = read.map((issue) => `${LEVEL[issue.level] ?? 'Note'}: ${issue.message}`).join(' ')
+    const text = read.map((issue) => [`${LEVEL[issue.level] ?? 'Note'}: ${issue.message}`, issue.fix].filter(Boolean).join(' ')).join(' ')
     return rest ? `${text} And ${rest} more issues.` : text
   }
   if (issues.length < seen.size) {

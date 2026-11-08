@@ -99,9 +99,27 @@ Every tuner follows the same flow:
    only makes sense where one fixed set is right on every kernel offered: the
    security tuner has none, because there it would turn unprivileged BPF back
    on and loosen Ubuntu's perf restriction.
-5. **Validation**: issues shown inline on the affected cards
+5. **Validation**: issues shown inline on the affected cards (see
+   "Validation issues" below)
 6. **Live simulation**: a tabbed `GraphPanel` plus impact cards
 7. **Config output**: copy, download, share URL, reset
+
+### Validation issues
+
+`validate(hardware, params, facts)` in the tuner's `validation.js` returns
+a list of issues `{ id, level, blocking, params, message, fix? }`. `level` is
+`error`, `warn` or `info`; `blocking` hides the output (§3); `params` names
+the cards the issue shows on. `fix` is one plain sentence saying what to
+change to resolve it ("Lower vm.dirty_background_ratio below 20, or raise
+vm.dirty_ratio above 20."). It is written next to the rule, reads the same
+values the rule's condition does, and may print the same computed limit as
+the message. Every blocking issue has one, and so does every warning with a
+concrete action; info notes, which describe a trade-off, mostly have none.
+
+The fix shows on its own line under the message wherever the issue does: on
+the card, in the blocked output panel, in a setup step's issue list and, for
+a blocked step, on the setup's Files step. `IssueAnnouncer` reads it after
+the message. The shared UI only prints `issue.fix`; it never builds one.
 
 ## 5. Architecture
 
@@ -125,10 +143,10 @@ so a tuner store's debounced hash write left over from one test can't seed
 the next test's store. The axe sweep cases have a 30 s timeout, since they
 take several seconds each under a full parallel run.
 
-Type is self-hosted: Host Grotesk 400, 500 and 600 for everything a person
+Type is self-hosted: Host Grotesk (one variable file, weights 400 to 600) for everything a person
 reads and Fragment Mono 400 for everything the machine reads (keys, values,
 paths, the file, the `[n]` marks), as committed Latin woff2 subsets in
-`src/assets/fonts/` with their `OFL.txt` (64,760 bytes of woff2 in all),
+`src/assets/fonts/` with their `OFL.txt` (43,288 bytes of woff2 in all),
 `font-display: swap`, and metric-matched local fallback faces in `main.css`,
 so the swap barely moves the text. There is no 700 weight. The prerendered
 pages and the 404 use the system stacks (no webfont before the app loads).
@@ -296,7 +314,7 @@ LinkedIn and Facebook don't show SVG previews. Edit the SVG, then regenerate
 and bump the `?v=` in `OG_IMAGE_PATH` (and `index.html`), since link previews
 are cached by image URL.
 The renderer has no Host Grotesk, so the script outlines every `<text>` (here
-and in `logo.svg`) from the self-hosted woff2 files with fontkit first. Keep
+and in `logo.svg`) from the self-hosted woff2 files with fontkit (the variable Host Grotesk is unpacked to TTF with the dev dependency `wawoff2`, since fontkit can't vary a woff2, and instanced per weight) first. Keep
 each `<text>` start-anchored, plain, and with its attributes on the element.
 
 Unknown paths return a real 404: the same step writes a static `dist/404.html`
@@ -349,7 +367,9 @@ The tuners answer "what should this one setting be". The guided setup answers
   `LANDING_EXAMPLE` next to the swap profile, its value from
   `deriveDefaults`, so the fit bar and the kernel-default tick sit apart);
   the key to the three marks; "Why" (a forum thread's one number against
-  this site's answer); "What is this machine for?", a role radiogroup beside
+  this site's answer; the forum value is hand-typed illustration copy of
+  what forums say, not read from data); "What is this machine for?", a role radiogroup (each role's name with a
+  one-line `hint` under it, the radio's `aria-describedby`) beside
   the route for the picked role; and "Or open one tuner directly", a table of
   every live tuner with the question it answers (the registry's `question`),
   its setting count and the files it writes, then the planned tuners and the
@@ -363,8 +383,11 @@ The tuners answer "what should this one setting be". The guided setup answers
   of the screen on a phone while the roles are in view, and opens `/setup`
   with the role. The rule behind it holds for the whole site: never place a
   primary action below content whose length depends on data. The table's
-  setting counts and file paths come from every domain, so they load (about
-  93 kB gzip) when the table scrolls into view. The page is still
+  setting counts and file paths are stored in the registry (`settingCount`,
+  `writes`, [§9 Registry](#registry)), so the landing route loads no domain
+  module for them: every domain together is about 93 kB gzip, more than the
+  page itself. `importBoundaries.test.js` keeps `LandingView.vue` from
+  importing `tuners/domains.js`. The page is still
   prerendered in full, so crawlers and no-JS visitors see the same story.
   The picked role lives in the query (`/?role=database`), so Back and a
   shared link keep it; a value that isn't a known role (`isMachineRole`)
@@ -519,7 +542,9 @@ drop-ins, the huge pages sysctl.d and tmpfiles.d files). A combined copy uses
 `combineFiles`, with one header for the machine profile, built from the
 machine fields' option labels. A blocked step's
 files are left out, and the step is named in their place. Under the files,
-the shared export steps (§7) cover every included file at once. There is no
+the shared export steps (§7) cover every included file at once, and "Copy all"
+confirms with the same "Next: ..." line as a tuner page (`nextStepSentence` in
+`ui/installGuide.js`, naming the first install step). There is no
 install script and no archive. A script would put executable directives in
 the output (§10). An archive would need a zip writer to save four clicks.
 A contract test checks that no two tuners write the same sysctl key, sysfs
@@ -636,7 +661,9 @@ must follow them, and existing UI must not regress.
   at every width. The site header is one row (`--site-header-h`, 61px): logo,
   a "Tuners" disclosure button (`aria-expanded`, `aria-controls`, +/- mark),
   the current tuner's name after a "/", Glossary (only if a `glossary` route
-  exists) and Start setup. The button opens a full-width panel of every live
+  exists) and Start setup. It is sticky from `lg` up and static below,
+  since on phones the impact bar already sticks and two sticky bars take
+  too much of a small screen. The button opens a full-width panel of every live
   tuner (name and registry `question`, the current one `aria-current="page"`
   with a `fit` top rule) and an "All tuners" link. It is a disclosure, not a
   modal: no focus trap; Escape closes it and refocuses the button, as does a
@@ -733,9 +760,10 @@ must follow them, and existing UI must not regress.
   `mine-tint`) in both schemes; primary buttons are `paper` on `ink` (hover
   `ink-2`). Marks (the kernel-default tick, the fit bar, the "yours" dot,
   the error frame, the focus ring) use `ink`, `fit`, `mine` and `error`, at
-  least 3:1 on every surface. `rule` and `rule-strong` are hairlines beside a
-  text label, never the only carrier of meaning (dark `rule-strong` is
-  2.2:1 on paper). `theme.test.js` measures every pair, so a shade change
+  least 3:1 on every surface. `rule-strong` (secondary button borders, minor
+  ticks) also holds 3:1 on every surface in both schemes (dark is `#72726E`,
+  3.8:1 on paper); `rule` is a hairline beside a text label, never the only
+  carrier of meaning. `theme.test.js` measures every pair, so a shade change
   that breaks one fails the suite. A disabled control may fall below the
   floor (`opacity-50`), as WCAG allows.
 - **Focus rings stay visible on every surface.** `main.css` gives every
@@ -946,6 +974,12 @@ must follow them, and existing UI must not regress.
   generated config. Use a comma, colon, semicolon or parentheses instead. En
   dashes in numeric ranges (`0–200`) are fine. Code comments and docs are
   exempt.
+- **Issue fixes.** An issue's `fix` is an imperative sentence ending in a
+  full stop that names the setting the way the card does (`vm.swappiness`,
+  `DefaultLimitNOFILE`, `net.ipv4.tcp_rmem`) and the direction to move it
+  ("Raise ... to 3600 seconds or more"). Keep the action out of the message so
+  it isn't said twice. It is plain text, since issues don't go through
+  `RichText`.
 - **A quiet voice.** No exclamation marks, no jokes in controls, no emoji,
   and no icons as ornament. Warnings carry a sign (`!` or the warning icon)
   as well as their colour, and a step or note state is said in words ("2
@@ -1212,6 +1246,14 @@ so that a new variant is an addition rather than an edit to shared code.
   runs out?"), which leads the landing table's row. The wording is approved
   by the maintainer; `registry.test.js` checks every live entry has one,
   ending with "?" and without an em dash. Planned entries have none.
+- for live entries, the landing table's facts: `settingCount` (the domain's
+  `parameterKeys.length`) and `writes` (the distinct file paths its
+  `generateConfig` writes for the default profile, in order). They are
+  derived values stored as data so the landing page and the static text need
+  no domain module for them. A guard in `contract.test.js` ("registry facts")
+  loads every domain and checks both against what it produces; its failure
+  names the entry and field to update and the value to put there, so a new
+  setting or a renamed file can't leave the table stale.
 
 Array order is the landing, nav and guided-setup order. It must stay plain data with no Vue
 or `@/` imports, because the postbuild script reads it under Node. The router,
@@ -1244,9 +1286,18 @@ over **every** registered tuner and checks:
   value, unknown preset, injected profile string) is rejected or clamped.
 - The defaults and every preset generate a config with no blocking issues,
   and every emitted value comes from the def's type formatter.
-- No displayed string (defs, presets, validation messages, about content, the
-  generated config) contains an em dash ([§8](#8-copy-conventions)).
+- No displayed string (defs, presets, validation messages and fixes, about
+  content, the generated config) contains an em dash ([§8](#8-copy-conventions)).
+- Every blocking issue has a `fix`, and every fix is one plain-text
+  sentence ([§4 Validation issues](#validation-issues)). The issues come from
+  a sweep that moves one or two keys at a time to their range ends and
+  middle (each option of an enum, each end of each tuple element), on every
+  profile, with and without facts, so a rule comparing two keys fires too.
+  Each tuner's own tests trigger its blocking rules and check the fix text.
 - Each live tuner's page mounts without console errors.
+- The registry's `settingCount` and `writes` for the tuner equal its
+  `parameterKeys.length` and the paths its default config writes
+  ([Registry](#registry)).
 
 A new tuner gets this coverage for free. Its own `*.test.js` files cover only
 its math and its cross-parameter rules.
@@ -1486,11 +1537,14 @@ These hold for every tuner and every output writer (§9 `core/output`):
   IP address, which needs a privacy policy change (a German court held
   embedding Google Fonts without consent to breach the GDPR, LG München I,
   2022). The redesign's typefaces, Host
-  Grotesk (400, 500, 600) and Fragment Mono (400), both under the SIL Open
+  Grotesk (one variable file, wght 400 to 600) and Fragment Mono (400), both under the SIL Open
   Font License, are committed as Latin woff2 subsets in `src/assets/fonts/`
-  with their `OFL.txt` and served from this origin: 64,760 bytes of woff2
-  in all (Host Grotesk 13,600 + 13,676 + 13,632, Fragment Mono 23,852), no
-  npm font package. `theme.test.js` fails if `main.css` names a font origin
+  with their `OFL.txt` and served from this origin: 43,288 bytes of woff2
+  in all (Host Grotesk 19,436, Fragment Mono 23,852), no
+  npm font package. Host Grotesk was subset from the google/fonts variable TTF
+  (commit 0b58fb3) to the same Latin range, wght axis clamped to 400-600 with
+  fontTools (the fontsource latin file drops the arrows and maths signs the
+  site uses). `theme.test.js` fails if `main.css` names a font origin
   or a face without `font-display: swap`.
 - `public/_headers` only gets stricter. The missing `script-src` CSP is the
   one accepted trade-off (§5 Hosting and deploy).

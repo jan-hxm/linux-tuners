@@ -128,7 +128,10 @@ describe('ConfigOutput', () => {
       const blocking = store.issues.filter((i) => i.blocking)
       expect(blocking.length).toBeGreaterThan(0)
       expect(wrapper.text()).toContain('Config output is suppressed.')
-      for (const issue of blocking) expect(wrapper.text()).toContain(issue.message)
+      for (const issue of blocking) {
+        expect(wrapper.text()).toContain(issue.message)
+        expect(wrapper.text()).toContain(issue.fix)
+      }
       expect(wrapper.find('pre').exists()).toBe(false)
       expect(copyButton(wrapper)).toBeUndefined()
       expect(wrapper.findAll('button').some((b) => /Download/.test(b.text()))).toBe(false)

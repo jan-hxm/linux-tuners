@@ -11,6 +11,7 @@ import { combineFiles } from '@/core/output/files.js'
 import { copyText, downloadText, downloadNames } from '@/ui/fileActions.js'
 import InstallSteps from '@/ui/InstallSteps.vue'
 import PlusMinus from '@/ui/PlusMinus.vue'
+import { nextStepSentence } from '@/ui/installGuide.js'
 import { settingsSummary } from '@/ui/settingsSummary.js'
 import { machineHeader } from './machineProfile.js'
 import { SETUP_STEPS } from './steps.js'
@@ -23,7 +24,12 @@ const setup = useSetupStore()
 const included = computed(() =>
   SETUP_STEPS.filter(({ id }) => !setup.skipped.includes(id)).map((step) => {
     const store = useStepStore(step.id)
-    return { ...step, blocked: store.blocked, files: store.blocked ? [] : store.configFiles }
+    return {
+      ...step,
+      blocked: store.blocked,
+      blocking: store.issues.filter((i) => i.blocking),
+      files: store.blocked ? [] : store.configFiles,
+    }
   }),
 )
 const allFiles = computed(() => included.value.flatMap((s) => s.files))
@@ -56,6 +62,7 @@ async function copyAll() {
   await copy('all', combined.value)
   copied.value = status.value.all === 'ok'
 }
+const nextStep = computed(() => nextStepSentence(allFiles.value, { combined: true }))
 const copyLink = () => copy('link', `${window.location.origin}${window.location.pathname}#${setup.linkHash()}`)
 
 const copyLabel = (key, idle) => ({ ok: 'Copied', fail: 'Copy failed' })[status.value[key]] ?? idle
@@ -95,6 +102,12 @@ const SMALL = 'inline-flex min-h-11 items-center border border-rule-strong px-3 
       <ul class="mt-1 list-disc pl-5">
         <li v-for="s in blockedSteps" :key="s.id">
           <button type="button" class="min-h-6 underline underline-offset-[3px]" @click="emit('goto', s.id)">{{ s.entry.title }}</button>
+          <ul class="mt-1 space-y-1">
+            <li v-for="issue in s.blocking" :key="issue.id">
+              {{ issue.message }}
+              <span v-if="issue.fix" class="block">{{ issue.fix }}</span>
+            </li>
+          </ul>
         </li>
       </ul>
     </div>
@@ -111,7 +124,7 @@ const SMALL = 'inline-flex min-h-11 items-center border border-rule-strong px-3 
         </div>
 
         <div aria-live="polite" class="mt-2 min-h-6 text-sm">
-          <p v-if="status.all === 'ok'" class="text-fit-text">Copied to clipboard. Next: save the files, then apply them.</p>
+          <p v-if="status.all === 'ok'" class="text-fit-text">Copied to clipboard.{{ nextStep }}</p>
           <p v-else-if="status.all === 'fail'" class="text-error">Clipboard write failed. Open a file below and copy it by hand.</p>
           <p v-if="status.link === 'ok'" class="text-fit-text">Link to this setup copied.</p>
           <p v-else-if="status.link === 'fail'" class="text-error">Clipboard write failed, but the URL bar already holds the current setup.</p>

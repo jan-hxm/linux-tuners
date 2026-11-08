@@ -32,7 +32,7 @@ const routeEl = (wrapper) => wrapper.get('[data-route]')
 const routeTitles = (wrapper) => routeEl(wrapper).findAll('ol > li a').map((a) => a.text())
 const titles = (tuners) => tuners.map((t) => t.title)
 const radios = (wrapper) => wrapper.findAll('[role="radio"]')
-const checked = (wrapper) => radios(wrapper).filter((b) => b.attributes('aria-checked') === 'true').map((b) => b.text())
+const checked = (wrapper) => radios(wrapper).filter((b) => b.attributes('aria-checked') === 'true').map((b) => b.find('[data-role-label]').text())
 const setupHrefs = (wrapper) => wrapper.findAll('a').filter((a) => a.text().startsWith('Start guided setup')).map((a) => a.attributes('href'))
 
 describe('LandingView role picker', () => {
@@ -47,7 +47,7 @@ describe('LandingView role picker', () => {
 
   it('shows the route for a picked role, with why lines, and the rest as fine to leave', async () => {
     const { wrapper, router } = await landingAt('/')
-    await radios(wrapper).find((b) => b.text() === 'Desktop or workstation').trigger('click')
+    await radios(wrapper).find((b) => b.find('[data-role-label]').text() === 'Desktop or workstation').trigger('click')
     await flushPromises()
     expect(router.currentRoute.value.query).toEqual({ role: 'desktop' })
 
@@ -61,10 +61,23 @@ describe('LandingView role picker', () => {
     expect(wrapper.get('[aria-live="polite"]').text()).toBe(`Desktop or workstation: ${recommended.length} tuners, in this order.`)
   })
 
+  it('shows each role hint under its label and describes the radio by it', async () => {
+    const { wrapper } = await landingAt('/')
+    for (const r of MACHINE_ROLES) {
+      const radio = radios(wrapper).find((b) => b.find('[data-role-label]').text() === r.label)
+      const id = radio.attributes('aria-describedby')
+      expect(id).toBe(`role-hint-${r.value}`)
+      expect(wrapper.find(`#${id}`).text()).toBe(r.hint)
+      expect(radio.find(`#${id}`).exists()).toBe(true)
+    }
+    // "Any machine" has no hint, so it has nothing to be described by.
+    expect(radios(wrapper)[0].attributes('aria-describedby')).toBeUndefined()
+  })
+
   it('reads the role from the link and goes back to every tuner on "Any machine"', async () => {
     const { wrapper, router } = await landingAt('/?role=database')
     expect(checked(wrapper)).toEqual(['Database'])
-    await radios(wrapper).find((b) => b.text() === 'Any machine').trigger('click')
+    await radios(wrapper).find((b) => b.find('[data-role-label]').text() === 'Any machine').trigger('click')
     await flushPromises()
     expect(router.currentRoute.value.query).toEqual({})
     expect(routeTitles(wrapper)).toEqual(titles(LIVE_TUNERS))
@@ -91,7 +104,7 @@ describe('LandingView role picker', () => {
     await press('ArrowDown')
     expect(checked(wrapper)).toEqual([labels[1]])
     expect(router.currentRoute.value.query).toEqual({ role: MACHINE_ROLES[0].value })
-    expect(document.activeElement?.textContent?.trim()).toBe(labels[1])
+    expect(document.activeElement?.querySelector('[data-role-label]')?.textContent?.trim()).toBe(labels[1])
     await press('End')
     expect(checked(wrapper)).toEqual([labels.at(-1)])
     await press('ArrowRight')

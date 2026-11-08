@@ -7,14 +7,15 @@
  * scripts/generate-static-routes.mjs reads the registry under Node.
  */
 
+/** `hint` is optional plain text: one short line under the label on the landing page. */
 export const MACHINE_ROLES = Object.freeze([
-  { value: 'server', label: 'General server' },
-  { value: 'web', label: 'Web or API server' },
-  { value: 'database', label: 'Database' },
-  { value: 'container-host', label: 'Container or Kubernetes host' },
-  { value: 'vm-host', label: 'VM host' },
-  { value: 'router', label: 'Router or firewall' },
-  { value: 'desktop', label: 'Desktop or workstation' },
+  { value: 'server', label: 'General server', hint: 'Services on a box you administer, no special load' },
+  { value: 'web', label: 'Web or API server', hint: 'Many short requests; connections and latency matter' },
+  { value: 'database', label: 'Database', hint: 'Large caches, steady writes, memory kept for the data' },
+  { value: 'container-host', label: 'Container or Kubernetes host', hint: 'Many workloads sharing one kernel, with limits' },
+  { value: 'vm-host', label: 'VM host', hint: 'Guests with fixed RAM, memory overcommit and I/O' },
+  { value: 'router', label: 'Router or firewall', hint: 'Forwarding traffic, connection tracking, firewall rules' },
+  { value: 'desktop', label: 'Desktop or workstation', hint: 'Browser, IDE, games; responsiveness first' },
 ])
 
 /** True for a known role id; anything else (an array, a typo) is false. */

@@ -48,7 +48,7 @@ export const LEARN = {
       oneLine: 'When RAM runs short, the kernel frees some. Two settings decide what goes first: copies of files, program memory, or remembered file names.',
       picture: {
         text: 'Your desk is full. You can put back a printout, since the original sits in the cabinet. Or you can box up your own notes, which takes longer because nobody else has a copy. One dial says which you reach for first.',
-        limit: 'You clear one pile at a time. The kernel usually takes a little from both kinds at once, and the dial sets the mix.',
+        limit: 'You clear one pile at a time. The kernel often frees only file cache while it has plenty, then mixes in program memory. The dial sets the mix.',
       },
       figure: {
         kind: 'stack',
@@ -172,7 +172,7 @@ export const LEARN = {
       body: [
         'The kernel splits RAM into ranges it manages on their own, called [[zones|memory-zone]][^zones]. Each zone has three free-memory levels, its [[watermarks|watermark]]: min, low and high[^zone]. Below low, a kernel thread that frees memory in the background wakes up. It is called [[kswapd]]. Above high, it stops again[^zone].',
         'If kswapd falls behind and free memory drops below min, a program asking for memory may have to free some itself. This is [[direct reclaim|reclaim]], and the program stalls until enough is free[^reclaim]. The allocstall counters in `/proc/vmstat` count these stalls[^wsf].',
-        'vm.min_free_kbytes sets the min level, and each zone gets a share by its size[^min-free]. The kernel picks it from your RAM, and stops adjusting it once you write a value[^min-free]. vm.watermark_scale_factor sets the gap between the levels. A wider gap wakes kswapd earlier and keeps it working until more is free[^wsf].',
+        'vm.min_free_kbytes sets the min level, shared out among zones by size[^min-free]. The kernel picks it from your RAM, and may raise it when [[transparent huge pages|thp]] are on, as on our test machines[^min-free]. A value you write stays, unless memory is added or huge pages are switched on later. vm.watermark_scale_factor sets the gap between the levels. A wider gap wakes kswapd earlier and keeps it working until more is free[^wsf].',
       ],
       pins: [
         { key: 'min_free_kbytes', layer: 'gauge', here: 'Sets the min mark, a reserve the kernel keeps for its own urgent needs. Most machines don\'t need to change this. Far too low risks hangs; far too high runs memory out at once.' },
@@ -188,9 +188,9 @@ export const LEARN = {
         {
           q: 'Does the kernel log mention a "page allocation failure"?',
           check: 'sudo dmesg | grep -i "page allocation failure"',
-          hint: 'Any line means the kernel once found no free memory for a request.',
+          hint: 'Any line means a request found no free memory it was allowed to take, often one from a driver that cannot wait. A bigger reserve leaves more for those.',
           yes: { key: 'min_free_kbytes', dir: 'raise' },
-          no: { leave: true, why: 'The kernel sizes both from your RAM, and that suits most machines.' },
+          no: { leave: true, why: 'Both defaults scale with your RAM, and that suits most machines.' },
         },
       ],
       symptoms: {
@@ -232,7 +232,7 @@ export const LEARN = {
         'Lower values make the first read faster, but the pages that follow may each need a read of their own[^page-cluster]. Our VM tests saw readahead from a swap file at the default and none at 0. On zram they saw none for memory only one program uses, even at the default.',
       ],
       pins: [
-        { key: 'page_cluster', here: 'How many pages come back from swap in one go, as a power of two. Lower suits swap in compressed RAM. Most machines with swap on a disk don\'t need to change this.' },
+        { key: 'page_cluster', here: 'How many pages come back from swap in one go, as a power of two. Lower can suit swap in compressed RAM. Most machines with swap on a disk don\'t need to change this.' },
       ],
       choose: [
         {
@@ -380,7 +380,7 @@ export const LEARN = {
       },
       body: [
         'Asking for memory and using it are two steps. A request only reserves room, and RAM is handed out when the program first writes there[^anon]. Many programs ask for large amounts in case they need them, and use little of it[^om].',
-        'Promising more than RAM and swap hold is called [[overcommit]]. vm.overcommit_memory picks the policy[^om]. In mode 0, the default, the kernel refuses only obvious overcommits. Mode 1 always says yes until memory really runs out. Mode 2 tries to prevent any overcommit[^om].',
+        'Promising more than RAM and swap hold is called [[overcommit]]. vm.overcommit_memory picks the policy[^om]. In mode 0, the default, the kernel refuses only obvious overcommits. Mode 1 always says yes, and the OOM killer steps in if memory really runs out. Mode 2 tries to prevent any overcommit[^om].',
         'In mode 2 the limit, the [[commit limit]], is all of swap plus a share of RAM set by vm.overcommit_ratio[^acct]. A request past it then usually fails with an error, rather than a program being killed later[^acct]. The ratio has no effect in modes 0 and 1[^acct].',
       ],
       pins: [
@@ -460,11 +460,11 @@ export const LEARN = {
       ],
       symptoms: {
         low: 'A program vanishes when memory runs out, and the kernel log says which one.',
-        high: 'The whole machine goes down whenever memory runs out.',
+        high: 'The whole machine goes down when memory runs out, unless only a cgroup or CPU set ran short.',
       },
       look: {
         cmd: 'sudo dmesg | grep -i "out of memory"',
-        for: 'A line starting with "Out of memory" names the program the OOM killer ended. Older kernels say "Kill process", newer ones "Killed process".',
+        for: 'A line with "Out of memory" names the program the OOM killer ended. "Memory cgroup out of memory" means a group of programs hit its own limit. Older kernels say "Kill process", newer ones "Killed process".',
       },
       sources: {
         oom: concepts('oom-killer', 'OOM killer'),

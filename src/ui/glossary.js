@@ -108,7 +108,7 @@ export const GLOSSARY = Object.freeze({
   page: {
     term: 'Page',
     definition:
-      'The fixed-size block the kernel manages memory in, usually 4 KiB on x86. RAM, file cache and swap are all handed out and counted in pages.',
+      'The fixed-size block the kernel manages memory in: 4 KiB on x86, and on most other systems. RAM, file cache and swap are all handed out and counted in pages.',
   },
   'memory-zone': {
     term: 'Memory zone',
@@ -123,7 +123,7 @@ export const GLOSSARY = Object.freeze({
   zram: {
     term: 'zram',
     definition:
-      'A swap device in compressed RAM. Swapped-out pages are compressed and kept in memory instead of on a disk, so reading them back needs no disk access.',
+      'A swap device in compressed RAM. Swapped-out pages are compressed and kept in memory instead of on a disk, so reading them back usually needs no disk access.',
   },
   'dentry-cache': {
     term: 'Dentry and inode caches',

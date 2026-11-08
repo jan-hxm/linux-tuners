@@ -8,6 +8,7 @@ details are kept in the local, gitignored `PRIVATE.md`, not here.
 ## 1. Next
 
 - [ ] **Learning pages** (in progress). One study guide per tuner at `/learn/<slug>`, for beginners, with figures whose numbers come from VM captures ([Design.md §5 Learning pages](Design.md#learning-pages)). The tuner cards drop their long descriptions once a tuner's guide is live. Built in four waves: foundations and the memory guide, the pages, the other eight guides, then a final pass.
+- [ ] **Chooser answers that name a value.** A chooser answer is `{ key, dir: 'raise' | 'lower' }` or `{ leave, why }`, rendered "Raise <name>." For an enum setting (`thp_enabled`, `thp_defrag`, `ksm_run`, likely network and security enums) "raise" means nothing, so the guides spell the value out in the question or `why`. Add `{ key, to: <value> }` to the schema (checked against the def's options), `answerText` ("Set <name> to madvise.") and the static decision flow, then move the enum answers over.
 - [ ] **Finer swap pressure samples near full memory.** `pressureCurve` samples memory fill in 1% steps, but on a typical machine the kswapd band and the min watermark sit within the last 1% (99.3 to 99.6% on 16 GiB). The chart now zooms the axis to that range (`focusRange`), so the curve shows only three samples there and starts rising at 99%, before the band. Sample more densely near the watermarks (simulation change, keep the tests).
 
 ## 2. Watch list

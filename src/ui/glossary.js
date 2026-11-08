@@ -150,4 +150,30 @@ export const GLOSSARY = Object.freeze({
     definition:
       'The kernel stopping the whole machine on purpose because it cannot safely go on. Every program stops with it; the kernel.panic setting decides whether the machine then reboots on its own.',
   },
+  // kernel guide
+  pid: {
+    term: 'Process ID',
+    definition:
+      'The number the kernel gives each process, and each thread, so it can tell them apart. The kernel hands them out in order and wraps back to a low number when it reaches kernel.pid_max.',
+  },
+  'kernel-key': {
+    term: 'Kernel key',
+    definition:
+      'A record the kernel keeps for security data such as an authentication token or an encryption key. It has a description and may have a payload, the data itself. Keyrings are keys that hold links to other keys.',
+  },
+  oops: {
+    term: 'Oops',
+    definition:
+      'The report the kernel prints when it hits a fault or a BUG in its own code. By default it tries to carry on; kernel.panic_on_oops makes it panic instead.',
+  },
+  'soft-lockup': {
+    term: 'Soft lockup',
+    definition:
+      'A bug that makes the kernel loop in kernel mode for more than 20 seconds (twice kernel.watchdog_thresh) without giving other tasks a chance to run. The watchdog logs it, and kernel.softlockup_panic can turn it into a panic.',
+  },
+  loglevel: {
+    term: 'Log level',
+    definition:
+      'The urgency of a kernel message, from 0 (emergency) to 7 (debug). The console shows only messages whose level is lower than the console log level.',
+  },
 })

@@ -52,6 +52,20 @@ export const GUIDES = {
     learn: () => import('../tuners/swap/learn.js').then((m) => m.LEARN),
     probes: () => import('../tuners/swap/probes.js').then((m) => m.PROBES),
   },
+  'kernel-limits': {
+    tunerId: 'kernel',
+    route: {
+      title: 'Kernel limits, crashes and the console | linux-tuners.dev',
+      description:
+        'A beginner guide to Linux kernel limits: process IDs and threads, key quotas, panics, Magic SysRq and console log levels, with official sources.',
+      ogTitle: 'Kernel limits, crashes and the console',
+      priority: 0.8,
+      changefreq: 'monthly',
+      jsonLdType: 'TechArticle',
+    },
+    learn: () => import('../tuners/kernel/learn.js').then((m) => m.LEARN),
+    probes: () => import('../tuners/kernel/probes.js').then((m) => m.PROBES),
+  },
 }
 
 /** The /learn index's own route metadata; the route exists only while a guide is live. */

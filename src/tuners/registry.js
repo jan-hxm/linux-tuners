@@ -135,6 +135,7 @@ export const TUNERS = [
   {
     id: 'kernel',
     status: 'live',
+    guide: { slug: 'kernel-limits', status: 'draft' },
     question: 'Does it run out of processes, or hang after a crash?',
     path: '/kernel',
     navLabel: 'Kernel',

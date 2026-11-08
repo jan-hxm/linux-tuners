@@ -102,7 +102,7 @@ describe('semantic tokens (Design.md §7)', () => {
     const css = readFileSync(new URL('../assets/main.css', import.meta.url), 'utf8')
     const faces = css.match(/@font-face\s*\{[^}]*\}/g)
     const web = faces.filter((face) => /url\(/.test(face))
-    expect(web).toHaveLength(4)
+    expect(web).toHaveLength(2)
     for (const face of web) {
       expect(face).toMatch(/font-display:\s*swap/)
       expect(face).toMatch(/url\('\.\/fonts\/[a-z0-9-]+\.woff2'\)/)

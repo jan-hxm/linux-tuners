@@ -125,10 +125,10 @@ so a tuner store's debounced hash write left over from one test can't seed
 the next test's store. The axe sweep cases have a 30 s timeout, since they
 take several seconds each under a full parallel run.
 
-Type is self-hosted: Host Grotesk 400, 500 and 600 for everything a person
+Type is self-hosted: Host Grotesk (one variable file, weights 400 to 600) for everything a person
 reads and Fragment Mono 400 for everything the machine reads (keys, values,
 paths, the file, the `[n]` marks), as committed Latin woff2 subsets in
-`src/assets/fonts/` with their `OFL.txt` (64,760 bytes of woff2 in all),
+`src/assets/fonts/` with their `OFL.txt` (43,288 bytes of woff2 in all),
 `font-display: swap`, and metric-matched local fallback faces in `main.css`,
 so the swap barely moves the text. There is no 700 weight. The prerendered
 pages and the 404 use the system stacks (no webfont before the app loads).
@@ -296,7 +296,7 @@ LinkedIn and Facebook don't show SVG previews. Edit the SVG, then regenerate
 and bump the `?v=` in `OG_IMAGE_PATH` (and `index.html`), since link previews
 are cached by image URL.
 The renderer has no Host Grotesk, so the script outlines every `<text>` (here
-and in `logo.svg`) from the self-hosted woff2 files with fontkit first. Keep
+and in `logo.svg`) from the self-hosted woff2 files with fontkit (the variable Host Grotesk is unpacked to TTF with the dev dependency `wawoff2`, since fontkit can't vary a woff2, and instanced per weight) first. Keep
 each `<text>` start-anchored, plain, and with its attributes on the element.
 
 Unknown paths return a real 404: the same step writes a static `dist/404.html`
@@ -1489,11 +1489,14 @@ These hold for every tuner and every output writer (§9 `core/output`):
   IP address, which needs a privacy policy change (a German court held
   embedding Google Fonts without consent to breach the GDPR, LG München I,
   2022). The redesign's typefaces, Host
-  Grotesk (400, 500, 600) and Fragment Mono (400), both under the SIL Open
+  Grotesk (one variable file, wght 400 to 600) and Fragment Mono (400), both under the SIL Open
   Font License, are committed as Latin woff2 subsets in `src/assets/fonts/`
-  with their `OFL.txt` and served from this origin: 64,760 bytes of woff2
-  in all (Host Grotesk 13,600 + 13,676 + 13,632, Fragment Mono 23,852), no
-  npm font package. `theme.test.js` fails if `main.css` names a font origin
+  with their `OFL.txt` and served from this origin: 43,288 bytes of woff2
+  in all (Host Grotesk 19,436, Fragment Mono 23,852), no
+  npm font package. Host Grotesk was subset from the google/fonts variable TTF
+  (commit 0b58fb3) to the same Latin range, wght axis clamped to 400-600 with
+  fontTools (the fontsource latin file drops the arrows and maths signs the
+  site uses). `theme.test.js` fails if `main.css` names a font origin
   or a face without `font-display: swap`.
 - `public/_headers` only gets stricter. The missing `script-src` CSP is the
   one accepted trade-off (§5 Hosting and deploy).

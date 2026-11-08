@@ -25,7 +25,7 @@ export const PROBES = {
   'swap.kswapd': { kind: 'thread', name: 'kswapd0' },
   'swap.zoneWatermarks': { kind: 'zoneinfo' },
   'swap.allocstall': { kind: 'vmstatKeys', prefix: 'allocstall' },
-  'swap.swapIns': { kind: 'vmstatKeys', prefix: 'pswp' },
+  'swap.swapIns': { kind: 'vmstatKeys', prefix: 'pswpin' },
   'swap.swapReadahead': { kind: 'vmstatKeys', prefix: 'swap_ra' },
   'swap.swaps': { kind: 'file', path: '/proc/swaps', exists: true },
   'swap.dentryState': { kind: 'file', path: '/proc/sys/fs/dentry-state', exists: true },

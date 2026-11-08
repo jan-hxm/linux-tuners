@@ -58,6 +58,11 @@ function sh(cmd, args, opts = {}) {
 function ensureKey() {
   mkdirSync(CACHE, { recursive: true })
   if (!existsSync(KEY)) sh('ssh-keygen', ['-q', '-t', 'ed25519', '-N', '', '-C', 'linux-tuners-vm', '-f', KEY])
+  // Windows' own OpenSSH ignores a key that any other account can read, and
+  // the file inherits the checkout's ACL, which can include other local
+  // users. Git's ssh doesn't check, so this only bites from PowerShell or
+  // cmd. Drop the inherited entries and leave the current user alone on it.
+  if (process.platform === 'win32') sh('icacls', [KEY, '/inheritance:r', '/grant:r', `${process.env.USERNAME}:F`])
   return readFileSync(`${KEY}.pub`, 'utf8').trim()
 }
 
@@ -177,18 +182,21 @@ export class VM {
   /** Start QEMU on the existing overlay and wait for SSH. */
   async launch(timeoutMs = 600_000) {
     this.boots = (this.boots ?? 0) + 1
-    const args = [...this.args, '-serial', `file:${this.console.replace(/\.log$/, `-${this.boots}.log`)}`]
+    const log = this.console.replace(/\.log$/, `-${this.boots}.log`)
+    const args = [...this.args, '-serial', `file:${log}`]
     this.proc = spawn(exe('qemu-system-x86_64'), args, { stdio: ['ignore', 'ignore', 'pipe'] })
     let qemuErr = ''
     this.proc.stderr.on('data', (d) => { qemuErr += d })
     this.exited = new Promise((r) => this.proc.on('exit', r))
 
     const deadline = Date.now() + timeoutMs
+    let last = ''
     for (;;) {
       if (this.proc.exitCode !== null) throw new Error(`qemu exited (${this.proc.exitCode}): ${qemuErr}`)
-      if (Date.now() >= deadline) throw new Error(`${this.id}: SSH did not come up; see ${this.console}`)
+      if (Date.now() >= deadline) throw new Error(`${this.id}: SSH did not come up; see ${log}${last ? `\nlast ssh error: ${last}` : ''}`)
       const r = await this.run('true', { timeoutMs: 15_000, check: false })
       if (r.code === 0) break
+      last = r.stderr.trim() || last
       await sleep(3000)
     }
     await this.afterBoot?.(this)

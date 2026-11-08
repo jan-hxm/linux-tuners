@@ -1,0 +1,158 @@
+{
+  "capturedAt": "2026-11-08T21:20:24Z",
+  "guestMemoryMiB": 3072,
+  "image": "debian-13",
+  "kernel": "6.12.113+deb13-cloud-amd64",
+  "probes": {
+    "swap.allocstall": {
+      "status": "ok",
+      "value": [
+        "allocstall_device",
+        "allocstall_dma",
+        "allocstall_dma32",
+        "allocstall_movable",
+        "allocstall_normal"
+      ]
+    },
+    "swap.dentryState": {
+      "status": "ok",
+      "value": true
+    },
+    "swap.dirtyBackgroundRatio": {
+      "status": "ok",
+      "value": 10
+    },
+    "swap.dirtyExpire": {
+      "status": "ok",
+      "value": 3000
+    },
+    "swap.dirtyRatio": {
+      "status": "ok",
+      "value": 20
+    },
+    "swap.dirtyWriteback": {
+      "status": "ok",
+      "value": 500
+    },
+    "swap.kswapd": {
+      "status": "ok",
+      "value": true
+    },
+    "swap.memAnon": {
+      "status": "ok",
+      "value": {
+        "AnonPages": 32948
+      }
+    },
+    "swap.memCache": {
+      "status": "ok",
+      "value": {
+        "Cached": 96696
+      }
+    },
+    "swap.memCommit": {
+      "status": "ok",
+      "value": {
+        "CommitLimit": 1492180,
+        "Committed_AS": 70424
+      }
+    },
+    "swap.memDirty": {
+      "status": "ok",
+      "value": {
+        "Dirty": 4216,
+        "Writeback": 0
+      }
+    },
+    "swap.memSize": {
+      "status": "ok",
+      "value": {
+        "MemTotal": 2984360,
+        "SwapTotal": 0
+      }
+    },
+    "swap.minFree": {
+      "status": "ok",
+      "value": 67584
+    },
+    "swap.overcommitMemory": {
+      "status": "ok",
+      "value": 0
+    },
+    "swap.overcommitRatio": {
+      "status": "ok",
+      "value": 50
+    },
+    "swap.pageCluster": {
+      "status": "ok",
+      "value": 3
+    },
+    "swap.panicOnOom": {
+      "status": "ok",
+      "value": 0
+    },
+    "swap.swapIns": {
+      "status": "ok",
+      "value": [
+        "pswpin"
+      ]
+    },
+    "swap.swapReadahead": {
+      "status": "ok",
+      "value": [
+        "swap_ra",
+        "swap_ra_hit"
+      ]
+    },
+    "swap.swappiness": {
+      "status": "ok",
+      "value": 60
+    },
+    "swap.swaps": {
+      "status": "ok",
+      "value": true
+    },
+    "swap.vfsCachePressure": {
+      "status": "ok",
+      "value": 100
+    },
+    "swap.vmSysctls": {
+      "status": "ok",
+      "value": true
+    },
+    "swap.watermarkScale": {
+      "status": "ok",
+      "value": 10
+    },
+    "swap.zoneWatermarks": {
+      "status": "ok",
+      "value": {
+        "DMA": {
+          "high": 129,
+          "low": 108,
+          "min": 87
+        },
+        "DMA32": {
+          "high": 16717,
+          "low": 13931,
+          "min": 11145
+        },
+        "Device": {
+          "high": 0,
+          "low": 0,
+          "min": 0
+        },
+        "Movable": {
+          "high": 32,
+          "low": 32,
+          "min": 32
+        },
+        "Normal": {
+          "high": 8492,
+          "low": 7077,
+          "min": 5662
+        }
+      }
+    }
+  }
+}

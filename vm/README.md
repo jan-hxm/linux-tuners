@@ -85,6 +85,40 @@ Per image ([suite.mjs](suite.mjs)):
    rules file for each kind of disk without a failed write, and the glob lines the
    security file suggests reach the boot interface.
 
+## Capturing the learning pages' evidence
+
+Every number in a learning page's figure comes from a capture on these
+images, committed as `src/learn/evidence/<image>.json`:
+
+```bash
+npm run vm:capture -- --dry-run          # list each probe and its command, boot nothing
+npm run vm:capture                       # every image, VM_PARALLEL at once (default 5)
+npm run vm:capture debian-13 fedora-43   # some images
+```
+
+Each image boots fresh on the suite's guest (3072 MB, the same extra disks,
+conntrack loaded), runs every probe from every `src/tuners/<id>/probes.js`
+and writes the file with its keys sorted, so a recapture diffs by value. A
+probe whose file, key or thread is missing, or whose command fails, is
+recorded as `{ "status": "absent", "reason": ... }`. An image that fails to
+boot keeps its old file and the command exits 1. Review the diff and commit
+it with the guide change that needed it.
+
+Probes are plain data in a closed set of kinds (`vm/lib/probeKinds.mjs`):
+`sysctl`, `file`, `sysfs`, `thread`, `zoneinfo`, `vmstatKeys` and
+`meminfoKeys`. Each kind runs a fixed command with the probe's one field
+quoted into it, so a probe can't run anything else; a new kind of
+measurement is a new kind there, with a parser test against real output in
+`vm/lib/__fixtures__/`.
+
+The suite's last block, **learn evidence is fresh**, reruns every probe at
+the end of `npm run test:vm` and fails, naming the probe and image, when the
+kernel or a probe's result no longer matches the file. Kinds whose value the
+suite's own writes change (sysctl and sysfs values, zone watermarks,
+meminfo sizes) are held only to the same status and shape; the rest
+(`file`, `thread`, `vmstatKeys`) to the same value. A failure there means:
+recapture.
+
 ## Notes for changing it
 
 - `images.mjs` `expect` holds facts about each distribution (where perf is

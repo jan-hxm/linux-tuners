@@ -1,0 +1,47 @@
+# /proc/zoneinfo in the layout of kernel 6.12 to 6.17 (Debian 13, Fedora 43),
+# with the "boost" (5.16), "promo" (6.12) and "cma" lines. No real capture
+# of this layout was found in the kernel docs, the mailing lists reachable
+# without a login, or this repo's history, so this is the documented format:
+# the seq_printf strings of zoneinfo_show_print() in mm/vmstat.c at v6.12,
+# https://raw.githubusercontent.com/torvalds/linux/v6.12/mm/vmstat.c
+# (same at v6.17), with one populated zone and one empty one. The numbers
+# are placeholders, each distinct so a test can tell the fields apart;
+# they are not a measurement and must never be used as evidence.
+---
+Node 0, zone   Normal
+  per-node stats
+      nr_inactive_anon 21
+      nr_active_anon 22
+  pages free     1
+        boost    2
+        min      3
+        low      4
+        high     5
+        promo    6
+        spanned  7
+        present  8
+        managed  9
+        cma      10
+        protection: (0, 0, 0, 0, 0)
+      nr_free_pages 1
+      nr_zone_inactive_anon 23
+  pagesets
+    cpu: 0
+              count: 11
+              high:  12
+              batch: 13
+  vm stats threshold: 14
+  node_unreclaimable:  0
+  start_pfn:           15
+Node 0, zone  Movable
+  pages free     0
+        boost    0
+        min      0
+        low      0
+        high     0
+        promo    0
+        spanned  0
+        present  0
+        managed  0
+        cma      0
+        protection: (0, 0, 0, 0, 0)

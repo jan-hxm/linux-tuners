@@ -680,6 +680,60 @@ lives only under `__fixtures__` and is never routed outside tests.
 
 #### Evidence
 
+A figure's numbers are measured, never typed in. A guide lists what to
+measure in `src/tuners/<id>/probes.js` as plain data (no imports, so the
+contract suite reads it in jsdom): `PROBES = { '<id>.<name>': { kind, ... } }`,
+every id starting with its tuner's folder name. `npm run vm:capture
+[image...]` (vm/README.md) boots each VM image on the suite's guest
+(3072 MB, its extra disks), runs every probe, and writes
+`src/learn/evidence/<image>.json`: `{ image, kernel, capturedAt,
+guestMemoryMiB, probes: { <id>: { status: 'ok', value } | { status:
+'absent', reason } } }`, keys sorted so a recapture diffs by value.
+Agents never boot VMs; the maintainer captures once per wave, and a guide
+whose probes have no evidence stays `draft`.
+
+The kinds are a closed set in `vm/lib/probeKinds.mjs`. Each holds its
+probe's fields to a strict pattern, builds a fixed command with that one
+field through `quote()`, parses the output, and declares how the
+freshness check compares:
+
+| Kind | Probe | Command | Value | Compare |
+|---|---|---|---|---|
+| `sysctl` | `name: 'vm.min_free_kbytes'` | `sudo sysctl -n <name>` | a number when it is one whole number, else text | present |
+| `file` | `path` under `/proc` or `/sys`, `exists: true` | `sudo test -e <path>` | `true`; a missing file is absent | exact |
+| `sysfs` | `path` under `/sys` | `sudo cat <path>` | the bracketed choice ("always [madvise] never" is `madvise`), else as `sysctl` | present |
+| `thread` | `name: 'kswapd0'` | `ps -e -o comm=` | whether a process of that exact name runs | exact |
+| `zoneinfo` | none | `cat /proc/zoneinfo` | `{ <zone>: { min, low, high } }` in pages; node 0's zones by name, others `node1-Normal` | present |
+| `vmstatKeys` | `prefix: 'allocstall'` | `cat /proc/vmstat` | the keys `<prefix>` or `<prefix>_*`, sorted (one `allocstall` before 4.8, per zone after) | exact |
+| `meminfoKeys` | `keys: ['MemTotal', ...]` | `cat /proc/meminfo` | `{ <key>: <number as printed> }`, keys the kernel lacks left out | present |
+
+What decides absent: a non-zero exit (not stderr, where sudo can warn), a
+missing file, or nothing to parse; the reason is the first stderr line or
+a fixed phrase, cleaned to printable text. Values are only numbers,
+strings, booleans, arrays and plain objects; anything else fails the
+write. The zoneinfo parser counts only the `min`, `low` and `high` lines
+between a zone's `pages free` and `protection:` lines, so it reads 4.15
+through 6.17 (`boost` from 5.16, `promo` and `cma` later) and never the
+per-cpu `high:` lines.
+
+The suite's last block, "learn evidence is fresh", reruns every probe on
+the same VM after the rest of the suite and fails with the probe id and
+image when the kernel differs from the file's or a result has gone stale.
+By then the suite has written its own sysctl, THP and swap settings, which
+is why kinds whose values those writes change compare as `present` (same
+status, same object keys or array items, same value type) and only the
+stable kinds as `exact`. So an `exact` probe must measure something the
+suite leaves as booted (a `file` that the suite creates, such as a zram
+device, would read as stale).
+
+Parser tests (`scripts/vm-probe-kinds.test.js`, in `npm test`) run on real
+output in `vm/lib/__fixtures__/`, each file naming its source: the
+`/proc/meminfo` example in the kernel's `proc.rst`, `/proc/zoneinfo` and
+`/proc/vmstat` posted to the kernel mailing list (2017, 2020, 2024), and a
+2.6.2 `/proc/vmstat` on kernel.org. No real 6.12 zoneinfo was found, so
+that layout is a documented-format fixture from the `mm/vmstat.c` format
+strings with placeholder numbers, marked as such.
+
 #### Routes and pages
 
 ## 6. Adding a tuner

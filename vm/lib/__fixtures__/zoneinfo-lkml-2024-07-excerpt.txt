@@ -1,0 +1,44 @@
+# /proc/zoneinfo excerpts, kernel 6.10-era (July 2024), with the "boost" line
+# (5.16+) and lines elided by the poster as "...". The first block is the
+# real layout; the second is the layout the patch proposed (a "Node N,
+# per-node stats" header line), which mainline had not taken as of v6.17.
+# Posted by Shivank Garg to the linux-kernel list, 2024-07-25, "[PATCH]
+# mm/vmstat: Fix placement of per-node stats in /proc/zoneinfo":
+# https://lkml.iu.edu/hypermail/linux/kernel/2407.3/01456.html
+# Copied verbatim from the message body.
+---
+Node 0, zone      DMA
+  per-node stats
+      nr_inactive_anon 2096
+...
+  pages free     2814
+        boost    0
+...
+      nr_free_pages 2814
+...
+Node 0, zone    DMA32
+  pages free     357384
+        boost    0
+...
+...
+Node 1, zone   Normal
+  per-node stats
+      nr_inactive_anon 87606
+...
+  pages free     51836334
+        boost    0
+...
+Node 1, zone  Movable
+  pages free     0
+        boost    0
+
+Node 0, per-node stats
+      nr_inactive_anon 2783
+      nr_active_anon 36
+...
+Node 0, zone      DMA
+  pages free     3584
+        boost    0
+        min      46
+...
+...

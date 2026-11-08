@@ -1,0 +1,15 @@
+# Output of `ps -e -o comm=`: the command name of every process, one per
+# line, no header (ps(1), "-o format" with an empty header,
+# https://man7.org/linux/man-pages/man1/ps.1.html). Documented format, not
+# a capture: the names are kernel threads the kernel docs name (kswapd in
+# admin-guide/mm/concepts.rst, "kswapd%d" per node in mm/vmscan.c; khugepaged in
+# admin-guide/mm/transhuge.rst, ksmd in admin-guide/mm/ksm.rst) plus init
+# and a shell, to test the parser's matching only.
+---
+systemd
+kthreadd
+kswapd0
+khugepaged
+ksmd
+kworker/0:1-events
+bash

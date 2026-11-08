@@ -871,32 +871,54 @@ must follow them, and existing UI must not regress.
   plain-language `title` above its sysctl name, the value (large, mono,
   underlined in `fit` or `mine`), the control and the one-line `shortDesc`.
   The control is labelled by the title and the name together. Its reasons
-  sit beside it in a **margin** of numbered notes (`[1]`, `[2]`, ...), built
-  from today's data in the order of the layers: the `longDesc` parts
-  (`ui/descParts.js`: "What it does", then "When to change it" and "Watch
-  out" where the def has them), the rule of thumb, the context note, and
-  last the origin note (below). Each note shows its **first sentence**
+  sit beside it in a **margin** of numbered notes (`[1]`, `[2]`, ...). The
+  margin's notes, in order: the **zone note**, when the def's current zone
+  has one (zones take an optional plain-text `note`, `{ label, min, max,
+  note }`; the current zone is the first with a note whose bounds hold the
+  value; the card knows no tuner, the text is data); then, **while the
+  tuner has no live guide**, the `longDesc` parts (`ui/descParts.js`: "What
+  it does", then "When to change it" and "Watch out" where the def has
+  them), the rule of thumb and the context note; and last the origin note
+  (below). Each of those long notes shows its **first sentence**
   (`ui/firstSentence.js`) with a "more" button (`aria-expanded`) that opens
-  the rest in place; the notes don't depend on the value, so dragging never
-  changes their height. The margin holds **at most three notes**: the first
-  two and the origin note. The card is a size container and lays itself out
-  by its own width, never by tuner: from 40rem the margin sits beside the
-  column, 16.25rem wide and growing towards **30rem** while the column keeps
-  at least 34rem; a card narrower than that clamp's floor (52.75rem, beside
-  the graph column or on a phone) holds **two notes**, the first and the
-  origin note; below 40rem the notes become `[n]` toggle buttons under the
-  column that open each note in place (the Tufte pattern). The margin's last
-  line holds "Learn more" (the remaining notes, in place), the docs link and
-  "Full reference", which opens the **drawer**: the pro reference, which
-  doesn't repeat `longDesc`: the accepted range and the kernel default with
-  its version note, a "Try it now" command that sets the current value
-  until the next reboot (the domain's `tryCommand`: `sudo sysctl -w`, or
-  `echo | sudo tee` for a sysfs file; systemd and block I/O have none, since
-  their settings are directives and udev rules), the context note, the
-  formula with live values, defaults by workload (named by the profile's
-  option labels), and the sources. The contract suite checks every def's
-  title and parts. Reactive notes that change with the value are planned
-  separately (TODO.md).
+  the rest in place; a zone note is short and shown whole. Dragging across
+  a zone boundary can change the first note, so it is also read out: a
+  visually hidden `aria-live="polite"` region on the card says the new
+  zone's label and note once the value has settled (600 ms, the way
+  `IssueAnnouncer` waits), never while dragging and never for the note
+  already there at mount. The margin holds **at most three notes**: the
+  first two and the origin note. The card is a size container and lays
+  itself out by its own width, never by tuner: from 40rem the margin sits
+  beside the column, 16.25rem wide and growing towards **30rem** while the
+  column keeps at least 34rem; a card narrower than that clamp's floor
+  (52.75rem, beside the graph column or on a phone) holds **two notes**,
+  the first and the origin note; below 40rem the notes become `[n]` toggle
+  buttons under the column that open each note in place (the Tufte
+  pattern). The margin's last line holds "Learn more" (the remaining notes,
+  in place, with the danger note), the docs link and "Full reference",
+  which opens the **drawer**: the pro reference, which doesn't repeat
+  `longDesc`: the accepted range and the kernel default with its version
+  note, a "Try it now" command that sets the current value until the next
+  reboot (the domain's `tryCommand`: `sudo sysctl -w`, or `echo | sudo tee`
+  for a sysfs file; systemd and block I/O have none, since their settings
+  are directives and udev rules), the context note, the formula with live
+  values, defaults by workload (named by the profile's option labels), and
+  the sources.
+
+  **With a live guide** (the registry entry's `guide.status` is `'live'`;
+  absent or `'draft'` changes nothing) the long text has moved to the
+  guide: the card shows no `longDesc` notes, rule of thumb or context note
+  in the margin, and no "Learn more". It keeps the title, sysctl name,
+  value, control, `shortDesc`, the zone note, the origin note and "Full
+  reference", and gains a **"How it works"** link to
+  `/learn/<slug>#<chapter id>` for the chapter that pins the key (a real
+  link; plain clicks go through the router). The chapter comes from a
+  lookup `(paramKey) => chapter id | null`, given to the card by its
+  `howItWorks` prop or by a page providing it under `HOW_IT_WORKS_KEY`
+  (`ui/descParts.js`); a key no chapter pins, or no lookup, shows no link.
+  `longDesc` stays in the defs and the guide reads it: text moves, never
+  copies. The contract suite checks every def's title and parts, and that
+  every zone note is plain text with no em dash on a zone with bounds.
 - **Essential and advanced parameters.** Every def has a `tier`. Each
   section of `ParameterPanel` shows its essential cards and a "Show N
   advanced" button (`aria-expanded`) for the rest. An advanced card is always

@@ -850,6 +850,25 @@ describe('guided setup output', () => {
   })
 })
 
+describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('zone notes: %s', (_id, domain) => {
+  // Design.md §7 "Three layers per parameter": a zone's optional `note` is
+  // plain text for the margin, with no markup and no em dash, and only a
+  // zone with bounds can be the current one.
+  it('keeps every zone note plain, free of em dashes, on a zone with bounds', () => {
+    for (const def of Object.values(domain.defsByKey)) {
+      for (const zone of def.zones ?? []) {
+        if (zone.note === undefined) continue
+        const where = `${def.key} ${zone.label}`
+        expect(typeof zone.note, where).toBe('string')
+        expect(zone.note.trim(), where).not.toBe('')
+        expect(zone.note, where).not.toMatch(/—/)
+        expect(zone.note, where).not.toMatch(/[`*\[\]<>]/)
+        expect(typeof zone.min === 'number' && typeof zone.max === 'number', `${where} needs min and max`).toBe(true)
+      }
+    }
+  })
+})
+
 describe('registry facts', () => {
   // The landing table prints each tuner's setting count and file paths from
   // the registry, so it loads no domain module (Design.md §9 "Registry").

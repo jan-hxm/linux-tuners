@@ -321,6 +321,15 @@ export function validateGuide(guide, ctx) {
       const marks = footnotes(value)
       if (marks.length && !cite) fail(path, 'footnote', '[^id] marks belong in the body only')
       for (const id of marks) citations.push({ path, id })
+      // The page splits a paragraph at its marks before RichText parses each
+      // piece (ChapterView), so a mark inside markup (**bold[^x]**) would
+      // leave each half unparsed. Every piece must parse on its own.
+      if (marks.length) {
+        const pieces = value.split(/\[\^[a-z0-9-]+\]/)
+        const broken = pieces.some((piece) => parseRichText(piece).some((seg) => seg.type === 'text' && LEFTOVER.test(seg.text)))
+        const whole = parseRichText(stripFootnotes(value)).some((seg) => seg.type === 'text' && LEFTOVER.test(seg.text))
+        if (broken && !whole) fail(path, 'footnote', 'a [^id] mark sits inside markup; put it after the closing mark')
+      }
       for (const seg of parseRichText(stripFootnotes(value))) {
         if (seg.type === 'term' && !Object.hasOwn(glossary, seg.id)) fail(path, 'glossary', `unknown glossary id "${seg.id}"`)
         if (seg.type === 'link') {

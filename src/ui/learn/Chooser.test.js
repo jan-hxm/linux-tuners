@@ -3,10 +3,11 @@ import { describe, it, expect } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import Chooser from './Chooser.vue'
 import DecisionFlow from './DecisionFlow.vue'
-// Until L1 merges: the local copy of the fixture (PROGRESS.md).
-import { DEMO_DEFS, DEMO_LEARN } from './__fixtures__/demo.learn.js'
+import { DEMO_DEFS, DEMO_LEARN } from '@/learn/__fixtures__/demoKit.js'
 
 const choose = DEMO_LEARN.chapters[0].choose
+/** A last question without a `no`: the contract suite refuses it, but the chooser must still end. */
+const lastWithoutNo = [{ q: 'Is it slow?', check: 'free -m', hint: 'Look at the available column.', yes: { key: 'mode', dir: 'raise' } }]
 const button = (w, text) => w.findAll('button').find((b) => b.text() === text)
 const mountChooser = (props = {}) =>
   mount(Chooser, { attachTo: document.body, props: { choose, defsByKey: DEMO_DEFS, tuneHref: (key) => `/demo?key=${key}`, ...props } })
@@ -40,11 +41,11 @@ describe('Chooser', () => {
     await flushPromises()
     const result = w.get('[data-result]')
     expect(result.classes()).toEqual(expect.arrayContaining(['bg-fit-tint', 'border-fit']))
-    expect(result.text()).toContain('Raise demo.alpha.')
-    expect(result.text()).toContain('Alpha level')
-    expect(result.get('a').attributes('href')).toBe('/demo?key=alpha')
+    expect(result.text()).toContain('Raise demo.reserve_kbytes.')
+    expect(result.text()).toContain('Free memory reserve')
+    expect(result.get('a').attributes('href')).toBe('/demo?key=reserve_kbytes')
     expect(result.get('a').text()).toBe('Open it in the tuner')
-    expect(w.get('[aria-live="polite"]').text()).toBe('Result: Raise demo.alpha.')
+    expect(w.get('[aria-live="polite"]').text()).toBe('Result: Raise demo.reserve_kbytes.')
     expect(document.activeElement?.textContent).toBe('Start over')
     await button(w, 'Start over').trigger('click')
     await flushPromises()
@@ -54,7 +55,7 @@ describe('Chooser', () => {
   })
 
   it('leaves the settings alone past the last question, with no tuner link', async () => {
-    const w = mountChooser({ choose: DEMO_LEARN.chapters[1].choose })
+    const w = mountChooser({ choose: lastWithoutNo })
     await button(w, 'No').trigger('click')
     await flushPromises()
     expect(w.get('[data-result]').text()).toContain('Leave it as it is: none of these questions matched your machine.')
@@ -68,9 +69,9 @@ describe('DecisionFlow', () => {
     const w = mount(DecisionFlow, { props: { choose, defsByKey: DEMO_DEFS } })
     const items = w.findAll('li')
     expect(items).toHaveLength(2)
-    expect(items[0].text()).toContain('Yes: Raise demo.alpha.')
+    expect(items[0].text()).toContain('Yes: Raise demo.reserve_kbytes.')
     expect(items[0].text()).toContain('No: Go to question 2.')
-    expect(items[1].text()).toContain('Yes: Leave it as it is: reclaim rarely runs.')
-    expect(items[1].text()).toContain('No: Lower demo.beta.')
+    expect(items[1].text()).toContain('Yes: Lower demo.reserve_kbytes.')
+    expect(items[1].text()).toContain('No: Leave it as it is: The reserve is doing its job, so the default fits.')
   })
 })

@@ -4,8 +4,8 @@
 // result) and the parts map, with the viewer's scheme set to light and to
 // dark. happy-dom has no stylesheet, so contrast isn't measured here (the
 // tokens are, in ui/theme.test.js) and both schemes check structure; the
-// browser pass in Design.md §7 covers the rest. Joins the route sweep once
-// L5 gives the guides a page.
+// browser pass in Design.md §7 covers the rest. The guide pages themselves
+// are in the route sweeps (src/a11y.test.js, src/views/learn.test.js).
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { h } from 'vue'
@@ -13,9 +13,7 @@ import axe from 'axe-core'
 import ChapterView from './ChapterView.vue'
 import PartsMap from './PartsMap.vue'
 import { storedKernel } from './kernelPref.js'
-// Until L1 merges: the local copy of the fixture and valueFor (PROGRESS.md).
-import { DEMO_DEFS, DEMO_IMAGES, DEMO_LEARN } from './__fixtures__/demo.learn.js'
-import { valueFor } from './__fixtures__/valueFor.js'
+import { DEMO_DEFS, DEMO_IMAGES, DEMO_LEARN, valueFor } from '@/learn/__fixtures__/demoKit.js'
 
 async function violations() {
   const { violations } = await axe.run(document, { resultTypes: ['violations'], rules: { 'color-contrast': { enabled: false } } })

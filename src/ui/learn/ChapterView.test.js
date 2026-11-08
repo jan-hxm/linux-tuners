@@ -3,9 +3,7 @@ import { describe, it, expect, afterEach, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import ChapterView from './ChapterView.vue'
 import { KERNEL_STORAGE_KEY, storedKernel } from './kernelPref.js'
-// Until L1 merges: the local copy of the fixture and valueFor (PROGRESS.md).
-import { DEMO_DEFS, DEMO_IMAGES, DEMO_LEARN } from './__fixtures__/demo.learn.js'
-import { valueFor } from './__fixtures__/valueFor.js'
+import { DEMO_DEFS, DEMO_DOCS, DEMO_IMAGES, DEMO_LEARN, valueFor } from '@/learn/__fixtures__/demoKit.js'
 
 const [stackChapter, timelineChapter, sideChapter] = DEMO_LEARN.chapters
 
@@ -30,10 +28,10 @@ describe('ChapterView', () => {
     wrapper = mountChapter()
     const order = wrapper.findAll('[data-part]').map((el) => el.attributes('data-part'))
     expect(order).toEqual(['oneLine', 'picture', 'figure', 'body', 'settings', 'chooser', 'flow', 'symptoms', 'look', 'sources'])
-    expect(wrapper.get('section').attributes('id')).toBe('when-reclaim-starts')
-    expect(wrapper.get('h2').text()).toBe('When reclaim starts')
+    expect(wrapper.get('section').attributes('id')).toBe('keeping-a-reserve')
+    expect(wrapper.get('h2').text()).toBe('Keeping a reserve')
     expect(wrapper.findAll('h3').map((h) => h.text())).toEqual(['Settings here', 'Should you change it?', "What you notice if it's wrong", 'Look on your machine', 'Sources'])
-    expect(wrapper.get('[data-part="picture"]').text()).toContain('Where the picture stops: A gauge empties')
+    expect(wrapper.get('[data-part="picture"]').text()).toContain('Where the picture stops: The picture stops at the drawer')
     expect(wrapper.get('[data-part="symptoms"]').text()).toContain('Too low')
   })
 
@@ -48,15 +46,20 @@ describe('ChapterView', () => {
     const body = wrapper.get('[data-part="body"]')
     const marks = body.findAll('a[href^="#"]')
     expect(marks.map((a) => [a.text(), a.attributes('href')])).toEqual([
-      ['Source [1]', '#when-reclaim-starts-source-zones'],
-      ['Source [2]', '#when-reclaim-starts-source-vm'],
+      ['Source [1]', '#keeping-a-reserve-source-vm'],
+      ['Source [1]', '#keeping-a-reserve-source-vm'],
+      ['Source [1]', '#keeping-a-reserve-source-vm'],
     ])
-    expect(body.get('button').text()).toBe('kswapd') // the glossary term
-    expect(body.get('code').text()).toBe('demo.alpha')
+    expect(body.get('button').text()).toContain('watermark') // the glossary term
+    expect(body.get('code').text()).toBe('kswapd')
+    expect(body.findAll('strong').map((s) => s.text())).toContain('reserve')
     expect(body.text()).not.toContain('[^')
-    expect(wrapper.get('#when-reclaim-starts-source-zones').text()).toContain('[1] Physical memory')
+    expect(wrapper.get('#keeping-a-reserve-source-vm').text()).toContain('[1] Documentation for /proc/sys/vm')
     // The margin repeats each paragraph's sources beside it.
-    expect(body.findAll('ul').map((u) => u.text())).toEqual([expect.stringContaining('Physical memory'), expect.stringContaining('Documentation for /proc/sys/vm')])
+    expect(body.findAll('ul').map((u) => u.text())).toEqual([
+      expect.stringContaining('Documentation for /proc/sys/vm'),
+      expect.stringContaining('Documentation for /proc/sys/vm'),
+    ])
   })
 
   it('selects the first pin and shows its panel, live and labelled', async () => {
@@ -68,20 +71,20 @@ describe('ChapterView', () => {
     const panel = wrapper.get('[data-pin-panel]')
     expect(panel.attributes('aria-live')).toBe('polite')
     expect(buttons[0].attributes('aria-controls')).toBe(panel.attributes('id'))
-    expect(panel.text()).toContain('demo.alpha')
-    expect(panel.text()).toContain('Alpha level')
-    expect(panel.text()).toContain('Moves all three marks up or down together.')
-    expect(panel.text()).toContain('Normal.min: 4,096 pages')
-    expect(panel.text()).toContain('Debian 13, kernel 6.12.48+deb13-amd64')
-    expect(panel.text()).toContain('cat /proc/zoneinfo')
-    expect(panel.get('a[target="_blank"]').attributes('href')).toBe('https://docs.kernel.org/admin-guide/sysctl/vm.html')
-    expect(panel.findAll('a').at(-1).attributes('href')).toBe('/demo?key=alpha')
-    expect(wrapper.get('[data-layer="levels"]').classes()).toContain('bg-fit-tint')
+    expect(panel.text()).toContain('demo.reserve_kbytes')
+    expect(panel.text()).toContain('Free memory reserve')
+    expect(panel.text()).toContain('Sets the size of the reserve, which moves all three levels.')
+    expect(panel.text()).toContain('Normal.min: 2,000 pages')
+    expect(panel.text()).toContain('Debian 13, kernel 0.0.0-fixture')
+    expect(panel.text()).toContain('/proc/zoneinfo')
+    expect(panel.get('a[target="_blank"]').attributes('href')).toBe(DEMO_DOCS)
+    expect(panel.findAll('a').at(-1).attributes('href')).toBe('/demo?key=reserve_kbytes')
+    expect(wrapper.get('[data-layer="free-memory"]').classes()).toContain('bg-fit-tint')
 
     await buttons[1].trigger('click')
     expect(buttons.map((b) => b.attributes('aria-pressed'))).toEqual(['false', 'true'])
-    expect(wrapper.get('[data-band="below-min"]').classes()).toContain('bg-fit-tint')
-    expect(panel.text()).toContain('demo.beta')
+    expect(wrapper.get('[data-layer="free-memory"]').classes()).not.toContain('bg-fit-tint')
+    expect(panel.text()).toContain('demo.fill_ratio')
     await buttons[1].trigger('click')
     expect(panel.text()).toBe('Pick a setting to see what it changes here.')
   })
@@ -97,7 +100,7 @@ describe('ChapterView', () => {
     await buttons[2].trigger('click')
     expect(localStorage.getItem(KERNEL_STORAGE_KEY)).toBe('fedora-43')
     expect(buttons[2].attributes('aria-pressed')).toBe('true')
-    expect(wrapper.get('[data-pin-panel]').text()).toContain('Normal.min: 3,900 pages')
+    expect(wrapper.get('[data-pin-panel]').text()).toContain('Fedora 43, kernel 0.0.2-fixture')
     // A second chapter on the page shows the same kernel.
     const other = mountChapter(timelineChapter)
     expect(other.get('[data-kernels] [aria-pressed="true"]').text()).toBe('Fedora 43')
@@ -105,7 +108,8 @@ describe('ChapterView', () => {
   })
 
   it('says "not measured" where an image has no capture', async () => {
-    wrapper = mountChapter()
+    const partial = (ref, imageId) => (imageId === 'ubuntu-24.04' ? { status: 'missing' } : valueFor(ref, imageId))
+    wrapper = mountChapter(stackChapter, { valueFor: partial })
     await wrapper.findAll('[data-kernels] button')[1].trigger('click')
     const panel = wrapper.get('[data-pin-panel]')
     expect(panel.text()).toContain('Normal.min: not measured')
@@ -128,7 +132,8 @@ describe('ChapterView', () => {
   })
 
   it('drops links that are not https or same-site', async () => {
-    wrapper = mountChapter(stackChapter, { tuneHref: () => 'javascript:alert(1)', defsByKey: { alpha: { ...DEMO_DEFS.alpha, kernelDocsUrl: 'http://x' } } })
+    const defsByKey = { ...DEMO_DEFS, reserve_kbytes: { ...DEMO_DEFS.reserve_kbytes, kernelDocsUrl: 'http://x' } }
+    wrapper = mountChapter(stackChapter, { tuneHref: () => 'javascript:alert(1)', defsByKey })
     await flushPromises()
     expect(wrapper.html()).not.toContain('javascript:')
     expect(wrapper.html()).not.toContain('http://x')

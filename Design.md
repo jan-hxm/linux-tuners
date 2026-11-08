@@ -597,6 +597,85 @@ built in waves; the subsections below are filled in as each part lands.
 
 #### Guide data and checks
 
+A guide is plain data in `src/tuners/<id>/learn.js` (`LEARN`), with the
+probes its figures read in `src/tuners/<id>/probes.js` (`PROBES`, plain
+data, no Node imports). The shapes are typedefs in `src/learn/schema.js`;
+`validateGuide(guide, { defsByKey, probes, evidence, glossary, status })`
+walks a guide and returns one `{ path, rule, message }` issue per broken
+rule (the message starts with the rule name), and never throws on bad data.
+The guide contract suite, `src/learn/contract.test.js`, runs it over every
+`src/tuners/*/learn.js` (found by glob, with the domain's defs and the
+registry's `guide.status`, `draft` until set) and over the fixture guide,
+and expects no issues.
+
+- **Template.** A chapter is `id`, `title` and nine parts in this order:
+  `oneLine`, `picture` (`text`, `limit`), `figure`, `body`, `pins`,
+  `choose`, `symptoms`, `look`, `sources`. Every part is present, and an
+  unknown field is an issue (it catches typos). Budgets: `oneLine` 30 words,
+  `picture.text` 70, `body` 1 to 3 paragraphs of 70, a pin's `here` 40,
+  1 to 3 questions, a lead of at most two sentences, and no sentence anywhere
+  over 30 words. Words are counted on what the reader sees: markup and
+  footnote marks gone, a code span as one word.
+- **Words.** No "simply", "just", "obviously", "easy" or "of course", and no
+  em dash in any string of the guide, ids and commands included.
+- **RichText.** `lead`, `oneLine`, `picture`, `body`, a pin's `here`,
+  `hint`, `why`, `symptoms` and `look.for` are RichText (`ui/richText.js`)
+  and must parse with nothing left over; titles, labels, figure text, card
+  text and source labels are plain text with no markup at all, since they
+  also build the figures' `aria-label`s. Glossary ids must exist. Inline
+  links follow the source host rule.
+- **Sources.** `[^id]` footnote marks are allowed in `body` only; each names
+  an entry in the chapter's `sources`, each source is cited, and a chapter
+  has at least one. A source URL is https on `docs.kernel.org`, `man7.org`
+  or `systemd.io`, with no port or credentials. `schema.js` takes the marks
+  out before `parseRichText` runs (`footnotes()`, `stripFootnotes()`).
+- **Settings.** Every def key of the tuner is pinned in exactly one chapter,
+  once; pins, `Answer.key` and a side-by-side `setting.key` are real def
+  keys. A pin's `layer` names an id in its chapter's figure (a stack layer,
+  band or node, or a timeline line). The last question has a `no`, since a
+  missing `no` means "next question".
+- **Commands.** `look.cmd` and `choose[].check` start with `cat`, `grep`,
+  `awk`, `free`, `swapon --show`, `sysctl`, `dmesg`, `sudo dmesg`,
+  `systemctl show`, `ls`, `findmnt` or `udevadm info`; a pipe feeds only
+  `grep` or `awk`; and there is no `>`, `<`, `;`, `&`, backtick, `$(`,
+  `tee`, `-w` or line break. Per command, arguments that write are refused
+  too: `sysctl` takes only read flags and key names (no `=`, `-p`,
+  `--system`), `dmesg` no clearing or console flags, `swapon --show` only
+  display flags, `udevadm info` no `--cleanup-db`, and an `awk` program no
+  `system`, `getline`, pipe or in-place flag. `commandIssues(cmd)` is the
+  check on its own.
+- **Probes and evidence.** Every ValueRef, node `probe`, card `probe` and
+  `backedBy.probe` names a probe in the tuner's `probes.js`, and a ValueRef
+  has a `unit` and a dotted `path`. A `live` guide needs an evidence file
+  for each of the five images and, in each, an `ok` or `absent` entry for
+  every probe it names, with an `ok` value at each ValueRef's path; a
+  `draft` may miss evidence but nothing else. A `backedBy.vmTest` must be a
+  literal `it()` name in `vm/suite.mjs` (checked by the suite, not the
+  validator).
+- **Figure ranges.** Timeline points and events are 0..1 and time never
+  goes back, `schematic` is `true`, a curve has two points or more; a
+  side-by-side has two states or more with `0 <= lit <= cells`; parts-map
+  cards sit on distinct cells from column and row 1, edges join two cards
+  sharing a row or a column, and bands cover rows that have cards.
+
+`src/learn/evidence.js` holds `IMAGES_ORDER` (the five image ids and the
+labels the kernel switcher shows, in `vm/lib/images.mjs` order, checked
+against it by the suite), `loadEvidence()` (the committed captures, bundled
+through `import.meta.glob`, so it runs under Vite only), `validateEvidence`
+(numbers, strings and booleans as leaves, no control characters or em
+dashes, guest memory 3072 MiB), and `valueFor(ref, imageId)`, which returns
+`{ status: 'ok', value, kernel, capturedAt }`, `{ status: 'absent', reason,
+kernel, capturedAt }` or `{ status: 'missing' }`, walking own properties
+only. A third argument takes other evidence, which is how tests pass the
+fixture captures.
+
+The fixture guide `src/learn/__fixtures__/demo.learn.js` (slug `demo`, with
+its own `DEFS`, probes and five made-up evidence files of round numbers)
+uses every figure kind, template part and optional field. It passes as
+`draft` without evidence and as `live` with its fixtures, and the suite
+breaks a copy of it once per rule and checks the issue's path and rule. It
+lives only under `__fixtures__` and is never routed outside tests.
+
 #### Figures
 
 #### Evidence

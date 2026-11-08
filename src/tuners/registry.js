@@ -78,7 +78,7 @@ export const TUNERS = [
       why: 'How eagerly the kernel swaps, how much memory it keeps free, and when dirty pages reach the disk. Every machine has these, and the defaults ignore its RAM.',
       defaultsFine: 'A small desktop or a lightly loaded machine that never runs short of memory or writes large files.',
     },
-    guide: { slug: 'memory', status: 'draft' },
+    guide: { slug: 'memory', status: 'live' },
   },
   {
     id: 'security',

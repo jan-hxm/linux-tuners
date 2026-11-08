@@ -9,11 +9,26 @@ import { nextTick } from 'vue'
 import ParameterCard from './ParameterCard.vue'
 import { useTunerStoreFor } from '@/core/createTunerStore.js'
 import { swapDomain } from '@/tuners/swap/index.js'
+import { TUNERS } from '@/tuners/registry.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { splitFirstSentence } from './firstSentence.js'
 import { DESC_PARTS } from './descParts.js'
 import RichText from './RichText.vue'
+
+// These tests cover the full card layers, which a live guide deliberately
+// replaces with a "How it works" link (ParameterCard.guide.test.js covers that
+// side). Pin the swap entry to a draft guide so they do not depend on which
+// guide the real registry has gone live with.
+const swapEntry = TUNERS.find((t) => t.id === swapDomain.id)
+const registryGuide = swapEntry.guide
+beforeEach(() => {
+  swapEntry.guide = { slug: 'memory', status: 'draft' }
+})
+afterEach(() => {
+  if (registryGuide === undefined) delete swapEntry.guide
+  else swapEntry.guide = registryGuide
+})
 
 function mountCard(paramKey) {
   return mount(ParameterCard, {

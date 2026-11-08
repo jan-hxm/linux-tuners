@@ -10,7 +10,7 @@ import { LIVE_TUNERS, PLANNED_TUNERS } from '@/tuners/registry.js'
 import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
 import { LANDING_COPY } from '@/ui/landing.js'
 import { ROUTES_META } from '@/routes-meta.js'
-import { pageDoc } from './pages.js'
+import { pageDoc, loadStaticGuides } from './pages.js'
 import { docTexts } from './nodes.js'
 import { GLOSSARY } from '@/ui/glossary.js'
 import { toHtml, escapeHtml } from './html.js'
@@ -113,9 +113,12 @@ describe.each(TUNER_DOMAINS.map((d) => [d.id, d]))('static page: %s', (_id, doma
   })
 })
 
+// Loaded the way the build does, so the live learn routes are covered for real.
+const guides = await loadStaticGuides()
+
 describe('static pages of every route', () => {
   it.each(ROUTES_META.map((r) => r.path))('%s', (path) => {
-    const doc = pageDoc(path, { now: NOW })
+    const doc = pageDoc(path, { now: NOW, guides })
     if (ROUTES_META.find((r) => r.path === path).noindex) {
       // The legal pages have no static text.
       expect(doc).toBeNull()
@@ -155,7 +158,7 @@ describe('static pages of every route', () => {
 
   it('builds each page from definitions only: the same input, the same text', () => {
     for (const { path } of ROUTES_META) {
-      expect(JSON.stringify(pageDoc(path, { now: NOW }))).toBe(JSON.stringify(pageDoc(path, { now: NOW })))
+      expect(JSON.stringify(pageDoc(path, { now: NOW, guides }))).toBe(JSON.stringify(pageDoc(path, { now: NOW, guides })))
     }
   })
 })

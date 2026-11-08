@@ -2,11 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { staticSite, injectStatic } from './site.js'
+import { loadStaticGuides } from './pages.js'
 import { LIVE_TUNERS } from '@/tuners/registry.js'
+import { LIVE_GUIDES } from '@/learn/guides.js'
 
 const NOW = new Date('2026-01-02T00:00:00Z')
 const SHELL = readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8')
-const site = staticSite({ now: NOW })
+const site = staticSite({ now: NOW, guides: await loadStaticGuides() })
 const page = (path) => site.pages.find((p) => p.path === path)
 
 const headOf = (html) => html.slice(0, html.indexOf('</head>'))
@@ -49,7 +51,12 @@ describe('injectStatic (the postbuild step)', () => {
 describe('staticSite', () => {
   it('writes Markdown for the landing page and every tuner', () => {
     expect(site.pages.filter((p) => p.markdownPath).map((p) => p.markdownPath).sort()).toEqual(
-      ['index.md', ...LIVE_TUNERS.map((t) => `${t.id}.md`)].sort(),
+      [
+        'index.md',
+        ...LIVE_TUNERS.map((t) => `${t.id}.md`),
+        // The study guides: the index and one page per live guide.
+        ...(LIVE_GUIDES.length ? ['learn.md', ...LIVE_GUIDES.map((g) => `learn/${g.slug}.md`)] : []),
+      ].sort(),
     )
   })
 

@@ -117,7 +117,7 @@ describe('tuner registry', () => {
       expect(['draft', 'live'], t.id).toContain(t.guide.status)
       expect(GUIDES[t.guide.slug]?.tunerId, t.id).toBe(t.id)
     }
-    expect(TUNERS.find((t) => t.id === 'swap').guide).toEqual({ slug: 'memory', status: 'draft' })
+    expect(TUNERS.find((t) => t.id === 'swap').guide).toEqual({ slug: 'memory', status: 'live' })
   })
 
   // Search results cut descriptions at about 155 characters, and link

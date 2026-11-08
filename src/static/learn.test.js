@@ -15,7 +15,9 @@ import { DEMO_LEARN, liveDemoGuides } from '@/learn/__fixtures__/demoKit.js'
 const NOW = new Date('2026-01-02T00:00:00Z')
 const EM_DASH = String.fromCharCode(0x2014)
 const guides = await loadStaticGuides(liveDemoGuides())
-const routes = [...ROUTES_META, ...learnRoutesMeta(liveDemoGuides())]
+// The real routes without the learn ones, so the fixture is the one live guide.
+const baseRoutes = ROUTES_META.filter((r) => !r.path.startsWith('/learn'))
+const routes = [...baseRoutes, ...learnRoutesMeta(liveDemoGuides())]
 const doc = pageDoc('/learn/demo', { now: NOW, guides })
 const html = toHtml(doc)
 const md = toMarkdown(doc)
@@ -82,7 +84,8 @@ describe('the static site with a live guide', () => {
   })
 
   it('writes no learn page while no guide is live', () => {
-    const plain = staticSite({ now: NOW })
+    // The real routes without the learn ones: the site as it is while no guide is live.
+    const plain = staticSite({ now: NOW, routes: baseRoutes })
     expect(plain.pages.some((p) => p.path.startsWith('/learn'))).toBe(false)
     expect(plain.llmsTxt).not.toContain('## Guides')
   })

@@ -1,0 +1,402 @@
+/**
+ * Guide contract suite (Design.md §5 "Learning pages > Guide data and checks").
+ * Every guide passes validateGuide() with no issues; the fixture guide passes
+ * as draft and as live; and each rule fails a broken copy of the fixture with
+ * an issue naming the path and the rule.
+ */
+import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { IMAGES } from '../../vm/lib/images.mjs'
+import { GLOSSARY } from '@/ui/glossary.js'
+import { TUNER_DOMAINS } from '@/tuners/domains.js'
+import { TUNERS } from '@/tuners/registry.js'
+import { validateGuide, commandIssues, footnotes, visibleText, sentences, wordCount, TEMPLATE_PARTS, BANNED_WORDS } from './schema.js'
+import { IMAGES_ORDER, GUEST_MEMORY_MIB, loadEvidence, valueFor, validateEvidence, resolvePath } from './evidence.js'
+import { LEARN as DEMO, DEFS_BY_KEY as DEMO_DEFS } from './__fixtures__/demo.learn.js'
+import { PROBES as DEMO_PROBES } from './__fixtures__/demo.probes.js'
+
+const FIXTURE_EVIDENCE = loadEvidence(import.meta.glob('./__fixtures__/evidence/*.json', { eager: true, import: 'default' }))
+const COMMITTED_EVIDENCE = loadEvidence()
+
+/** Test names in vm/suite.mjs a side-by-side figure may cite as `backedBy.vmTest`. */
+const VM_TESTS = new Set(
+  [...readFileSync(new URL('../../vm/suite.mjs', import.meta.url), 'utf8').matchAll(/\bit\(\s*(['"])((?:(?!\1).)+)\1/g)].map((m) => m[2]),
+)
+
+// ── The guides ──────────────────────────────────────────────────────────────
+
+/**
+ * Every real guide: each tuner folder's learn.js with its probes.js, the
+ * domain's defs and the registry's guide status (draft until set). L5's
+ * guides.js must list exactly these slugs; see PROGRESS.md.
+ */
+const LEARN_MODULES = import.meta.glob('../tuners/*/learn.js', { eager: true })
+const PROBE_MODULES = import.meta.glob('../tuners/*/probes.js', { eager: true })
+
+const GUIDE_CASES = Object.entries(LEARN_MODULES).map(([file, mod]) => {
+  const tunerId = file.split('/').at(-2)
+  const domain = TUNER_DOMAINS.find((d) => d.id === tunerId)
+  const entry = TUNERS.find((t) => t.id === tunerId)
+  return {
+    name: tunerId,
+    guide: mod.LEARN,
+    entry,
+    ctx: {
+      defsByKey: domain?.defsByKey ?? {},
+      probes: PROBE_MODULES[file.replace(/learn\.js$/, 'probes.js')]?.PROBES ?? {},
+      evidence: COMMITTED_EVIDENCE,
+      glossary: GLOSSARY,
+      status: entry?.guide?.status ?? 'draft',
+    },
+  }
+})
+
+const DEMO_CTX = { defsByKey: DEMO_DEFS, probes: DEMO_PROBES, evidence: FIXTURE_EVIDENCE, glossary: GLOSSARY, status: 'live' }
+const ALL_CASES = [{ name: 'demo (fixture, live)', guide: DEMO, ctx: DEMO_CTX }, ...GUIDE_CASES]
+
+/** vmTest names a guide cites, with their paths. */
+function vmTestRefs(guide) {
+  return (guide.chapters ?? []).flatMap((ch, i) => (ch.figure?.backedBy?.vmTest ? [{ path: `chapters[${i}].figure.backedBy.vmTest`, name: ch.figure.backedBy.vmTest }] : []))
+}
+
+describe.each(ALL_CASES.map((c) => [c.name, c]))('guide contract: %s', (_name, { guide, ctx, entry }) => {
+  it('passes every check', () => {
+    expect(validateGuide(guide, ctx)).toEqual([])
+  })
+
+  it('cites only tests that exist in vm/suite.mjs', () => {
+    expect(vmTestRefs(guide).filter((r) => !VM_TESTS.has(r.name))).toEqual([])
+  })
+
+  if (entry) {
+    it("has the registry entry's slug, and a tuner with defs", () => {
+      expect(Object.keys(ctx.defsByKey).length).toBeGreaterThan(0)
+      if (entry.guide) expect(guide.slug).toBe(entry.guide.slug)
+    })
+  }
+})
+
+describe('guides together', () => {
+  it('have unique slugs, none of them the fixture slug', () => {
+    const slugs = GUIDE_CASES.map((c) => c.guide.slug)
+    expect(new Set(slugs).size).toBe(slugs.length)
+    expect(slugs).not.toContain(DEMO.slug)
+  })
+
+  it('the fixture also passes as a draft without evidence', () => {
+    expect(validateGuide(DEMO, { ...DEMO_CTX, status: 'draft', evidence: {} })).toEqual([])
+  })
+
+  it('the fixture uses every figure kind, every optional field and every template part', () => {
+    const kinds = DEMO.chapters.map((c) => c.figure.kind)
+    expect(new Set(kinds)).toEqual(new Set(['stack', 'timeline', 'sideBySide']))
+    for (const ch of DEMO.chapters) expect(Object.keys(ch)).toEqual(['id', 'title', ...TEMPLATE_PARTS])
+    const json = JSON.stringify(DEMO)
+    for (const needle of ['"tone":"fit"', '"tone":"error"', '"bands":[', '"sub":', '"layer":', '"vmTest":', '"backedBy":{"probe"', '"leave":true', '"dir":"raise"', '"dir":"lower"', '[^', '[[', '**', '`']) {
+      expect(json, needle).toContain(needle)
+    }
+    expect(DEMO.chapters[0].choose.some((q) => q.no === undefined)).toBe(true)
+  })
+})
+
+// ── Images and evidence ─────────────────────────────────────────────────────
+
+describe('IMAGES_ORDER', () => {
+  it('lists the VM images in vm/lib/images.mjs order', () => {
+    expect(IMAGES_ORDER.map((i) => i.id)).toEqual(Object.keys(IMAGES))
+  })
+
+  it('labels each image by its distribution and release', () => {
+    for (const { id, label } of IMAGES_ORDER) {
+      const [name, version] = id.split('-')
+      expect(label).toBe(`${name[0].toUpperCase()}${name.slice(1)} ${version}`)
+    }
+  })
+})
+
+describe('evidence files', () => {
+  it.each(Object.entries({ ...COMMITTED_EVIDENCE }))('committed %s has the frozen shape', (id, file) => {
+    expect(validateEvidence(file, id)).toEqual([])
+  })
+
+  it('the fixture files cover every image and have the frozen shape', () => {
+    expect(Object.keys(FIXTURE_EVIDENCE)).toEqual(IMAGES_ORDER.map((i) => i.id))
+    for (const [id, file] of Object.entries(FIXTURE_EVIDENCE)) expect(validateEvidence(file, id)).toEqual([])
+  })
+
+  const good = () => structuredClone(FIXTURE_EVIDENCE['debian-13'])
+  it.each([
+    ['wrong image name', (f) => (f.image = 'debian-12'), 'debian-13.image'],
+    ['unknown field', (f) => (f.extra = 1), 'debian-13.extra'],
+    ['other guest memory', (f) => (f.guestMemoryMiB = 2048), 'debian-13.guestMemoryMiB'],
+    ['bad capture time', (f) => (f.capturedAt = 'yesterday'), 'debian-13.capturedAt'],
+    ['kernel with spaces', (f) => (f.kernel = '6.1 <b>'), 'debian-13.kernel'],
+    ['unknown status', (f) => (f.probes['demo.worker'].status = 'maybe'), 'debian-13.probes.demo.worker.status'],
+    ['absent without a reason', (f) => (f.probes['demo.zram'] = { status: 'absent' }), 'debian-13.probes.demo.zram'],
+    ['null value', (f) => (f.probes['demo.reserve'].value = null), 'debian-13.probes.demo.reserve.value'],
+    ['infinite value', (f) => (f.probes['demo.reserve'].value = Infinity), 'debian-13.probes.demo.reserve.value'],
+    ['em dash in a string', (f) => (f.probes['demo.stalls'].value[0] = 'a—b'), 'debian-13.probes.demo.stalls.value[0]'],
+    ['line break in a string', (f) => (f.probes['demo.stalls'].value[0] = 'a\nb'), 'debian-13.probes.demo.stalls.value[0]'],
+  ])('rejects %s', (_name, mutate, path) => {
+    const file = good()
+    mutate(file)
+    const issues = validateEvidence(file, 'debian-13')
+    expect(issues.map((i) => i.path)).toContain(path)
+    expect(issues.every((i) => i.message.startsWith('evidence: '))).toBe(true)
+  })
+
+  it('rejects a file for an image the VM suite does not boot', () => {
+    const file = { ...good(), image: 'arch' }
+    expect(validateEvidence(file, 'arch').map((i) => i.path)).toContain('arch')
+  })
+})
+
+describe('valueFor', () => {
+  const ref = { probe: 'demo.watermarks', path: 'Normal.min', unit: 'pages' }
+
+  it('returns the value with the kernel and capture time', () => {
+    expect(valueFor(ref, 'debian-13', FIXTURE_EVIDENCE)).toEqual({ status: 'ok', value: 2000, kernel: '0.0.0-fixture', capturedAt: '2000-01-01T00:00:00Z' })
+    expect(valueFor({ probe: 'demo.worker' }, 'fedora-43', FIXTURE_EVIDENCE)).toMatchObject({ status: 'ok', value: true })
+  })
+
+  it('says absent, with the reason, where the image lacks the thing', () => {
+    expect(valueFor({ probe: 'demo.zram' }, 'ubuntu-24.04', FIXTURE_EVIDENCE)).toEqual({
+      status: 'absent', value: undefined, reason: 'fixture: no zram module', kernel: '0.0.1-fixture', capturedAt: '2000-01-01T00:00:00Z',
+    })
+  })
+
+  it('says missing for an unknown image, probe or path, never a number', () => {
+    expect(valueFor(ref, 'arch', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
+    expect(valueFor({ probe: 'demo.nope' }, 'debian-13', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
+    expect(valueFor({ ...ref, path: 'Normal.max' }, 'debian-13', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
+    expect(valueFor(ref, 'debian-13', {})).toEqual({ status: 'missing' })
+    expect(valueFor(null, 'debian-13', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
+  })
+
+  it('walks own properties only', () => {
+    for (const path of ['constructor', '__proto__', 'Normal.toString', 'Normal.min.toFixed']) {
+      expect(valueFor({ ...ref, path }, 'debian-13', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
+    }
+    expect(valueFor({ probe: 'toString' }, 'debian-13', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
+    expect(valueFor(ref, 'toString', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
+    expect(resolvePath({ a: [5, 6] }, 'a.1')).toBe(6)
+  })
+
+  it('reads the committed captures by default', () => {
+    expect(valueFor(ref, 'debian-13')).toEqual(COMMITTED_EVIDENCE['debian-13'] ? expect.any(Object) : { status: 'missing' })
+    expect(GUEST_MEMORY_MIB).toBe(3072)
+  })
+})
+
+// ── Text helpers ────────────────────────────────────────────────────────────
+
+describe('text helpers', () => {
+  it('finds footnotes and leaves them out of what a reader sees', () => {
+    expect(footnotes('A.[^vm] B `x.y`.[^proc-5]')).toEqual(['vm', 'proc-5'])
+    expect(visibleText('Free `vm.min_free_kbytes` and [[reclaim]].[^vm]', { codeAs: 'code' })).toBe('Free code and reclaim.')
+  })
+
+  it('counts words and splits sentences', () => {
+    expect(wordCount('  one two\tthree ')).toBe(3)
+    expect(sentences('One. Two? Three! Four')).toEqual(['One.', 'Two?', 'Three!', 'Four'])
+  })
+})
+
+describe('commandIssues', () => {
+  it.each([
+    'cat /proc/swaps',
+    "grep -E '^(swap_ra|pswpin) ' /proc/vmstat",
+    "awk '/MemAvailable/ {print $2}' /proc/meminfo",
+    'free -m',
+    'swapon --show',
+    'swapon --show=NAME,SIZE --noheadings',
+    'sysctl vm.swappiness',
+    'sysctl -a',
+    'dmesg -T',
+    'sudo dmesg --level=err',
+    'systemctl show -p MemoryMax user.slice',
+    'ls /sys/block',
+    'findmnt /',
+    'udevadm info /dev/sda',
+    'cat /proc/meminfo | grep -i swap',
+    "sysctl -a | grep vm.dirty | awk '{print $3}'",
+  ])('allows %s', (cmd) => {
+    expect(commandIssues(cmd)).toEqual([])
+  })
+
+  it.each([
+    ['rm -rf /', 'starts with'],
+    ['cat /proc/swaps > /tmp/x', '">"'],
+    ['cat a; reboot', '";"'],
+    ['cat `whoami`', 'backtick'],
+    ['cat $(whoami)', '"$("'],
+    ['cat a && reboot', '"&"'],
+    ['cat a | tee /etc/x', 'tee'],
+    ['cat a | sh', 'pipes into "sh"'],
+    ['cat a || reboot', 'empty pipe stage'],
+    ['sysctl -w vm.swappiness=10', '-w'],
+    ['sysctl vm.swappiness=10', 'could write'],
+    ['sysctl -p', 'could write'],
+    ['sysctl --system', 'could write'],
+    ['sudo cat /etc/shadow', 'starts with'],
+    ['sudo sysctl vm.swappiness', 'starts with'],
+    ['dmesg -C', 'clear the log'],
+    ['sudo dmesg -c', 'clear the log'],
+    ['dmesg -n 1', 'console'],
+    ['swapon -a --show', 'starts with'],
+    ['swapon --show -a', 'display flags'],
+    ['udevadm info --cleanup-db', 'clean the database'],
+    ["awk 'BEGIN{system(\"reboot\")}'", 'runs a command'],
+    ["awk '{print | \"sh\"}' /proc/meminfo", 'runs a command'],
+    ['awk -i inplace 1 /etc/fstab', 'edits in place'],
+    ["grep 'x", 'unclosed quote'],
+    ['cat a\nreboot', 'line break'],
+    ['', 'empty'],
+  ])('rejects %j', (cmd, why) => {
+    expect(commandIssues(cmd).join(' | ')).toContain(why)
+  })
+})
+
+// ── Each rule fails a broken copy of the fixture ────────────────────────────
+
+/** The fixture with one change, as a live guide with the fixture evidence. */
+function broken(mutate, ctx = {}) {
+  const guide = structuredClone(DEMO)
+  mutate(guide)
+  return validateGuide(guide, { ...DEMO_CTX, ...ctx })
+}
+
+const words = (n, w = 'word') => Array(n).fill(w).join(' ')
+/** n words as short sentences, so only the word budget trips, not the sentence length. */
+const shortSentences = (n) => Array.from({ length: n }, (_, i) => (i % 10 === 9 ? 'word.' : 'word')).join(' ')
+const ch0 = (g) => g.chapters[0]
+
+/** Rebuilds a chapter with its keys in a given order. */
+const reorder = (ch, keys) => Object.fromEntries(keys.map((k) => [k, ch[k]]))
+
+const RULE_CASES = [
+  // template
+  ['parts out of order', (g) => (g.chapters[0] = reorder(ch0(g), ['id', 'title', 'oneLine', 'picture', 'body', 'figure', 'pins', 'choose', 'symptoms', 'look', 'sources'])), 'chapters[0]', 'template order'],
+  ['a missing part', (g) => delete ch0(g).look, 'chapters[0]', 'shape'],
+  ['an unknown field', (g) => (ch0(g).notes = 'x'), 'chapters[0].notes', 'shape'],
+  ['a chapter id that is not kebab case', (g) => (ch0(g).id = 'Keeping A Reserve'), 'chapters[0].id', 'unique id'],
+  ['two chapters with one id', (g) => (g.chapters[1].id = ch0(g).id), 'chapters[1].id', 'unique id'],
+  ['a slug that is not kebab case', (g) => (g.slug = 'Demo Guide'), 'slug', 'shape'],
+  ['minutes that are not a whole number', (g) => (g.minutes = 2.5), 'minutes', 'shape'],
+  ['no parts map', (g) => delete g.parts, 'guide', 'shape'],
+  ['the last question without a no', (g) => delete ch0(g).choose[1].no, 'chapters[0].choose[1].no', 'shape'],
+  ['an answer that is neither', (g) => (ch0(g).choose[1].no = { leave: false, why: 'x' }), 'chapters[0].choose[1].no.leave', 'shape'],
+  ['an answer direction that is not raise or lower', (g) => (ch0(g).choose[0].yes.dir = 'up'), 'chapters[0].choose[0].yes.dir', 'shape'],
+  ['a two-line symptom', (g) => (ch0(g).symptoms.low = 'One.\nTwo.'), 'chapters[0].symptoms.low', 'shape'],
+  ['an empty picture limit', (g) => (ch0(g).picture.limit = ' '), 'chapters[0].picture.limit', 'shape'],
+  // budgets
+  ['a long oneLine', (g) => (ch0(g).oneLine = shortSentences(31)), 'chapters[0].oneLine', 'word budget'],
+  ['a long picture', (g) => (ch0(g).picture.text = shortSentences(71)), 'chapters[0].picture.text', 'word budget'],
+  ['four paragraphs', (g) => ch0(g).body.push('Two.', 'Three.'), 'chapters[0].body', 'word budget'],
+  ['a long paragraph', (g) => (ch0(g).body[1] = `${shortSentences(71)}[^vm]`), 'chapters[0].body[1]', 'word budget'],
+  ['a long pin', (g) => (ch0(g).pins[0].here = shortSentences(41)), 'chapters[0].pins[0].here', 'word budget'],
+  ['four questions', (g) => ch0(g).choose.unshift(...structuredClone(ch0(g).choose)), 'chapters[0].choose', 'word budget'],
+  ['a three-sentence lead', (g) => (g.lead = 'One. Two. Three.'), 'lead', 'word budget'],
+  ['a long sentence', (g) => (ch0(g).symptoms.high = `${words(31)}.`), 'chapters[0].symptoms.high', 'sentence length'],
+  ['a long sentence in a figure label', (g) => (ch0(g).figure.title = words(31)), 'chapters[0].figure.title', 'sentence length'],
+  // words and dashes
+  ...BANNED_WORDS.map((w) => [`the banned word "${w}"`, (g) => (g.chapters[1].look.for = `Look at it, ${w}, here.`), 'chapters[1].look.for', 'banned word']),
+  ['an em dash in a title', (g) => (g.title = 'How it works — a demo'), 'title', 'em dash'],
+  ['an em dash in a command', (g) => (ch0(g).look.cmd = 'cat /proc/swaps —'), 'chapters[0].look.cmd', 'em dash'],
+  ['an em dash in a source label', (g) => (ch0(g).sources.vm.label = 'vm — docs'), 'chapters[0].sources.vm.label', 'em dash'],
+  ['an em dash in a figure', (g) => (g.parts.edges[0].label = 'a — b'), 'parts.edges[0].label', 'em dash'],
+  // rich text
+  ['italic markup', (g) => (ch0(g).body[0] = 'An *italic* word.[^vm]'), 'chapters[0].body[0]', 'rich text'],
+  ['an unclosed code span', (g) => (ch0(g).oneLine = 'Run `free -m to see.'), 'chapters[0].oneLine', 'rich text'],
+  ['a broken glossary mark', (g) => (ch0(g).picture.text = 'A [[reclaim] mark.'), 'chapters[0].picture.text', 'rich text'],
+  ['markup in a plain-text title', (g) => (ch0(g).title = 'Keeping a **reserve**'), 'chapters[0].title', 'rich text'],
+  ['markup in a card', (g) => (g.parts.cards[0].does = 'Ask for `memory`.'), 'parts.cards[0].does', 'rich text'],
+  ['a broken footnote mark', (g) => (ch0(g).body[0] = 'Each zone.[^Vm Docs]'), 'chapters[0].body[0]', 'rich text'],
+  // glossary and sources
+  ['an unknown glossary id', (g) => (ch0(g).oneLine = 'The [[swap storm]] hits.'), 'chapters[0].oneLine', 'glossary'],
+  ['a footnote without a source', (g) => (ch0(g).body[0] += '[^missing]'), 'chapters[0].body[0]', 'footnote'],
+  ['a footnote outside the body', (g) => (ch0(g).oneLine += '[^vm]'), 'chapters[0].oneLine', 'footnote'],
+  ['a source nobody cites', (g) => (ch0(g).sources.extra = { url: 'https://docs.kernel.org/mm/index.html', label: 'mm' }), 'chapters[0].sources.extra', 'source'],
+  ['no sources', (g) => (g.chapters[1].sources = {}), 'chapters[1].sources', 'source'],
+  ['a source over http', (g) => (ch0(g).sources.vm.url = 'http://docs.kernel.org/admin-guide/sysctl/vm.html'), 'chapters[0].sources.vm.url', 'source'],
+  ['a source on another host', (g) => (ch0(g).sources.vm.url = 'https://wiki.archlinux.org/title/Swap'), 'chapters[0].sources.vm.url', 'source'],
+  ['a source on a look-alike host', (g) => (ch0(g).sources.vm.url = 'https://docs.kernel.org.example.com/vm.html'), 'chapters[0].sources.vm.url', 'source'],
+  ['an inline link to another host', (g) => (ch0(g).symptoms.low = 'See [the wiki](https://wiki.archlinux.org/title/Swap).'), 'chapters[0].symptoms.low', 'source'],
+  // def keys and pins
+  ['a pin on an unknown key', (g) => (ch0(g).pins[1].key = 'swappiness'), 'chapters[0].pins[1].key', 'def key'],
+  ['an answer with an unknown key', (g) => (ch0(g).choose[0].yes.key = 'nope'), 'chapters[0].choose[0].yes.key', 'def key'],
+  ['a side-by-side setting with an unknown key', (g) => (g.chapters[2].figure.states[0].setting.key = 'nope'), 'chapters[2].figure.states[0].setting.key', 'def key'],
+  ['a key pinned nowhere', (g) => ch0(g).pins.pop(), 'chapters', 'pins'],
+  ['a key pinned in two chapters', (g) => g.chapters[1].pins.push({ key: 'fill_ratio', here: 'Again.' }), 'chapters[1].pins[1]', 'pins'],
+  ['a key pinned twice in one chapter', (g) => ch0(g).pins.push({ key: 'fill_ratio', here: 'Again.' }), 'chapters[0].pins[2].key', 'pins'],
+  ['a pin layer the figure lacks', (g) => (ch0(g).pins[0].layer = 'nowhere'), 'chapters[0].pins[0].layer', 'pins'],
+  ['a chapter with no pins', (g) => (g.chapters[1].pins = []), 'chapters[1].pins', 'shape'],
+  // commands
+  ['a look command that writes', (g) => (ch0(g).look.cmd = 'sysctl -w vm.swappiness=10'), 'chapters[0].look.cmd', 'command'],
+  ['a check that is not read-only', (g) => (ch0(g).choose[0].check = 'swapoff -a'), 'chapters[0].choose[0].check', 'command'],
+  ['a check that redirects', (g) => (ch0(g).choose[0].check = 'cat /proc/swaps > /etc/fstab'), 'chapters[0].choose[0].check', 'command'],
+  ['a check that pipes into a shell', (g) => (ch0(g).choose[0].check = 'cat /proc/swaps | sh'), 'chapters[0].choose[0].check', 'command'],
+  // probes and evidence
+  ['a value from an unknown probe', (g) => (ch0(g).figure.layers[1].values[0].probe = 'demo.nope'), 'chapters[0].figure.layers[1].values[0].probe', 'probe'],
+  ['a node probe that does not exist', (g) => (ch0(g).figure.layers[0].nodes[1].probe = 'demo.nope'), 'chapters[0].figure.layers[0].nodes[1].probe', 'probe'],
+  ['a card probe that does not exist', (g) => (g.parts.cards[1].probe = 'demo.nope'), 'parts.cards[1].probe', 'probe'],
+  ['a backing probe that does not exist', (g) => (g.chapters[3].figure.backedBy.probe = 'demo.nope'), 'chapters[3].figure.backedBy.probe', 'probe'],
+  ['a timeline line without a unit', (g) => delete g.chapters[1].figure.lines[0].value.unit, 'chapters[1].figure.lines[0].value', 'shape'],
+  ['a path into nothing on a live guide', (g) => (g.chapters[1].figure.lines[0].value.path = 'Normal.max'), 'chapters[1].figure.lines[0].value.probe', 'evidence'],
+  // figure ranges
+  ['a curve point above 1', (g) => (g.chapters[1].figure.curve[2] = [0.45, 1.2]), 'chapters[1].figure.curve[2]', 'figure range'],
+  ['a curve that goes back in time', (g) => (g.chapters[1].figure.curve[2] = [0.1, 0.3]), 'chapters[1].figure.curve[2]', 'figure range'],
+  ['a one-point curve', (g) => (g.chapters[1].figure.curve = [[0, 0]]), 'chapters[1].figure.curve', 'shape'],
+  ['an event before the start', (g) => (g.chapters[1].figure.events[0].at = -0.1), 'chapters[1].figure.events[0].at', 'figure range'],
+  ['an event tone that does not exist', (g) => (g.chapters[1].figure.events[0].tone = 'warn'), 'chapters[1].figure.events[0].tone', 'shape'],
+  ['a timeline that is not schematic', (g) => (g.chapters[1].figure.schematic = false), 'chapters[1].figure.schematic', 'shape'],
+  ['more lit cells than cells', (g) => (g.chapters[2].figure.states[1].lit = 9), 'chapters[2].figure.states[1].lit', 'figure range'],
+  ['one state', (g) => g.chapters[2].figure.states.pop(), 'chapters[2].figure.states', 'shape'],
+  ['a side by side backed by nothing', (g) => (g.chapters[2].figure.backedBy = {}), 'chapters[2].figure.backedBy', 'shape'],
+  ['an unknown figure kind', (g) => (ch0(g).figure.kind = 'pie'), 'chapters[0].figure.kind', 'shape'],
+  ['a bands layer with nodes', (g) => (ch0(g).figure.layers[1].nodes = [{ id: 'n', text: 'n' }]), 'chapters[0].figure.layers[1].nodes', 'shape'],
+  ['an edge across rows and columns', (g) => g.parts.edges.push({ from: 'programs', to: 'worker', label: 'x' }), 'parts.edges[4]', 'figure range'],
+  ['an edge to a card that does not exist', (g) => (g.parts.edges[0].to = 'nowhere'), 'parts.edges[0].to', 'figure range'],
+  ['two cards in one cell', (g) => (g.parts.cards[1].col = 1), 'parts.cards[1]', 'figure range'],
+  ['a card at column 0', (g) => (g.parts.cards[0].col = 0), 'parts.cards[0].col', 'figure range'],
+  ['a band past the last row', (g) => (g.parts.bands[1].rows = [2, 3]), 'parts.bands[1].rows', 'figure range'],
+  ['a band upside down', (g) => (g.parts.bands[1].rows = [2, 1]), 'parts.bands[1].rows', 'figure range'],
+  ['a card tone that does not exist', (g) => (g.parts.cards[0].tone = 'error'), 'parts.cards[0].tone', 'shape'],
+]
+
+describe('each rule fails a broken fixture', () => {
+  it.each(RULE_CASES)('%s', (_name, mutate, path, rule) => {
+    const issues = broken(mutate)
+    const hit = issues.find((i) => i.path === path && i.rule === rule)
+    expect(hit, `no "${rule}" issue at ${path} in ${JSON.stringify(issues, null, 1)}`).toBeTruthy()
+    expect(hit.message.startsWith(`${rule}: `)).toBe(true)
+  })
+
+  it('needs evidence for every image once live', () => {
+    const { 'fedora-43': _gone, ...four } = FIXTURE_EVIDENCE
+    expect(broken(() => {}, { evidence: four })).toContainEqual(expect.objectContaining({ path: 'guide', rule: 'evidence' }))
+    expect(broken(() => {}, { evidence: {} }).filter((i) => i.rule === 'evidence')).toHaveLength(IMAGES_ORDER.length)
+  })
+
+  it('needs an ok or absent entry for every probe a live figure names', () => {
+    const evidence = structuredClone({ ...FIXTURE_EVIDENCE })
+    delete evidence['debian-11'].probes['demo.worker']
+    const issues = broken(() => {}, { evidence })
+    expect(issues.map((i) => i.path)).toEqual(expect.arrayContaining(['parts.cards[3].probe', 'chapters[0].figure.layers[0].nodes[1].probe']))
+    expect(issues.every((i) => i.rule === 'evidence' && i.message.includes('debian-11'))).toBe(true)
+  })
+
+  it('lets a draft miss evidence, but not break any other rule', () => {
+    expect(broken(() => {}, { status: 'draft', evidence: {} })).toEqual([])
+    expect(broken((g) => (g.title = 'x — y'), { status: 'draft', evidence: {} }).map((i) => i.rule)).toEqual(['em dash'])
+  })
+
+  it('rejects an unknown status', () => {
+    expect(broken(() => {}, { status: 'beta' })).toContainEqual(expect.objectContaining({ path: 'guide', rule: 'shape' }))
+  })
+
+  it('reports a non-object guide without throwing', () => {
+    expect(validateGuide(null, DEMO_CTX)).toEqual([{ path: 'guide', rule: 'shape', message: 'shape: must be an object' }])
+    expect(() => validateGuide({ chapters: [null, 1, { figure: null }] }, {})).not.toThrow()
+  })
+})

@@ -1,0 +1,54 @@
+{
+  "image": "ubuntu-18.04",
+  "kernel": "0.0.4-fixture",
+  "capturedAt": "2000-01-01T00:00:00Z",
+  "guestMemoryMiB": 3072,
+  "probes": {
+    "demo.meminfo": {
+      "status": "ok",
+      "value": {
+        "Cached": 1000000,
+        "SwapTotal": 2000000
+      }
+    },
+    "demo.reserve": {
+      "status": "ok",
+      "value": 4000
+    },
+    "demo.stalls": {
+      "status": "ok",
+      "value": [
+        "allocstall_dma32",
+        "allocstall_movable",
+        "allocstall_normal"
+      ]
+    },
+    "demo.swaps": {
+      "status": "ok",
+      "value": true
+    },
+    "demo.watermarks": {
+      "status": "ok",
+      "value": {
+        "DMA32": {
+          "high": 3000,
+          "low": 2000,
+          "min": 1000
+        },
+        "Normal": {
+          "high": 6000,
+          "low": 4000,
+          "min": 2000
+        }
+      }
+    },
+    "demo.worker": {
+      "status": "ok",
+      "value": true
+    },
+    "demo.zram": {
+      "reason": "fixture: no zram module",
+      "status": "absent"
+    }
+  }
+}

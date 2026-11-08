@@ -17,7 +17,7 @@ import { GLOSSARY } from '@/ui/glossary.js'
 import { NEED_THIS_HEADING, needThisRows } from '@/ui/needThis.js'
 import { installGuide } from '@/ui/installGuide.js'
 import { controlMetaFor } from '@/ui/controls/meta.js'
-import { LANDING_COPY, routeSummary, tunerFacts } from '@/ui/landing.js'
+import { LANDING_COPY, routeSummary } from '@/ui/landing.js'
 import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
 import { text, code, bold, link, rich, heading, paragraph, list, defs, codeBlock, joinSegments } from './nodes.js'
 
@@ -202,13 +202,13 @@ export function landingDoc() {
     heading(2, tuners.heading),
   ]
   for (const tuner of LIVE_TUNERS) {
-    const { settings, writes } = tunerFacts(DOMAINS_BY_ID[tuner.id])
+    const { settingCount, writes } = tuner
     blocks.push(
       heading(3, tuner.title),
       paragraph(bold(tuner.question)),
       paragraph(text(tuner.blurb)),
       defs([
-        row(tuners.columns.settings, text(settings)),
+        row(tuners.columns.settings, text(settingCount)),
         row(tuners.columns.writes, joinSegments(writes.map((path) => [code(path)]), ', ')),
       ]),
       list(tuner.keys.filter((k) => k !== '…').map((k) => [code(k)])),

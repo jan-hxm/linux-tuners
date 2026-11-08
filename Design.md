@@ -678,6 +678,57 @@ lives only under `__fixtures__` and is never routed outside tests.
 
 #### Figures
 
+The figures are HTML in the site tokens, drawn from the guide's data
+(`src/ui/learn/`), so they follow the scheme, print, keep their text
+selectable and take their `aria-label` from the same data. The words and the
+geometry live in plain JS (`figureText.js`), which the prerendered page can
+share; the components only lay them out. `PartsMap` is the guide's "Start
+here": cards on a grid from `col`/`row` (a `fit` card in `fit-tint`), light
+`paper-hover` bands behind rows with a label column, and connectors whose
+places are CSS `calc()` lengths built from the grid's equal tracks and its
+gaps, so nothing is measured and no guide sets a pixel; below `md` it is a
+list of cards by band and "A to B: label" rows. `StackFigure` draws layers as
+rows with a 7.5rem label column (the label sits over the row below `md`),
+bands side by side (stacked on a phone) and node boxes. `Timeline` is
+schematic: the curve is an SVG path from `curve`, the lines are dashed and
+spaced evenly in the order listed (line i of n at level (n - i)/(n + 1)), so a
+guide writes its curve against those levels and the measured values are the
+lines' labels, never their positions; events are numbered ticks (`fit`,
+`error` or `quiet`) with their words listed under the plot, and the caption
+says the distances aren't real. `SideBySide` is one row of squares per state,
+the first lit one `fit`, the rest `fit-tint`, with the setting that gives it
+and the VM test or probe behind it.
+
+Each figure root is `role="img"` with a label read from the data (cards,
+bands, connections, layers, line values, events in time order, lit counts),
+its drawing `aria-hidden`; nothing interactive sits inside it. A value comes
+only through `evidence`, a function `ref => valueFor(ref, imageId)`, and
+anything not `ok` reads "not measured" (or "not present on this kernel" for
+an `absent` probe), never a number, in the drawing and the label alike.
+
+`ChapterView` renders one chapter in the template order. Above a figure that
+shows captures, a kernel switcher (`role="group"`, one `aria-pressed` button
+per image of `IMAGES_ORDER`) picks the capture; it is a viewer preference
+(`linux-tuners:learn-kernel`, the image id, checked against the list before
+use and never rendered; `ui/learn/kernelPref.js`) shared by every chapter on
+the page. Under the figure the pins are mono buttons with a dot
+(`aria-pressed`, `fit-tint` and a `fit` dot when pressed; a second press
+clears it). The first is selected on load, and its `layer` (a layer, band,
+node or timeline line id) is drawn in `fit-tint`. The margin panel beside the
+figure (under it on a phone) is `aria-live="polite"`: the setting's name and
+title, what it changes here, the values its `layer` points at with the
+kernel they were measured on, the chapter's look command, the def's docs
+link and "Tune it". Footnote marks `[^id]` aren't RichText markup, so the
+chapter splits them out first; each becomes a mono `[n]` link to the
+chapter's sources (numbered by first citation), followed in place like the
+tuner pages' in-page links, and each paragraph's sources sit in the margin
+beside it. Links render only when they are https or a same-site path. The
+`choose` questions are the `Chooser` on screen (one question at a time, Yes
+and No staying in place so focus stays, a polite live line, then a
+`fit-tint` result with "Open it in the tuner" and "Start over", which focus
+moves to) and the static `DecisionFlow` list in print. `learn.a11y.test.js`
+runs the axe sweep over every fixture chapter's states in both schemes.
+
 #### Evidence
 
 A figure's numbers are measured, never typed in. A guide lists what to

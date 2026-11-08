@@ -349,7 +349,8 @@ The tuners answer "what should this one setting be". The guided setup answers
   `LANDING_EXAMPLE` next to the swap profile, its value from
   `deriveDefaults`, so the fit bar and the kernel-default tick sit apart);
   the key to the three marks; "Why" (a forum thread's one number against
-  this site's answer); "What is this machine for?", a role radiogroup beside
+  this site's answer; the forum value is hand-typed illustration copy of
+  what forums say, not read from data); "What is this machine for?", a role radiogroup beside
   the route for the picked role; and "Or open one tuner directly", a table of
   every live tuner with the question it answers (the registry's `question`),
   its setting count and the files it writes, then the planned tuners and the
@@ -636,7 +637,9 @@ must follow them, and existing UI must not regress.
   at every width. The site header is one row (`--site-header-h`, 61px): logo,
   a "Tuners" disclosure button (`aria-expanded`, `aria-controls`, +/- mark),
   the current tuner's name after a "/", Glossary (only if a `glossary` route
-  exists) and Start setup. The button opens a full-width panel of every live
+  exists) and Start setup. It is sticky from `lg` up and static below,
+  since on phones the impact bar already sticks and two sticky bars take
+  too much of a small screen. The button opens a full-width panel of every live
   tuner (name and registry `question`, the current one `aria-current="page"`
   with a `fit` top rule) and an "All tuners" link. It is a disclosure, not a
   modal: no focus trap; Escape closes it and refocuses the button, as does a

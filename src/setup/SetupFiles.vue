@@ -24,7 +24,12 @@ const setup = useSetupStore()
 const included = computed(() =>
   SETUP_STEPS.filter(({ id }) => !setup.skipped.includes(id)).map((step) => {
     const store = useStepStore(step.id)
-    return { ...step, blocked: store.blocked, files: store.blocked ? [] : store.configFiles }
+    return {
+      ...step,
+      blocked: store.blocked,
+      blocking: store.issues.filter((i) => i.blocking),
+      files: store.blocked ? [] : store.configFiles,
+    }
   }),
 )
 const allFiles = computed(() => included.value.flatMap((s) => s.files))
@@ -97,6 +102,12 @@ const SMALL = 'inline-flex min-h-11 items-center border border-rule-strong px-3 
       <ul class="mt-1 list-disc pl-5">
         <li v-for="s in blockedSteps" :key="s.id">
           <button type="button" class="min-h-6 underline underline-offset-[3px]" @click="emit('goto', s.id)">{{ s.entry.title }}</button>
+          <ul class="mt-1 space-y-1">
+            <li v-for="issue in s.blocking" :key="issue.id">
+              {{ issue.message }}
+              <span v-if="issue.fix" class="block">{{ issue.fix }}</span>
+            </li>
+          </ul>
         </li>
       </ul>
     </div>

@@ -9,10 +9,12 @@
  * @property {'warn' | 'info'} level
  * @property {string[]} params    Parameter keys this issue relates to
  * @property {string}   message
+ * @property {string}   [fix]     What to change to resolve it, in one plain sentence
  * @property {boolean}  blocking  Always false here
  */
 
 import { seeks } from './calculations.js'
+import { READ_AHEAD_DEFAULT } from './defs.js'
 
 /** Read-ahead above this, on random I/O, mostly fills the cache with pages nobody asked for. */
 const RANDOM_READ_AHEAD_KB = 512
@@ -25,12 +27,13 @@ const RANDOM_READ_AHEAD_KB = 512
 export function validate(hw, p) {
   /** @type {ValidationIssue[]} */
   const issues = []
-  const warn = (id, params, message) => issues.push({ id, level: 'warn', blocking: false, params, message })
+  const warn = (id, params, message, fix) => issues.push({ id, level: 'warn', blocking: false, params, message, fix })
   const info = (id, params, message) => issues.push({ id, level: 'info', blocking: false, params, message })
 
   if (seeks(hw) && p.scheduler === 'none') {
     warn('none-hdd', ['scheduler'],
-      'Without a scheduler, requests reach the hard disk in the order programs issue them, and it seeks between them. mq-deadline or bfq sort them by sector first.')
+      'Without a scheduler, requests reach the hard disk in the order programs issue them, and it seeks between them.',
+      'Set the scheduler to mq-deadline or bfq, which sort requests by sector first.')
   }
   if (seeks(hw) && p.scheduler === 'kyber') {
     info('kyber-hdd', ['scheduler'],
@@ -43,7 +46,8 @@ export function validate(hw, p) {
 
   if (p.read_ahead_kb === 0) {
     warn('read-ahead-off', ['read_ahead_kb'],
-      'With no read-ahead, a sequential read fetches only what each read() asks for, so a program reading a file in small pieces waits on the disk for every one.')
+      'With no read-ahead, a sequential read fetches only what each read() asks for, so a program reading a file in small pieces waits on the disk for every one.',
+      `Raise read_ahead_kb above 0, for example to the kernel default of ${READ_AHEAD_DEFAULT}.`)
   } else if (hw.workload === 'database' && p.read_ahead_kb > RANDOM_READ_AHEAD_KB) {
     info('read-ahead-random', ['read_ahead_kb'],
       'Database reads are mostly random, so a large read-ahead window reads data no query asked for and pushes useful pages out of the cache.')

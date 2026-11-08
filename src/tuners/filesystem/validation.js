@@ -9,6 +9,7 @@
  * @property {'warn' | 'info'} level
  * @property {string[]} params    Parameter keys this issue relates to
  * @property {string}   message
+ * @property {string}   [fix]     What to change to resolve it, in one plain sentence
  * @property {boolean}  blocking  Always false here
  */
 
@@ -26,12 +27,13 @@ const GiB = 1024 ** 3
 export function validate(hw, p) {
   /** @type {ValidationIssue[]} */
   const issues = []
-  const warn = (id, params, message) => issues.push({ id, level: 'warn', blocking: false, params, message })
+  const warn = (id, params, message, fix) => issues.push({ id, level: 'warn', blocking: false, params, message, fix })
   const info = (id, params, message) => issues.push({ id, level: 'info', blocking: false, params, message })
 
   if (isApplicable('file_max', hw) && p.file_max < kernelFileMax(hw)) {
     warn('file-max-below-kernel', ['file_max'],
-      `This is below the ${kernelFileMax(hw).toLocaleString()} the kernel picks for this much RAM. When the table is full, every unprivileged process fails to open files, SSH logins included.`)
+      `This is below the ${kernelFileMax(hw).toLocaleString()} the kernel picks for this much RAM. When the table is full, every unprivileged process fails to open files, SSH logins included.`,
+      `Raise fs.file-max to ${kernelFileMax(hw).toLocaleString()} or more.`)
   }
 
   if (p.nr_open !== NR_OPEN_DEFAULT) {
@@ -42,7 +44,8 @@ export function validate(hw, p) {
   const watchBytes = watchMemoryBytes(p.max_user_watches)
   if (watchBytes > hw.ramGiB * GiB * 0.1) {
     warn('watches-memory', ['max_user_watches'],
-      `If one user filled every watch, the kernel would pin about ${formatBytes(watchBytes)} that can't be swapped, ${Math.round((watchBytes / (hw.ramGiB * GiB)) * 100)}% of RAM. The memory is only used by watches in use.`)
+      `If one user filled every watch, the kernel would pin about ${formatBytes(watchBytes)} that can't be swapped, ${Math.round((watchBytes / (hw.ramGiB * GiB)) * 100)}% of RAM. The memory is only used by watches in use.`,
+      'Lower fs.inotify.max_user_watches until a full set takes a tenth of RAM or less.')
   }
   if (p.max_user_watches < kernelWatches(hw)) {
     info('watches-below-kernel', ['max_user_watches'],

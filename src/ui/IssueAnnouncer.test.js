@@ -44,12 +44,14 @@ describe('IssueAnnouncer', () => {
 
     store.setParam('dirty_background_ratio', ratio)
     await settle()
-    expect(region.text()).toBe('Error: dirty_background_ratio must be less than dirty_ratio.')
+    // The fix follows the message.
+    const read = `Error: dirty_background_ratio must be less than dirty_ratio. Lower vm.dirty_background_ratio below ${ratio}, or raise vm.dirty_ratio above ${ratio}.`
+    expect(region.text()).toBe(read)
 
     // Another edit that leaves the same issue says nothing new.
     store.setParam('swappiness', store.params.swappiness + 1)
     await settle()
-    expect(region.text()).toBe('Error: dirty_background_ratio must be less than dirty_ratio.')
+    expect(region.text()).toBe(read)
 
     store.setParam('dirty_background_ratio', bg)
     await settle()

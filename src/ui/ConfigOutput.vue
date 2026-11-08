@@ -139,7 +139,10 @@ const SECONDARY = 'min-h-11 border border-rule-strong px-3.5 text-sm font-medium
         The following blocking validation issue{{ blockingIssues.length === 1 ? '' : 's' }} must be resolved before the file can be copied:
       </p>
       <ul class="mt-2 list-disc space-y-1 pl-5">
-        <li v-for="issue in blockingIssues" :key="issue.id">{{ issue.message }}</li>
+        <li v-for="issue in blockingIssues" :key="issue.id">
+          {{ issue.message }}
+          <span v-if="issue.fix" class="block">{{ issue.fix }}</span>
+        </li>
       </ul>
     </div>
 

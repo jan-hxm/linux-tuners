@@ -316,7 +316,8 @@ function openInDrawer() {
         <p v-if="!compact" class="mt-3 text-base leading-relaxed text-ink-2">{{ def.shortDesc }}</p>
 
         <!-- Validation issues: a blocking error in a 1px error frame, a
-             warning in the warning colour with its sign, an info note quiet. -->
+             warning in the warning colour with its sign, an info note quiet.
+             The issue's fix, when it has one, is the line under it. -->
         <ul v-if="issues.length" class="pc-issues mt-3 space-y-2 text-[15px] leading-[1.55]">
           <li
             v-for="issue in issues"
@@ -341,6 +342,7 @@ function openInDrawer() {
             <span>
               <span class="font-medium" :class="{ 'text-error': issue.level === 'error' }">{{ ISSUE_LABELS[issue.level] ?? issue.level }}:</span>
               {{ issue.message }}
+              <span v-if="issue.fix" class="mt-1 block">{{ issue.fix }}</span>
             </span>
           </li>
         </ul>

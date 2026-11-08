@@ -55,12 +55,18 @@ describe('network buffers', () => {
   it('blocks buffer bounds out of order', () => {
     const bad = issues(DEFAULT_NETWORK_SPEC, { tcp_wmem: [4096, 8 * MiB, 4 * MiB] }).find((i) => i.id === 'tcp_wmem-order')
     expect(bad.blocking).toBe(true)
+    expect(bad.fix).toBe('Make the net.ipv4.tcp_wmem min no larger than the default, and the default no larger than the max.')
+    const rmem = issues(DEFAULT_NETWORK_SPEC, { tcp_rmem: [8 * MiB, 131072, 6 * MiB] }).find((i) => i.id === 'tcp_rmem-order')
+    expect(rmem.fix).toContain('net.ipv4.tcp_rmem')
   })
 })
 
 describe('network ports and queues', () => {
   it('blocks a port range the kernel rejects, and notes equal parity', () => {
-    expect(issues(DEFAULT_NETWORK_SPEC, { ip_local_port_range: [40000, 30000] }).find((i) => i.blocking).id).toBe('port-range-order')
+    expect(issues(DEFAULT_NETWORK_SPEC, { ip_local_port_range: [40000, 30000] }).find((i) => i.blocking)).toMatchObject({
+      id: 'port-range-order',
+      fix: 'Lower the low end of net.ipv4.ip_local_port_range to 30000 or less, or raise the high end to 40000 or more.',
+    })
     expect(ids(DEFAULT_NETWORK_SPEC, { ip_local_port_range: [32768, 60000] })).toContain('port-range-parity')
     expect(ids(DEFAULT_NETWORK_SPEC)).not.toContain('port-range-parity')
   })

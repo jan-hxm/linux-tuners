@@ -445,6 +445,8 @@ describe('ParameterCard [n] note toggles (Design.md §7)', () => {
     await nextTick()
     expect(wrapper.findAll('button').find((b) => b.text().startsWith('Back to')).classes()).not.toContain('invisible')
     expect(wrapper.text()).toContain('Error:')
+    // The fix sits under the message.
+    expect(wrapper.text()).toContain(store.issues.find((i) => i.blocking).fix)
   })
 })
 

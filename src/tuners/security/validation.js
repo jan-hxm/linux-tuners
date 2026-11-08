@@ -8,10 +8,12 @@
  * @property {'warn' | 'info'} level
  * @property {string[]} params    Parameter keys this issue relates to
  * @property {string}   message
+ * @property {string}   [fix]     What to change to resolve it, in one plain sentence
  * @property {boolean}  blocking  Always false here
  */
 
 import { hasReversibleBpfOff, isApplicable } from './calculations.js'
+import { PARAMETER_DEFS_BY_KEY } from './defs.js'
 
 /**
  * @param {import('./profile.js').SecuritySpec} hw
@@ -21,20 +23,23 @@ import { hasReversibleBpfOff, isApplicable } from './calculations.js'
 export function validate(hw, p) {
   /** @type {ValidationIssue[]} */
   const issues = []
-  const warn = (id, params, message) => issues.push({ id, level: 'warn', blocking: false, params, message })
+  const warn = (id, params, message, fix) => issues.push({ id, level: 'warn', blocking: false, params, message, fix })
   const info = (id, params, message) => issues.push({ id, level: 'info', blocking: false, params, message })
 
   if (p.kptr_restrict === 0 && p.perf_event_paranoid <= 1) {
     warn('kallsyms-exposed', ['kptr_restrict', 'perf_event_paranoid'],
-      'With kptr_restrict 0 and perf_event_paranoid 1 or lower, /proc/kallsyms shows real kernel addresses to every user, which defeats KASLR.')
+      'With kptr_restrict 0 and perf_event_paranoid 1 or lower, /proc/kallsyms shows real kernel addresses to every user, which defeats KASLR.',
+      'Set kernel.kptr_restrict to 1 or 2, or kernel.perf_event_paranoid to 2 or higher.')
   }
   if (p.kptr_restrict === 0 && hw.kernel === 'legacy') {
     warn('kptr-raw', ['kptr_restrict'],
-      'Kernels before 4.15 print %pK addresses in full at 0, so every user can read them. Use 1.')
+      'Kernels before 4.15 print %pK addresses in full at 0, so every user can read them.',
+      'Set kernel.kptr_restrict to 1 or 2.')
   }
   if (p.perf_event_paranoid === 3) {
     warn('perf-3-ubuntu', ['perf_event_paranoid'],
-      'Debian, Android and older Ubuntu kernels block perf at 3. Current Ubuntu kernels start at 4 and treat 3 like 2, so 3 loosens them. Use 4, which blocks perf on all of them.')
+      'Debian, Android and older Ubuntu kernels block perf at 3. Current Ubuntu kernels start at 4 and treat 3 like 2, so 3 loosens them.',
+      'Set kernel.perf_event_paranoid to 4, which blocks unprivileged perf on all of these kernels.')
   }
   if (p.perf_event_paranoid === 4) {
     info('perf-4-patched', ['perf_event_paranoid'],
@@ -43,7 +48,8 @@ export function validate(hw, p) {
 
   if (p.ptrace_scope === 0) {
     warn('ptrace-classic', ['ptrace_scope'],
-      'Any process can attach to every other process of the same user, so one compromised program can read the secrets of all the others.')
+      'Any process can attach to every other process of the same user, so one compromised program can read the secrets of all the others.',
+      'Set kernel.yama.ptrace_scope to 1 or higher.')
   }
   if (p.ptrace_scope === 3) {
     info('ptrace-locked', ['ptrace_scope'],
@@ -53,13 +59,17 @@ export function validate(hw, p) {
   if (p.randomize_va_space < 2) {
     warn('aslr-reduced', ['randomize_va_space'], p.randomize_va_space === 0
       ? 'ASLR is off: every program loads at predictable addresses, which makes memory-corruption exploits much easier.'
-      : 'Partial ASLR leaves the heap unrandomised. Use 2 unless a very old binary needs it.')
+      : 'Partial ASLR leaves the heap unrandomised.',
+    p.randomize_va_space === 0
+      ? 'Set kernel.randomize_va_space to 2.'
+      : 'Set kernel.randomize_va_space to 2 unless a very old binary needs 1.')
   }
 
   const bpf = p.unprivileged_bpf_disabled
   if (bpf === 0 && hasReversibleBpfOff(hw)) {
     warn('bpf-unprivileged', ['unprivileged_bpf_disabled'],
-      'Every user can load BPF programs, which exposes the BPF verifier, the source of several local privilege escalations. Kernels from 5.16 and most distributions start at 2, so 0 turns this back on.')
+      'Every user can load BPF programs, which exposes the BPF verifier, the source of several local privilege escalations. Kernels from 5.16 and most distributions start at 2, so 0 turns this back on.',
+      'Set kernel.unprivileged_bpf_disabled to 2.')
   }
   if (bpf === 0 && !hasReversibleBpfOff(hw)) {
     info('bpf-left-out', ['unprivileged_bpf_disabled'],
@@ -74,10 +84,12 @@ export function validate(hw, p) {
   if (p.user_namespaces === 'blocked') {
     if (hw.workload === 'container') {
       warn('userns-container', ['user_namespaces'],
-        'Rootless containers, Podman and Docker\'s userns-remap, and Kubernetes pods with hostUsers: false need user namespaces. Block them only if the host runs none of these.')
+        'Rootless containers, Podman and Docker\'s userns-remap, and Kubernetes pods with hostUsers: false need user namespaces. Block them only if the host runs none of these.',
+        'Set user namespaces back to allowed unless the host runs none of these.')
     } else if (hw.workload === 'desktop') {
       warn('userns-desktop', ['user_namespaces'],
-        'Flatpak and the sandboxes of Chromium-based browsers need user namespaces, and some apps won\'t start without them.')
+        'Flatpak and the sandboxes of Chromium-based browsers need user namespaces, and some apps won\'t start without them.',
+        'Set user namespaces back to allowed.')
     } else {
       info('userns-blocked', ['user_namespaces'],
         'Nothing can create a user namespace, root included: rootless containers and systemd services with PrivateUsers= fail to start, such as uuidd on Debian and Ubuntu and chrony-wait on Fedora.')
@@ -89,27 +101,32 @@ export function validate(hw, p) {
       'The kernel applies the higher of conf.all and each interface\'s value, and systemd sets interfaces to 2 (loose). Lower them too, as the generated file explains, or strict mode has no effect. NetworkManager sets the interfaces it manages back to 2, so strict mode doesn\'t hold where it runs.')
     if (hw.workload === 'router') {
       warn('rp-strict-router', ['rp_filter'],
-        'Strict filtering drops legitimate traffic on asymmetric routes, which routers and VPN gateways often have. Loose (2) still drops unroutable sources.')
+        'Strict filtering drops legitimate traffic on asymmetric routes, which routers and VPN gateways often have. Loose (2) still drops unroutable sources.',
+        'Set net.ipv4.conf.all.rp_filter to 2 (loose).')
     }
     if (hw.workload === 'container') {
       warn('rp-strict-container', ['rp_filter'],
-        'Some container network plugins route pod traffic asymmetrically and need loose (2) or off. Check what your CNI requires.')
+        'Some container network plugins route pod traffic asymmetrically and need loose (2) or off. Check what your CNI requires.',
+        'Set net.ipv4.conf.all.rp_filter to 2 (loose), or to what your CNI requires.')
     }
   }
 
   if (p.tcp_syncookies === 0) {
     warn('syncookies-off', ['tcp_syncookies'],
-      'Without SYN cookies a SYN flood can fill the listen queue and lock out real clients.')
+      'Without SYN cookies a SYN flood can fill the listen queue and lock out real clients.',
+      'Set net.ipv4.tcp_syncookies to 1.')
   }
   if (p.tcp_syncookies === 2) {
     warn('syncookies-always', ['tcp_syncookies'],
-      '2 answers every connection with a cookie, even without a flood, which is meant for testing. Use 1.')
+      '2 answers every connection with a cookie, even without a flood, which is meant for testing.',
+      'Set net.ipv4.tcp_syncookies to 1.')
   }
 
   const redirects = ['accept_redirects', 'accept_redirects_v6'].filter((k) => p[k] === 1 && isApplicable(k, hw))
   if (redirects.length) {
     warn('redirects-accepted', redirects,
-      'Accepting ICMP redirects lets anyone on the local network change this host\'s routes and put themselves in the middle.')
+      'Accepting ICMP redirects lets anyone on the local network change this host\'s routes and put themselves in the middle.',
+      `Set ${redirects.map((k) => PARAMETER_DEFS_BY_KEY[k].sysctlName).join(' and ')} to 0.`)
   }
   if (p.accept_redirects_v6 === 0 && isApplicable('accept_redirects_v6', hw)) {
     info('redirects-v6-interfaces', ['accept_redirects_v6'],
@@ -120,13 +137,15 @@ export function validate(hw, p) {
   }
   if (p.accept_source_route === 1) {
     warn('source-route', ['accept_source_route'],
-      'Source-routed packets choose their own path through the network, which can get them around firewalls.')
+      'Source-routed packets choose their own path through the network, which can get them around firewalls.',
+      'Set net.ipv4.conf.all.accept_source_route to 0.')
   }
 
   for (const key of ['protected_symlinks', 'protected_hardlinks']) {
     if (p[key] === 0) {
       warn(`${key}-off`, [key],
-        'Without this protection a user can plant links in shared directories such as /tmp and trick privileged programs into overwriting files.')
+        'Without this protection a user can plant links in shared directories such as /tmp and trick privileged programs into overwriting files.',
+        `Set ${PARAMETER_DEFS_BY_KEY[key].sysctlName} to 1.`)
     }
   }
 
@@ -136,7 +155,8 @@ export function validate(hw, p) {
   }
   if (p.suid_dumpable === 1) {
     warn('suid-dump-debug', ['suid_dumpable'],
-      'Mode 1 writes core dumps of privileged processes that their user can read, which can leak password hashes and keys.')
+      'Mode 1 writes core dumps of privileged processes that their user can read, which can leak password hashes and keys.',
+      'Set fs.suid_dumpable to 0, or to 2 for dumps only root can read.')
   }
   if (p.suid_dumpable === 2) {
     info('suid-dump-pattern', ['suid_dumpable'],

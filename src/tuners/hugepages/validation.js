@@ -8,6 +8,7 @@
  * @property {'warn' | 'info'} level
  * @property {string[]} params    Parameter keys this issue relates to
  * @property {string}   message
+ * @property {string}   [fix]     What to change to resolve it, in one plain sentence
  * @property {boolean}  blocking  Always false here
  */
 
@@ -26,13 +27,14 @@ const POOL_WARN_SHARE = 0.75
 export function validate(hw, p) {
   /** @type {ValidationIssue[]} */
   const issues = []
-  const warn = (id, params, message) => issues.push({ id, level: 'warn', blocking: false, params, message })
+  const warn = (id, params, message, fix) => issues.push({ id, level: 'warn', blocking: false, params, message, fix })
   const info = (id, params, message) => issues.push({ id, level: 'info', blocking: false, params, message })
 
   const pool = poolBytes(p.nr_hugepages)
   if (pool > ramBytes(hw) * POOL_WARN_SHARE) {
     warn('pool-ram', ['nr_hugepages'],
-      `The pool takes ${formatBytes(pool)}, ${Math.round((pool / ramBytes(hw)) * 100)}% of RAM, at boot whether a program uses it or not. Only ${formatBytes(ramBytes(hw) - pool)} is left for the kernel, the page cache and every other program.`)
+      `The pool takes ${formatBytes(pool)}, ${Math.round((pool / ramBytes(hw)) * 100)}% of RAM, at boot whether a program uses it or not. Only ${formatBytes(ramBytes(hw) - pool)} is left for the kernel, the page cache and every other program.`,
+      `Lower vm.nr_hugepages to ${Math.floor((ramBytes(hw) * POOL_WARN_SHARE) / poolBytes(1)).toLocaleString()} or less, so the pool takes at most three quarters of RAM.`)
   }
   if (p.nr_hugepages > 0) {
     info('pool-check', ['nr_hugepages'],
@@ -41,11 +43,13 @@ export function validate(hw, p) {
 
   if (p.thp_enabled === 'always' && hw.workload === 'database') {
     warn('thp-always-database', ['thp_enabled'],
-      'PostgreSQL, Oracle and Redis advise against THP always: it can waste memory and add latency spikes. madvise gives huge pages only to programs that ask for them.')
+      'PostgreSQL, Oracle and Redis advise against THP always: it can waste memory and add latency spikes.',
+      'Set transparent huge pages to madvise, which gives huge pages only to programs that ask for them.')
   }
   if (p.thp_defrag === 'always') {
     warn('thp-defrag-always', ['thp_defrag'],
-      'Every program that faults in THP memory waits while the kernel compacts memory, which shows up as latency spikes. madvise or defer+madvise limit the waiting to programs that asked for huge pages.')
+      'Every program that faults in THP memory waits while the kernel compacts memory, which shows up as latency spikes.',
+      'Set THP defragmentation to madvise or defer+madvise, which limit the waiting to programs that asked for huge pages.')
   }
 
   if (p.ksm_run === 1) {
@@ -60,7 +64,8 @@ export function validate(hw, p) {
 
   if (hw.numa === 'multi' && p.zone_reclaim_mode === 1) {
     warn('zone-reclaim-on', ['zone_reclaim_mode'],
-      'The kernel now evicts page cache on the local node before it uses free memory on another. File servers and databases lose their cache this way; keep it on only for workloads partitioned per node.')
+      'The kernel now evicts page cache on the local node before it uses free memory on another. File servers and databases lose their cache this way.',
+      'Set vm.zone_reclaim_mode to 0 unless the workload is partitioned per node.')
   }
 
   return issues

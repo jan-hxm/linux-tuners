@@ -99,9 +99,27 @@ Every tuner follows the same flow:
    only makes sense where one fixed set is right on every kernel offered: the
    security tuner has none, because there it would turn unprivileged BPF back
    on and loosen Ubuntu's perf restriction.
-5. **Validation**: issues shown inline on the affected cards
+5. **Validation**: issues shown inline on the affected cards (see
+   "Validation issues" below)
 6. **Live simulation**: a tabbed `GraphPanel` plus impact cards
 7. **Config output**: copy, download, share URL, reset
+
+### Validation issues
+
+`validate(hardware, params, facts)` in the tuner's `validation.js` returns
+a list of issues `{ id, level, blocking, params, message, fix? }`. `level` is
+`error`, `warn` or `info`; `blocking` hides the output (§3); `params` names
+the cards the issue shows on. `fix` is one plain sentence saying what to
+change to resolve it ("Lower vm.dirty_background_ratio below 20, or raise
+vm.dirty_ratio above 20."). It is written next to the rule, reads the same
+values the rule's condition does, and may print the same computed limit as
+the message. Every blocking issue has one, and so does every warning with a
+concrete action; info notes, which describe a trade-off, mostly have none.
+
+The fix shows on its own line under the message wherever the issue does: on
+the card, in the blocked output panel, in a setup step's issue list and, for
+a blocked step, on the setup's Files step. `IssueAnnouncer` reads it after
+the message. The shared UI only prints `issue.fix`; it never builds one.
 
 ## 5. Architecture
 
@@ -956,6 +974,12 @@ must follow them, and existing UI must not regress.
   generated config. Use a comma, colon, semicolon or parentheses instead. En
   dashes in numeric ranges (`0–200`) are fine. Code comments and docs are
   exempt.
+- **Issue fixes.** An issue's `fix` is an imperative sentence ending in a
+  full stop that names the setting the way the card does (`vm.swappiness`,
+  `DefaultLimitNOFILE`, `net.ipv4.tcp_rmem`) and the direction to move it
+  ("Raise ... to 3600 seconds or more"). Keep the action out of the message so
+  it isn't said twice. It is plain text, since issues don't go through
+  `RichText`.
 - **A quiet voice.** No exclamation marks, no jokes in controls, no emoji,
   and no icons as ornament. Warnings carry a sign (`!` or the warning icon)
   as well as their colour, and a step or note state is said in words ("2
@@ -1262,8 +1286,14 @@ over **every** registered tuner and checks:
   value, unknown preset, injected profile string) is rejected or clamped.
 - The defaults and every preset generate a config with no blocking issues,
   and every emitted value comes from the def's type formatter.
-- No displayed string (defs, presets, validation messages, about content, the
-  generated config) contains an em dash ([§8](#8-copy-conventions)).
+- No displayed string (defs, presets, validation messages and fixes, about
+  content, the generated config) contains an em dash ([§8](#8-copy-conventions)).
+- Every blocking issue has a `fix`, and every fix is one plain-text
+  sentence ([§4 Validation issues](#validation-issues)). The issues come from
+  a sweep that moves one or two keys at a time to their range ends and
+  middle (each option of an enum, each end of each tuple element), on every
+  profile, with and without facts, so a rule comparing two keys fires too.
+  Each tuner's own tests trigger its blocking rules and check the fix text.
 - Each live tuner's page mounts without console errors.
 - The registry's `settingCount` and `writes` for the tuner equal its
   `parameterKeys.length` and the paths its default config writes

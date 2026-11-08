@@ -123,6 +123,7 @@ const SECTION_NUM = 'mr-3 font-mono text-[13px] font-normal text-quiet'
             :class="ISSUE_CLASSES[issue.level]"
           >
             <span class="font-medium">{{ issue.blocking ? 'Blocks the files: ' : `${ISSUE_LABEL[issue.level]}: ` }}</span>{{ issue.message }}
+            <span v-if="issue.fix" class="block">{{ issue.fix }}</span>
           </li>
         </ul>
         <ParameterPanel />

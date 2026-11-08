@@ -10,6 +10,7 @@
  * @property {ValidationLevel} level
  * @property {string[]}        params    Parameter keys this issue relates to
  * @property {string}          message
+ * @property {string}          [fix]     What to change to resolve it, in one plain sentence
  * @property {boolean}         blocking  Blocks the config output when true
  */
 
@@ -33,6 +34,7 @@ export function validate(hw, p) {
       blocking: true,
       params: ['dirty_background_ratio', 'dirty_ratio'],
       message: 'dirty_background_ratio must be less than dirty_ratio.',
+      fix: `Lower vm.dirty_background_ratio below ${p.dirty_ratio}, or raise vm.dirty_ratio above ${p.dirty_background_ratio}.`,
     })
   }
 
@@ -47,6 +49,7 @@ export function validate(hw, p) {
       params: ['dirty_writeback_centisecs', 'dirty_expire_centisecs'],
       message:
         'dirty_writeback_centisecs is longer than dirty_expire_centisecs, so expired pages can wait up to a full writeback interval before they are flushed.',
+      fix: `Lower vm.dirty_writeback_centisecs to ${p.dirty_expire_centisecs} or less, or raise vm.dirty_expire_centisecs.`,
     })
   }
 
@@ -57,6 +60,7 @@ export function validate(hw, p) {
       blocking: false,
       params: ['swappiness'],
       message: 'swappiness > 100 causes severe latency on rotational disks.',
+      fix: 'Keep vm.swappiness at 100 or below on a hard disk.',
     })
   }
 
@@ -70,6 +74,7 @@ export function validate(hw, p) {
       blocking: false,
       params: ['swappiness'],
       message: `swappiness=${p.swappiness} exceeds the recommended cap (${deviceMax}) for ${describeDevice(hw.swapDevice)}.`,
+      fix: `Lower vm.swappiness to ${deviceMax} or less.`,
     })
   }
 
@@ -81,6 +86,7 @@ export function validate(hw, p) {
       params: ['swappiness', 'watermark_scale_factor'],
       message:
         'With swappiness=0 and a narrow watermark window, sudden memory-pressure spikes can OOM before kswapd reclaims enough.',
+      fix: 'Raise vm.watermark_scale_factor to 50 or more, or vm.swappiness above 0.',
     })
   }
 
@@ -91,6 +97,7 @@ export function validate(hw, p) {
       blocking: false,
       params: ['min_free_kbytes'],
       message: 'Values below 8 MiB can cause atomic allocation failures under load.',
+      fix: 'Raise vm.min_free_kbytes to 8192 (8 MiB) or more.',
     })
   }
 
@@ -102,6 +109,7 @@ export function validate(hw, p) {
       blocking: false,
       params: ['min_free_kbytes'],
       message: `Reserving more than 5% of RAM (${fivePercentRam.toLocaleString()} kB on this node) wastes usable memory.`,
+      fix: `Lower vm.min_free_kbytes to ${fivePercentRam.toLocaleString()} or less.`,
     })
   }
 
@@ -113,6 +121,7 @@ export function validate(hw, p) {
       params: ['overcommit_memory', 'panic_on_oom'],
       message:
         'Strict no-overcommit + panic-on-OOM will reboot the node on the first over-allocation attempt.',
+      fix: 'Set vm.panic_on_oom to 0, or vm.overcommit_memory to 0 or 1.',
     })
   }
 
@@ -124,6 +133,7 @@ export function validate(hw, p) {
       params: ['vfs_cache_pressure'],
       message:
         'vfs_cache_pressure=0 is documented as dangerous: the kernel will refuse to reclaim dentry/inode caches even under memory pressure.',
+      fix: 'Raise vm.vfs_cache_pressure above 0, for example to the kernel default of 100.',
     })
   }
 
@@ -145,6 +155,7 @@ export function validate(hw, p) {
       params: [],
       message:
         'Swap over a network device (e.g. NFS) is fragile: a network blip can stall every userspace process.',
+      fix: 'Put swap on a local disk, or use zram, if the machine has the choice.',
     })
   }
 

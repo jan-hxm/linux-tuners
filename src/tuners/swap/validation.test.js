@@ -24,7 +24,11 @@ describe('validate', () => {
 
   it('flags dirty_background_ratio >= dirty_ratio as a blocking error', () => {
     const issues = validate(baseHw, paramsFor({ dirty_background_ratio: 20, dirty_ratio: 20 }))
-    expect(issues.find((i) => i.id === 'dirtybg-ge-dirty')).toMatchObject({ blocking: true, level: 'error' })
+    expect(issues.find((i) => i.id === 'dirtybg-ge-dirty')).toMatchObject({
+      blocking: true,
+      level: 'error',
+      fix: 'Lower vm.dirty_background_ratio below 20, or raise vm.dirty_ratio above 20.',
+    })
     expect(hasBlockingIssue(issues)).toBe(true)
   })
 

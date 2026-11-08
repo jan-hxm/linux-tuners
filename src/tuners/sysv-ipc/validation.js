@@ -9,6 +9,7 @@
  * @property {'warn' | 'info'} level
  * @property {string[]} params    Parameter keys this issue relates to
  * @property {string}   message
+ * @property {string}   [fix]     What to change to resolve it, in one plain sentence
  * @property {boolean}  blocking  Always false here
  */
 
@@ -26,23 +27,26 @@ const QUEUE_RAM_WARN = 0.25
 export function validate(hw, p) {
   /** @type {ValidationIssue[]} */
   const issues = []
-  const warn = (id, params, message) => issues.push({ id, level: 'warn', blocking: false, params, message })
+  const warn = (id, params, message, fix) => issues.push({ id, level: 'warn', blocking: false, params, message, fix })
   const info = (id, params, message) => issues.push({ id, level: 'info', blocking: false, params, message })
 
   if (p.msgmax > p.msgmnb) {
     warn('msgmax-above-queue', ['msgmax', 'msgmnb'],
-      'A message this large doesn\'t fit in a queue of the default size, so msgsnd() waits for space that never comes (or fails with EAGAIN) unless the program raises its queue\'s size. Keep kernel.msgmnb at least this large.')
+      'A message this large doesn\'t fit in a queue of the default size, so msgsnd() waits for space that never comes (or fails with EAGAIN) unless the program raises its queue\'s size.',
+      `Raise kernel.msgmnb to ${p.msgmax.toLocaleString()} or more, or lower kernel.msgmax.`)
   }
 
   if (queueRamShare(hw, p) > QUEUE_RAM_WARN && p.msgmnb > 16384) {
     warn('queue-memory', ['msgmnb', 'msgmni'],
-      `If every message queue were full, the kernel would hold about ${formatBytes(queueMemoryBytes(p))} of messages that can't be swapped, ${Math.round(queueRamShare(hw, p) * 100)}% of RAM. Any local user can create queues; the memory is only used by messages waiting in them.`)
+      `If every message queue were full, the kernel would hold about ${formatBytes(queueMemoryBytes(p))} of messages that can't be swapped, ${Math.round(queueRamShare(hw, p) * 100)}% of RAM. Any local user can create queues; the memory is only used by messages waiting in them.`,
+      `Lower kernel.msgmnb or kernel.msgmni until full queues take ${Math.round(QUEUE_RAM_WARN * 100)}% of RAM or less.`)
   }
 
   if (p.shm_rmid_forced === 1) {
     if (hw.workload === 'oracle' || hw.workload === 'db2') {
       warn('rmid-database', ['shm_rmid_forced'],
-        'Databases keep shared memory segments that their tools and restarted processes attach to later. Leave this off on a database host unless the vendor says otherwise.')
+        'Databases keep shared memory segments that their tools and restarted processes attach to later. Leave this off on a database host unless the vendor says otherwise.',
+        'Set kernel.shm_rmid_forced to 0.')
     } else {
       info('rmid-tools', ['shm_rmid_forced'],
         'A program that creates a segment and exits before another attaches to it loses the segment. Check that nothing on the machine works that way.')

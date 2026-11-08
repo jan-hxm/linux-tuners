@@ -132,6 +132,26 @@ describe('SetupView', () => {
     wrapper.unmount()
   })
 
+  it('says how to fix a blocking issue, on its step and on the files step', async () => {
+    const wrapper = await setupAt('/setup')
+    const step = SETUP_STEPS.find((s) => s.id === 'swap')
+    expect(useSetupStore().skipped).not.toContain(step.id)
+    const store = useStepStore(step.id)
+    store.setParam('dirty_background_ratio', store.params.dirty_ratio)
+    await flushPromises()
+    const issue = store.issues.find((i) => i.blocking)
+    expect(issue.fix).toBeTruthy()
+    await stepButtons(wrapper).find((b) => b.text().includes(step.entry.title)).trigger('click')
+    expect(heading(wrapper)).toContain(step.entry.title)
+    expect(wrapper.text()).toContain(issue.fix)
+    await stepButtons(wrapper).find((b) => b.text().endsWith('Files')).trigger('click')
+    expect(heading(wrapper)).toContain('Files')
+    expect(heading(wrapper)).not.toContain('Filesystem')
+    expect(wrapper.text()).toContain(issue.message)
+    expect(wrapper.text()).toContain(issue.fix)
+    wrapper.unmount()
+  })
+
   it('repeats unapplied profile edits above the values, with Apply', async () => {
     const wrapper = await setupAt('/setup')
     const setup = useSetupStore()

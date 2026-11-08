@@ -350,7 +350,8 @@ The tuners answer "what should this one setting be". The guided setup answers
   `deriveDefaults`, so the fit bar and the kernel-default tick sit apart);
   the key to the three marks; "Why" (a forum thread's one number against
   this site's answer; the forum value is hand-typed illustration copy of
-  what forums say, not read from data); "What is this machine for?", a role radiogroup beside
+  what forums say, not read from data); "What is this machine for?", a role radiogroup (each role's name with a
+  one-line `hint` under it, the radio's `aria-describedby`) beside
   the route for the picked role; and "Or open one tuner directly", a table of
   every live tuner with the question it answers (the registry's `question`),
   its setting count and the files it writes, then the planned tuners and the

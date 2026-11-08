@@ -5,6 +5,16 @@ import { LIVE_TUNERS } from '@/tuners/registry.js'
 const ids = (list) => list.map((t) => t.id)
 
 describe('machine roles', () => {
+  it('gives every role a short plain-text hint without an em dash', () => {
+    for (const r of MACHINE_ROLES) {
+      expect(typeof r.hint, r.value).toBe('string')
+      expect(r.hint.trim(), r.value).toBe(r.hint)
+      expect(r.hint.length, r.value).toBeGreaterThan(10)
+      expect(r.hint.length, r.value).toBeLessThanOrEqual(60)
+      expect(r.hint, r.value).not.toMatch(/[—–<>&]|\.$/)
+    }
+  })
+
   it('accepts only known role ids', () => {
     expect(isMachineRole('database')).toBe(true)
     for (const v of ['', 'Database', 'admin', ['database'], undefined, null]) expect(isMachineRole(v)).toBe(false)

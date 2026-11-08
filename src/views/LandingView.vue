@@ -191,6 +191,7 @@ const secondaryButton = 'inline-flex min-h-11 items-center justify-center border
             type="button"
             role="radio"
             :aria-checked="role === r.value"
+            :aria-describedby="r.hint ? `role-hint-${r.value}` : undefined"
             :tabindex="role === r.value ? 0 : -1"
             class="flex min-h-14 w-full items-center gap-4 border-b border-rule py-3.5 pl-3 pr-3 text-left text-[17px] text-ink"
             :class="role === r.value ? 'bg-fit-tint font-medium' : 'hover:bg-paper-hover'"
@@ -202,7 +203,10 @@ const secondaryButton = 'inline-flex min-h-11 items-center justify-center border
               class="h-[18px] w-[18px] shrink-0 rounded-full bg-paper"
               :class="role === r.value ? 'border-[6px] border-fit' : 'border-[1.5px] border-quiet'"
             />
-            <span class="min-w-0">{{ r.label }}</span>
+            <span class="min-w-0">
+              <span data-role-label>{{ r.label }}</span>
+              <span v-if="r.hint" :id="`role-hint-${r.value}`" class="mt-0.5 block text-sm font-normal leading-normal text-quiet">{{ r.hint }}</span>
+            </span>
           </button>
         </div>
 

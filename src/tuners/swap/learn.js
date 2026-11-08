@@ -172,7 +172,7 @@ export const LEARN = {
       body: [
         'The kernel splits RAM into ranges it manages on their own, called [[zones|memory-zone]][^zones]. Each zone has three free-memory levels, its [[watermarks|watermark]]: min, low and high[^zone]. Below low, a kernel thread that frees memory in the background wakes up. It is called [[kswapd]]. Above high, it stops again[^zone].',
         'If kswapd falls behind and free memory drops below min, a program asking for memory may have to free some itself. This is [[direct reclaim|reclaim]], and the program stalls until enough is free[^reclaim]. The allocstall counters in `/proc/vmstat` count these stalls[^wsf].',
-        'vm.min_free_kbytes sets the min level, and each zone gets a share by its size[^minFree]. The kernel picks it from your RAM, and stops adjusting it once you write a value[^minFree]. vm.watermark_scale_factor sets the gap between the levels. A wider gap wakes kswapd earlier and keeps it working until more is free[^wsf].',
+        'vm.min_free_kbytes sets the min level, and each zone gets a share by its size[^min-free]. The kernel picks it from your RAM, and stops adjusting it once you write a value[^min-free]. vm.watermark_scale_factor sets the gap between the levels. A wider gap wakes kswapd earlier and keeps it working until more is free[^wsf].',
       ],
       pins: [
         { key: 'min_free_kbytes', layer: 'gauge', here: 'Sets the min mark, a reserve the kernel keeps for its own urgent needs. Most machines don\'t need to change this. Far too low risks hangs; far too high runs memory out at once.' },
@@ -205,7 +205,7 @@ export const LEARN = {
         zones: concepts('zones', 'Zones'),
         zone: { url: 'https://docs.kernel.org/mm/physical_memory.html#zone-structure', label: 'Physical memory: zone structure' },
         reclaim: concepts('reclaim', 'Reclaim'),
-        minFree: vm('min-free-kbytes', 'min_free_kbytes'),
+        'min-free': vm('min-free-kbytes', 'min_free_kbytes'),
         wsf: vm('watermark-scale-factor', 'watermark_scale_factor'),
       },
     },
@@ -227,9 +227,9 @@ export const LEARN = {
         backedBy: { vmTest: 'on a swap file it reads ahead at the default and not at 0' },
       },
       body: [
-        'The kernel divides RAM into small blocks of the same size, called [[pages|page]][^primer]. Moving a page of program memory to swap is swapping out. When the program uses that page again, the kernel reads it back from swap, which is swapping in[^pageCluster].',
-        'Along with the page the program needs, the kernel can read pages stored next to it in swap. Those were swapped out together. This is swap [[readahead]][^pageCluster]. vm.page-cluster sets how many: 0 means one page, and each step up doubles it[^pageCluster].',
-        'Lower values make the first read faster, but the pages that follow may each need a read of their own[^pageCluster]. Our VM tests saw readahead from a swap file at the default and none at 0. On zram they saw none for memory only one program uses, even at the default.',
+        'The kernel divides RAM into small blocks of the same size, called [[pages|page]][^primer]. Moving a page of program memory to swap is swapping out. When the program uses that page again, the kernel reads it back from swap, which is swapping in[^page-cluster].',
+        'Along with the page the program needs, the kernel can read pages stored next to it in swap. Those were swapped out together. This is swap [[readahead]][^page-cluster]. vm.page-cluster sets how many: 0 means one page, and each step up doubles it[^page-cluster].',
+        'Lower values make the first read faster, but the pages that follow may each need a read of their own[^page-cluster]. Our VM tests saw readahead from a swap file at the default and none at 0. On zram they saw none for memory only one program uses, even at the default.',
       ],
       pins: [
         { key: 'page_cluster', here: 'How many pages come back from swap in one go, as a power of two. Lower suits swap in compressed RAM. Most machines with swap on a disk don\'t need to change this.' },
@@ -253,7 +253,7 @@ export const LEARN = {
       },
       sources: {
         primer: concepts('virtual-memory-primer', 'Virtual Memory Primer'),
-        pageCluster: vm('page-cluster', 'page-cluster'),
+        'page-cluster': vm('page-cluster', 'page-cluster'),
       },
     },
     {
@@ -282,7 +282,7 @@ export const LEARN = {
         ],
       },
       body: [
-        'When a program writes to a file, the kernel changes the copy in file cache first and marks it as a [[dirty page]][^pageCache]. Writing it to disk later is called [[writeback]]. Until then the change exists only in RAM[^pageCache].',
+        'When a program writes to a file, the kernel changes the copy in file cache first and marks it as a [[dirty page]][^page-cache]. Writing it to disk later is called [[writeback]]. Until then the change exists only in RAM[^page-cache].',
         'Kernel threads that write in the background, the [[flusher threads|flusher-thread]], start once dirty data passes vm.dirty_background_ratio of available memory[^bg]. Past vm.dirty_ratio, a program that keeps writing must write out data itself[^ratio]. Available memory here means free and reclaimable memory, not all of RAM[^ratio].',
         'Two timers matter as well. The flusher threads wake every vm.dirty_writeback_centisecs to write out old data[^wb]. Data dirty for longer than vm.dirty_expire_centisecs is written at the next wake-up[^exp]. Both count hundredths of a second, and 0 for the wake-up timer turns periodic writeback off[^wb].',
       ],
@@ -316,7 +316,7 @@ export const LEARN = {
         for: 'Dirty is changed data still in RAM. Writeback is data being written right now. Both are in kB.',
       },
       sources: {
-        pageCache: concepts('page-cache', 'Page cache'),
+        'page-cache': concepts('page-cache', 'Page cache'),
         bg: vm('dirty-background-ratio', 'dirty_background_ratio'),
         ratio: vm('dirty-ratio', 'dirty_ratio'),
         wb: vm('dirty-writeback-centisecs', 'dirty_writeback_centisecs'),

@@ -10,7 +10,7 @@
  * Plain JS with no Vue and no tuner imports, so the build, the tests and the
  * figure components can all read it.
  *
- * @typedef {{ probe: string, path?: string, unit: string }} ValueRef
+ * @typedef {{ probe: string, path?: string, unit: string }} ValueRef  unit '' for a unitless value
  *   A number in a figure: the probe id in the tuner's probes.js, a dotted path
  *   into the probe's captured value, and the unit it is shown in.
  *
@@ -358,7 +358,9 @@ export function validateGuide(guide, ctx) {
   function valueRef(path, ref) {
     if (!shape(path, ref, ['probe', 'unit'], ['path'])) return
     if (ref.path !== undefined && (typeof ref.path !== 'string' || !PATH.test(ref.path))) fail(`${path}.path`, 'shape', `"${ref.path}" is not a dotted path`)
-    text(`${path}.unit`, ref.unit)
+    // A unitless value (vm.swappiness) has unit ''; otherwise plain text.
+    if (typeof ref.unit !== 'string') fail(`${path}.unit`, 'shape', 'must be a string')
+    else if (ref.unit !== '') text(`${path}.unit`, ref.unit)
     probe(`${path}.probe`, ref.probe, ref.path)
   }
 

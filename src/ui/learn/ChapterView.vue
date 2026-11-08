@@ -100,13 +100,13 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
 <template>
   <section :id="chapter.id" :aria-labelledby="headId" class="scroll-mt-4 lg:scroll-mt-[calc(var(--site-header-h)+1rem)]" data-chapter>
     <component :is="h" :id="headId" class="m-0 text-[28px] font-medium leading-tight text-ink">{{ chapter.title }}</component>
-    <p class="m-0 mt-3 text-[19px] leading-[1.5] text-ink-2" data-part="oneLine">{{ chapter.oneLine }}</p>
+    <p class="m-0 mt-3 text-[19px] leading-[1.5] text-ink-2" data-part="oneLine"><RichText :text="chapter.oneLine" /></p>
 
     <div class="mt-6 border border-rule bg-paper-hover p-4" data-part="picture">
       <p class="m-0 text-[13px] font-medium text-quiet">Picture it</p>
-      <p class="m-0 mt-1 text-[17px] leading-[1.55] text-ink">{{ chapter.picture.text }}</p>
+      <p class="m-0 mt-1 text-[17px] leading-[1.55] text-ink"><RichText :text="chapter.picture.text" /></p>
       <p v-if="chapter.picture.limit" class="m-0 mt-2 text-[15px] leading-[1.55] text-ink-2">
-        <span class="font-medium text-ink">Where the picture stops: </span>{{ chapter.picture.limit }}
+        <span class="font-medium text-ink">Where the picture stops: </span><RichText :text="chapter.picture.limit" />
       </p>
     </div>
 
@@ -155,7 +155,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
           <p class="m-0 break-words font-mono text-[15px] text-ink">{{ defName(selected.key, defsByKey) }}</p>
           <p v-if="defTitle(selected.key, defsByKey)" class="m-0 text-ink-2">{{ defTitle(selected.key, defsByKey) }}</p>
           <p class="m-0 mt-3 text-[13px] font-medium text-quiet">What it changes here</p>
-          <p class="m-0 text-ink">{{ selected.here }}</p>
+          <p class="m-0 text-ink"><RichText :text="selected.here" /></p>
           <template v-if="selectedRefs.length">
             <p class="m-0 mt-3 text-[13px] font-medium text-quiet">Measured</p>
             <ul class="m-0 list-none p-0 font-mono text-[13px] text-ink">
@@ -207,7 +207,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
         <li v-for="pin in pins" :key="pin.key" class="border-b border-rule py-3 text-[15px] leading-[1.55]">
           <p class="m-0 break-words font-mono text-ink">{{ defName(pin.key, defsByKey) }}</p>
           <p v-if="defTitle(pin.key, defsByKey)" class="m-0 text-ink-2">{{ defTitle(pin.key, defsByKey) }}</p>
-          <p class="m-0 text-ink">{{ pin.here }}</p>
+          <p class="m-0 text-ink"><RichText :text="pin.here" /></p>
           <a v-if="tune(pin.key)" :href="tune(pin.key)" class="inline-flex min-h-6 items-center text-ink" :class="LINK">Tune it</a>
         </li>
       </ul>
@@ -228,11 +228,11 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
       <dl class="m-0 grid grid-cols-1 gap-4 pt-3 text-[15px] leading-[1.55] md:grid-cols-2" data-part="symptoms">
         <div>
           <dt class="text-[13px] font-medium text-quiet">Too low</dt>
-          <dd class="m-0 text-ink">{{ chapter.symptoms.low }}</dd>
+          <dd class="m-0 text-ink"><RichText :text="chapter.symptoms.low" /></dd>
         </div>
         <div>
           <dt class="text-[13px] font-medium text-quiet">Too high</dt>
-          <dd class="m-0 text-ink">{{ chapter.symptoms.high }}</dd>
+          <dd class="m-0 text-ink"><RichText :text="chapter.symptoms.high" /></dd>
         </div>
       </dl>
     </template>
@@ -241,7 +241,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
       <component :is="sub" :class="SUBHEAD">Look on your machine</component>
       <div class="pt-3" data-part="look">
         <pre tabindex="0" :aria-label="`Command: ${chapter.look.cmd}`" class="m-0 overflow-x-auto border border-rule bg-paper-hover p-3 font-mono text-[15px] text-ink"><code>{{ chapter.look.cmd }}</code></pre>
-        <p class="m-0 mt-2 text-[15px] leading-[1.55] text-ink-2">Look for {{ chapter.look.for }}.</p>
+        <p class="m-0 mt-2 text-[15px] leading-[1.55] text-ink-2">Look for <RichText :text="chapter.look.for" />.</p>
       </div>
     </template>
 

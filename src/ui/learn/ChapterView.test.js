@@ -35,6 +35,19 @@ describe('ChapterView', () => {
     expect(wrapper.get('[data-part="symptoms"]').text()).toContain('Too low')
   })
 
+  it('renders RichText markup in every chapter, never the raw marks', async () => {
+    for (const chapter of DEMO_LEARN.chapters) {
+      wrapper = mountChapter(chapter)
+      // Open the first pin so its `here` text is on the page too.
+      const pin = wrapper.find('[data-part="settings"] button')
+      if (pin.exists()) await pin.trigger('click')
+      const text = wrapper.text()
+      expect(text, chapter.id).not.toMatch(/\[\[|\]\]|\*\*|`/)
+      wrapper.unmount()
+      wrapper = null
+    }
+  })
+
   it('prints the decision flow instead of the chooser', () => {
     wrapper = mountChapter()
     expect(wrapper.get('[data-part="chooser"]').classes()).toContain('print:hidden')

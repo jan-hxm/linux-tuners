@@ -12,6 +12,11 @@
  */
 import { computed, nextTick, ref } from 'vue'
 import { answerText, chooseStep, defTitle } from './figureText.js'
+import RichText from '@/ui/RichText.vue'
+import { parseRichText } from '@/ui/richText.js'
+
+/** What a reader sees of a RichText string, for the live region. */
+const visibleText = (s) => parseRichText(s).map((seg) => seg.text).join('')
 
 const props = defineProps({
   /** chapter.choose: [{ q, check, hint, yes, no? }] */
@@ -45,7 +50,7 @@ async function answer(yes) {
   const step = chooseStep(props.choose, index.value, yes)
   if (step.result) {
     result.value = step.result
-    say(`Result: ${resultText.value}`)
+    say(`Result: ${visibleText(resultText.value)}`)
     await nextTick()
     startOver.value?.focus()
   } else {
@@ -70,7 +75,7 @@ async function restart() {
       <p class="m-0 text-[13px] text-quiet">Question {{ index + 1 }} of {{ choose.length }}</p>
       <p class="m-0 mt-1 text-[17px] font-medium leading-snug text-ink" data-question>{{ question.q }}</p>
       <p class="m-0 mt-2 text-[15px] leading-[1.55] text-ink-2">
-        How to check: <code class="font-mono text-ink">{{ question.check }}</code> <span>{{ question.hint }}</span>
+        How to check: <code class="font-mono text-ink">{{ question.check }}</code> <span><RichText :text="question.hint" /></span>
       </p>
       <div class="mt-3 flex flex-wrap gap-2">
         <button ref="yesButton" type="button" class="min-h-11 border border-rule-strong px-5 text-[15px] font-medium text-ink hover:bg-paper-hover" @click="answer(true)">Yes</button>
@@ -79,7 +84,7 @@ async function restart() {
     </div>
     <div v-else class="border-l-4 border-fit bg-fit-tint p-4" data-result>
       <p class="m-0 text-[13px] text-fit-text">Result</p>
-      <p class="m-0 mt-1 text-[17px] font-medium leading-snug text-ink">{{ resultText }}</p>
+      <p class="m-0 mt-1 text-[17px] font-medium leading-snug text-ink"><RichText :text="resultText" /></p>
       <p v-if="resultTitle" class="m-0 text-[15px] text-ink-2">{{ resultTitle }}</p>
       <div class="mt-3 flex flex-wrap items-center gap-4">
         <a v-if="href" :href="href" class="inline-flex min-h-6 items-center text-[15px] text-ink underline underline-offset-[3px] hover:decoration-2">Open it in the tuner</a>

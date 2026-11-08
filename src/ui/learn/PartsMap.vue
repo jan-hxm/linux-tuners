@@ -11,6 +11,7 @@
  * "Picture it" text follows it as ordinary text.
  */
 import { computed } from 'vue'
+import RichText from '@/ui/RichText.vue'
 import { cardGroups, edgeGeometry, edgeRows, formatValue, gridSize, partsMapLabel, probeRef } from './figureText.js'
 
 const props = defineProps({
@@ -114,7 +115,7 @@ const cardClass = (card) => (card.tone === 'fit' ? 'border-fit bg-fit-tint' : 'b
       </div>
     </div>
     <p v-if="parts.picture" class="m-0 mt-4 border-l-2 border-ink pl-3 text-[15px] leading-[1.55] text-ink-2">
-      <span class="font-medium text-ink">Picture it: </span>{{ parts.picture }}
+      <span class="font-medium text-ink">Picture it: </span><RichText :text="parts.picture" />
     </p>
   </div>
 </template>

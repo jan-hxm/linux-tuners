@@ -588,6 +588,21 @@ step's segment is dashed, a blocked one's is `error`. Back and Next are a
 secondary and a primary button under the step, and the files step reads like
 a tuner's export.
 
+### Learning pages
+
+One study guide per tuner at `/learn/<slug>`, written for a total beginner,
+with a figure before every explanation. A guide's text cites the official
+docs, and every number in a figure comes from a committed VM capture. Being
+built in waves; the subsections below are filled in as each part lands.
+
+#### Guide data and checks
+
+#### Figures
+
+#### Evidence
+
+#### Routes and pages
+
 ## 6. Adding a tuner
 
 1. A folder `src/tuners/<name>/` laid out as in §9, with the domain module

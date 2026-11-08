@@ -261,6 +261,7 @@ export const TUNERS = [
       why: 'Huge page pools, Transparent Huge Pages and KSM, which databases and VM hosts depend on and other machines are better off leaving alone.',
       defaultsFine: 'Anything that is not a database or a VM host. Skip it unless your software documents huge pages or KSM.',
     },
+    guide: { slug: 'huge-pages', status: 'draft' },
   },
   {
     id: 'sysv-ipc',

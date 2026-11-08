@@ -52,6 +52,20 @@ export const GUIDES = {
     learn: () => import('../tuners/swap/learn.js').then((m) => m.LEARN),
     probes: () => import('../tuners/swap/probes.js').then((m) => m.PROBES),
   },
+  'huge-pages': {
+    tunerId: 'hugepages',
+    route: {
+      title: 'How Linux uses huge pages | linux-tuners.dev',
+      description:
+        'A beginner guide to Linux huge pages: the reserved pool, transparent huge pages, page merging, memory mappings and NUMA, with figures from five kernels.',
+      ogTitle: 'How Linux uses huge pages',
+      priority: 0.8,
+      changefreq: 'monthly',
+      jsonLdType: 'TechArticle',
+    },
+    learn: () => import('../tuners/hugepages/learn.js').then((m) => m.LEARN),
+    probes: () => import('../tuners/hugepages/probes.js').then((m) => m.PROBES),
+  },
 }
 
 /** The /learn index's own route metadata; the route exists only while a guide is live. */

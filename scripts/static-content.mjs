@@ -6,7 +6,8 @@
  *
  *   - Each route's static HTML goes inside its <div id="app">, which
  *     app.mount() replaces, and each tuner's head gets a Markdown alternate.
- *   - dist/<tuner>.md, dist/index.md, dist/llms.txt and dist/llms-full.txt.
+ *   - dist/<tuner>.md, dist/index.md, dist/learn.md and dist/learn/<slug>.md
+ *     for live study guides, dist/llms.txt and dist/llms-full.txt.
  *   - _headers rules for those files, appended to dist/_headers.
  *
  * src/static/ imports the domains, which need Vite (the `@/` alias, `vue`), so
@@ -39,8 +40,8 @@ async function withStaticModule(rootDir, use) {
 
 /** dist/<route>/index.html, or dist/index.html for '/'. */
 function htmlPathFor(distDir, routePath) {
-  // Paths become directories under dist/; refuse anything but one plain segment.
-  if (!/^\/[a-z0-9-]*$/.test(routePath)) throw new Error(`unsafe route path: ${routePath}`)
+  // Paths become directories under dist/; refuse anything but one or two plain segments (/learn/<slug>).
+  if (!/^\/[a-z0-9-]*(\/[a-z0-9-]+)?$/.test(routePath)) throw new Error(`unsafe route path: ${routePath}`)
   return routePath === '/' ? path.join(distDir, 'index.html') : path.join(distDir, routePath.slice(1), 'index.html')
 }
 
@@ -49,16 +50,19 @@ function htmlPathFor(distDir, routePath) {
  *   `now` is the one date every example config in the build carries.
  */
 export async function writeStaticContent({ rootDir, distDir, now = new Date() }) {
-  return withStaticModule(rootDir, async ({ staticSite, injectStatic }) => {
-    const { pages, llmsTxt, llmsFullTxt, headers } = staticSite({ now })
+  return withStaticModule(rootDir, async ({ staticSite, injectStatic, loadStaticGuides }) => {
+    const guides = await loadStaticGuides()
+    const { pages, llmsTxt, llmsFullTxt, headers } = staticSite({ now, guides })
 
     let markdownFiles = 0
     for (const page of pages) {
       const htmlPath = htmlPathFor(distDir, page.path)
       await fs.writeFile(htmlPath, injectStatic(await fs.readFile(htmlPath, 'utf8'), page), 'utf8')
       if (page.markdownPath) {
-        if (!/^[a-z0-9-]+\.md$/.test(page.markdownPath)) throw new Error(`unsafe Markdown path: ${page.markdownPath}`)
-        await fs.writeFile(path.join(distDir, page.markdownPath), page.markdown, 'utf8')
+        if (!/^[a-z0-9-]+(\/[a-z0-9-]+)?\.md$/.test(page.markdownPath)) throw new Error(`unsafe Markdown path: ${page.markdownPath}`)
+        const mdPath = path.join(distDir, page.markdownPath)
+        await fs.mkdir(path.dirname(mdPath), { recursive: true })
+        await fs.writeFile(mdPath, page.markdown, 'utf8')
         markdownFiles += 1
       }
     }

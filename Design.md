@@ -257,7 +257,11 @@ parameters" and `linux-tuners:compact-parameters` for "Compact", each `'1'`
 when on and removed when off. They are conveniences for the viewer, never
 tuner state, so they are not part of the hash, are never sent anywhere, and
 the page works the same when storage is blocked or throws (the switches start
-off). The privacy policy lists them in section 3. The filter text and "Changed
+off). A third, `linux-tuners:learn-kernel` (`ui/learn/kernelPref.js`), holds
+the VM image id the study guides' kernel switcher last picked, shared by
+every figure on a guide page; it is only ever compared with the image list,
+never rendered, and without it the page starts on the first image. The privacy
+policy lists all three in section 3. The filter text and "Changed
 only" are not remembered at all: they last for the visit. Any other preference worth remembering takes the same
 form: one on/off or enum value per key, prefixed `linux-tuners:`, and a line in
 the policy.
@@ -265,8 +269,10 @@ the policy.
 ### Routes, SEO and build
 
 Route metadata is single-sourced in `src/routes-meta.js`, which lists the
-landing and legal pages and takes each live tuner's route from the registry
-(`src/tuners/registry.js`, see [§9 Registry](#registry)). The router applies
+landing and legal pages, takes each live tuner's route from the registry
+(`src/tuners/registry.js`, see [§9 Registry](#registry)), and adds the learn
+routes for live study guides (`learnRoutesMeta`, see "Learning pages > Routes
+and pages"): `/learn` and `/learn/<slug>`, the only two-segment paths. The router applies
 the head tags client-side, and `npm run build` runs a postbuild step
 (`scripts/generate-static-routes.mjs`) that writes `dist/<route>/index.html`
 with the route's title, OG/Twitter tags, JSON-LD and canonical URL baked in,
@@ -299,7 +305,8 @@ the default profile, the graph blurbs, the config `generateConfig` writes for
 the default profile (one build date for every page) with its install, check
 and undo steps, and the About content. `/` lists every tuner, `/setup` its
 steps; the legal pages get none. The build also writes `dist/<tuner>.md`,
-`dist/index.md`, `dist/llms.txt` (llmstxt.org) and `dist/llms-full.txt`, adds
+`dist/index.md`, `dist/learn.md` and `dist/learn/<slug>.md` for live guides,
+`dist/llms.txt` (llmstxt.org) and `dist/llms-full.txt`, adds
 a `<link rel="alternate" type="text/markdown">` to each tuner's head, appends
 `_headers` rules for those files (Markdown as `text/markdown`, `noindex`, a
 canonical `Link` to the HTML page; the llms files as `text/plain`), and fails
@@ -341,7 +348,9 @@ CMP**, configured in the AdSense dashboard. A custom consent banner existed
 earlier and was removed; reintroducing one would race with the CMP. `AdSlot`
 renders the `<ins>` block only when the publisher ID and the slot ID are both
 set. The IDs come from `VITE_ADSENSE_*` env vars baked in at build time (see
-`.env.example`). Without them, production renders nothing and dev shows a
+`.env.example`). Each tuner page uses the `swap` slot; each study guide has one
+`learn` slot (`VITE_ADSENSE_SLOT_LEARN`) after its last chapter and none
+between chapters. Without them, production renders nothing and dev shows a
 dashed placeholder.
 
 ### Hosting and deploy
@@ -786,6 +795,56 @@ that layout is a documented-format fixture from the `mm/vmstat.c` format
 strings with placeholder numbers, marked as such.
 
 #### Routes and pages
+
+`src/learn/guides.js` lists every guide (`GUIDES`, keyed by slug): its tuner,
+its route metadata and lazy loaders for its `learn.js` and `probes.js`, like
+`TUNER_DOMAIN_LOADERS`, so each guide is its own chunk. It is plain JS that
+runs under Node (routes-meta.js reads it in the postbuild). A guide gets a page
+only when its registry entry says `guide: { slug, status: 'live' }`
+(`LIVE_GUIDES`); a `draft` gets no route, no link, no static page and no
+sitemap entry. While no guide is live, `/learn` doesn't exist either, and the
+header's and footer's "Learn" links (shown when a route named `learn` exists,
+like Glossary) stay hidden. `src/learn/guides.test.js` checks that the slugs
+equal the guides the contract suite finds and the registry's.
+
+- **Routes.** `/learn` (`LearnIndexView`: each live guide's title, lead and
+  facts line, and its tuner) and `/learn/<slug>` (`LearnView`). The router
+  loads the guide, its probes, the committed captures and the tuner's domain
+  (for the settings' names and docs links) before it renders, so the views
+  have no loading state. JSON-LD: `TechArticle` for a guide, `CollectionPage`
+  for the index.
+- **The guide page.** A header block (breadcrumb Learn / title, the lead, the
+  facts line from `guideFacts`: chapters, settings, minutes, "Figures measured
+  on N kernels", and "Tune these settings"), "Start here" with the parts map
+  (it follows the shared kernel choice), "The chapters" with the settings each
+  pins, then every chapter through `ChapterView` (`h2`, parts `h3`), each
+  followed by its previous and next chapter. Beside them from `lg` up a sticky
+  chapter rail of in-page links (`aria-current="location"` from
+  `useScrollSpy`); on a phone it is a disclosure button with `aria-expanded`.
+  One `AdSlot` (`learn`) after the last chapter.
+- **"Tune it" links** open `/<tuner>?focus=<key>`, never `#setting-<key>`:
+  the tuner's hash is shared-link state. `ui/focusSetting.js` builds the link;
+  `TunerPage` reads the query once after the router's first scroll, accepts
+  only one value that is an own def key of the domain, drops the query from the
+  URL (the hash stays), opens the card's group and advanced cards and focuses
+  the card (or its group when the profile hides it). Nothing in it reaches the
+  store, the config or the page text.
+- **The tuner page** of a live guide gets a "How it works" link in its title
+  block, and provides `HOW_IT_WORKS_KEY` (`ui/descParts.js`) to the cards: a
+  lookup `(key) => chapterId | null` from `chapterIndex(learn)`, loaded after
+  mount from the guide's `learn.js` only. The router passes the guide as a
+  prop, so a tuner with a draft guide or none loads nothing.
+- **Static text.** The build awaits `loadStaticGuides()` and writes one page
+  per live guide with every chapter in the template order: figures as lists,
+  each value on every image with the kernel it was measured on, the body's
+  marks as `[n]`, the chooser as the decision flow, the settings with their
+  `?focus` links; plus `/learn`, their Markdown copies, a "Guides" section in
+  llms.txt and the guides at the end of llms-full.txt. A learn route without
+  its data fails the build.
+- **Tests** route the fixture guide as live with `vi.mock` of guides.js
+  (`src/learn/__fixtures__/demoKit.js` `mockGuides`): `src/views/learn.test.js`
+  (routes, links, page structure, focus, axe in both schemes), the route sweep
+  in `src/a11y.test.js`, `src/static/learn.test.js` and the static sweep.
 
 ## 6. Adding a tuner
 
@@ -1267,7 +1326,12 @@ src/
   `needThis.js`, `installGuide.js`, `controls/meta.js`), never `vue` or a
   `.vue` file, and nothing in `src/` imports it: only the build (and tests)
   does, so the SPA bundle doesn't change. Text the page and the static layer
-  both show lives in those plain-JS modules, never copied.
+  both show lives in those plain-JS modules, never copied. It reads the study
+  guides through `learn/guides.js` (lazy loaders, awaited once), as it reads
+  tuners through `domains.js`.
+- `learn/` holds the guide schema, the evidence loader and `guides.js`, the
+  one list of guides; `ui/` never imports it (the router passes a tuner page
+  its guide), and `views/LearnView.vue` and the static layer do.
 - Enforced by `src/importBoundaries.test.js`, which scans import statements,
   since the project has no ESLint. Test files are exempt: shared-code tests
   mount real tuners as fixtures.

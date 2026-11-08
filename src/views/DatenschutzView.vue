@@ -92,7 +92,13 @@ import { RouterLink } from 'vue-router'
         with the value <code class="bg-paper-hover px-1 font-mono text-[14px]">1</code>, so the switch
         stays on next time. The <em>Compact</em> switch does the same with
         <code class="bg-paper-hover px-1 font-mono text-[14px]">linux-tuners:compact-parameters</code>.
-        Turning a switch off removes its entry. They are read only by this site's code in your
+        Turning a switch off removes its entry. On a study guide page, picking a kernel under
+        <em>Measured on</em> keeps
+        <code class="bg-paper-hover px-1 font-mono text-[14px]">linux-tuners:learn-kernel</code>
+        with the name of the test machine you picked (such as
+        <code class="bg-paper-hover px-1 font-mono text-[14px]">debian-13</code>), so the figures show
+        the same kernel next time; it stays until you clear this site's data in your browser. These
+        entries are read only by this site's code in your
         browser, are never transmitted, and contain no personal data. Storing them is strictly necessary to
         provide the setting you asked for and is permitted without consent per § 25 (2) (2) TTDSG.
       </p>

@@ -10,6 +10,7 @@ import {
   jsonLdFor,
 } from './routes-meta.js'
 import { LIVE_TUNERS } from './tuners/registry.js'
+import { LIVE_GUIDES, LEARN_INDEX_ROUTE, loadGuide, loadChapterIndex } from './learn/guides.js'
 
 // Lazy-loaded domain module per live tuner, keyed by registry id. Kept here
 // rather than in the registry so the registry stays plain data and each tuner
@@ -27,18 +28,59 @@ const TUNER_DOMAIN_LOADERS = {
   'block-io': () => import('@/tuners/block-io/index.js').then((m) => m.blockIoDomain),
 }
 
+/**
+ * What a tuner page knows of its live guide: where it is, and a lazy lookup
+ * of the chapter that pins each setting (loaded only once the page asks, so a
+ * tuner with a draft guide or none pays nothing). Null without a live guide.
+ */
+function guideLinkFor(tunerId) {
+  const g = LIVE_GUIDES.find((entry) => entry.tunerId === tunerId)
+  return g ? { path: g.path, title: g.route.ogTitle, chapters: () => loadChapterIndex(g) } : null
+}
+
 /** A lazy route component that renders the shared TunerPage for one domain. */
 function tunerView(loadDomain) {
   return () =>
-    Promise.all([loadDomain(), import('@/ui/TunerPage.vue')]).then(([domain, { default: TunerPage }]) => ({
-      name: `TunerView-${domain.id}`,
-      render: () => h(TunerPage, { domain }),
-    }))
+    Promise.all([loadDomain(), import('@/ui/TunerPage.vue')]).then(([domain, { default: TunerPage }]) => {
+      const guide = guideLinkFor(domain.id)
+      return {
+        name: `TunerView-${domain.id}`,
+        render: () => h(TunerPage, { domain, guide }),
+      }
+    })
 }
 
 export const TUNER_VIEWS = Object.fromEntries(
   Object.entries(TUNER_DOMAIN_LOADERS).map(([id, load]) => [id, tunerView(load)]),
 )
+
+/**
+ * A live guide's page: the guide's data, its captures and its tuner's domain
+ * (for the settings' names and the "Tune it" links), loaded together.
+ * @param {import('./learn/guides.js').LiveGuide} entry
+ */
+function guideView(entry) {
+  const loadDomain = entry.domain ?? TUNER_DOMAIN_LOADERS[entry.tunerId]
+  return () =>
+    Promise.all([loadGuide(entry), loadDomain(), import('@/views/LearnView.vue')]).then(([data, domain, { default: LearnView }]) => ({
+      name: `LearnView-${entry.slug}`,
+      render: () => h(LearnView, { entry, ...data, domain }),
+    }))
+}
+
+/** The /learn index: every live guide's data, so the cards need no loading state. */
+function learnIndexView() {
+  return () =>
+    Promise.all([Promise.all(LIVE_GUIDES.map((g) => g.learn())), import('@/views/LearnIndexView.vue')]).then(([learns, { default: LearnIndexView }]) => ({
+      name: 'LearnIndexView',
+      render: () => h(LearnIndexView, { guides: LIVE_GUIDES.map((entry, i) => ({ entry, learn: learns[i] })) }),
+    }))
+}
+
+/** Lazy views for the learn routes (none while no guide is live). */
+export const LEARN_VIEWS = LIVE_GUIDES.length
+  ? Object.fromEntries([[LEARN_INDEX_ROUTE.path, learnIndexView()], ...LIVE_GUIDES.map((g) => [g.path, guideView(g)])])
+  : {}
 
 const PAGE_VIEWS = {
   '/': () => import('@/views/LandingView.vue'),
@@ -56,7 +98,7 @@ export const routes = [
   ...ROUTES_META.map((r) => ({
     path: r.path,
     name: r.name,
-    component: PAGE_VIEWS[r.path] ?? TUNER_VIEW_BY_PATH[r.path],
+    component: PAGE_VIEWS[r.path] ?? TUNER_VIEW_BY_PATH[r.path] ?? LEARN_VIEWS[r.path],
     meta: r,
   })),
   {

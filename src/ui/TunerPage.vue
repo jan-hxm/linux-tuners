@@ -17,7 +17,7 @@
  * tabs gets a full-width tune step and no impact bar. The router renders this
  * directly for each live tuner.
  */
-import { provide, computed, inject, nextTick, ref, onMounted, onBeforeUnmount } from 'vue'
+import { provide, computed, inject, nextTick, ref, shallowRef, onMounted, onBeforeUnmount } from 'vue'
 import { RouterLink, routerKey } from 'vue-router'
 import { useTunerStoreFor } from '@/core/createTunerStore.js'
 import { optionLabel } from '@/core/profile.js'
@@ -43,7 +43,10 @@ import { followInPageLink } from '@/ui/inPageLink.js'
 import NeedThisBox from '@/ui/NeedThisBox.vue'
 import { useScrollSpy } from '@/ui/useScrollSpy.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY, PROFILE_DRAFT_KEY, PARAMETER_VIEW_KEY } from '@/ui/useActiveTuner.js'
-import { useParameterView } from '@/ui/useParameterView.js'
+import { useParameterView, settingAnchorId, groupAnchorId } from '@/ui/useParameterView.js'
+import { HOW_IT_WORKS_KEY } from '@/ui/descParts.js'
+import { focusAnchor } from '@/ui/inPageLink.js'
+import { FOCUS_QUERY, focusKeyFrom, withoutFocus } from '@/ui/focusSetting.js'
 import { useOutline, railStartsExpanded } from '@/ui/outline/useOutline.js'
 import OutlineRail from '@/ui/outline/OutlineRail.vue'
 import OutlineDrawer from '@/ui/outline/OutlineDrawer.vue'
@@ -51,6 +54,12 @@ import OutlineDrawer from '@/ui/outline/OutlineDrawer.vue'
 const props = defineProps({
   /** @type {import('@/core/types.js').TunerDomain} */
   domain: { type: Object, required: true },
+  /**
+   * The tuner's live study guide, from the router: `{ path, title, chapters }`
+   * where `chapters()` loads `{ [defKey]: chapterId }`. Null without one (a
+   * draft guide counts as none), and then nothing is loaded.
+   */
+  guide: { type: Object, default: null },
 })
 
 const store = useTunerStoreFor(props.domain)
@@ -64,6 +73,16 @@ provide(PROFILE_DRAFT_KEY, profileDraft)
 // settings outline so they always agree.
 const parameterView = useParameterView(store, props.domain)
 provide(PARAMETER_VIEW_KEY, parameterView)
+
+// The cards' "How it works" links (Design.md §7 "Three layers per
+// parameter"): the chapter of the live guide that pins each setting. The
+// guide's data loads after mount, so the links appear a moment later; with no
+// live guide nothing is loaded and the lookup gives null.
+const chapterByKey = shallowRef(null)
+provide(HOW_IT_WORKS_KEY, (key) => (chapterByKey.value && Object.hasOwn(chapterByKey.value, key) ? chapterByKey.value[key] : null))
+onMounted(() => {
+  props.guide?.chapters?.().then((index) => (chapterByKey.value = index)).catch(() => {})
+})
 
 const graphTabs = props.domain.graphTabs
 const hasGraphs = graphTabs.length > 0
@@ -152,7 +171,38 @@ async function editMachine() {
 
 // The breadcrumb's link stays in the app when a router is installed; a test
 // that mounts the page on its own gets a plain link.
-const hasRouter = inject(routerKey, null) !== null
+const router = inject(routerKey, null)
+const hasRouter = router !== null
+
+// A study guide's "Tune it" link opens the page with `?focus=<key>`
+// (ui/focusSetting.js): once, after the router's own first scroll, the query
+// is dropped from the URL (the hash, the tuner state, stays as it is) and the
+// card is opened and focused. An unknown key is ignored.
+async function focusFromQuery() {
+  if (typeof window === 'undefined') return
+  if (router) await router.isReady()
+  // The router's own location when there is one (a memory history in tests).
+  const search = router ? new URL(router.currentRoute.value.fullPath, window.location.origin).search : window.location.search
+  if (!new URLSearchParams(search).has(FOCUS_QUERY)) return
+  const key = focusKeyFrom(search, props.domain.defsByKey)
+  if (router) {
+    const { [FOCUS_QUERY]: _drop, ...query } = router.currentRoute.value.query
+    await router.replace({ query, hash: router.currentRoute.value.hash })
+  } else {
+    history.replaceState(history.state, '', withoutFocus(window.location))
+  }
+  if (!key) return
+  await nextTick()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  const view = parameterView
+  const section = view.shownSections.value.find((s) => s.keys.includes(key))
+  if (!section) return
+  view.open.value[section.id] = true
+  view.advancedOpen.value[section.id] = true
+  await nextTick()
+  focusAnchor(document.getElementById(settingAnchorId(key)) ? settingAnchorId(key) : groupAnchorId(section.id))
+}
+onMounted(focusFromQuery)
 
 const STEP_SCROLL = 'scroll-mt-16 lg:scroll-mt-[calc(var(--site-header-h)+var(--step-chain-h)+1.5rem)]'
 const INTRO_CODE = 'font-mono text-[0.9em] text-ink'
@@ -178,8 +228,12 @@ const CRUMB_LINK = 'inline-flex min-h-6 items-center underline underline-offset-
         <p class="mt-3 max-w-[36em] text-[17px] leading-relaxed text-ink-2 sm:text-lg">
           <RichText :text="page.intro" :code-class="INTRO_CODE" />
         </p>
-        <p class="mt-1 text-sm">
+        <p class="mt-1 flex flex-wrap gap-x-5 text-sm">
           <a href="#about" @click="followInPageLink($event, 'about')" class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]">About this tuner</a>
+          <template v-if="guide">
+            <RouterLink v-if="hasRouter" :to="guide.path" class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]" data-guide-link>How it works<span class="sr-only">: {{ guide.title }}</span></RouterLink>
+            <a v-else :href="guide.path" class="inline-flex min-h-6 items-center text-ink underline underline-offset-[3px]" data-guide-link>How it works<span class="sr-only">: {{ guide.title }}</span></a>
+          </template>
         </p>
       </div>
       <div class="flex min-w-0 max-w-full flex-wrap items-center gap-x-3.5 gap-y-1 border-y border-rule py-1.5">

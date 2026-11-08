@@ -1,0 +1,89 @@
+// The prerendered study guide pages (Design.md §5 "Learning pages > Routes
+// and pages"), with the fixture guide as the one live guide: every chapter in
+// the template order, the figures as lists with each value and the kernel it
+// was measured on, the chooser as the static flow, the Markdown copy, the
+// llms.txt entries. The axe sweep of the static HTML is in a11y.test.js.
+import { describe, it, expect } from 'vitest'
+import { ROUTES_META, learnRoutesMeta } from '@/routes-meta.js'
+import { pageDoc, loadStaticGuides } from './pages.js'
+import { staticSite } from './site.js'
+import { toHtml } from './html.js'
+import { toMarkdown } from './markdown.js'
+import { docTexts } from './nodes.js'
+import { DEMO_LEARN, liveDemoGuides } from '@/learn/__fixtures__/demoKit.js'
+
+const NOW = new Date('2026-01-02T00:00:00Z')
+const EM_DASH = String.fromCharCode(0x2014)
+const guides = await loadStaticGuides(liveDemoGuides())
+const routes = [...ROUTES_META, ...learnRoutesMeta(liveDemoGuides())]
+const doc = pageDoc('/learn/demo', { now: NOW, guides })
+const html = toHtml(doc)
+const md = toMarkdown(doc)
+
+describe('a guide page as static text', () => {
+  it('has the header block, Start here, the chapter map and every chapter in order', () => {
+    const h2 = doc.blocks.filter((b) => b.kind === 'heading' && b.level === 2).map((b) => b.text)
+    expect(h2.slice(0, 2 + DEMO_LEARN.chapters.length)).toEqual(['Start here', 'The chapters', ...DEMO_LEARN.chapters.map((c) => c.title)])
+    expect(md).toContain('4 chapters · 5 settings · 5 min read · Figures measured on 5 kernels')
+    expect(md).toContain('[Tune these settings in the Swap & memory tuner](https://linux-tuners.dev/swap)')
+    const parts = doc.blocks.filter((b) => b.kind === 'heading' && b.level === 3).map((b) => b.text)
+    for (const part of ['Picture it', 'Settings here', 'Should you change it?', "What you notice if it's wrong", 'Look on your machine', 'Sources']) {
+      expect(parts.filter((p) => p === part), part).toHaveLength(DEMO_LEARN.chapters.length)
+    }
+  })
+
+  it('lists each figure value on every kernel, with the kernel it was measured on', () => {
+    expect(md).toContain('`Normal.min`**: Debian 13, kernel 0.0.0-fixture: 2,000 pages; Ubuntu 24.04, kernel 0.0.1-fixture: 2,000 pages;')
+    expect(md).toContain('Layers from the top:')
+    expect(md).toContain('A schematic timeline: the order is real, the distances are not.')
+    expect(md).toContain('**Batch off:** demo.batch_order = 0, 1 of 8 lit.')
+    expect(md).toContain('Checked on real kernels by the VM test')
+  })
+
+  it('writes the chooser as the static flow and the marks as [n]', () => {
+    expect(md).toContain('Yes: Raise demo.reserve_kbytes. No: Go to question 2.')
+    expect(md).toContain('No: Leave it as it is: The reserve is doing its job, so the default fits.')
+    expect(md).toMatch(/high\.\\\[1\\\]/)
+    expect(md).not.toContain('[^')
+  })
+
+  it('links each setting to the tuner with the focus query, never a hash', () => {
+    expect(html).toContain('href="https://linux-tuners.dev/swap?focus=reserve_kbytes"')
+    expect(html).not.toMatch(/href="https:\/\/linux-tuners\.dev\/swap#/)
+  })
+
+  it('carries nothing executable and no em dash', () => {
+    expect(html).not.toMatch(/<script|\son\w+\s*=|javascript:/i)
+    for (const [, href] of html.matchAll(/href="([^"]*)"/g)) expect(href).toMatch(/^https:\/\//)
+    expect(docTexts(doc).join(' ')).not.toContain(EM_DASH)
+  })
+})
+
+describe('the static site with a live guide', () => {
+  const site = staticSite({ now: NOW, guides, routes })
+  const page = (path) => site.pages.find((p) => p.path === path)
+
+  it('writes the index and the guide, each with its Markdown copy', () => {
+    expect(page('/learn').markdownPath).toBe('learn.md')
+    expect(page('/learn/demo').markdownPath).toBe('learn/demo.md')
+    expect(page('/learn').markdown).toContain('[Read How a demo tuner works](https://linux-tuners.dev/learn/demo)')
+    expect(site.headers).toContain('/learn/demo.md\n  Content-Type: text/markdown; charset=utf-8\n  X-Robots-Tag: noindex\n  Link: <https://linux-tuners.dev/learn/demo>; rel="canonical"')
+  })
+
+  it('lists the guides in llms.txt and puts the guide in llms-full.txt', () => {
+    expect(site.llmsTxt).toContain('## Guides')
+    expect(site.llmsTxt).toContain(`- [${DEMO_LEARN.title}](https://linux-tuners.dev/learn/demo.md): `)
+    expect(site.llmsTxt).toContain('(https://linux-tuners.dev/learn.md): every study guide')
+    expect(site.llmsFullTxt).toContain(`# ${DEMO_LEARN.title}`)
+  })
+
+  it('refuses a learn route without its guide data', () => {
+    expect(() => staticSite({ now: NOW, routes })).toThrow(/no guide data/)
+  })
+
+  it('writes no learn page while no guide is live', () => {
+    const plain = staticSite({ now: NOW })
+    expect(plain.pages.some((p) => p.path.startsWith('/learn'))).toBe(false)
+    expect(plain.llmsTxt).not.toContain('## Guides')
+  })
+})

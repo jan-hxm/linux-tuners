@@ -16,6 +16,8 @@ const SPONSOR_URL = 'https://github.com/sponsors/jan-hxm'
 // "glossary" is registered, so it never points at the landing-page redirect.
 const router = useRouter()
 const hasGlossary = computed(() => router.hasRoute('glossary'))
+// Likewise the study guides: the /learn route exists only while a guide is live.
+const hasLearn = computed(() => router.hasRoute('learn'))
 const linkClass = 'inline-flex min-h-6 items-center text-ink-2 underline underline-offset-[3px] hover:text-ink'
 const year = new Date().getFullYear()
 </script>
@@ -37,6 +39,7 @@ const year = new Date().getFullYear()
           Defaults are quoted from kernel.org and the systemd manuals. The output is applied and read back on {{ testedOnText() }}.
         </p>
         <nav aria-label="Footer" class="mt-3.5 flex flex-wrap gap-x-5 gap-y-1">
+          <RouterLink v-if="hasLearn" :to="{ name: 'learn' }" :class="linkClass">Learn</RouterLink>
           <RouterLink v-if="hasGlossary" :to="{ name: 'glossary' }" :class="linkClass">Glossary</RouterLink>
           <RouterLink to="/privacy" :class="linkClass">Privacy</RouterLink>
           <RouterLink to="/imprint" :class="linkClass">Imprint</RouterLink>

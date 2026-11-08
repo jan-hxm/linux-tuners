@@ -7,6 +7,7 @@ import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { TUNER_VIEWS, router } from '@/router.js'
 import { ROUTES_META } from '@/routes-meta.js'
 import { MACHINE_ROLES } from '@/core/machineRoles.js'
+import { GUIDES } from '@/learn/guides.js'
 
 const EM_DASH = String.fromCharCode(0x2014)
 const ROUTE_FIELDS = ['title', 'description', 'ogTitle', 'priority', 'changefreq', 'jsonLdType']
@@ -104,6 +105,19 @@ describe('tuner registry', () => {
       expect(paths, t.id).not.toContain(`/${t.id}`)
       expect(router.hasRoute(t.id), t.id).toBe(false)
     }
+  })
+
+  // Study guides (Design.md §5 "Learning pages"); src/learn/guides.test.js
+  // checks the slugs against the guides the contract suite finds.
+  it('gives a guide only to live tuners, as { slug, status } with a loader in guides.js', () => {
+    for (const t of TUNERS.filter((x) => x.guide)) {
+      expect(t.status, t.id).toBe('live')
+      expect(Object.keys(t.guide).sort(), t.id).toEqual(['slug', 'status'])
+      expect(t.guide.slug, t.id).toMatch(/^[a-z][a-z0-9-]*$/)
+      expect(['draft', 'live'], t.id).toContain(t.guide.status)
+      expect(GUIDES[t.guide.slug]?.tunerId, t.id).toBe(t.id)
+    }
+    expect(TUNERS.find((t) => t.id === 'swap').guide).toEqual({ slug: 'memory', status: 'draft' })
   })
 
   // Search results cut descriptions at about 155 characters, and link

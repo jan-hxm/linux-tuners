@@ -150,4 +150,16 @@ export const GLOSSARY = Object.freeze({
     definition:
       'The kernel stopping the whole machine on purpose because it cannot safely go on. Every program stops with it; the kernel.panic setting decides whether the machine then reboots on its own.',
   },
+
+  // filesystem guide
+  inotify: {
+    term: 'inotify',
+    definition:
+      'A kernel feature that tells a program when files or directories change. The program adds a watch for each file or directory it cares about, and reads the events from a queue. Editors, sync tools and dev servers use it.',
+  },
+  'native-aio': {
+    term: 'Native async I/O',
+    definition:
+      'The kernel interface where a program calls io_setup() to reserve request slots, then queues reads and writes and carries on while they run. Databases use it. It is not the same as io_uring.',
+  },
 })

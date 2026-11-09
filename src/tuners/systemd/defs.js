@@ -313,10 +313,10 @@ export const SYSTEMD_DEFS = [
     step: 1,
     unit: 'weight',
     zones: [
-      { label: '1–50: yields', min: 1, max: 50 },
-      { label: '100: default', min: 100, max: 100 },
-      { label: '200–1000: prioritised', min: 200, max: 1000 },
-      { label: '10000: max', min: 10000, max: 10000 },
+      { label: '1–50: yields', min: 1, max: 50, note: 'This slice gives way to its siblings while the CPU is busy.' },
+      { label: '100: default', min: 100, max: 100, note: 'The kernel default, the same share as any sibling left unset.' },
+      { label: '200–1000: prioritised', min: 200, max: 1000, note: 'This slice gets a larger share of a busy CPU than its siblings at the default.' },
+      { label: '10000: max', min: 10000, max: 10000, note: 'The largest weight: siblings at the default get very little while this slice keeps the CPU busy.' },
     ],
   },
   {
@@ -374,7 +374,7 @@ export const SYSTEMD_DEFS = [
     unit: 'pct',
     zones: [
       { label: 'below MemoryMax: throttle band' },
-      { label: '100%: no soft limit', min: 100, max: 100 },
+      { label: '100%: no soft limit', min: 100, max: 100, note: 'No soft limit: the slice is never slowed for its own memory use.' },
     ],
   },
   {
@@ -406,7 +406,7 @@ export const SYSTEMD_DEFS = [
     unit: 'pct',
     zones: [
       { label: '≥ MemoryHigh: safety cap' },
-      { label: '100%: no hard limit', min: 100, max: 100 },
+      { label: '100%: no hard limit', min: 100, max: 100, note: 'No hard limit: only the memory of the whole machine bounds the slice.' },
     ],
   },
   {
@@ -434,8 +434,8 @@ export const SYSTEMD_DEFS = [
     step: 1,
     unit: 'pct',
     zones: [
-      { label: '0%: no swap for slice', min: 0, max: 0 },
-      { label: '100%: unlimited swap', min: 100, max: 100 },
+      { label: '0%: no swap for slice', min: 0, max: 0, note: 'The memory of this slice is never moved to swap.' },
+      { label: '100%: unlimited swap', min: 100, max: 100, note: 'No swap limit: the slice may use swap freely.' },
     ],
   },
   {
@@ -466,10 +466,10 @@ export const SYSTEMD_DEFS = [
     step: 1,
     unit: 'weight',
     zones: [
-      { label: '1–50: yields', min: 1, max: 50 },
-      { label: '100: default', min: 100, max: 100 },
-      { label: '200–1000: prioritised', min: 200, max: 1000 },
-      { label: '10000: max', min: 10000, max: 10000 },
+      { label: '1–50: yields', min: 1, max: 50, note: 'This slice gives way to its siblings while the disk is busy, where the disk splits time by weight.' },
+      { label: '100: default', min: 100, max: 100, note: 'The default, the same share as any sibling left unset.' },
+      { label: '200–1000: prioritised', min: 200, max: 1000, note: 'This slice gets a larger share of a busy disk, where the disk splits time by weight.' },
+      { label: '10000: max', min: 10000, max: 10000, note: 'The largest weight: siblings at the default get very little disk time while this slice is busy.' },
     ],
   },
   {

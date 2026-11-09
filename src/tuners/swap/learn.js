@@ -3,8 +3,14 @@
  * swap tuner's twelve settings act on. Data in the frozen Guide shape
  * (src/learn/schema.js), checked by src/learn/contract.test.js. Probe ids
  * name entries in ./probes.js; `[^id]` marks point into each chapter's
- * `sources`; `[[term]]` names an entry in ui/glossary.js.
+ * `sources`; `[[term]]` names an entry in ui/glossary.js. Figure labels
+ * name a part in a few words; what it does is its `does`, shown as a
+ * tooltip on the page and inline on the static page.
  */
+
+/** Pages of 4 kB: the page size on x86-64, which every VM test image runs. */
+const KB_PER_PAGE = 4
+const pages = (path) => ({ probe: 'swap.zoneWatermarks', path, unit: 'pages' })
 
 const VM = 'https://docs.kernel.org/admin-guide/sysctl/vm.html'
 const CONCEPTS = 'https://docs.kernel.org/admin-guide/mm/concepts.html'
@@ -20,10 +26,10 @@ export const LEARN = {
     picture:
       'Think of RAM as your desk and the disk as a filing cabinet. The desk is fast but small. When it fills up, the kernel clears space. It puts back printouts that have a copy in the cabinet. Notes that exist only on the desk go into a spare drawer.',
     cards: [
-      { id: 'programs', title: 'Your programs', does: 'Ask the kernel for memory, and read and write files.', col: 1, row: 1 },
-      { id: 'manager', title: "The kernel's memory manager", does: 'Hands out memory, and decides what to free when it runs short.', col: 1, row: 2, probe: 'swap.vmSysctls' },
+      { id: 'programs', title: 'Your programs', does: 'They ask the kernel for memory, and read and write files.', col: 1, row: 1 },
+      { id: 'manager', title: 'Memory manager', does: 'The part of the kernel that hands out memory, and decides what to free when it runs short.', col: 1, row: 2, probe: 'swap.vmSysctls' },
       { id: 'kswapd', title: 'kswapd', does: 'Frees memory in the background, before programs have to wait.', col: 2, row: 2, probe: 'swap.kswapd' },
-      { id: 'program-memory', title: 'Program memory', does: "Each program's own working data. It has no copy on disk.", col: 1, row: 3, probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' },
+      { id: 'program-memory', title: 'Program memory', does: "Each program's own working data, with no copy on disk.", col: 1, row: 3, probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' },
       { id: 'file-cache', title: 'File cache', does: 'Copies of files kept in RAM, so the next read skips the disk.', col: 2, row: 3, probe: 'swap.memCache', path: 'Cached', unit: 'kB' },
       { id: 'swap', title: 'Swap', does: 'Space where program memory waits when RAM runs short.', col: 1, row: 4, probe: 'swap.swaps' },
       { id: 'files', title: 'Your files', does: 'What the file cache copies, and where changes are written back.', col: 2, row: 4 },
@@ -34,12 +40,21 @@ export const LEARN = {
     ],
     edges: [
       { from: 'programs', to: 'manager', label: 'ask for memory' },
-      { from: 'manager', to: 'kswapd', label: 'wakes it when memory runs low' },
+      { from: 'manager', to: 'kswapd', label: 'wakes when low' },
       { from: 'manager', to: 'program-memory', label: 'hands out pages' },
-      { from: 'kswapd', to: 'file-cache', label: 'drops copies it can read again' },
-      { from: 'program-memory', to: 'swap', label: 'moved out when RAM runs short' },
+      { from: 'kswapd', to: 'file-cache', label: 'drops copies' },
+      { from: 'program-memory', to: 'swap', label: 'moved out' },
       { from: 'file-cache', to: 'files', label: 'changes written back' },
     ],
+    scale: {
+      label: 'RAM',
+      total: { probe: 'swap.memSize', path: 'MemTotal', unit: 'kB' },
+      segments: [
+        { id: 'program-memory', label: 'Program memory', value: { probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' }, does: 'Memory programs wrote to that has no file behind it, `AnonPages` in /proc/meminfo.' },
+        { id: 'file-cache', label: 'File cache', value: { probe: 'swap.memCache', path: 'Cached', unit: 'kB' }, does: 'Copies of files kept in RAM, `Cached` in /proc/meminfo.' },
+        { id: 'rest', label: 'Free or kernel', does: 'Free memory, and what the kernel holds for itself, such as its own caches.' },
+      ],
+    },
   },
   chapters: [
     {
@@ -54,12 +69,12 @@ export const LEARN = {
         kind: 'stack',
         title: 'What the kernel can free',
         layers: [
-          { id: 'programs', label: 'Your programs', kind: 'nodes', nodes: [{ id: 'ask', text: 'A program needs more memory' }] },
+          { id: 'programs', label: 'Your programs', kind: 'nodes', nodes: [{ id: 'ask', text: 'Needs more memory', does: 'A program needs more memory than is free.' }] },
           {
             id: 'reclaim',
             label: 'Reclaim',
             kind: 'nodes',
-            nodes: [{ id: 'choose', text: 'The kernel picks what to free' }],
+            nodes: [{ id: 'choose', text: 'Picks what to free', does: 'The kernel weighs file cache against program memory, as the two settings say.' }],
             values: [
               { probe: 'swap.swappiness', unit: '' },
               { probe: 'swap.vfsCachePressure', unit: '' },
@@ -70,9 +85,9 @@ export const LEARN = {
             label: 'RAM',
             kind: 'nodes',
             nodes: [
-              { id: 'anon', text: 'Program memory', sub: 'no copy on disk', probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' },
-              { id: 'cache', text: 'File cache', sub: 'a copy of a file', probe: 'swap.memCache', path: 'Cached', unit: 'kB' },
-              { id: 'names', text: 'File names and details', sub: 'dentries and inodes', probe: 'swap.dentryState' },
+              { id: 'anon', text: 'Program memory', does: 'It has no copy on disk, so it goes to swap before its RAM is reused.', probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' },
+              { id: 'cache', text: 'File cache', does: 'A copy of a file, which the kernel can drop and read again.', probe: 'swap.memCache', path: 'Cached', unit: 'kB' },
+              { id: 'names', text: 'File names', does: 'Names and details of files the kernel looked up: dentries and inodes.', probe: 'swap.dentryState' },
             ],
           },
           {
@@ -80,8 +95,8 @@ export const LEARN = {
             label: 'Disk',
             kind: 'nodes',
             nodes: [
-              { id: 'swap', text: 'Swap', sub: 'where program memory goes', probe: 'swap.swaps' },
-              { id: 'files', text: 'Your files', sub: 'where the copies came from' },
+              { id: 'swap', text: 'Swap', does: 'Where program memory goes when it leaves RAM.', probe: 'swap.swaps' },
+              { id: 'files', text: 'Your files', does: 'Where the file cache copies came from.' },
             ],
           },
         ],
@@ -137,36 +152,25 @@ export const LEARN = {
         limit: 'Fuel only runs down while you drive. Free memory goes up and down all the time, and each zone of RAM has its own gauge.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Free memory and the three watermarks',
-        layers: [
-          {
-            id: 'gauge',
-            label: 'Free memory in one zone',
-            kind: 'bands',
-            bands: [
-              { id: 'above-high', text: 'Above high: kswapd goes back to sleep' },
-              { id: 'low-high', text: 'Low to high: kswapd, once awake, keeps freeing' },
-              { id: 'min-low', text: 'Min to low: kswapd is awake, programs do not wait yet' },
-              { id: 'below-min', text: 'Below min: a program asking for memory frees some itself, and waits' },
-            ],
-            values: [
-              { probe: 'swap.zoneWatermarks', path: 'Normal.high', unit: 'pages' },
-              { probe: 'swap.zoneWatermarks', path: 'Normal.low', unit: 'pages' },
-              { probe: 'swap.zoneWatermarks', path: 'Normal.min', unit: 'pages' },
-              { probe: 'swap.minFree', unit: 'kB' },
-              { probe: 'swap.watermarkScale', unit: '' },
-            ],
-          },
-          {
-            id: 'helpers',
-            label: 'Who frees memory',
-            kind: 'nodes',
-            nodes: [
-              { id: 'kswapd', text: 'kswapd', sub: 'in the background, programs keep running', probe: 'swap.kswapd' },
-              { id: 'direct', text: 'Direct reclaim', sub: 'the program waits', probe: 'swap.allocstall' },
-            ],
-          },
+        kind: 'gauge',
+        title: 'Free memory in the Normal zone and its three watermarks',
+        axis: 'free pages',
+        marks: [
+          { id: 'min', label: 'min', value: pages('Normal.min'), tone: 'error', does: 'Below it, a program asking for memory frees some itself, and waits.' },
+          { id: 'low', label: 'low', value: pages('Normal.low'), does: 'Below it, kswapd wakes and frees memory in the background.' },
+          { id: 'high', label: 'high', value: pages('Normal.high'), does: 'Above it, kswapd goes back to sleep.' },
+        ],
+        zones: [
+          { id: 'below-min', label: 'programs wait', to: 'min', tone: 'error', does: 'Direct reclaim: a program asking for memory frees some itself, and stalls until enough is free.' },
+          { id: 'min-low', label: 'kswapd awake', from: 'min', to: 'low', tone: 'fit', does: 'kswapd is awake and frees memory in the background, and programs do not wait yet.' },
+          { id: 'low-high', label: 'kswapd keeps freeing', from: 'low', to: 'high', tone: 'fit', does: 'Once awake, kswapd keeps freeing memory until free memory is back above high.' },
+          { id: 'above-high', label: 'kswapd sleeps', from: 'high', does: 'kswapd goes back to sleep, and programs keep running.' },
+        ],
+        // The marks are in pages, MemTotal in kB.
+        zoom: { label: 'All RAM', full: { probe: 'swap.memSize', path: 'MemTotal', unit: 'kB' }, fullPerUnit: KB_PER_PAGE },
+        pins: [
+          { key: 'min_free_kbytes', mark: 'min', value: { probe: 'swap.minFree', unit: 'kB' } },
+          { key: 'watermark_scale_factor', from: 'min', to: 'high', value: { probe: 'swap.watermarkScale', unit: '' } },
         ],
       },
       body: [
@@ -175,8 +179,8 @@ export const LEARN = {
         'vm.min_free_kbytes sets the min level, shared out among zones by size[^min-free]. The kernel picks it from your RAM, and may raise it when [[transparent huge pages|thp]] are on, as on our test machines. A value you write stays, unless memory is added or huge pages are switched on later. vm.watermark_scale_factor sets the gap between the levels. A wider gap wakes kswapd earlier and keeps it working until more is free[^wsf].',
       ],
       pins: [
-        { key: 'min_free_kbytes', layer: 'gauge', here: 'Sets the min mark, a reserve the kernel keeps for its own urgent needs. Most machines don\'t need to change this. Far too low risks hangs; far too high runs memory out at once.' },
-        { key: 'watermark_scale_factor', layer: 'gauge', here: 'Sets the gap between the marks. Wider wakes kswapd earlier and lets it free more before sleeping, so programs stall less. The cost is a little more RAM kept free.' },
+        { key: 'min_free_kbytes', layer: 'min', here: 'Sets the min mark, a reserve the kernel keeps for its own urgent needs. Most machines don\'t need to change this. Far too low risks hangs; far too high runs memory out at once.' },
+        { key: 'watermark_scale_factor', here: 'Sets the gap between the marks. Wider wakes kswapd earlier and lets it free more before sleeping, so programs stall less. The cost is a little more RAM kept free.' },
       ],
       choose: [
         {
@@ -221,9 +225,10 @@ export const LEARN = {
         kind: 'sideBySide',
         title: 'Pages read back from swap in one go, at most',
         states: [
-          { label: 'Default', cells: 8, lit: 8, setting: { key: 'page_cluster', value: 3 } },
-          { label: 'Readahead off', cells: 8, lit: 1, setting: { key: 'page_cluster', value: 0 } },
+          { label: 'Default', cells: 16, lit: 8, asked: 2, setting: { key: 'page_cluster', value: 3 } },
+          { label: 'Readahead off', cells: 16, lit: 1, start: 2, asked: 2, setting: { key: 'page_cluster', value: 0 } },
         ],
+        legend: { asked: 'asked for', lit: 'read along', off: 'stays in swap' },
         backedBy: { vmTest: 'on a swap file it reads ahead at the default and not at 0' },
       },
       body: [
@@ -265,20 +270,32 @@ export const LEARN = {
         limit: 'A pile on a desk survives a power cut. Changes still in RAM are lost when the power goes, so how long they wait matters.',
       },
       figure: {
-        kind: 'timeline',
-        title: 'Changed file data waiting in RAM during a big write',
-        schematic: true,
-        lines: [
-          { id: 'background', label: 'Background writing starts', value: { probe: 'swap.dirtyBackgroundRatio', unit: '%' } },
-          { id: 'ceiling', label: 'Writers must help', value: { probe: 'swap.dirtyRatio', unit: '%' } },
+        kind: 'gauge',
+        title: 'Changed file data waiting in RAM, as a share of available memory',
+        axis: 'dirty data',
+        range: { from: 0, to: 30 },
+        marks: [
+          { id: 'background', label: 'background', value: { probe: 'swap.dirtyBackgroundRatio', unit: '%' }, does: 'Past it, the flusher threads start writing in the background.' },
+          { id: 'ceiling', label: 'limit', value: { probe: 'swap.dirtyRatio', unit: '%' }, tone: 'error', does: 'Past it, a program that keeps writing must write data out itself.' },
         ],
-        // Levels are shares of available memory, so the lines sit at value / 100.
-        curve: [[0, 0.02], [0.1, 0.02], [0.3, 0.1], [0.5, 0.18], [0.6, 0.2], [0.75, 0.2], [0.85, 0.12], [1, 0.04]],
-        events: [
-          { at: 0.1, label: 'A big write starts' },
-          { at: 0.3, label: 'Background writing starts', tone: 'fit' },
-          { at: 0.6, label: 'The writer has to help', tone: 'error' },
-          { at: 0.75, label: 'The write ends' },
+        zones: [
+          { id: 'waiting', label: 'waits in RAM', to: 'background', does: 'Changed data waits in RAM until it grows old or passes the background mark.' },
+          { id: 'flushing', label: 'background writing', from: 'background', to: 'ceiling', tone: 'fit', does: 'The flusher threads write changed data out while programs keep going.' },
+          { id: 'throttled', label: 'writers must help', from: 'ceiling', tone: 'error', does: 'A program that keeps writing must write data out itself, so it slows down.' },
+        ],
+        // Schematic: level 1 is the background mark and 2 the limit, as measured.
+        curve: {
+          points: [[0, 0.2], [0.1, 0.2], [0.3, 1], [0.5, 1.8], [0.6, 2], [0.75, 2], [0.85, 1.2], [1, 0.4]],
+          events: [
+            { at: 0.1, label: 'a big write starts' },
+            { at: 0.3, label: 'flushers start', tone: 'fit', does: 'Dirty data passed the background mark, so the flusher threads start writing.' },
+            { at: 0.6, label: 'the writer helps', tone: 'error', does: 'Dirty data reached the limit, so the program that writes must write data out itself.' },
+            { at: 0.75, label: 'the write ends' },
+          ],
+        },
+        pins: [
+          { key: 'dirty_background_ratio', mark: 'background' },
+          { key: 'dirty_ratio', mark: 'ceiling' },
         ],
       },
       body: [
@@ -335,15 +352,15 @@ export const LEARN = {
         kind: 'stack',
         title: 'What happens to a request for memory',
         layers: [
-          { id: 'request', label: 'A program asks for memory', kind: 'nodes', nodes: [{ id: 'ask', text: 'A request for memory', sub: 'a promise, not RAM yet' }] },
+          { id: 'request', label: 'The request', kind: 'nodes', nodes: [{ id: 'ask', text: 'Request for memory', does: 'A program asks for memory: a promise, not RAM yet.' }] },
           {
             id: 'policy',
             label: 'The kernel answers',
             kind: 'nodes',
             nodes: [
-              { id: 'mode0', text: 'Mode 0', sub: 'refuses obvious overcommits' },
-              { id: 'mode1', text: 'Mode 1', sub: 'always says yes' },
-              { id: 'mode2', text: 'Mode 2', sub: 'refuses past the commit limit' },
+              { id: 'mode0', text: 'Mode 0', does: 'Refuses only obvious overcommits; the default.' },
+              { id: 'mode1', text: 'Mode 1', does: 'Always says yes.' },
+              { id: 'mode2', text: 'Mode 2', does: 'Refuses any promise past the commit limit.' },
             ],
             values: [
               { probe: 'swap.overcommitMemory', unit: 'mode' },
@@ -355,8 +372,8 @@ export const LEARN = {
             label: 'What has been promised',
             kind: 'nodes',
             nodes: [
-              { id: 'committed', text: 'Promised so far', sub: 'Committed_AS', probe: 'swap.memCommit', path: 'Committed_AS', unit: 'kB' },
-              { id: 'limit', text: 'Commit limit', sub: 'CommitLimit', probe: 'swap.memCommit', path: 'CommitLimit', unit: 'kB' },
+              { id: 'committed', text: 'Promised so far', sub: 'Committed_AS', does: 'Everything promised so far, used or not.', probe: 'swap.memCommit', path: 'Committed_AS', unit: 'kB' },
+              { id: 'limit', text: 'Commit limit', sub: 'CommitLimit', does: 'The limit mode 2 enforces: all of swap plus a share of RAM.', probe: 'swap.memCommit', path: 'CommitLimit', unit: 'kB' },
             ],
             values: [
               { probe: 'swap.memCommit', path: 'Committed_AS', unit: 'kB' },
@@ -434,8 +451,8 @@ export const LEARN = {
             label: 'What the kernel does',
             kind: 'nodes',
             nodes: [
-              { id: 'killer', text: 'OOM killer', sub: 'ends one program, the machine runs on' },
-              { id: 'panic', text: 'Kernel panic', sub: 'the whole machine stops' },
+              { id: 'killer', text: 'OOM killer', does: 'Ends one program, and the machine runs on.' },
+              { id: 'panic', text: 'Kernel panic', does: 'The whole machine stops.' },
             ],
             values: [{ probe: 'swap.panicOnOom', unit: '' }],
           },

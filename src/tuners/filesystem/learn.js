@@ -86,7 +86,7 @@ export const LEARN = {
       },
       body: [
         'A program refers to an open file by a small number, a [[file descriptor]]. Each call to open() also creates an entry in a system-wide table of open files[^open]. The kernel enforces a soft limit on descriptors, and a hard limit is the ceiling the soft limit can be raised to[^rlimit]. A program that reaches its limit gets the error EMFILE[^rlimit].',
-        'fs.nr_open puts a ceiling on how far that per-process limit can be raised[^procsys]. The ceiling holds for privileged and unprivileged programs alike[^procsys]. Its default is 1048576[^nr-open]. Trying to raise a hard limit above it fails with EPERM[^rlimit-err].',
+        'fs.nr_open puts a ceiling on how far that per-process limit can be raised[^procsys]. The ceiling holds for privileged and unprivileged programs alike[^procsys]. The kernel default is 1048576[^nr-open], and systemd 240 and later raise it much higher at boot, as on most of our test machines. Trying to raise a hard limit above it fails with EPERM[^rlimit-err].',
         'fs.file-max limits open files for all programs together[^procsys]. Calls that hit it fail with ENFILE, and the kernel log shows a line starting "VFS: file-max limit"[^file-max]. Processes with CAP_SYS_ADMIN can override it[^procsys].',
       ],
       pins: [

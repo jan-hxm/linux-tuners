@@ -8,10 +8,15 @@
  *
  * The /sys/fs/cgroup paths are the cgroup v2 layout. On an image that boots
  * the older v1 or hybrid layout (Ubuntu 18.04, systemd 237) they read as
- * absent, which is what the figures should say there. The manager defaults
- * (DefaultTasksMax, DefaultLimitNOFILE, DefaultLimitMEMLOCK and the
- * accounting toggles) are only visible through `systemctl show`, which no
- * probe kind runs, so the figures show their documented defaults as text.
+ * absent, which is what the figures should say there.
+ *
+ * The manager defaults (DefaultTasksMax, the DefaultLimit* pairs and the
+ * accounting toggles) are only visible through `systemctl show`, read by
+ * the `systemctl` kind. Names are the Manager object's D-Bus properties
+ * (org.freedesktop.systemd1(5)). A property an older or newer systemd
+ * doesn't export reads as absent: DefaultIOAccounting reaches D-Bus only in
+ * 254, and DefaultCPUAccounting is gone from 258, where CPU accounting is
+ * always on.
  */
 
 const SLICE = '/sys/fs/cgroup/system.slice'
@@ -45,4 +50,17 @@ export const PROBES = {
   'systemd.pidMax': { kind: 'sysctl', name: 'kernel.pid_max' },
   'systemd.threadsMax': { kind: 'sysctl', name: 'kernel.threads-max' },
   'systemd.nrOpen': { kind: 'sysctl', name: 'fs.nr_open' },
+
+  // The manager defaults every service starts from, and system.slice's own task limit.
+  'systemd.defaultTasksMax': { kind: 'systemctl', property: 'DefaultTasksMax' },
+  'systemd.defaultLimitNofile': { kind: 'systemctl', property: 'DefaultLimitNOFILE' },
+  'systemd.defaultLimitNofileSoft': { kind: 'systemctl', property: 'DefaultLimitNOFILESoft' },
+  'systemd.defaultLimitMemlock': { kind: 'systemctl', property: 'DefaultLimitMEMLOCK' },
+  'systemd.defaultLimitMemlockSoft': { kind: 'systemctl', property: 'DefaultLimitMEMLOCKSoft' },
+  'systemd.defaultMemoryAccounting': { kind: 'systemctl', property: 'DefaultMemoryAccounting' },
+  'systemd.defaultTasksAccounting': { kind: 'systemctl', property: 'DefaultTasksAccounting' },
+  'systemd.defaultIoAccounting': { kind: 'systemctl', property: 'DefaultIOAccounting' },
+  'systemd.defaultIpAccounting': { kind: 'systemctl', property: 'DefaultIPAccounting' },
+  'systemd.defaultCpuAccounting': { kind: 'systemctl', property: 'DefaultCPUAccounting' },
+  'systemd.systemSliceTasksMax': { kind: 'systemctl', property: 'TasksMax', unit: 'system.slice' },
 }

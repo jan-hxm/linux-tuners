@@ -950,6 +950,7 @@ freshness check compares:
 | `zoneinfo` | none | `cat /proc/zoneinfo` | `{ <zone>: { min, low, high } }` in pages; node 0's zones by name, others `node1-Normal` | present |
 | `vmstatKeys` | `prefix: 'allocstall'` | `cat /proc/vmstat` | the keys `<prefix>` or `<prefix>_*`, sorted (one `allocstall` before 4.8, per zone after) | exact |
 | `meminfoKeys` | `keys: ['MemTotal', ...]` | `cat /proc/meminfo` | `{ <key>: <number as printed> }`, keys the kernel lacks left out | present |
+| `systemctl` | `property: 'DefaultTasksMax'` (`/^[A-Z][A-Za-z0-9]{1,63}$/`), optional `unit: 'system.slice'` (letters, digits, `_ . @ -`, no leading `-`, a unit suffix) | `systemctl show --no-pager --property=<property> --value [<unit>]` as the normal user | as `sysctl` ("infinity" and "yes" stay text); empty output, a property that systemd doesn't export, is absent | present |
 
 What decides absent: a non-zero exit (not stderr, where sudo can warn), a
 missing file, or nothing to parse; the reason is the first stderr line or

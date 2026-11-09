@@ -31,7 +31,7 @@ describe('command templates', () => {
   })
 
   it('is the closed set from the plan, each with a compare mode', () => {
-    expect(Object.keys(KINDS).sort()).toEqual(['diskQueue', 'file', 'meminfoKeys', 'sysctl', 'sysfs', 'thread', 'vmstatKeys', 'zoneinfo'])
+    expect(Object.keys(KINDS).sort()).toEqual(['diskQueue', 'file', 'meminfoKeys', 'sysctl', 'sysfs', 'systemctl', 'thread', 'vmstatKeys', 'zoneinfo'])
     for (const k of Object.values(KINDS)) expect(['exact', 'present']).toContain(k.compare)
   })
 
@@ -120,6 +120,59 @@ describe('diskQueue', () => {
     expect(checkProbe('demo.b', { kind: 'diskQueue', disk: 'sdc', attr: 'rotational' }, 'demo')).not.toEqual([])
     expect(checkProbe('demo.c', { kind: 'diskQueue', disk: 'ssd', attr: '../../x' }, 'demo')).not.toEqual([])
     expect(checkProbe('demo.d', { kind: 'diskQueue', disk: 'toString', attr: 'rotational' }, 'demo')).not.toEqual([])
+  })
+})
+
+describe('systemctl', () => {
+  const p = { kind: 'systemctl', property: 'DefaultTasksMax' }
+  it('quotes the property, and the unit when there is one, into a fixed command', () => {
+    expect(KINDS.systemctl.command(p)).toBe("systemctl show --no-pager '--property=DefaultTasksMax' --value")
+    expect(KINDS.systemctl.command({ kind: 'systemctl', property: 'TasksMax', unit: 'system.slice' }))
+      .toBe("systemctl show --no-pager '--property=TasksMax' --value 'system.slice'")
+  })
+  // Output as systemctl-show(1) --value prints it: the bare value, one line.
+  it('reads a whole number as a number, and infinity or yes/no as text', () => {
+    expect(entry(p, ok('4915\n'))).toEqual({ status: 'ok', value: 4915 })
+    expect(entry(p, ok('infinity\n'))).toEqual({ status: 'ok', value: 'infinity' })
+    expect(entry({ kind: 'systemctl', property: 'DefaultMemoryAccounting' }, ok('yes\n'))).toEqual({ status: 'ok', value: 'yes' })
+    expect(entry(p, ok('18446744073709551615\n'))).toEqual({ status: 'ok', value: '18446744073709551615' })
+  })
+  it('is absent when the property is unknown (empty output) or systemctl fails', () => {
+    expect(entry({ kind: 'systemctl', property: 'DefaultCPUAccounting' }, ok('\n')))
+      .toEqual({ status: 'absent', reason: 'no DefaultCPUAccounting property in this systemd' })
+    expect(entry(p, ok(''))).toEqual({ status: 'absent', reason: 'no DefaultTasksMax property in this systemd' })
+    expect(entry(p, { code: 1, stdout: '', stderr: 'Failed to connect to bus: No such file or directory\n' }))
+      .toEqual({ status: 'absent', reason: 'Failed to connect to bus: No such file or directory' })
+    expect(entry(p, ok('1\n2\n'))).toEqual({ status: 'absent', reason: 'unexpected output' })
+  })
+  it('accepts only property names and unit names, so nothing else reaches the shell', () => {
+    expect(checkProbe('demo.a', p, 'demo')).toEqual([])
+    expect(checkProbe('demo.b', { kind: 'systemctl', property: 'TasksMax', unit: 'system.slice' }, 'demo')).toEqual([])
+    expect(checkProbe('demo.c', { kind: 'systemctl', property: 'TasksMax', unit: 'getty@tty1.service' }, 'demo')).toEqual([])
+    const bad = [
+      { property: "DefaultTasksMax'; reboot; '" },
+      { property: 'DefaultTasksMax --all' },
+      { property: 'defaultTasksMax' },
+      { property: 'D' },
+      { property: `D${'a'.repeat(64)}` },
+      { property: '$(reboot)' },
+      { property: ['DefaultTasksMax'] },
+      {},
+      { property: 'TasksMax', unit: 'system' },
+      { property: 'TasksMax', unit: 'system.slice; reboot' },
+      { property: 'TasksMax', unit: "system.slice' && reboot '.slice" },
+      { property: 'TasksMax', unit: '$(reboot).slice' },
+      { property: 'TasksMax', unit: '-.slice' },
+      { property: 'TasksMax', unit: '--all.slice' },
+      { property: 'TasksMax', unit: '../x.slice' },
+      { property: 'TasksMax', unit: 'a b.slice' },
+      { property: 'TasksMax', unit: 'system.slice\n' },
+      { property: 'TasksMax', unit: 'system.exe' },
+      { property: 'TasksMax', unit: '' },
+      { property: 'TasksMax', unit: null },
+      { property: 'TasksMax', path: '/etc' },
+    ]
+    for (const b of bad) expect(checkProbe('demo.x', { kind: 'systemctl', ...b }, 'demo'), JSON.stringify(b)).not.toEqual([])
   })
 })
 
@@ -284,7 +337,7 @@ describe('freshness', () => {
 describe('loading probes', () => {
   it('finds every probes.js under a tuners folder', async () => {
     const probes = await loadProbes(join(FIXTURES, 'tuners'))
-    expect(Object.keys(probes).sort()).toEqual(['demo.allocstall', 'demo.kswapd', 'demo.meminfo', 'demo.minFree', 'demo.ssdRotational', 'demo.swaps', 'demo.thp', 'demo.zoneWatermarks'])
+    expect(Object.keys(probes).sort()).toEqual(['demo.allocstall', 'demo.kswapd', 'demo.meminfo', 'demo.minFree', 'demo.ssdRotational', 'demo.swaps', 'demo.tasksMax', 'demo.thp', 'demo.zoneWatermarks'])
     expect(new Set(Object.values(probes).map((p) => p.kind))).toEqual(new Set(Object.keys(KINDS)))
   })
   it('refuses a folder with any bad probe, naming each', async () => {

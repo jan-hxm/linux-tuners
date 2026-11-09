@@ -7,5 +7,6 @@ export const PROBES = {
   'demo.kswapd': { kind: 'thread', name: 'kswapd0' },
   'demo.zoneWatermarks': { kind: 'zoneinfo' },
   'demo.allocstall': { kind: 'vmstatKeys', prefix: 'allocstall' },
+  'demo.tasksMax': { kind: 'systemctl', property: 'DefaultTasksMax' },
   'demo.meminfo': { kind: 'meminfoKeys', keys: ['MemTotal', 'SwapTotal'] },
 }

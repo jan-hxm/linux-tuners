@@ -10,6 +10,6 @@ export const PROBES = {
   'demo.stalls': { kind: 'vmstatKeys', prefix: 'allocstall' },
   'demo.reserve': { kind: 'sysctl', name: 'vm.min_free_kbytes' },
   'demo.swaps': { kind: 'file', path: '/proc/swaps', exists: true },
-  'demo.meminfo': { kind: 'meminfoKeys', keys: ['Cached', 'SwapTotal'] },
+  'demo.meminfo': { kind: 'meminfoKeys', keys: ['MemTotal', 'AnonPages', 'Cached', 'SwapTotal'] },
   'demo.zram': { kind: 'file', path: '/sys/block/zram0', exists: true },
 }

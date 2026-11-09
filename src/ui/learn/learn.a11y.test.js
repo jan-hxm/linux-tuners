@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 // The axe sweep of src/a11y.test.js, over the learning-page figures: every
-// fixture chapter in each of its states (each pin, each kernel, the chooser's
-// result) and the parts map, with the viewer's scheme set to light and to
+// fixture chapter in each of its states (each pin, each open tooltip, each
+// kernel, the chooser's result) and the parts map, with the viewer's scheme set to light and to
 // dark. happy-dom has no stylesheet, so contrast isn't measured here (the
 // tokens are, in ui/theme.test.js) and both schemes check structure; the
 // browser pass in Design.md §7 covers the rest. The guide pages themselves
@@ -76,6 +76,18 @@ describe('learning figures axe sweep', { timeout: 30_000 }, () => {
       for (const pin of pins.findAll('button')) await pin.trigger('click')
       await pins.findAll('button').at(-1).trigger('click')
     }
+    expect(await violations()).toEqual([])
+
+    // Every figure tooltip open in turn (figure parts, scale legend, gauge
+    // marks and zones), and every pin drawn on a gauge.
+    const tips = wrapper.findAll('button[aria-describedby]')
+    expect(tips.length).toBeGreaterThan(10)
+    for (const tip of tips) {
+      await tip.trigger('click')
+      expect(document.body.querySelector('[data-tip]')).not.toBeNull()
+    }
+    expect(await violations()).toEqual([])
+    for (const pin of wrapper.findAll('[data-gauge-pin]')) await pin.trigger('click')
     expect(await violations()).toEqual([])
 
     // Each kernel, the ones without a capture too.

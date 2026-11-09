@@ -3,8 +3,10 @@
  * One chapter of a study guide, in the template's order (Design.md §5
  * "Learning pages > Figures"): the one-line summary, the picture box, the
  * figure with its pins and margin panel, the body with its sources in the
- * margin, the settings here, the chooser, what you notice if it's wrong,
- * where to look on your machine, and the sources.
+ * margin, the chooser, what you notice if it's wrong, where to look on your
+ * machine, and the sources. Each thing is said once: the pin panel is the
+ * one place a setting is explained on screen (the static page lists every
+ * setting with its `here` as well), and the look command has its own part.
  *
  * The kernel switcher (which VM capture the numbers come from) is a group of
  * pressed-state buttons, remembered per viewer (kernelPref.js) and shared by
@@ -21,11 +23,12 @@ import { followInPageLink } from '@/ui/inPageLink.js'
 import StackFigure from './StackFigure.vue'
 import Timeline from './Timeline.vue'
 import SideBySide from './SideBySide.vue'
+import Gauge from './Gauge.vue'
 import Chooser from './Chooser.vue'
 import DecisionFlow from './DecisionFlow.vue'
 import { imageIn, setKernel } from './kernelPref.js'
 import {
-  defName, defTitle, hostOf, kernelOf, measuredText, numberedSources, pinRefs, safeHref, sameOnEveryImage, splitFootnotes, stackRefs,
+  defName, defTitle, figureRefs as refsOf, hostOf, kernelOf, measuredText, numberedSources, pinRefs, safeHref, sameOnEveryImage, splitFootnotes,
 } from './figureText.js'
 
 const props = defineProps({
@@ -43,7 +46,7 @@ const props = defineProps({
   headingLevel: { type: Number, default: 2, validator: (n) => n >= 1 && n <= 5 },
 })
 
-const FIGURES = { stack: StackFigure, timeline: Timeline, sideBySide: SideBySide }
+const FIGURES = { stack: StackFigure, timeline: Timeline, sideBySide: SideBySide, gauge: Gauge }
 
 const uid = useId()
 const headId = `${uid}-title`
@@ -59,13 +62,9 @@ const evidence = computed(() => {
 
 const figure = computed(() => props.chapter.figure)
 const figureComponent = computed(() => FIGURES[figure.value?.kind] ?? null)
-const figureRefs = computed(() => {
-  const f = figure.value
-  if (!f) return []
-  if (f.kind === 'stack') return stackRefs(f)
-  if (f.kind === 'timeline') return f.lines.map((l) => l.value)
-  return []
-})
+const figureRefs = computed(() => refsOf(figure.value))
+/** Pins the figure draws itself (a gauge's), whose buttons in the row show only below md. */
+const drawnKeys = computed(() => new Set(figure.value?.kind === 'gauge' ? (figure.value.pins ?? []).map((p) => p.key) : []))
 
 // Every value the same on every image: no picker, one caption (Design.md
 // "Learning pages > Figures").
@@ -138,7 +137,12 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
           :figure="figure"
           :evidence="evidence"
           :image-id="imageId"
-          v-bind="figure.kind === 'sideBySide' ? { defsByKey } : { highlight: selected?.layer ?? null, sameOn }"
+          :defs-by-key="defsByKey"
+          :highlight="selected?.layer ?? null"
+          :same-on="sameOn"
+          :selected-key="selectedKey"
+          v-bind="figure.kind === 'gauge' ? { controls: panelId } : {}"
+          @select="togglePin"
         />
         <div v-if="pins.length" role="group" aria-label="Settings in this figure" class="mt-4 flex flex-wrap gap-2" data-pins>
           <button
@@ -146,7 +150,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
             :key="pin.key"
             type="button"
             class="inline-flex min-h-6 items-center gap-2 border px-2 py-1 font-mono text-[13px] text-ink"
-            :class="pin.key === selectedKey ? 'border-fit bg-fit-tint' : 'border-rule-strong bg-paper hover:bg-paper-hover'"
+            :class="[pin.key === selectedKey ? 'border-fit bg-fit-tint' : 'border-rule-strong bg-paper hover:bg-paper-hover', drawnKeys.has(pin.key) ? 'md:hidden' : '']"
             :aria-pressed="pin.key === selectedKey"
             :aria-controls="panelId"
             @click="togglePin(pin.key)"
@@ -168,10 +172,6 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
               <li v-for="vref in selectedRefs" :key="`${vref.probe}:${vref.path}`" class="break-words">{{ measuredText(vref, evidence) }}</li>
             </ul>
             <p class="m-0 text-[13px] text-ink-2">{{ sameOn ? `The same on all ${sameOn} test kernels` : selectedKernel ? `${imageLabel}, kernel ${selectedKernel}` : `Not measured on ${imageLabel} yet` }}</p>
-          </template>
-          <template v-if="chapter.look?.cmd">
-            <p class="m-0 mt-3 text-[13px] font-medium text-quiet">Look on your machine</p>
-            <code class="block break-words font-mono text-[13px] text-ink">{{ chapter.look.cmd }}</code>
           </template>
           <p v-if="docsHref" class="m-0 mt-3 text-[13px] text-ink-2">
             Source: <a :href="docsHref" :class="LINK" target="_blank" rel="noopener">{{ hostOf(docsHref) }} ↗</a>
@@ -206,18 +206,6 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
         <div v-else aria-hidden="true" />
       </template>
     </div>
-
-    <template v-if="pins.length">
-      <component :is="sub" :class="SUBHEAD">Settings here</component>
-      <ul class="m-0 list-none p-0" data-part="settings">
-        <li v-for="pin in pins" :key="pin.key" class="border-b border-rule py-3 text-[15px] leading-[1.55]">
-          <p class="m-0 break-words font-mono text-ink">{{ defName(pin.key, defsByKey) }}</p>
-          <p v-if="defTitle(pin.key, defsByKey)" class="m-0 text-ink-2">{{ defTitle(pin.key, defsByKey) }}</p>
-          <p class="m-0 text-ink"><RichText :text="pin.here" /></p>
-          <a v-if="tune(pin.key)" :href="tune(pin.key)" class="inline-flex min-h-6 items-center text-ink" :class="LINK">Tune it</a>
-        </li>
-      </ul>
-    </template>
 
     <template v-if="chapter.choose?.length">
       <component :is="sub" :class="SUBHEAD">Should you change it?</component>

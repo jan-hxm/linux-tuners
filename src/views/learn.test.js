@@ -91,7 +91,7 @@ describe('a live guide', { timeout: 30_000 }, () => {
     const card = w.get('[data-guides] li')
     expect(card.get('h2 a').attributes('href')).toBe('/learn/demo')
     expect(card.text()).toContain('fixture data')
-    expect(card.text()).toContain('4 chapters')
+    expect(card.text()).toContain('5 chapters')
     expect(card.text()).toContain('5 min read')
     expect(w.get('header a[aria-current="page"]').text()).toBe('Learn')
   })
@@ -100,9 +100,9 @@ describe('a live guide', { timeout: 30_000 }, () => {
     const { wrapper: w } = await mountAt('/learn/demo')
     expect(w.get('h1').text()).toBe(DEMO_LEARN.title)
     expect(w.get('nav[aria-label="Breadcrumb"]').text()).toContain('Learn')
-    expect(w.get('[data-facts]').findAll('li').map((li) => li.text())).toEqual(['4 chapters', '5 settings', '5 min read', 'Figures measured on 5 kernels'])
+    expect(w.get('[data-facts]').findAll('li').map((li) => li.text())).toEqual(['5 chapters', '7 settings', '5 min read', 'Figures measured on 5 kernels'])
     expect(w.get('[data-tune-link]').attributes('href')).toBe('/swap')
-    expect(w.get('#start-here [role="img"]').attributes('aria-label')).toContain('Parts map.')
+    expect(w.get('#start-here [role="figure"]').attributes('aria-label')).toContain('Parts map.')
     // The map of chapters, with the settings each pins.
     const map = w.findAll('[data-chapter-map] > li')
     expect(map).toHaveLength(DEMO_LEARN.chapters.length)
@@ -126,7 +126,7 @@ describe('a live guide', { timeout: 30_000 }, () => {
 
   it('links each setting to the tuner with a focus query, never a hash', async () => {
     const { wrapper: w } = await mountAt('/learn/demo')
-    const tune = w.findAll('[data-part="settings"] a').map((a) => a.attributes('href'))
+    const tune = w.findAll('[data-pin-panel] a:not([target])').map((a) => a.attributes('href'))
     expect(tune).toContain('/swap?focus=reserve_kbytes')
     for (const href of tune) expect(href).not.toContain('#')
   })

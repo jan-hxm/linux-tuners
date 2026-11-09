@@ -18,6 +18,18 @@ const ksm = (anchor, name) => ({ url: `${MM}/ksm.html#${anchor}`, label: `Kernel
 const vm = (anchor, name) => ({ url: `${VM}#${anchor}`, label: `sysctl/vm: ${name}` })
 const man2 = (page, anchor) => ({ url: `https://man7.org/linux/man-pages/man2/${page}.2.html#${anchor}`, label: `${page}(2): ${anchor}` })
 
+/**
+ * One example pool behind the first chapter: a database that reserved 1,024
+ * huge pages of the default size, with room for 512 more on demand. The idle
+ * test guests reserve none, so this is an example the page labels as such.
+ */
+const POOL = {
+  inUse: { example: 600, unit: 'pages', label: 'Pages in use' },
+  size: { example: 1024, unit: 'pages', label: 'Pool size' },
+  extra: { example: 512, unit: 'pages', label: 'Extra allowed' },
+  ceiling: { example: 1536, unit: 'pages', label: 'Pool plus extra' },
+}
+
 export const LEARN = {
   slug: 'huge-pages',
   title: 'How Linux uses huge pages',
@@ -56,49 +68,23 @@ export const LEARN = {
         limit: 'A restaurant can rearrange its floor at any moment. A huge page needs a free block of memory in one piece, so a pool asked for late may come up short.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Where a reserved huge page sits',
-        layers: [
-          {
-            id: 'programs',
-            label: 'Your programs',
-            kind: 'nodes',
-            nodes: [{ id: 'ask', text: 'Asks for huge pages', sub: 'mmap or SysV memory', does: 'A program that names huge pages when it asks for memory.' }],
-          },
-          {
-            id: 'pool',
-            label: 'The pool',
-            kind: 'nodes',
-            nodes: [
-              { id: 'total', text: 'Pages in pool', sub: 'HugePages_Total', does: 'All huge pages the kernel holds in reserve.' },
-              { id: 'free', text: 'Not yet used', sub: 'HugePages_Free', does: 'Pool pages no program has touched yet.' },
-              { id: 'reserved', text: 'Promised, unused', sub: 'HugePages_Rsvd', does: 'Pages promised to a program that has not used them yet.' },
-              { id: 'surplus', text: 'Extra pages', sub: 'HugePages_Surp', does: 'Pages taken beyond the pool, returned when unused.' },
-            ],
-            values: [
-              { probe: 'hugepages.poolMeminfo', path: 'HugePages_Total', unit: 'pages' },
-              { probe: 'hugepages.poolMeminfo', path: 'HugePages_Free', unit: 'pages' },
-              { probe: 'hugepages.poolMeminfo', path: 'HugePages_Rsvd', unit: 'pages' },
-              { probe: 'hugepages.poolMeminfo', path: 'HugePages_Surp', unit: 'pages' },
-              { probe: 'hugepages.poolMeminfo', path: 'Hugepagesize', unit: 'kB' },
-            ],
-          },
-          {
-            id: 'settings',
-            label: 'The two settings',
-            kind: 'nodes',
-            nodes: [
-              { id: 'size', text: 'vm.nr_hugepages', sub: 'pool size', does: 'How many pages the pool keeps.', probe: 'hugepages.poolPages' },
-              { id: 'grow', text: 'vm.nr_overcommit_hugepages', sub: 'extra allowed', does: 'How many extra pages the pool may take on demand.', probe: 'hugepages.surplusPages' },
-            ],
-          },
-          {
-            id: 'ram',
-            label: 'Normal memory',
-            kind: 'nodes',
-            nodes: [{ id: 'rest', text: 'Everything else', sub: 'programs and cache', does: 'What the pool leaves for programs and file cache.' }],
-            values: [{ probe: 'hugepages.memTotal', path: 'MemTotal', unit: 'kB' }],
-          },
+        kind: 'gauge',
+        title: 'An example pool of huge pages, in use and free',
+        axis: 'huge pages',
+        marks: [
+          { id: 'in-use', label: 'Pages in use', value: POOL.inUse, does: 'An example: pool pages that programs have touched, so nothing else can use them.' },
+          { id: 'pool', label: 'Pool size', value: POOL.size, does: 'An example pool: `vm.nr_hugepages` pages are kept in reserve, used or not.' },
+          { id: 'ceiling', label: 'Pool plus extra', tone: 'error', value: POOL.ceiling, does: 'The most the pool may reach when it takes extra pages on demand.' },
+        ],
+        zones: [
+          { id: 'used', label: 'in use now', to: 'in-use', tone: 'fit', does: 'Pages a program has touched.' },
+          { id: 'reserved', label: 'held back, unused', from: 'in-use', to: 'pool', does: 'Pool pages no program has touched yet, and nothing else may use them.' },
+          { id: 'extra', label: 'extra on demand', from: 'pool', to: 'ceiling', does: 'Surplus pages the pool may take from normal memory, and return when unused.' },
+          { id: 'refused', label: 'no more pages', from: 'ceiling', tone: 'error', does: 'A program asking for more huge pages than this gets none.' },
+        ],
+        pins: [
+          { key: 'nr_hugepages', mark: 'pool' },
+          { key: 'nr_overcommit_hugepages', mark: 'ceiling', value: POOL.extra },
         ],
       },
       body: [
@@ -107,8 +93,8 @@ export const LEARN = {
         '`vm.nr_overcommit_hugepages` lets the pool grow past that number when programs ask for more. These surplus pages come from the normal page pool and return to it when unused[^overview]. The pool may then be as large as `nr_hugepages` plus `nr_overcommit_hugepages`[^vmsurplus]. Whether pages can be found depends on contiguous memory being free at that moment[^overview].',
       ],
       pins: [
-        { key: 'nr_hugepages', layer: 'size', here: 'How many huge pages the kernel keeps for programs that ask. Nothing else can use them. Size it to what the program needs. Most machines don\'t need to change this.' },
-        { key: 'nr_overcommit_hugepages', layer: 'grow', here: 'How many extra huge pages the pool may take on demand. Unused ones go back to normal memory, but may not be there when asked. Leave it at 0 unless the program can cope.' },
+        { key: 'nr_hugepages', layer: 'pool', here: 'How many huge pages the kernel keeps for programs that ask. Nothing else can use them. Size it to what the program needs. Most machines don\'t need to change this.' },
+        { key: 'nr_overcommit_hugepages', layer: 'ceiling', here: 'How many extra huge pages the pool may take on demand. Unused ones go back to normal memory, but may not be there when asked. Leave it at 0 unless the program can cope.' },
       ],
       choose: [
         {
@@ -154,6 +140,7 @@ export const LEARN = {
       },
       figure: {
         kind: 'modes',
+        kernels: true,
         title: 'Which memory may get a huge page',
         rows: [
           {
@@ -345,6 +332,7 @@ export const LEARN = {
       },
       figure: {
         kind: 'compare',
+        kernels: true,
         title: 'Memory mappings one process may hold',
         axis: 'mappings',
         scale: 'linear',
@@ -352,6 +340,10 @@ export const LEARN = {
           {
             id: 'cap', label: 'Per process', tone: 'fit', value: { probe: 'hugepages.mapCount', unit: '' },
             does: 'The most mappings one process may hold, counting malloc, mmap, mprotect, madvise and loaded shared libraries.',
+          },
+          {
+            id: 'many', label: 'Program with many maps', tone: 'error', value: { example: 200000, unit: '', label: 'Program with many maps' },
+            does: 'An example program that needs more mappings than the older default allows.',
           },
         ],
         pins: [{ key: 'max_map_count', bar: 'cap' }],

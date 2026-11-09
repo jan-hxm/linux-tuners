@@ -44,9 +44,10 @@ describe('systemd validate', () => {
     expect(ids(issues)).toContain('cgroup-v1')
   })
 
-  it('warns when memory limits are set without memory accounting', () => {
-    const { hw, params } = setup('general', { default_memory_accounting: 0, memory_max: 80 })
-    expect(ids(validate(hw, params))).toContain('memlimit-without-accounting')
+  // systemd turns the controller on for a unit with a limit set, accounting or not.
+  it('does not warn about a memory or task limit with its accounting off', () => {
+    const { hw, params } = setup('general', { default_memory_accounting: 0, memory_max: 80, default_tasks_accounting: 0 })
+    expect(validate(hw, params).filter((i) => i.params.includes('default_memory_accounting') || i.params.includes('default_tasks_accounting'))).toEqual([])
   })
 
   it('surfaces an info note when a slice is pinned out of swap', () => {

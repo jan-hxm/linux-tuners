@@ -78,30 +78,10 @@ export function validate(hw, p, facts = {}) {
     })
   }
 
-  // Memory limits do nothing without memory accounting.
-  if (p.default_memory_accounting === 0 && (highSet || maxSet)) {
-    issues.push({
-      id: 'memlimit-without-accounting',
-      level: 'warn',
-      blocking: false,
-      params: ['default_memory_accounting', 'memory_high', 'memory_max'],
-      message: 'MemoryHigh/MemoryMax are only enforced when memory accounting is enabled.',
-      fix: 'Turn on DefaultMemoryAccounting, or leave MemoryHigh and MemoryMax at 100%.',
-    })
-  }
-
-  // TasksMax does nothing without tasks accounting.
-  const tasksCapped = p.tasks_max < hw.pidMax || p.default_tasks_max < hw.pidMax
-  if (p.default_tasks_accounting === 0 && tasksCapped) {
-    issues.push({
-      id: 'tasksmax-without-accounting',
-      level: 'warn',
-      blocking: false,
-      params: ['default_tasks_accounting', 'tasks_max', 'default_tasks_max'],
-      message: 'TasksMax/DefaultTasksMax are only enforced when tasks accounting is enabled.',
-      fix: 'Turn on DefaultTasksAccounting.',
-    })
-  }
+  // No warning for a memory or task limit with its accounting off: systemd
+  // turns the controller on for any unit with a limit set (MemoryMax=,
+  // TasksMax=, or a DefaultTasksMax= copied into the unit), see
+  // systemd.resource-control(5) and unit_get_own_mask() in cgroup.c.
 
   // No limit can pass fs.nr_open: units asking for more get fs.nr_open.
   if (facts.nrOpen !== undefined && p.default_limit_nofile_hard > facts.nrOpen) {

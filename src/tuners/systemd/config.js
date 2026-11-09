@@ -56,9 +56,9 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   } else {
     manager.push(commentLine('DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)'))
   }
-  manager.push(...iniDirective('DefaultMemoryAccounting', yesNo(t.default_memory_accounting), 'per-unit memory accounting (required for memory limits)'))
+  manager.push(...iniDirective('DefaultMemoryAccounting', yesNo(t.default_memory_accounting), 'per-unit memory accounting (units with a limit count either way)'))
   manager.push(...iniDirective('DefaultIOAccounting', yesNo(t.default_io_accounting), 'per-unit block-I/O accounting'))
-  manager.push(...iniDirective('DefaultTasksAccounting', yesNo(t.default_tasks_accounting), 'per-unit task counting (required for TasksMax)'))
+  manager.push(...iniDirective('DefaultTasksAccounting', yesNo(t.default_tasks_accounting), 'per-unit task counting (units with a TasksMax count either way)'))
   manager.push(...iniDirective('DefaultIPAccounting', yesNo(t.default_ip_accounting), 'per-unit network accounting (eBPF)'))
   manager.push(...iniDirective('DefaultTasksMax', t.default_tasks_max, `default per-unit task cap (~${pctOfPid(params.default_tasks_max, hardware.pidMax)} of pid_max)`))
   manager.push(...iniDirective('DefaultLimitNOFILE', `${t.default_limit_nofile_soft}:${t.default_limit_nofile_hard}`, 'default open-file-descriptor soft:hard limit'))

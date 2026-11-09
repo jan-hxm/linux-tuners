@@ -80,21 +80,21 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Track per-unit memory usage for every service by default.',
     longDesc: {
       what: [
-        'Enables memory accounting for all units, the prerequisite for MemoryHigh=/MemoryMax= limits to be enforced and for `systemctl status` to show a Memory: line. Maps to the per-unit MemoryAccounting= setting.',
+        'Enables memory accounting for all units, so `systemctl status` shows a Memory: line for each and `systemd-cgtop` can rank them. Maps to the per-unit MemoryAccounting= setting. A unit with a memory limit (MemoryHigh=, MemoryMax=, MemorySwapMax=) gets the memory controller turned on either way.',
       ],
       when: [
-        'systemd defaults this to yes on modern systems. Keep it on: memory limits silently do nothing without it, and on [[cgroup]] v2 the memory controller is the one you most want telemetry from.',
+        'systemd defaults this to yes on modern systems. Keep it on: limits still apply without it, but you lose the per-unit numbers for every unit without one, and on [[cgroup]] v2 the memory controller is the one you most want telemetry from.',
       ],
     },
-    tuningTip: 'Leave it on; MemoryHigh/MemoryMax limits are only enforced when memory accounting is active.',
+    tuningTip: 'Leave it on for per-unit memory figures; MemoryHigh/MemoryMax limits apply either way, since a limit turns the controller on for its unit.',
     kernelDocsUrl: `${SYSTEM_CONF}#DefaultMemoryAccounting=`,
-    contextNote: 'Required on container hosts: pod/container memory limits rely on per-unit memory accounting.',
+    contextNote: 'On container hosts it shows the memory of every container unit, including those without a limit.',
     kernelDefault: 1,
     kernelMin: 0,
     kernelMax: 1,
     step: 1,
     unit: 'bool',
-    toggleLabels: { on: 'Memory accounting ENABLED (limits enforceable)', off: 'Memory accounting off (limits will not be enforced)' },
+    toggleLabels: { on: 'Memory accounting ENABLED for all units', off: 'Memory accounting off (units with a limit still count)' },
   },
   {
     key: 'default_io_accounting',
@@ -134,21 +134,21 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Count tasks (processes + threads) per unit, enabling TasksMax.',
     longDesc: {
       what: [
-        'Enables the pids controller for all units so the number of tasks (processes and threads) each unit has spawned is counted and `systemctl status` shows a Tasks: line. It underpins TasksMax= enforcement.',
+        'Enables the pids controller for all units so the number of tasks (processes and threads) each unit has spawned is counted and `systemctl status` shows a Tasks: line. A unit with a TasksMax= (including the one DefaultTasksMax= gives it) gets the pids controller turned on either way.',
       ],
       when: [
-        'systemd defaults this to yes. With it on, a unit that fork-bombs is capped at its TasksMax instead of exhausting the system-wide PID space and taking the box down.',
+        'systemd defaults this to yes. Keep it on to see the task count of every unit; the cap that stops a fork bomb from exhausting the system-wide PID space comes from TasksMax and DefaultTasksMax, which work with it off too.',
       ],
     },
-    tuningTip: 'Keep it on: it is the safety net that contains runaway fork loops to a single unit.',
+    tuningTip: 'Keep it on for per-unit task counts; the fork-bomb cap itself is TasksMax.',
     kernelDocsUrl: `${SYSTEM_CONF}#DefaultTasksAccounting=`,
-    contextNote: 'Container hosts depend on this so a single container cannot exhaust the host PID namespace.',
+    contextNote: 'On container hosts it shows how many tasks each container unit runs, next to the TasksMax that caps it.',
     kernelDefault: 1,
     kernelMin: 0,
     kernelMax: 1,
     step: 1,
     unit: 'bool',
-    toggleLabels: { on: 'Tasks accounting ENABLED (TasksMax enforceable)', off: 'Tasks accounting off (TasksMax will not be enforced)' },
+    toggleLabels: { on: 'Tasks accounting ENABLED for all units', off: 'Tasks accounting off (units with a TasksMax still count)' },
   },
   {
     key: 'default_ip_accounting',

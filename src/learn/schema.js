@@ -10,9 +10,17 @@
  * Plain JS with no Vue and no tuner imports, so the build, the tests and the
  * figure components can all read it.
  *
- * @typedef {{ probe: string, path?: string, unit: string }} ValueRef  unit '' for a unitless value
+ * @typedef {{ probe: string, path?: string, unit: string, label?: string }} ValueRef  unit '' for a unitless value
  *   A number in a figure: the probe id in the tuner's probes.js, a dotted path
- *   into the probe's captured value, and the unit it is shown in.
+ *   into the probe's captured value, and the unit it is shown in. A numeric
+ *   step of the path on a string value picks one of its words, counted from
+ *   0, so `path: '2'` on "4096 131072 6291456" is 6291456 (resolvePath).
+ *   `label` (at most BUDGETS.label words) is what the figure, the panel and the
+ *   static page call it; without one a ref is named by the part that shows it
+ *   (a mark, a bar, a node), else by its path. A stack layer's `values` are
+ *   shown by name alone, so one without a path needs a label.
+ *   'bytes' and 'kB' (the kernel's KiB) read as KiB, MiB or GiB, with the
+ *   number as measured in the tooltip, the panel and the static page.
  *
  * Figure words. A `label` (a card's title, a node's text, an edge, a mark or
  * a zone) names a part in at most BUDGETS.label words; what the part does is
@@ -59,9 +67,29 @@
  *       states: { label: string, cells: number, lit: number, start?: number, asked?: number, setting: { key: string, value: number|string } }[],
  *       legend?: { asked?: string, lit: string, off: string },
  *       backedBy: { vmTest: string } | { probe: string } }
- *   | GaugeFigure} Figure
+ *   | GaugeFigure | CompareFigure | TreeFigure | ModesFigure} Figure
  *   A side-by-side state lights `lit` cells from `start` (0 when unset); `asked`
  *   is the cell the request was for, drawn in ink, the other lit ones in fit.
+ *
+ * @typedef {{ id: string, label: string, does?: string }} FigureGroup  a heading over bars or rows
+ * @typedef {{ kind: 'compare', title: string, axis: string, scale: 'linear'|'log',
+ *     groups?: FigureGroup[],
+ *     bars: { id: string, label: string, value: ValueRef, does?: string, group?: string, tone?: 'fit'|'error' }[],
+ *     marks?: { id: string, label: string, value: ValueRef, does?: string, tone?: 'fit'|'error' }[],
+ *     pins?: ({ key: string, bar: string } | { key: string, mark: string })[] }} CompareFigure
+ *   Horizontal bars, one per item, on one shared scale in one unit (1 to 12
+ *   bars, at most 3 marks, which are vertical lines such as a limit). With
+ *   `groups`, every bar names one. `log` suits values orders of magnitude apart.
+ * @typedef {{ id: string, label: string, value?: ValueRef, does?: string, children?: TreeNode[] }} TreeNode
+ * @typedef {{ kind: 'tree', title: string, root: TreeNode, pins?: { key: string, node: string }[] }} TreeFigure
+ *   A small hierarchy: at most 3 levels and 12 nodes, such as systemd's slices.
+ * @typedef {{ id: string, label: string, value: ValueRef, does?: string, group?: string, pin?: string,
+ *     bits?: true, allValues?: true, options: { value: number|string, label: string, does?: string }[] }} ModesRow
+ *   One setting's choices as segments, the measured one lit. `bits`: options are
+ *   bit values (0 or powers of two) and every set bit lights. Where `pin` names
+ *   a def with options, each option value is one the def writes (its
+ *   sysctlValue, else its value), unless `allValues`.
+ * @typedef {{ kind: 'modes', title: string, groups?: FigureGroup[], rows: ModesRow[] }} ModesFigure
  *
  * @typedef {{ key: string, dir: 'raise'|'lower' } | { key: string, to: string|number } | { leave: true, why: string }} Answer
  *   `to` names a value: an option's value for a def with options, else a number
@@ -143,7 +171,10 @@ export const READ_ONLY_COMMANDS = Object.freeze([
   ['systemctl', 'show'], ['ls'], ['findmnt'], ['udevadm', 'info'],
 ])
 
-export const FIGURE_KINDS = Object.freeze(['stack', 'timeline', 'sideBySide', 'gauge'])
+export const FIGURE_KINDS = Object.freeze(['stack', 'timeline', 'sideBySide', 'gauge', 'compare', 'tree', 'modes'])
+
+/** Most bars, marks and groups a compare figure, rows and options a modes figure, and nodes and levels a tree draws. */
+export const FIGURE_LIMITS = Object.freeze({ bars: 12, marks: 3, groups: 6, rows: 12, options: 8, treeNodes: 12, treeLevels: 3 })
 
 const EM_DASH = '—'
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/
@@ -474,8 +505,10 @@ export function validateGuide(guide, ctx) {
     probe(`${path}.probe`, item.probe, item.path, { scalar: item.path === undefined })
   }
 
-  function valueRef(path, ref) {
-    if (!shape(path, ref, ['probe', 'unit'], ['path'])) return
+  function valueRef(path, ref, { needsLabel = false } = {}) {
+    if (!shape(path, ref, ['probe', 'unit'], ['path', 'label'])) return
+    if (ref.label !== undefined) label(`${path}.label`, ref.label)
+    else if (needsLabel && !ref.path) fail(path, 'figure words', 'a value shown by name alone needs a label (at most four words) when it has no path')
     if (ref.path !== undefined && (typeof ref.path !== 'string' || !PATH.test(ref.path))) fail(`${path}.path`, 'shape', `"${ref.path}" is not a dotted path`)
     // A unitless value (vm.swappiness) has unit ''; otherwise plain text.
     if (typeof ref.unit !== 'string') fail(`${path}.unit`, 'shape', 'must be a string')
@@ -614,7 +647,7 @@ export function validateGuide(guide, ctx) {
             itemProbe(q, n)
           })
         } else fail(`${p}.kind`, 'shape', `"${l.kind}" is not bands or nodes`)
-        if (l.values !== undefined) list(`${p}.values`, l.values).forEach((v, j) => valueRef(`${p}.values[${j}]`, v))
+        if (l.values !== undefined) list(`${p}.values`, l.values).forEach((v, j) => valueRef(`${p}.values[${j}]`, v, { needsLabel: true }))
       })
     } else if (fig.kind === 'timeline') {
       shape(path, fig, ['kind', 'title', 'schematic', 'lines', 'curve', 'events'])
@@ -646,6 +679,12 @@ export function validateGuide(guide, ctx) {
       })
     } else if (fig.kind === 'gauge') {
       gauge(path, fig, ids)
+    } else if (fig.kind === 'compare') {
+      compare(path, fig, ids)
+    } else if (fig.kind === 'tree') {
+      tree(path, fig, ids)
+    } else if (fig.kind === 'modes') {
+      modes(path, fig, ids)
     } else {
       shape(path, fig, ['kind', 'title', 'states', 'backedBy'], ['legend'])
       text(`${path}.title`, fig.title)
@@ -684,8 +723,173 @@ export function validateGuide(guide, ctx) {
     return ids
   }
 
-  /** Gauges, for the chapter's pin check and the live mark-order check. */
+  /** Gauges, for the live mark-order check. */
   const gauges = []
+  /** Settings a figure draws itself, by figure path, for the chapter's pin check. */
+  const drawnPins = []
+
+  const tone = (p, t) => {
+    if (t !== undefined && t !== 'fit' && t !== 'error') fail(p, 'shape', `"${t}" is not fit or error`)
+  }
+
+  /** A setting drawn on a figure: a def key, at most once per figure. */
+  function drawnKey(p, key, pinKeys) {
+    if (!isDef(key)) fail(p, 'def key', `"${key}" is not a def key of this tuner`)
+    else if (pinKeys.some((k) => k.key === key)) fail(p, 'pins', `"${key}" is drawn twice on this figure`)
+    else pinKeys.push({ key, path: p })
+  }
+
+  /** Optional group headings; their ids, or null without groups. Every item then names one. */
+  function groupsOf(path, groups, ids) {
+    if (groups === undefined) return null
+    const all = list(path, groups, { min: 1, max: FIGURE_LIMITS.groups })
+    uniqueIds(path, all, ids)
+    all.forEach((g, i) => {
+      const p = `${path}[${i}]`
+      if (!shape(p, g, ['id', 'label'], ['does'])) return
+      label(`${p}.label`, g.label)
+      if (g.does !== undefined) tip(`${p}.does`, g.does)
+    })
+    return new Set(all.filter(isObj).map((g) => g.id))
+  }
+
+  function inGroup(p, item, groupIds) {
+    if (groupIds === null) {
+      if (item.group !== undefined) fail(`${p}.group`, 'figure range', 'the figure has no groups')
+    } else if (item.group === undefined) fail(p, 'figure range', 'the figure has groups, so every item names one')
+    else if (!groupIds.has(item.group)) fail(`${p}.group`, 'figure range', `"${item.group}" is not a group`)
+  }
+
+  function compare(path, fig, ids) {
+    shape(path, fig, ['kind', 'title', 'axis', 'scale', 'bars'], ['groups', 'marks', 'pins'])
+    text(`${path}.title`, fig.title)
+    label(`${path}.axis`, fig.axis)
+    if (fig.scale !== 'linear' && fig.scale !== 'log') fail(`${path}.scale`, 'shape', `"${fig.scale}" is not linear or log`)
+    const groupIds = groupsOf(`${path}.groups`, fig.groups, ids)
+    let unit
+    const sameUnit = (p, ref) => {
+      if (!isObj(ref)) return
+      if (unit === undefined) unit = ref.unit
+      else if (ref.unit !== unit) fail(`${p}.value.unit`, 'figure range', `"${ref.unit}" is not the first bar's unit "${unit}"; a compare figure has one scale`)
+    }
+    const bars = list(`${path}.bars`, fig.bars, { min: 1, max: FIGURE_LIMITS.bars })
+    uniqueIds(`${path}.bars`, bars, ids)
+    bars.forEach((b, i) => {
+      const p = `${path}.bars[${i}]`
+      if (!shape(p, b, ['id', 'label', 'value'], ['does', 'group', 'tone'])) return
+      label(`${p}.label`, b.label)
+      if (b.does !== undefined) tip(`${p}.does`, b.does)
+      valueRef(`${p}.value`, b.value)
+      sameUnit(p, b.value)
+      inGroup(p, b, groupIds)
+      tone(`${p}.tone`, b.tone)
+    })
+    const marks = fig.marks === undefined ? [] : list(`${path}.marks`, fig.marks, { min: 1, max: FIGURE_LIMITS.marks })
+    uniqueIds(`${path}.marks`, marks, ids)
+    marks.forEach((m, i) => {
+      const p = `${path}.marks[${i}]`
+      if (!shape(p, m, ['id', 'label', 'value'], ['does', 'tone'])) return
+      label(`${p}.label`, m.label)
+      if (m.does !== undefined) tip(`${p}.does`, m.does)
+      valueRef(`${p}.value`, m.value)
+      sameUnit(p, m.value)
+      tone(`${p}.tone`, m.tone)
+    })
+    const barIds = new Set(bars.filter(isObj).map((b) => b.id))
+    const markIds = new Set(marks.filter(isObj).map((m) => m.id))
+    const pinKeys = []
+    if (fig.pins !== undefined) {
+      list(`${path}.pins`, fig.pins).forEach((pin, i) => {
+        const p = `${path}.pins[${i}]`
+        if (!isObj(pin)) return fail(p, 'shape', 'must be an object')
+        const onBar = Object.hasOwn(pin, 'bar')
+        if (!shape(p, pin, onBar ? ['key', 'bar'] : ['key', 'mark'])) return
+        drawnKey(`${p}.key`, pin.key, pinKeys)
+        const at = onBar ? pin.bar : pin.mark
+        if (!(onBar ? barIds : markIds).has(at)) fail(`${p}.${onBar ? 'bar' : 'mark'}`, 'figure range', `"${at}" is not a ${onBar ? 'bar' : 'mark'}`)
+      })
+    }
+    drawnPins.push({ path, pinKeys })
+  }
+
+  function tree(path, fig, ids) {
+    shape(path, fig, ['kind', 'title', 'root'], ['pins'])
+    text(`${path}.title`, fig.title)
+    const nodeIds = new Set()
+    let count = 0
+    const node = (p, n, depth) => {
+      if (!shape(p, n, ['id', 'label'], ['value', 'does', 'children'])) return
+      count++
+      if (typeof n.id !== 'string' || !KEBAB.test(n.id)) fail(`${p}.id`, 'unique id', `"${n.id}" is not kebab case`)
+      else if (ids.has(n.id) || nodeIds.has(n.id)) fail(`${p}.id`, 'unique id', `"${n.id}" is used twice`)
+      else nodeIds.add(n.id)
+      label(`${p}.label`, n.label)
+      if (n.does !== undefined) tip(`${p}.does`, n.does)
+      if (n.value !== undefined) valueRef(`${p}.value`, n.value)
+      if (n.children === undefined) return
+      const kids = list(`${p}.children`, n.children, { min: 1 })
+      if (depth + 1 >= FIGURE_LIMITS.treeLevels && kids.length) return fail(`${p}.children`, 'figure range', `a tree has at most ${FIGURE_LIMITS.treeLevels} levels`)
+      kids.forEach((k, i) => node(`${p}.children[${i}]`, k, depth + 1))
+    }
+    node(`${path}.root`, fig.root, 0)
+    if (count > FIGURE_LIMITS.treeNodes) fail(path, 'figure range', `${count} nodes, at most ${FIGURE_LIMITS.treeNodes}`)
+    for (const id of nodeIds) ids.add(id)
+    const pinKeys = []
+    if (fig.pins !== undefined) {
+      list(`${path}.pins`, fig.pins).forEach((pin, i) => {
+        const p = `${path}.pins[${i}]`
+        if (!shape(p, pin, ['key', 'node'])) return
+        drawnKey(`${p}.key`, pin.key, pinKeys)
+        if (!nodeIds.has(pin.node)) fail(`${p}.node`, 'figure range', `"${pin.node}" is not a node`)
+      })
+    }
+    drawnPins.push({ path, pinKeys })
+  }
+
+  const isPow2 = (v) => Number.isSafeInteger(v) && v > 0 && 2 ** Math.round(Math.log2(v)) === v
+
+  function modes(path, fig, ids) {
+    shape(path, fig, ['kind', 'title', 'rows'], ['groups'])
+    text(`${path}.title`, fig.title)
+    const groupIds = groupsOf(`${path}.groups`, fig.groups, ids)
+    const rows = list(`${path}.rows`, fig.rows, { min: 1, max: FIGURE_LIMITS.rows })
+    uniqueIds(`${path}.rows`, rows, ids)
+    const pinKeys = []
+    rows.forEach((row, i) => {
+      const p = `${path}.rows[${i}]`
+      if (!shape(p, row, ['id', 'label', 'value', 'options'], ['does', 'group', 'pin', 'bits', 'allValues'])) return
+      label(`${p}.label`, row.label)
+      if (row.does !== undefined) tip(`${p}.does`, row.does)
+      valueRef(`${p}.value`, row.value)
+      inGroup(p, row, groupIds)
+      for (const flag of ['bits', 'allValues']) if (row[flag] !== undefined && row[flag] !== true) fail(`${p}.${flag}`, 'shape', 'must be true when set')
+      const seen = new Set()
+      const options = list(`${p}.options`, row.options, { min: 2, max: FIGURE_LIMITS.options })
+      options.forEach((o, j) => {
+        const q = `${p}.options[${j}]`
+        if (!shape(q, o, ['value', 'label'], ['does'])) return
+        label(`${q}.label`, o.label)
+        if (o.does !== undefined) tip(`${q}.does`, o.does)
+        if (!isNum(o.value) && !isStr(o.value)) return fail(`${q}.value`, 'shape', 'must be a number or a string')
+        if (typeof o.value === 'string') text(`${q}.value`, o.value)
+        if (seen.has(String(o.value))) fail(`${q}.value`, 'figure range', `${JSON.stringify(o.value)} is listed twice in this row`)
+        seen.add(String(o.value))
+        if (row.bits === true && o.value !== 0 && !isPow2(o.value)) fail(`${q}.value`, 'figure range', `${JSON.stringify(o.value)} is not 0 or a power of two; a bits row lists one bit per option`)
+      })
+      if (row.pin === undefined) return
+      drawnKey(`${p}.pin`, row.pin, pinKeys)
+      const def = isDef(row.pin) ? defsByKey[row.pin] : null
+      if (row.allValues !== true && Array.isArray(def?.options)) {
+        const written = def.options.map((o) => String(o?.sysctlValue ?? o?.value))
+        options.forEach((o, j) => {
+          if (isObj(o) && (isNum(o.value) || isStr(o.value)) && !written.includes(String(o.value))) {
+            fail(`${p}.options[${j}].value`, 'mode value', `${JSON.stringify(o.value)} is not a value ${row.pin} writes (${written.join(', ')}); set allValues for one the tuner does not offer`)
+          }
+        })
+      }
+    })
+    drawnPins.push({ path, pinKeys })
+  }
 
   function gauge(path, fig, ids) {
     shape(path, fig, ['kind', 'title', 'axis', 'marks', 'zones'], ['range', 'zoom', 'curve', 'pins'])
@@ -762,15 +966,14 @@ export function validateGuide(guide, ctx) {
         if (!isObj(pin)) return fail(p, 'shape', 'must be an object')
         const onMark = Object.hasOwn(pin, 'mark')
         if (!shape(p, pin, onMark ? ['key', 'mark'] : ['key', 'from', 'to'], ['value'])) return
-        if (!isDef(pin.key)) fail(`${p}.key`, 'def key', `"${pin.key}" is not a def key of this tuner`)
-        else if (pinKeys.some((k) => k.key === pin.key)) fail(`${p}.key`, 'pins', `"${pin.key}" is drawn twice on this gauge`)
-        else pinKeys.push({ key: pin.key, path: `${p}.key` })
+        drawnKey(`${p}.key`, pin.key, pinKeys)
         for (const end of onMark ? ['mark'] : ['from', 'to']) if (order(pin[end]) < 0) fail(`${p}.${end}`, 'figure range', `"${pin[end]}" is not a mark`)
         if (!onMark && order(pin.from) >= 0 && order(pin.to) >= 0 && order(pin.from) >= order(pin.to)) fail(p, 'figure range', `"${pin.from}" is not below "${pin.to}"`)
         if (pin.value !== undefined) valueRef(`${p}.value`, pin.value)
       })
     }
-    gauges.push({ path, marks: marks.filter(isObj), pinKeys })
+    gauges.push({ path, marks: marks.filter(isObj) })
+    drawnPins.push({ path, pinKeys })
   }
 
   // ── Chapters ──
@@ -809,9 +1012,9 @@ export function validateGuide(guide, ctx) {
       text(`${p}.here`, pin.here, { rich: true, budget: BUDGETS.pinHere })
       if (pin.layer !== undefined && !ids.has(pin.layer)) fail(`${p}.layer`, 'pins', `"${pin.layer}" is not an id in this chapter's figure`)
     })
-    const drawn = gauges.find((g) => g.path === `${path}.figure`)
+    const drawn = drawnPins.find((g) => g.path === `${path}.figure`)
     for (const { key, path: at } of drawn?.pinKeys ?? []) {
-      if (isDef(key) && !here.has(key)) fail(at, 'pins', `"${key}" is drawn on the gauge but not pinned in this chapter`)
+      if (isDef(key) && !here.has(key)) fail(at, 'pins', `"${key}" is drawn on the figure but not pinned in this chapter`)
     }
 
     const questions = list(`${path}.choose`, ch.choose, { min: 1, max: BUDGETS.questions })

@@ -59,7 +59,7 @@ describe('PartsMap', () => {
     // Title and value only on the card; what it does is its description.
     expect(cache.text()).not.toContain('Keeps file data')
     const desc = w.get(`#${cache.attributes('aria-describedby')}`)
-    expect(desc.text()).toBe('Keeps file data in spare memory. 1,000,000 kB, kernel 0.0.0-fixture')
+    expect(desc.text()).toBe('Keeps file data in spare memory. 977 MiB (1,000,000 kB), kernel 0.0.0-fixture')
     expect(desc.attributes('hidden')).toBeDefined()
   })
 
@@ -69,20 +69,20 @@ describe('PartsMap', () => {
     expect(list.classes()).toContain('md:hidden')
     expect(list.text()).toContain('Worker to Disk: writes to')
     expect(list.text()).toContain('Background')
-    expect(list.findAll('button').map((b) => b.text())).toContain('Page cache1,000,000 kB')
+    expect(list.findAll('button').map((b) => b.text())).toContain('Page cache977 MiB')
   })
 
   it('draws the scale bar to scale, with the legend as tooltip buttons', () => {
     const w = mountMap()
-    expect(w.get('[data-scale-total]').text()).toBe('3,000,000 kB')
+    expect(w.get('[data-scale-total]').text()).toBe('2.9 GiB')
     expect(w.get('[data-segment="programs"]').attributes('style')).toContain('width: 16.666')
     expect(w.get('[data-segment="programs"]').classes()).toContain('bg-ink')
     expect(w.get('[data-segment="cache"]').classes()).toContain('bg-fit')
     expect(w.get('[data-legend="programs"]').element.tagName).toBe('BUTTON')
-    expect(w.get('[data-legend="programs"]').text()).toBe('Programs500,000 kB, 17 %')
+    expect(w.get('[data-legend="programs"]').text()).toBe('Programs488 MiB, 17 %')
     // A segment with no tip and no value is plain text; the rest with a tip is a button.
     expect(w.get('[data-legend="rest"]').element.tagName).toBe('BUTTON')
-    expect(w.get('[role="figure"]').attributes('aria-label')).toContain('Memory, 3,000,000 kB, drawn to scale')
+    expect(w.get('[role="figure"]').attributes('aria-label')).toContain('Memory, 2.9 GiB, drawn to scale')
   })
 
   it('puts the picture after the figure as ordinary text', () => {
@@ -232,7 +232,7 @@ describe('Gauge', () => {
     const bracket = w.get('[data-zoom-bracket]').attributes('style')
     expect(bracket).toContain('bottom: 0%')
     expect(bracket).toContain('1.0666')
-    expect(w.text()).toContain('The thin bar is all memory, 3,000,000 kB; the bracket at its foot is the part drawn large, 1.1 % of it.')
+    expect(w.text()).toContain('The thin bar is all memory, 2.9 GiB; the bracket at its foot is the part drawn large, 1.1 % of it.')
   })
 
   it('draws the pins on their mark and gap as pressed-state buttons that select', async () => {

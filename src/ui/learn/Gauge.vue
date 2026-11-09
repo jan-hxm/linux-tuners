@@ -20,6 +20,7 @@
 import { computed, useId } from 'vue'
 import FigureTip from './FigureTip.vue'
 import TipStrip from './TipStrip.vue'
+import FigurePin from './FigurePin.vue'
 import { defName, gaugeAxisText, gaugeCaption, gaugeLabel, gaugeModel, gaugePinPlace, tipValue } from './figureText.js'
 
 const props = defineProps({
@@ -120,8 +121,8 @@ const pinLabel = (p) => `${pinName(p)}, ${gaugePinPlace(props.figure, p)}`
                   :scope="scope"
                   class="inline-flex min-h-6 items-baseline gap-1.5 whitespace-nowrap text-left text-[15px] leading-none text-ink"
                   :data-mark-label="m.id"
-                ><span class="font-semibold underline decoration-dotted underline-offset-4">{{ m.label }}</span><span class="font-mono text-[13px] text-ink-2">{{ model.measured ? m.text.replace(/ [a-z]+$/i, '') : m.text }}</span></FigureTip>
-                <span v-else aria-hidden="true" class="inline-flex min-h-6 items-baseline gap-1.5 whitespace-nowrap text-[15px] leading-none text-ink" :data-mark-label="m.id"><span class="font-semibold">{{ m.label }}</span><span class="font-mono text-[13px] text-ink-2">{{ model.measured ? m.text.replace(/ [a-z]+$/i, '') : m.text }}</span></span>
+                ><span class="font-semibold underline decoration-dotted underline-offset-4">{{ m.label }}</span><span class="font-mono text-[13px] text-ink-2">{{ model.measured ? m.num : m.text }}</span></FigureTip>
+                <span v-else aria-hidden="true" class="inline-flex min-h-6 items-baseline gap-1.5 whitespace-nowrap text-[15px] leading-none text-ink" :data-mark-label="m.id"><span class="font-semibold">{{ m.label }}</span><span class="font-mono text-[13px] text-ink-2">{{ model.measured ? m.num : m.text }}</span></span>
               </div>
             </template>
           </div>
@@ -133,31 +134,29 @@ const pinLabel = (p) => `${pinName(p)}, ${gaugePinPlace(props.figure, p)}`
           <template v-for="p in model.pins" :key="p.key">
             <template v-if="p.mark">
               <span aria-hidden="true" class="absolute left-0 h-0.5 w-3 -translate-y-1/2 bg-ink" :style="{ top: top(p.y) }" />
-              <button
-                type="button"
-                class="absolute left-3 inline-flex min-h-7 -translate-y-1/2 items-center gap-2 border-[1.5px] border-ink px-2 font-mono text-[13px] text-ink"
-                :class="p.key === selectedKey ? 'bg-fit-tint' : 'bg-paper hover:bg-paper-hover'"
+              <FigurePin
+                class="absolute left-3 -translate-y-1/2"
                 :style="{ top: top(p.y) }"
-                :aria-pressed="p.key === selectedKey"
-                :aria-controls="controls ?? undefined"
-                :aria-label="pinLabel(p)"
+                :name="pinName(p)"
+                :label="pinLabel(p)"
+                :pressed="p.key === selectedKey"
+                :controls="controls"
                 :data-gauge-pin="p.key"
-                @click="emit('select', p.key)"
-              ><span aria-hidden="true" class="size-2 shrink-0 rounded-full" :class="p.key === selectedKey ? 'bg-fit' : 'border border-ink'" />{{ pinName(p) }}</button>
+                @select="emit('select', p.key)"
+              />
             </template>
             <template v-else>
               <span aria-hidden="true" class="absolute left-1 w-0.5 bg-ink" :style="{ top: top(p.y1), height: `${(p.y1 - p.y0) * 100}%` }" />
-              <button
-                type="button"
-                class="absolute left-3 inline-flex min-h-7 -translate-y-1/2 items-center gap-2 border-[1.5px] border-ink px-2 font-mono text-[13px] text-ink"
-                :class="p.key === selectedKey ? 'bg-fit-tint' : 'bg-paper hover:bg-paper-hover'"
+              <FigurePin
+                class="absolute left-3 -translate-y-1/2"
                 :style="{ top: top((p.y0 + p.y1) / 2) }"
-                :aria-pressed="p.key === selectedKey"
-                :aria-controls="controls ?? undefined"
-                :aria-label="pinLabel(p)"
+                :name="pinName(p)"
+                :label="pinLabel(p)"
+                :pressed="p.key === selectedKey"
+                :controls="controls"
                 :data-gauge-pin="p.key"
-                @click="emit('select', p.key)"
-              ><span aria-hidden="true" class="size-2 shrink-0 rounded-full" :class="p.key === selectedKey ? 'bg-fit' : 'border border-ink'" />{{ pinName(p) }}</button>
+                @select="emit('select', p.key)"
+              />
             </template>
           </template>
         </div>

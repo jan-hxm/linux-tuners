@@ -4,6 +4,22 @@
   "capturedAt": "2000-01-01T00:00:00Z",
   "guestMemoryMiB": 3072,
   "probes": {
+    "demo.bufMax": {
+      "status": "ok",
+      "value": 212992
+    },
+    "demo.bufSizes": {
+      "status": "ok",
+      "value": "4096 131072 6291456"
+    },
+    "demo.bufTotal": {
+      "status": "ok",
+      "value": 16777216
+    },
+    "demo.keyMask": {
+      "status": "ok",
+      "value": 438
+    },
     "demo.meminfo": {
       "status": "ok",
       "value": {
@@ -13,9 +29,25 @@
         "SwapTotal": 2000000
       }
     },
+    "demo.pageMode": {
+      "status": "ok",
+      "value": "madvise"
+    },
     "demo.reserve": {
       "status": "ok",
       "value": 4000
+    },
+    "demo.schedHdd": {
+      "status": "ok",
+      "value": "bfq"
+    },
+    "demo.schedSsd": {
+      "status": "ok",
+      "value": "mq-deadline"
+    },
+    "demo.sliceWeight": {
+      "status": "ok",
+      "value": 100
     },
     "demo.stalls": {
       "status": "ok",
@@ -28,6 +60,10 @@
     "demo.swaps": {
       "status": "ok",
       "value": true
+    },
+    "demo.userWeight": {
+      "status": "ok",
+      "value": 100
     },
     "demo.watermarks": {
       "status": "ok",

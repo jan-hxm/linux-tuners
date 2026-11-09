@@ -50,9 +50,14 @@ export function loadEvidence(modules = COMMITTED) {
   return Object.freeze(Object.fromEntries([...known, ...rest].map((id) => [id, byImage[id]])))
 }
 
+const INDEX = /^\d+$/
+const NUMBER = /^-?\d+(\.\d+)?$/
+
 /**
  * The value at a dotted path, through own properties only; undefined when
- * any step is missing. No path returns the value itself.
+ * any step is missing. No path returns the value itself. A numeric step on a
+ * string picks one of its whitespace-separated words, counted from 0, as a
+ * number when it is one: `'2'` on "4096 131072 6291456" gives 6291456.
  * @param {EvidenceValue} value
  * @param {string} [path]
  */
@@ -60,6 +65,13 @@ export function resolvePath(value, path) {
   if (path === undefined || path === '') return value
   let at = value
   for (const step of path.split('.')) {
+    if (typeof at === 'string' && INDEX.test(step)) {
+      const words = at.trim().split(/\s+/).filter(Boolean)
+      const i = Number(step)
+      if (i >= words.length) return undefined
+      at = NUMBER.test(words[i]) ? Number(words[i]) : words[i]
+      continue
+    }
     if (at === null || typeof at !== 'object' || !Object.hasOwn(at, step)) return undefined
     at = at[step]
   }

@@ -197,7 +197,7 @@ describe('ChapterView', () => {
     await drawn[1].trigger('click')
     const panel = wrapper.get('[data-pin-panel]')
     expect(panel.text()).toContain('Sets the gap between the marks.')
-    expect(panel.text()).toContain('Normal.high: 6,000 pages')
+    expect(panel.text()).toContain('high: 6,000 pages')
     expect(wrapper.findAll('[data-gauge-pin]')[1].attributes('aria-pressed')).toBe('true')
     expect(wrapper.findAll('[data-pins] button')[1].attributes('aria-pressed')).toBe('true')
   })

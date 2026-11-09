@@ -76,8 +76,8 @@ export const LEARN = {
             kind: 'nodes',
             nodes: [{ id: 'choose', text: 'Picks what to free', does: 'The kernel weighs file cache against program memory, as the two settings say.' }],
             values: [
-              { probe: 'swap.swappiness', unit: '' },
-              { probe: 'swap.vfsCachePressure', unit: '' },
+              { probe: 'swap.swappiness', unit: '', label: 'vm.swappiness' },
+              { probe: 'swap.vfsCachePressure', unit: '', label: 'vm.vfs_cache_pressure' },
             ],
           },
           {
@@ -363,8 +363,8 @@ export const LEARN = {
               { id: 'mode2', text: 'Mode 2', does: 'Refuses any promise past the commit limit.' },
             ],
             values: [
-              { probe: 'swap.overcommitMemory', unit: 'mode' },
-              { probe: 'swap.overcommitRatio', unit: '%' },
+              { probe: 'swap.overcommitMemory', unit: 'mode', label: 'vm.overcommit_memory' },
+              { probe: 'swap.overcommitRatio', unit: '%', label: 'vm.overcommit_ratio' },
             ],
           },
           {
@@ -454,7 +454,7 @@ export const LEARN = {
               { id: 'killer', text: 'OOM killer', does: 'Ends one program, and the machine runs on.' },
               { id: 'panic', text: 'Kernel panic', does: 'The whole machine stops.' },
             ],
-            values: [{ probe: 'swap.panicOnOom', unit: '' }],
+            values: [{ probe: 'swap.panicOnOom', unit: '', label: 'vm.panic_on_oom' }],
           },
         ],
       },

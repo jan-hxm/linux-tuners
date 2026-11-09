@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-11-09T09:49:50Z",
+  "capturedAt": "2026-11-09T22:01:43Z",
   "guestMemoryMiB": 3072,
   "image": "fedora-43",
   "kernel": "6.17.1-300.fc43.x86_64",
@@ -169,7 +169,7 @@
     "hugepages.memTotal": {
       "status": "ok",
       "value": {
-        "MemTotal": 2964288
+        "MemTotal": 2964284
       }
     },
     "hugepages.minFree": {
@@ -358,7 +358,7 @@
     },
     "network.tcpRmem": {
       "status": "ok",
-      "value": "4096 131072 22460480"
+      "value": "4096 131072 22460448"
     },
     "network.tcpWmem": {
       "status": "ok",
@@ -509,33 +509,33 @@
     "swap.memAnon": {
       "status": "ok",
       "value": {
-        "AnonPages": 45908
+        "AnonPages": 44944
       }
     },
     "swap.memCache": {
       "status": "ok",
       "value": {
-        "Cached": 172228
+        "Cached": 172080
       }
     },
     "swap.memCommit": {
       "status": "ok",
       "value": {
-        "CommitLimit": 4445596,
-        "Committed_AS": 168988
+        "CommitLimit": 4445592,
+        "Committed_AS": 134556
       }
     },
     "swap.memDirty": {
       "status": "ok",
       "value": {
-        "Dirty": 5800,
+        "Dirty": 5960,
         "Writeback": 0
       }
     },
     "swap.memSize": {
       "status": "ok",
       "value": {
-        "MemTotal": 2964288,
+        "MemTotal": 2964284,
         "SwapTotal": 2963452
       }
     },
@@ -642,6 +642,46 @@
       "status": "ok",
       "value": 100
     },
+    "systemd.defaultCpuAccounting": {
+      "reason": "no DefaultCPUAccounting property in this systemd",
+      "status": "absent"
+    },
+    "systemd.defaultIoAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultIpAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultLimitMemlock": {
+      "status": "ok",
+      "value": 8388608
+    },
+    "systemd.defaultLimitMemlockSoft": {
+      "status": "ok",
+      "value": 8388608
+    },
+    "systemd.defaultLimitNofile": {
+      "status": "ok",
+      "value": 524288
+    },
+    "systemd.defaultLimitNofileSoft": {
+      "status": "ok",
+      "value": 1024
+    },
+    "systemd.defaultMemoryAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksMax": {
+      "status": "ok",
+      "value": 3408
+    },
     "systemd.initScope": {
       "status": "ok",
       "value": true
@@ -652,7 +692,7 @@
     },
     "systemd.memoryCurrent": {
       "status": "ok",
-      "value": 165318656
+      "value": 165515264
     },
     "systemd.memoryHigh": {
       "status": "ok",
@@ -693,6 +733,10 @@
     "systemd.systemSlice": {
       "status": "ok",
       "value": true
+    },
+    "systemd.systemSliceTasksMax": {
+      "status": "ok",
+      "value": "infinity"
     },
     "systemd.threadsMax": {
       "status": "ok",

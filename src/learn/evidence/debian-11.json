@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-11-09T09:50:28Z",
+  "capturedAt": "2026-11-09T22:02:18Z",
   "guestMemoryMiB": 3072,
   "image": "debian-11",
   "kernel": "5.10.0-46-cloud-amd64",
@@ -209,7 +209,7 @@
     "hugepages.thpMeminfo": {
       "status": "ok",
       "value": {
-        "AnonHugePages": 0
+        "AnonHugePages": 2048
       }
     },
     "hugepages.vmSysctls": {
@@ -508,26 +508,26 @@
     "swap.memAnon": {
       "status": "ok",
       "value": {
-        "AnonPages": 23700
+        "AnonPages": 25628
       }
     },
     "swap.memCache": {
       "status": "ok",
       "value": {
-        "Cached": 80224
+        "Cached": 77864
       }
     },
     "swap.memCommit": {
       "status": "ok",
       "value": {
         "CommitLimit": 1498012,
-        "Committed_AS": 150192
+        "Committed_AS": 152244
       }
     },
     "swap.memDirty": {
       "status": "ok",
       "value": {
-        "Dirty": 6256,
+        "Dirty": 4124,
         "Writeback": 0
       }
     },
@@ -641,6 +641,46 @@
       "reason": "cat: /sys/fs/cgroup/system.slice/cpu.weight: No such file or directory",
       "status": "absent"
     },
+    "systemd.defaultCpuAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultIoAccounting": {
+      "reason": "no DefaultIOAccounting property in this systemd",
+      "status": "absent"
+    },
+    "systemd.defaultIpAccounting": {
+      "reason": "no DefaultIPAccounting property in this systemd",
+      "status": "absent"
+    },
+    "systemd.defaultLimitMemlock": {
+      "status": "ok",
+      "value": 65536
+    },
+    "systemd.defaultLimitMemlockSoft": {
+      "status": "ok",
+      "value": 65536
+    },
+    "systemd.defaultLimitNofile": {
+      "status": "ok",
+      "value": 524288
+    },
+    "systemd.defaultLimitNofileSoft": {
+      "status": "ok",
+      "value": 1024
+    },
+    "systemd.defaultMemoryAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksMax": {
+      "status": "ok",
+      "value": 3486
+    },
     "systemd.initScope": {
       "status": "ok",
       "value": true
@@ -651,7 +691,7 @@
     },
     "systemd.memoryCurrent": {
       "status": "ok",
-      "value": 100347904
+      "value": 96489472
     },
     "systemd.memoryHigh": {
       "status": "ok",
@@ -675,7 +715,7 @@
     },
     "systemd.pidsCurrent": {
       "status": "ok",
-      "value": 23
+      "value": 24
     },
     "systemd.pidsMax": {
       "status": "ok",
@@ -692,6 +732,10 @@
     "systemd.systemSlice": {
       "status": "ok",
       "value": true
+    },
+    "systemd.systemSliceTasksMax": {
+      "status": "ok",
+      "value": "infinity"
     },
     "systemd.threadsMax": {
       "status": "ok",

@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-11-09T09:51:11Z",
+  "capturedAt": "2026-11-09T22:03:07Z",
   "guestMemoryMiB": 3072,
   "image": "ubuntu-18.04",
   "kernel": "4.15.0-212-generic",
@@ -508,26 +508,26 @@
     "swap.memAnon": {
       "status": "ok",
       "value": {
-        "AnonPages": 33444
+        "AnonPages": 34196
       }
     },
     "swap.memCache": {
       "status": "ok",
       "value": {
-        "Cached": 295628
+        "Cached": 299912
       }
     },
     "swap.memCommit": {
       "status": "ok",
       "value": {
         "CommitLimit": 1503684,
-        "Committed_AS": 190060
+        "Committed_AS": 191156
       }
     },
     "swap.memDirty": {
       "status": "ok",
       "value": {
-        "Dirty": 38096,
+        "Dirty": 38044,
         "Writeback": 0
       }
     },
@@ -641,6 +641,46 @@
       "reason": "cat: /sys/fs/cgroup/system.slice/cpu.weight: No such file or directory",
       "status": "absent"
     },
+    "systemd.defaultCpuAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultIoAccounting": {
+      "reason": "no DefaultIOAccounting property in this systemd",
+      "status": "absent"
+    },
+    "systemd.defaultIpAccounting": {
+      "reason": "no DefaultIPAccounting property in this systemd",
+      "status": "absent"
+    },
+    "systemd.defaultLimitMemlock": {
+      "status": "ok",
+      "value": 67108864
+    },
+    "systemd.defaultLimitMemlockSoft": {
+      "status": "ok",
+      "value": 67108864
+    },
+    "systemd.defaultLimitNofile": {
+      "status": "ok",
+      "value": 4096
+    },
+    "systemd.defaultLimitNofileSoft": {
+      "status": "ok",
+      "value": 1024
+    },
+    "systemd.defaultMemoryAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultTasksAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksMax": {
+      "status": "ok",
+      "value": 3493
+    },
     "systemd.initScope": {
       "reason": "no /sys/fs/cgroup/init.scope",
       "status": "absent"
@@ -692,6 +732,10 @@
     "systemd.systemSlice": {
       "reason": "no /sys/fs/cgroup/system.slice",
       "status": "absent"
+    },
+    "systemd.systemSliceTasksMax": {
+      "status": "ok",
+      "value": "infinity"
     },
     "systemd.threadsMax": {
       "status": "ok",

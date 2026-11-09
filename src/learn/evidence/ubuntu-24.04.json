@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-11-09T09:49:52Z",
+  "capturedAt": "2026-11-09T22:01:46Z",
   "guestMemoryMiB": 3072,
   "image": "ubuntu-24.04",
   "kernel": "6.8.0-147-generic",
@@ -509,26 +509,26 @@
     "swap.memAnon": {
       "status": "ok",
       "value": {
-        "AnonPages": 59408
+        "AnonPages": 59136
       }
     },
     "swap.memCache": {
       "status": "ok",
       "value": {
-        "Cached": 290560
+        "Cached": 290452
       }
     },
     "swap.memCommit": {
       "status": "ok",
       "value": {
         "CommitLimit": 1488824,
-        "Committed_AS": 236644
+        "Committed_AS": 228168
       }
     },
     "swap.memDirty": {
       "status": "ok",
       "value": {
-        "Dirty": 3392,
+        "Dirty": 3192,
         "Writeback": 0
       }
     },
@@ -642,6 +642,46 @@
       "status": "ok",
       "value": 100
     },
+    "systemd.defaultCpuAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultIoAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultIpAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultLimitMemlock": {
+      "status": "ok",
+      "value": 8388608
+    },
+    "systemd.defaultLimitMemlockSoft": {
+      "status": "ok",
+      "value": 8388608
+    },
+    "systemd.defaultLimitNofile": {
+      "status": "ok",
+      "value": 524288
+    },
+    "systemd.defaultLimitNofileSoft": {
+      "status": "ok",
+      "value": 1024
+    },
+    "systemd.defaultMemoryAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksMax": {
+      "status": "ok",
+      "value": 3443
+    },
     "systemd.initScope": {
       "status": "ok",
       "value": true
@@ -652,7 +692,7 @@
     },
     "systemd.memoryCurrent": {
       "status": "ok",
-      "value": 246812672
+      "value": 246501376
     },
     "systemd.memoryHigh": {
       "status": "ok",
@@ -693,6 +733,10 @@
     "systemd.systemSlice": {
       "status": "ok",
       "value": true
+    },
+    "systemd.systemSliceTasksMax": {
+      "status": "ok",
+      "value": "infinity"
     },
     "systemd.threadsMax": {
       "status": "ok",

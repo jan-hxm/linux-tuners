@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-11-09T09:49:44Z",
+  "capturedAt": "2026-11-09T22:01:37Z",
   "guestMemoryMiB": 3072,
   "image": "debian-13",
   "kernel": "6.12.113+deb13-cloud-amd64",
@@ -209,7 +209,7 @@
     "hugepages.thpMeminfo": {
       "status": "ok",
       "value": {
-        "AnonHugePages": 4096
+        "AnonHugePages": 0
       }
     },
     "hugepages.vmSysctls": {
@@ -509,26 +509,26 @@
     "swap.memAnon": {
       "status": "ok",
       "value": {
-        "AnonPages": 31148
+        "AnonPages": 30800
       }
     },
     "swap.memCache": {
       "status": "ok",
       "value": {
-        "Cached": 97076
+        "Cached": 97068
       }
     },
     "swap.memCommit": {
       "status": "ok",
       "value": {
         "CommitLimit": 1492180,
-        "Committed_AS": 59628
+        "Committed_AS": 59964
       }
     },
     "swap.memDirty": {
       "status": "ok",
       "value": {
-        "Dirty": 4896,
+        "Dirty": 4296,
         "Writeback": 0
       }
     },
@@ -642,6 +642,46 @@
       "status": "ok",
       "value": 100
     },
+    "systemd.defaultCpuAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultIoAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultIpAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultLimitMemlock": {
+      "status": "ok",
+      "value": 8388608
+    },
+    "systemd.defaultLimitMemlockSoft": {
+      "status": "ok",
+      "value": 8388608
+    },
+    "systemd.defaultLimitNofile": {
+      "status": "ok",
+      "value": 524288
+    },
+    "systemd.defaultLimitNofileSoft": {
+      "status": "ok",
+      "value": 1024
+    },
+    "systemd.defaultMemoryAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksMax": {
+      "status": "ok",
+      "value": 3467
+    },
     "systemd.initScope": {
       "status": "ok",
       "value": true
@@ -652,7 +692,7 @@
     },
     "systemd.memoryCurrent": {
       "status": "ok",
-      "value": 115847168
+      "value": 115339264
     },
     "systemd.memoryHigh": {
       "status": "ok",
@@ -693,6 +733,10 @@
     "systemd.systemSlice": {
       "status": "ok",
       "value": true
+    },
+    "systemd.systemSliceTasksMax": {
+      "status": "ok",
+      "value": "infinity"
     },
     "systemd.threadsMax": {
       "status": "ok",

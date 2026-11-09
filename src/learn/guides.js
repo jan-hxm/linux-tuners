@@ -80,6 +80,20 @@ export const GUIDES = {
     learn: () => import('../tuners/filesystem/learn.js').then((m) => m.LEARN),
     probes: () => import('../tuners/filesystem/probes.js').then((m) => m.PROBES),
   },
+  ipc: {
+    tunerId: 'sysv-ipc',
+    route: {
+      title: 'How Linux programs share memory and messages | linux-tuners.dev',
+      description:
+        'A beginner guide to System V IPC: shared memory segments, semaphores and message queues, and the six limits the kernel sets on them, with official sources.',
+      ogTitle: 'How Linux programs share memory and messages',
+      priority: 0.8,
+      changefreq: 'monthly',
+      jsonLdType: 'TechArticle',
+    },
+    learn: () => import('../tuners/sysv-ipc/learn.js').then((m) => m.LEARN),
+    probes: () => import('../tuners/sysv-ipc/probes.js').then((m) => m.PROBES),
+  },
 }
 
 /** The /learn index's own route metadata; the route exists only while a guide is live. */

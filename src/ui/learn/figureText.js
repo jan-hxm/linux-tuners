@@ -27,6 +27,17 @@ export const itemValue = (item, evidence) => {
   return formatValue(evidence(ref), ref.unit)
 }
 
+/**
+ * The value line a card or node shows, or '' for none. A probe that only
+ * measured "this part exists" (true) adds nothing the drawn part doesn't
+ * already say, so it shows no line; a part missing on the kernel still says so.
+ */
+export const shownItemValue = (item, evidence) => {
+  if (!item.probe) return ''
+  const r = evidence(itemRef(item))
+  return r?.status === 'ok' && r.value === true ? '' : itemValue(item, evidence)
+}
+
 function plural(unit, n) {
   if (!unit) return ''
   return n === 1 && unit.endsWith('s') ? ` ${unit.slice(0, -1)}` : ` ${unit}`
@@ -150,7 +161,8 @@ export function edgeRows(parts) {
 }
 
 function cardText(card, evidence) {
-  const value = card.probe ? `, measured ${itemValue(card, evidence)}` : ''
+  const shown = shownItemValue(card, evidence)
+  const value = shown ? `, measured ${shown}` : ''
   return `${card.title}, ${plainTip(card.does)}${value}`
 }
 
@@ -263,7 +275,8 @@ export function stackRefs(figure) {
 }
 
 function nodeText(node, evidence) {
-  const parts = [node.text, node.sub, node.probe ? `measured ${itemValue(node, evidence)}` : null]
+  const shown = shownItemValue(node, evidence)
+  const parts = [node.text, node.sub, shown ? `measured ${shown}` : null]
   const does = node.does ? `: ${plainTip(node.does).replace(/\.$/, '')}` : ''
   return `${parts.filter(Boolean).join(', ')}${does}`
 }

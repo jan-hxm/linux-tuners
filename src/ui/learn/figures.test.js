@@ -115,7 +115,11 @@ describe('StackFigure', () => {
     expect(w.get('[data-band="below-min"]').element.tagName).toBe('BUTTON')
     expect(w.get('[data-node="kswapd"]').element.tagName).toBe('BUTTON')
     expect(w.get('[data-node="app"]').attributes('aria-hidden')).toBe('true')
-    expect(w.get('[data-node="kswapd"]').text()).toContain('yes')
+    expect(w.get('[data-node="kswapd"]').text()).not.toContain('yes')
+    // Missing on a kernel, it says so.
+    const absent = mount(StackFigure, { props: { figure: stackChapter.figure, evidence: (ref) => (ref.probe === 'demo.worker' ? { status: 'absent', reason: 'x', kernel: '4.15' } : valueFor(ref, 'debian-13')) } })
+    expect(absent.get('[data-node="kswapd"]').text()).toContain('not present on this kernel')
+    absent.unmount()
     expect(w.text()).toContain('Normal.min: 2,000 pages')
     expect(w.text()).toContain('Values measured on debian-13, kernel 0.0.0-fixture.')
   })

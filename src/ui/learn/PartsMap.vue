@@ -21,7 +21,7 @@ import RichText from '@/ui/RichText.vue'
 import FigureTip from './FigureTip.vue'
 import TipStrip from './TipStrip.vue'
 import {
-  cardGroups, edgeGeometry, edgeRows, gridSize, itemRef, itemValue, partsMapLabel, percent, scaleModel, tipValue,
+  cardGroups, edgeGeometry, edgeRows, gridSize, itemRef, partsMapLabel, shownItemValue, percent, scaleModel, tipValue,
 } from './figureText.js'
 
 const props = defineProps({
@@ -61,7 +61,7 @@ const edges = computed(() =>
     .filter((e) => e.geo),
 )
 
-const value = (card) => itemValue(card, props.evidence)
+const value = (card) => shownItemValue(card, props.evidence)
 const cardValue = (card) => (card.probe ? tipValue(itemRef(card), props.evidence) : '')
 const cardClass = (card) => (card.tone === 'fit' ? 'border-fit bg-fit-tint' : 'border-ink bg-paper hover:bg-paper-hover')
 const SWATCH = { ink: 'bg-ink', fit: 'bg-fit', quiet: 'bg-quiet' }
@@ -97,7 +97,7 @@ const segValue = (seg) => (seg.ref ? tipValue(seg.ref, props.evidence) : '')
           :data-card="card.id"
         >
           <span class="text-[16px] font-medium leading-snug text-ink">{{ card.title }}</span>
-          <span v-if="card.probe" class="font-mono text-[13px] text-ink-2">{{ value(card) }}</span>
+          <span v-if="value(card)" class="font-mono text-[13px] text-ink-2">{{ value(card) }}</span>
         </FigureTip>
         <div aria-hidden="true" class="pointer-events-none absolute inset-y-0 right-0 z-[1]" :style="overlayStyle">
           <div
@@ -136,7 +136,7 @@ const segValue = (seg) => (seg.ref ? tipValue(seg.ref, props.evidence) : '')
                 class="inline-flex min-h-6 flex-wrap items-baseline gap-x-2 text-left text-[15px] leading-snug underline decoration-dotted underline-offset-4"
               >
                 <span class="font-medium text-ink">{{ card.title }}</span>
-                <span v-if="card.probe" class="font-mono text-[13px] text-ink-2">{{ value(card) }}</span>
+                <span v-if="value(card)" class="font-mono text-[13px] text-ink-2">{{ value(card) }}</span>
               </FigureTip>
             </li>
           </ul>

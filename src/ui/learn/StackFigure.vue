@@ -13,7 +13,7 @@
 import { computed, useId } from 'vue'
 import FigureTip from './FigureTip.vue'
 import TipStrip from './TipStrip.vue'
-import { itemRef, itemValue, measuredOn, measuredText, sameOnText, refName, stackLabel, stackRefs, tipValue } from './figureText.js'
+import { itemRef, measuredOn, shownItemValue, measuredText, sameOnText, refName, stackLabel, stackRefs, tipValue } from './figureText.js'
 
 const props = defineProps({
   /** Figure of kind 'stack' */
@@ -91,7 +91,7 @@ const nodeValue = (node) => (node.probe ? tipValue(itemRef(node), props.evidence
                 >
                   <span class="block text-[15px] font-medium leading-snug text-ink underline decoration-dotted underline-offset-4">{{ node.text }}</span>
                   <span v-if="node.sub" class="block text-[13px] leading-snug text-ink-2">{{ node.sub }}</span>
-                  <span v-if="node.probe" class="mt-1 block font-mono text-[13px] text-ink-2">{{ itemValue(node, evidence) }}</span>
+                  <span v-if="shownItemValue(node, evidence)" class="mt-1 block font-mono text-[13px] text-ink-2">{{ shownItemValue(node, evidence) }}</span>
                 </FigureTip>
                 <div
                   v-else
@@ -103,7 +103,7 @@ const nodeValue = (node) => (node.probe ? tipValue(itemRef(node), props.evidence
                 >
                   <p class="m-0 text-[15px] font-medium leading-snug text-ink">{{ node.text }}</p>
                   <p v-if="node.sub" class="m-0 text-[13px] leading-snug text-ink-2">{{ node.sub }}</p>
-                  <p v-if="node.probe" class="m-0 mt-1 font-mono text-[13px] text-ink-2">{{ itemValue(node, evidence) }}</p>
+                  <p v-if="shownItemValue(node, evidence)" class="m-0 mt-1 font-mono text-[13px] text-ink-2">{{ shownItemValue(node, evidence) }}</p>
                 </div>
               </template>
             </div>

@@ -58,35 +58,31 @@ export const LEARN = {
         limit: 'A floor plan helps any burglar. Kernel addresses only help someone who already has a kernel bug to work with.',
       },
       figure: {
-        kind: 'stack',
+        kind: 'modes',
         title: 'Who can read kernel addresses and the kernel log',
-        layers: [
-          {
-            id: 'memory',
-            label: 'Kernel memory',
-            kind: 'nodes',
-            nodes: [{ id: 'layout', text: 'Kernel code and data', sub: 'random each boot', does: 'Where they sit moves at each boot, if the kernel is built for it.', probe: 'security.kallsyms' }],
-          },
+        rows: [
           {
             id: 'addresses',
-            label: 'Addresses in /proc',
-            kind: 'bands',
-            bands: [
-              { id: 'kptr-0', text: '0: printed as hash', does: 'The address is hashed first, so it reveals no location.' },
-              { id: 'kptr-1', text: '1: zeros, bar CAP_SYSLOG', does: 'Readers without `CAP_SYSLOG` see zeros.' },
-              { id: 'kptr-2', text: '2: zeros for all', does: 'Everyone sees zeros, root included.' },
+            label: 'Kernel addresses',
+            pin: 'kptr_restrict',
+            value: { probe: 'security.kptrRestrict', unit: '' },
+            does: 'What users see where the kernel prints an address in `/proc`.',
+            options: [
+              { value: 0, label: 'hashed', does: 'The address is hashed first, so it reveals no location.' },
+              { value: 1, label: 'zeros for users', does: 'Readers without `CAP_SYSLOG` see zeros.' },
+              { value: 2, label: 'zeros for all', does: 'Everyone sees zeros, root included.' },
             ],
-            values: [{ probe: 'security.kptrRestrict', unit: '' }],
           },
           {
             id: 'log',
-            label: 'The kernel log',
-            kind: 'bands',
-            bands: [
-              { id: 'dmesg-0', text: '0: any user reads', does: 'Every user can read the log with `dmesg`.' },
-              { id: 'dmesg-1', text: '1: admins only', does: 'Only users with `CAP_SYSLOG` can read the log.' },
+            label: 'Kernel log',
+            pin: 'dmesg_restrict',
+            value: { probe: 'security.dmesgRestrict', unit: '' },
+            does: 'Who may read the kernel log with `dmesg`.',
+            options: [
+              { value: 0, label: 'any user reads', does: 'Every user can read the log with `dmesg`.' },
+              { value: 1, label: 'admins only', does: 'Only users with `CAP_SYSLOG` can read the log.' },
             ],
-            values: [{ probe: 'security.dmesgRestrict', unit: '' }],
           },
         ],
       },
@@ -139,30 +135,20 @@ export const LEARN = {
         limit: 'A thief can still knock on every door. Random placement makes guessing harder, not impossible.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Which parts of a program land at random addresses',
-        layers: [
+        kind: 'modes',
+        title: 'How much of a program lands at random addresses',
+        rows: [
           {
-            id: 'parts',
-            label: 'One program in memory',
-            kind: 'nodes',
-            nodes: [
-              { id: 'stack', text: 'Stack', does: 'Holds the calls a program is in the middle of.' },
-              { id: 'mmap', text: 'Shared libraries', sub: 'the mmap area', does: 'Libraries a program loads land in the mmap area.' },
-              { id: 'vdso', text: 'vDSO', sub: 'kernel-made library', does: 'A small library the kernel maps into every program.' },
-              { id: 'heap', text: 'Heap', sub: 'the brk area', does: 'Memory a program asks for while it runs.' },
+            id: 'aslr',
+            label: 'Address randomisation',
+            pin: 'randomize_va_space',
+            value: { probe: 'security.randomizeVaSpace', unit: '' },
+            does: 'How much of each program the kernel moves at every start.',
+            options: [
+              { value: 0, label: 'off', does: 'Every part of a program lands where it did last time.' },
+              { value: 1, label: 'stack and libraries', does: 'The stack, the mmap area and the vDSO land at random.' },
+              { value: 2, label: 'heap too', does: 'The heap lands at random as well, which is the default.' },
             ],
-          },
-          {
-            id: 'mode',
-            label: 'ASLR mode',
-            kind: 'bands',
-            bands: [
-              { id: 'aslr-0', text: '0: nothing moves', does: 'Every part of a program lands where it did last time.' },
-              { id: 'aslr-1', text: '1: all but heap', does: 'The stack, the mmap area and the vDSO land at random.' },
-              { id: 'aslr-2', text: '2: heap moves too', does: 'The heap lands at random as well, which is the default.' },
-            ],
-            values: [{ probe: 'security.randomizeVaSpace', unit: '' }],
           },
         ],
       },
@@ -172,7 +158,7 @@ export const LEARN = {
         'Full randomisation is the default, unless the kernel was built for very old programs that expect a fixed heap[^rva]. The docs know of no current program it breaks, so 2 suits nearly every machine[^rva].',
       ],
       pins: [
-        { key: 'randomize_va_space', layer: 'mode', here: 'How much of each program lands at random addresses. 2, the default, moves the heap too and suits nearly every machine. Lower it only for a debugging session, then put it back.' },
+        { key: 'randomize_va_space', layer: 'aslr', here: 'How much of each program lands at random addresses. 2, the default, moves the heap too and suits nearly every machine. Lower it only for a debugging session, then put it back.' },
       ],
       choose: [
         {
@@ -206,38 +192,39 @@ export const LEARN = {
         limit: 'Keys stay where they are. A program can hand its own key out: it may name one other program that is allowed to attach to it.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Who may look into another program\'s memory',
-        layers: [
-          { id: 'tracer', label: 'A program looking', kind: 'nodes', nodes: [{ id: 'debugger', text: 'A debugger or tracer', sub: 'gdb or strace', does: 'Debuggers and tracers are built on `ptrace`.' }] },
+        kind: 'modes',
+        title: 'Who may look into a program, and what a crash leaves',
+        groups: [
+          { id: 'looking', label: 'Debuggers', does: 'A debugger or tracer reads another program, and that memory can hold credentials.' },
+          { id: 'crash', label: 'Crashes' },
+        ],
+        rows: [
           {
-            id: 'scope',
+            id: 'attach',
             label: 'Who may attach',
-            kind: 'bands',
-            bands: [
-              { id: 'ptrace-0', text: '0: same user', does: 'Any program of the same user may attach.' },
-              { id: 'ptrace-1', text: '1: own descendants', does: 'Only its own descendants, or a debugger it names, may attach.' },
-              { id: 'ptrace-2', text: '2: CAP_SYS_PTRACE only', does: 'Only processes with `CAP_SYS_PTRACE` may attach.' },
-              { id: 'ptrace-3', text: '3: nobody, locked', does: 'Nobody may attach, and the value cannot be changed.' },
+            group: 'looking',
+            pin: 'ptrace_scope',
+            value: { probe: 'security.ptraceScope', unit: '' },
+            does: 'Which programs may read and change another program\'s memory with `ptrace`.',
+            options: [
+              { value: 0, label: 'same user', does: 'Any program of the same user may attach.' },
+              { value: 1, label: 'descendants', does: 'Only its own descendants, or a debugger it names, may attach.' },
+              { value: 2, label: 'admins', does: 'Only processes with `CAP_SYS_PTRACE` may attach.' },
+              { value: 3, label: 'nobody', does: 'Nobody may attach, and the value cannot be changed.' },
             ],
-            values: [{ probe: 'security.ptraceScope', unit: '' }],
-          },
-          {
-            id: 'target',
-            label: 'The other program',
-            kind: 'nodes',
-            nodes: [{ id: 'memory', text: 'Its memory', sub: 'credentials it holds', does: 'Memory can hold keys and passwords of an SSH session or key agent.', probe: 'security.yama' }],
           },
           {
             id: 'dumps',
-            label: 'A privileged crash',
-            kind: 'bands',
-            bands: [
-              { id: 'dump-0', text: '0: no core dump', does: 'A crashed privileged program leaves no dump.' },
-              { id: 'dump-1', text: '1: dump, insecure', does: 'It dumps like any program, which the docs call insecure.' },
-              { id: 'dump-2', text: '2: dump to handler', does: 'It dumps only to a pipe handler or a full path.' },
+            label: 'Privileged crash',
+            group: 'crash',
+            pin: 'suid_dumpable',
+            value: { probe: 'security.suidDumpable', unit: '' },
+            does: 'Whether a crashed privileged program leaves its memory in a file.',
+            options: [
+              { value: 0, label: 'no dump', does: 'A crashed privileged program leaves no dump.' },
+              { value: 1, label: 'plain dump', does: 'It dumps like any program, which the docs call insecure.' },
+              { value: 2, label: 'handler only', does: 'It dumps only to a pipe handler or a full path.' },
             ],
-            values: [{ probe: 'security.suidDumpable', unit: '' }],
           },
         ],
       },
@@ -247,7 +234,7 @@ export const LEARN = {
         'A [[core dump|core-dump]] is a file holding a crashed program\'s memory[^core]. fs.suid_dumpable decides whether [[setuid programs|setuid]], and others that changed their privileges, leave one. At 0 they don\'t. At 1 they dump like any program, which the docs call insecure: users could read privileged memory. At 2 they dump only to a pipe handler or a full path[^dumpable].',
       ],
       pins: [
-        { key: 'ptrace_scope', layer: 'scope', here: 'Which programs may attach to others. 1 keeps debugging your own programs working and suits most machines. 2 leaves attaching to root. 3 turns it off until the next reboot.' },
+        { key: 'ptrace_scope', layer: 'attach', here: 'Which programs may attach to others. 1 keeps debugging your own programs working and suits most machines. 2 leaves attaching to root. 3 turns it off until the next reboot.' },
         { key: 'suid_dumpable', layer: 'dumps', here: 'Whether privileged programs leave core dumps. 0 leaves none. 2 suits a machine whose crash handler treats such dumps with care. Leave 1 only for a debugging session.' },
       ],
       choose: [
@@ -289,27 +276,46 @@ export const LEARN = {
         limit: 'Some visitors do need a staff door. Profilers, BPF tools and containers use these features, and closing them stops those programs.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Kernel features a program without privileges may reach',
-        layers: [
-          { id: 'caller', label: 'An ordinary user', kind: 'nodes', nodes: [{ id: 'user', text: 'Unprivileged program', does: 'A program run by a user without admin rights.' }] },
+        kind: 'modes',
+        title: 'Kernel features an ordinary user may reach',
+        rows: [
           {
-            id: 'doors',
-            label: 'Features it may call',
-            kind: 'nodes',
-            nodes: [
-              { id: 'perf', text: 'Performance events', sub: 'perf_event_open()', does: 'Measures performance, and can profile the kernel.' },
-              { id: 'bpf', text: 'BPF programs', sub: 'bpf()', does: 'Loads small programs that run inside the kernel.' },
-              { id: 'userns', text: 'User namespaces', sub: 'root inside only', does: 'A program gets root inside the namespace, with no extra rights outside.' },
-            ],
-            values: [
-              { probe: 'security.perfParanoid', unit: '' },
-              { probe: 'security.bpfDisabled', unit: '' },
-              { probe: 'security.maxUserNamespaces', unit: 'per user' },
-              { probe: 'security.threadsMax', unit: 'threads' },
+            id: 'perf',
+            label: 'Performance events',
+            pin: 'perf_event_paranoid',
+            value: { probe: 'security.perfParanoid', unit: '' },
+            does: 'How much of `perf_event_open()` a user without `CAP_PERFMON` gets.',
+            options: [
+              { value: 0, label: 'system', does: 'Users may also collect events for the whole machine.' },
+              { value: 1, label: 'own all', does: 'Users may profile their own programs, kernel code included.' },
+              { value: 2, label: 'own user', does: 'Users may measure only the user-space part of their own programs, which is the upstream default.' },
+              { value: 3, label: 'off (3)', does: 'Debian and older Ubuntu kernels refuse unprivileged use entirely.' },
+              { value: 4, label: 'off (4)', does: 'Current Ubuntu kernels and patched ones refuse it for everyone without privileges.' },
             ],
           },
-          { id: 'code', label: 'The kernel', kind: 'nodes', nodes: [{ id: 'reach', text: 'Kernel code behind', sub: 'less reachable, fewer bugs', does: 'Each feature opens more kernel code to a program, and less code in reach leaves fewer bugs to use.' }] },
+          {
+            id: 'bpf',
+            label: 'BPF programs',
+            pin: 'unprivileged_bpf_disabled',
+            value: { probe: 'security.bpfDisabled', unit: '' },
+            does: 'Whether users without `CAP_BPF` may load programs that run inside the kernel.',
+            options: [
+              { value: 0, label: 'allowed', does: 'Any user may load BPF programs into the kernel.' },
+              { value: 1, label: 'off, locked', does: 'Refused until the next reboot.' },
+              { value: 2, label: 'off', does: 'Refused, and an admin can change it back.' },
+            ],
+          },
+          {
+            id: 'userns',
+            label: 'User namespaces',
+            pin: 'user_namespaces',
+            value: { probe: 'security.maxUserNamespaces', unit: '' },
+            does: 'The lit number is how many each user may create, not a switch.',
+            options: [
+              { value: 0, label: 'blocked', does: 'Creating one fails for everyone, root included.' },
+              { value: 'allowed', label: 'allowed', does: 'Each user may create namespaces up to a limit.' },
+            ],
+          },
         ],
       },
       body: [
@@ -370,28 +376,55 @@ export const LEARN = {
         limit: 'A clerk reads the note once. A program often checks a name and uses it a moment later, and the trap is laid in that gap.',
       },
       figure: {
-        kind: 'stack',
-        title: 'What a program running as root may meet in /tmp',
-        layers: [
-          { id: 'program', label: 'A privileged program', kind: 'nodes', nodes: [{ id: 'root', text: 'A program as root', sub: 'uses a /tmp name', does: 'It creates or follows a name in `/tmp`.' }] },
+        kind: 'modes',
+        title: 'Which traps the kernel refuses in shared folders',
+        rows: [
           {
-            id: 'folder',
-            label: 'A shared folder',
-            kind: 'nodes',
-            nodes: [
-              { id: 'symlink', text: 'A symlink', sub: 'points elsewhere', does: 'A link that leads to another file.' },
-              { id: 'hardlink', text: 'A hard link', sub: 'second file name', does: 'Another name for the same file.' },
-              { id: 'fifo', text: 'A FIFO', sub: 'a named pipe', does: 'A file that passes data between programs.' },
-              { id: 'regular', text: 'A regular file', sub: 'planted by another user', does: 'Another user created it first.' },
-            ],
-            values: [
-              { probe: 'security.protectedSymlinks', unit: '' },
-              { probe: 'security.protectedHardlinks', unit: '' },
-              { probe: 'security.protectedFifos', unit: '' },
-              { probe: 'security.protectedRegular', unit: '' },
+            id: 'symlink',
+            label: 'Symlinks',
+            pin: 'protected_symlinks',
+            value: { probe: 'security.protectedSymlinks', unit: '' },
+            does: 'A link that leads to another file.',
+            options: [
+              { value: 0, label: 'followed', does: 'A program follows any link in a shared folder.' },
+              { value: 1, label: 'checked', does: 'A link is followed only when it belongs to the follower or the folder\'s owner.' },
             ],
           },
-          { id: 'target', label: 'Where it ends up', kind: 'nodes', nodes: [{ id: 'elsewhere', text: 'An unmeant file', does: 'A file the program never meant to touch.' }] },
+          {
+            id: 'hardlink',
+            label: 'Hard links',
+            pin: 'protected_hardlinks',
+            value: { probe: 'security.protectedHardlinks', unit: '' },
+            does: 'Another name for the same file.',
+            options: [
+              { value: 0, label: 'any file' },
+              { value: 1, label: 'own files only', does: 'Users may link only files they own, or can read and write.' },
+            ],
+          },
+          {
+            id: 'fifo',
+            label: 'FIFOs',
+            pin: 'protected_fifos',
+            value: { probe: 'security.protectedFifos', unit: '' },
+            does: 'A named pipe another user may have planted before the program created its own.',
+            options: [
+              { value: 0, label: 'off' },
+              { value: 1, label: 'world-writable' },
+              { value: 2, label: 'group-writable too' },
+            ],
+          },
+          {
+            id: 'regular',
+            label: 'Regular files',
+            pin: 'protected_regular',
+            value: { probe: 'security.protectedRegular', unit: '' },
+            does: 'A file another user may have planted before the program created its own.',
+            options: [
+              { value: 0, label: 'off' },
+              { value: 1, label: 'world-writable' },
+              { value: 2, label: 'group-writable too' },
+            ],
+          },
         ],
       },
       body: [
@@ -451,35 +484,73 @@ export const LEARN = {
         limit: 'A clerk can phone the sender. The kernel can only compare a packet with its own routes, which mislead it when traffic goes out one way and returns another.',
       },
       figure: {
-        kind: 'stack',
-        title: 'What the kernel checks when a packet arrives',
-        layers: [
-          { id: 'arrives', label: 'A packet arrives', kind: 'nodes', nodes: [{ id: 'packet', text: 'A network packet', sub: 'names its sender', does: 'The sender is only a claim the kernel can check.' }] },
+        kind: 'modes',
+        title: 'What the kernel believes about arriving packets',
+        groups: [
+          { id: 'spoofing', label: 'Spoofing' },
+          { id: 'redirects', label: 'Redirects' },
+          { id: 'routes', label: 'Source routing' },
+        ],
+        rows: [
           {
-            id: 'checks',
-            label: 'Kernel checks',
-            kind: 'nodes',
-            nodes: [
-              { id: 'rpf', text: 'Reverse path', sub: 'reply the same way?', does: 'Would a reply leave by the interface the packet arrived on?' },
-              { id: 'redirect', text: 'ICMP redirects', sub: 'use another router', does: 'Advice from a router to use a different one.' },
-              { id: 'srr', text: 'Source routing', sub: 'sender picks path', does: 'The packet carries the path it wants to take.' },
-            ],
-            values: [
-              { probe: 'security.rpFilter', unit: '' },
-              { probe: 'security.rpFilterDefault', unit: '' },
-              { probe: 'security.acceptRedirects', unit: '' },
-              { probe: 'security.acceptRedirectsV6', unit: '' },
-              { probe: 'security.acceptSourceRoute', unit: '' },
+            id: 'spoof',
+            label: 'Reverse path',
+            group: 'spoofing',
+            pin: 'rp_filter',
+            value: { probe: 'security.rpFilter', unit: '' },
+            does: 'Whether a reply would leave by the interface the packet arrived on.',
+            options: [
+              { value: 0, label: 'off', does: 'No check of the sender.' },
+              { value: 1, label: 'strict', does: 'Drops a packet whose interface is not the best way back to the sender.' },
+              { value: 2, label: 'loose', does: 'Drops it only when no interface leads back.' },
             ],
           },
           {
-            id: 'sends',
-            label: 'What it sends',
-            kind: 'nodes',
-            nodes: [{ id: 'own-redirects', text: 'Its own redirects', sub: 'only when routing', does: 'This machine sends them only when it routes traffic.' }],
-            values: [
-              { probe: 'security.sendRedirects', unit: '' },
-              { probe: 'security.ipForward', unit: '' },
+            id: 'redirect4',
+            label: 'IPv4 redirects',
+            group: 'redirects',
+            pin: 'accept_redirects',
+            value: { probe: 'security.acceptRedirects', unit: '' },
+            does: 'Advice from a router to use a different router.',
+            options: [
+              { value: 0, label: 'ignored' },
+              { value: 1, label: 'accepted', does: 'The kernel takes the advice and changes its routes.' },
+            ],
+          },
+          {
+            id: 'redirect6',
+            label: 'IPv6 redirects',
+            group: 'redirects',
+            pin: 'accept_redirects_v6',
+            value: { probe: 'security.acceptRedirectsV6', unit: '' },
+            does: 'The same advice, for IPv6.',
+            options: [
+              { value: 0, label: 'ignored' },
+              { value: 1, label: 'accepted', does: 'The kernel takes the advice and changes its routes.' },
+            ],
+          },
+          {
+            id: 'send',
+            label: 'Redirects it sends',
+            group: 'redirects',
+            pin: 'send_redirects',
+            value: { probe: 'security.sendRedirects', unit: '' },
+            does: 'Whether this machine tells others about a better router.',
+            options: [
+              { value: 0, label: 'never' },
+              { value: 1, label: 'when routing', does: 'This machine sends them only when it routes traffic.' },
+            ],
+          },
+          {
+            id: 'source',
+            label: 'Source routes',
+            group: 'routes',
+            pin: 'accept_source_route',
+            value: { probe: 'security.acceptSourceRoute', unit: '' },
+            does: 'Packets that carry the path they want to take.',
+            options: [
+              { value: 0, label: 'dropped' },
+              { value: 1, label: 'accepted', does: 'The packet picks its own path through the network.' },
             ],
           },
         ],
@@ -490,11 +561,11 @@ export const LEARN = {
         'For IPv4 redirects, an interface takes or sends them when either the `all` value or its own value allows it[^ip]. Setting `all` to 0 is then not enough on its own, so check each interface. For rp_filter the higher of the two values counts[^ip].',
       ],
       pins: [
-        { key: 'rp_filter', layer: 'rpf', here: 'Whether the kernel drops IPv4 packets whose sender looks forged. 1 suits a machine with one way in and out. 2 suits several uplinks, VPNs and other uneven routes.' },
-        { key: 'accept_redirects', layer: 'redirect', here: 'Whether IPv4 redirects may change this machine\'s routes. A machine whose routes are set correctly has no use for them, so 0 suits most machines.' },
-        { key: 'accept_redirects_v6', layer: 'redirect', here: 'The same choice for IPv6 redirects. 0 suits most machines; check each interface after you set it.' },
-        { key: 'send_redirects', layer: 'own-redirects', here: 'Whether this machine tells others about a better router when it forwards their traffic. Only a router needs it, so 0 suits other machines.' },
-        { key: 'accept_source_route', layer: 'srr', here: 'Whether IPv4 packets may choose their own path. Hosts refuse them by default, and 0 keeps it that way.' },
+        { key: 'rp_filter', layer: 'spoof', here: 'Whether the kernel drops IPv4 packets whose sender looks forged. 1 suits a machine with one way in and out. 2 suits several uplinks, VPNs and other uneven routes.' },
+        { key: 'accept_redirects', layer: 'redirect4', here: 'Whether IPv4 redirects may change this machine\'s routes. A machine whose routes are set correctly has no use for them, so 0 suits most machines.' },
+        { key: 'accept_redirects_v6', layer: 'redirect6', here: 'The same choice for IPv6 redirects. 0 suits most machines; check each interface after you set it.' },
+        { key: 'send_redirects', layer: 'send', here: 'Whether this machine tells others about a better router when it forwards their traffic. Only a router needs it, so 0 suits other machines.' },
+        { key: 'accept_source_route', layer: 'source', here: 'Whether IPv4 packets may choose their own path. Hosts refuse them by default, and 0 keeps it that way.' },
       ],
       choose: [
         {

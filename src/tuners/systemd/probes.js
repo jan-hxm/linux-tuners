@@ -27,7 +27,6 @@ export const PROBES = {
   'systemd.initScope': { kind: 'file', path: '/sys/fs/cgroup/init.scope', exists: true },
   'systemd.cpuStat': { kind: 'file', path: `${SLICE}/cpu.stat`, exists: true },
   'systemd.memoryCurrent': { kind: 'sysfs', path: `${SLICE}/memory.current` },
-  'systemd.ioStat': { kind: 'file', path: `${SLICE}/io.stat`, exists: true },
 
   // What the slice settings write, read back for system.slice.
   'systemd.cpuWeight': { kind: 'sysfs', path: `${SLICE}/cpu.weight` },
@@ -35,7 +34,6 @@ export const PROBES = {
   'systemd.memoryHigh': { kind: 'sysfs', path: `${SLICE}/memory.high` },
   'systemd.memoryMax': { kind: 'sysfs', path: `${SLICE}/memory.max` },
   'systemd.swapMax': { kind: 'sysfs', path: `${SLICE}/memory.swap.max` },
-  'systemd.ioWeight': { kind: 'sysfs', path: `${SLICE}/io.weight` },
   'systemd.pidsMax': { kind: 'sysfs', path: `${SLICE}/pids.max` },
   'systemd.pidsCurrent': { kind: 'sysfs', path: `${SLICE}/pids.current` },
 

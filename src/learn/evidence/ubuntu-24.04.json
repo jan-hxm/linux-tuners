@@ -650,14 +650,6 @@
       "status": "ok",
       "value": true
     },
-    "systemd.ioStat": {
-      "reason": "no /sys/fs/cgroup/system.slice/io.stat",
-      "status": "absent"
-    },
-    "systemd.ioWeight": {
-      "reason": "cat: /sys/fs/cgroup/system.slice/io.weight: No such file or directory",
-      "status": "absent"
-    },
     "systemd.memoryCurrent": {
       "status": "ok",
       "value": 246812672

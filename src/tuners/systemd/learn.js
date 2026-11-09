@@ -93,7 +93,7 @@ export const LEARN = {
             nodes: [
               { id: 'cpu', text: 'CPU time', sub: 'cpu.stat', probe: 'systemd.cpuStat' },
               { id: 'memory', text: 'Memory', sub: 'memory.current' },
-              { id: 'io', text: 'Disk reads and writes', sub: 'io.stat', probe: 'systemd.ioStat' },
+              { id: 'io', text: 'Disk reads and writes', sub: 'io.stat, once IOWeight is set' },
               { id: 'tasks', text: 'Tasks', sub: 'pids.current' },
               { id: 'network', text: 'Network traffic', sub: 'IPAccounting=' },
             ],
@@ -315,7 +315,6 @@ export const LEARN = {
               { id: 'system-slice', text: 'system.slice', sub: 'io.weight' },
               { id: 'user-slice', text: 'user.slice', sub: 'io.weight' },
             ],
-            values: [{ probe: 'systemd.ioWeight', unit: '' }],
           },
           {
             id: 'splitter',

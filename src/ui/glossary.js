@@ -343,4 +343,31 @@ export const GLOSSARY = Object.freeze({
     definition:
       'A system call with which a program tells the kernel how it expects to use a range of its memory, for example that it wants huge pages there (MADV_HUGEPAGE) or that identical pages in it may be merged (MADV_MERGEABLE).',
   },
+
+  // kernel guide
+  pid: {
+    term: 'Process ID',
+    definition:
+      'The number the kernel gives each process, and each thread, so it can tell them apart. The kernel hands them out in order and wraps back to a low number when it reaches kernel.pid_max.',
+  },
+  'kernel-key': {
+    term: 'Kernel key',
+    definition:
+      'A record the kernel keeps for security data such as an authentication token or an encryption key. It has a description and may have a payload, the data itself. Keyrings are keys that hold links to other keys.',
+  },
+  oops: {
+    term: 'Oops',
+    definition:
+      'The report the kernel prints when it hits a fault or a BUG in its own code. By default it tries to carry on; kernel.panic_on_oops makes it panic instead.',
+  },
+  'soft-lockup': {
+    term: 'Soft lockup',
+    definition:
+      'A bug that makes the kernel loop in kernel mode for more than twice kernel.watchdog_thresh (20 seconds by default) without giving other tasks a chance to run. The watchdog logs it, and kernel.softlockup_panic can turn it into a panic.',
+  },
+  loglevel: {
+    term: 'Log level',
+    definition:
+      'The urgency of a kernel message, from 0 (emergency) to 7 (debug). The console shows only messages whose level is lower than the console log level.',
+  },
 })

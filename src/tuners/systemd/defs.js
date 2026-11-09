@@ -419,7 +419,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Cap on how much swap this slice may use.',
     longDesc: {
       what: [
-        'Limits the swap (not RAM) the slice may consume, via the [[cgroup]] v2 memory controller. Expressed here as a percentage of total RAM for an at-a-glance budget.',
+        'Limits the swap (not RAM) the slice may consume, via the [[cgroup]] v2 memory controller. Set here as a percentage of total RAM for an at-a-glance budget, and written to the file as that many bytes: systemd reads a percentage here as a share of RAM, but its manual says of swap, so a byte size is the one form that means the same on every version.',
       ],
       when: [
         'Set it to 0 to forbid the slice from swapping at all: the classic database tuning, where you would rather the slice be reclaimed or [[OOM-killed|oom-killer]] than suffer the latency of paging buffers to disk. Leave it at 100% (infinity) to let the slice use swap freely.',

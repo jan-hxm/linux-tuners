@@ -242,30 +242,24 @@ export const LEARN = {
         limit: 'A slot is full when it runs out of room. A queue is measured in bytes of message text, so a few long messages fill it as fast as many short ones.',
       },
       figure: {
-        kind: 'stack',
-        title: 'The three message queue limits',
-        layers: [
-          {
-            id: 'sender',
-            label: 'A program sends',
-            kind: 'nodes',
-            nodes: [{ id: 'send', text: 'One message', sub: 'Up to msgmax bytes', does: 'The text of one message may be up to kernel.msgmax bytes long.' }],
-            values: [{ probe: 'sysv-ipc.msgmax', unit: 'bytes', label: 'msgmax' }],
-          },
+        kind: 'compare',
+        title: 'The two message size limits',
+        axis: 'bytes',
+        scale: 'linear',
+        bars: [
+          { id: 'message', label: 'One message', value: { probe: 'sysv-ipc.msgmax', unit: 'bytes', label: 'msgmax' }, does: 'The longest text one message may carry.' },
           {
             id: 'queue',
             label: 'One queue',
-            kind: 'nodes',
-            nodes: [{ id: 'one-queue', text: 'A message queue', sub: 'Starts at msgmnb', does: 'A new queue holds kernel.msgmnb bytes of message text to start.', probe: 'sysv-ipc.sysvipcMsg' }],
-            values: [{ probe: 'sysv-ipc.msgmnb', unit: 'bytes', label: 'msgmnb' }],
+            tone: 'fit',
+            value: { probe: 'sysv-ipc.msgmnb', unit: 'bytes', label: 'msgmnb' },
+            does: 'What a new queue holds; msgmni, the count of queues, is a count and is not drawn.',
           },
-          {
-            id: 'machine',
-            label: 'The machine',
-            kind: 'nodes',
-            nodes: [{ id: 'all-queues', text: 'All message queues', sub: 'At most msgmni', does: 'The machine allows at most kernel.msgmni queues.' }],
-            values: [{ probe: 'sysv-ipc.msgmni', unit: 'queues', label: 'msgmni' }],
-          },
+        ],
+        pins: [
+          { key: 'msgmax', bar: 'message' },
+          { key: 'msgmnb', bar: 'queue' },
+          { key: 'msgmni', bar: 'queue' },
         ],
       },
       body: [
@@ -274,8 +268,8 @@ export const LEARN = {
         '`kernel.msgmnb` is the size a new queue starts with, 16384 bytes by default[^msgget][^limits]. When a queue is full, `msgsnd()` waits, or fails with EAGAIN if the program asked not to wait[^msgsnd]. Raising one queue above msgmnb needs the capability CAP_SYS_RESOURCE[^msgctl].',
       ],
       pins: [
-        { key: 'msgmni', layer: 'machine', here: 'The most queues that may exist at once. A new queue past it fails with ENOSPC. Raise it only when software asks, since the default is already large.' },
-        { key: 'msgmax', layer: 'sender', here: 'The longest message text one send may carry, in bytes. A longer one fails with EINVAL. Keep it at or below msgmnb, or a large message may never fit in a queue.' },
+        { key: 'msgmni', layer: 'queue', here: 'The most queues that may exist at once. A new queue past it fails with ENOSPC. Raise it only when software asks, since the default is already large.' },
+        { key: 'msgmax', layer: 'message', here: 'The longest message text one send may carry, in bytes. A longer one fails with EINVAL. Keep it at or below msgmnb, or a large message may never fit in a queue.' },
         { key: 'msgmnb', layer: 'queue', here: 'How many bytes a new queue holds before senders wait. Higher lets more pile up, and every full queue takes more memory. Raise it only when software asks.' },
       ],
       choose: [

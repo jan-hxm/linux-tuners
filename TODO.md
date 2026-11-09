@@ -8,7 +8,6 @@ details are kept in the local, gitignored `PRIVATE.md`, not here.
 ## 1. Next
 
 - [ ] **Learning pages** (in progress). One study guide per tuner at `/learn/<slug>`, for beginners, with figures whose numbers come from VM captures ([Design.md §5 Learning pages](Design.md#learning-pages)). The tuner cards drop their long descriptions once a tuner's guide is live. Built in four waves: foundations and the memory guide, the pages, the other eight guides, then a final pass.
-- [ ] **Run the new swap cap VM case.** `vm/suite.mjs` "a partial swap cap reaches memory.swap.max as the bytes the comment says" (cgroup v2 images) has not been run yet: it checks the byte-size `MemorySwapMax=` the systemd tuner now writes, and that systemd scales `MemorySwapMax=10%` by RAM (not swap, as its man page says). If `memory.swap.max` doesn't change after `daemon-reexec`, the slice needs re-realizing (a `daemon-reload`, or reading it from a unit started in the slice) rather than a tuner fix.
 - [ ] **Finer swap pressure samples near full memory.** `pressureCurve` samples memory fill in 1% steps, but on a typical machine the kswapd band and the min watermark sit within the last 1% (99.3 to 99.6% on 16 GiB). The chart now zooms the axis to that range (`focusRange`), so the curve shows only three samples there and starts rising at 99%, before the band. Sample more densely near the watermarks (simulation change, keep the tests).
 
 ## 2. Watch list

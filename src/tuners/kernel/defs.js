@@ -81,6 +81,11 @@ export const PARAMETER_DEFS = [
     kernelDefault: 131072,
     kernelDefaultNote: 'About RAM / 128 KiB: 131072 on 16 GiB.',
     kernelMin: 2048,
+    // Upstream kernels before 5.4 silently cap a write above the boot value
+    // (set_max_threads() in kernel/fork.c; fixed by "kernel/sysctl.c: do not
+    // override max_threads provided by userspace"). No supported image is
+    // affected: Ubuntu 18.04's 4.15 carries the fix, Debian 11 runs 5.10, and
+    // the VM suite raises threads-max past the boot value on every image.
     kernelMax: PID_MAX_LIMIT,
     step: 1024,
     unit: 'count',

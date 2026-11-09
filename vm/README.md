@@ -78,7 +78,9 @@ Per image ([suite.mjs](suite.mjs)):
    file would need to lower them.
 9. **systemd drop-ins** for each workload and preset load after
    `daemon-reexec` with no PID 1 warning about our files, and `systemctl show`
-   reports each directive.
+   reports each directive. On cgroup v2 a partial swap cap reaches
+   `memory.swap.max` as the bytes written, and `MemorySwapMax=10%` is a tenth
+   of RAM (not of swap, as the man page says).
 10. **After a reboot**, systemd-sysctl applies the swap, network, security,
    filesystem, huge pages, Db2 IPC and kernel defaults together, systemd-tmpfiles sets the
    THP and KSM files and a small pool is reserved, udev applies a block I/O

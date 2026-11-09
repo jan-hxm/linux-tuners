@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateConfig, systemdSize } from './config.js'
+import { generateConfig, swapMaxBytes, systemdSize } from './config.js'
 import { combineFiles } from '@/core/output/files.js'
 import { deriveDefaults } from './calculations.js'
 import { DEFAULT_SYSTEMD_SPEC } from './profile.js'
@@ -23,6 +23,17 @@ describe('systemd generateConfig', () => {
     expect(v1).toMatch(/^DefaultCPUAccounting=(yes|no)$/m)
     expect(v1).not.toMatch(/^MemorySwapMax=/m)
     expect(v1).toContain('# MemorySwapMax: left out, it needs cgroup v2')
+  })
+
+  // systemd scales MemorySwapMax=N% by RAM, but its man page says by swap
+  // size, so a swap cap between 0 and 100% is written as a byte size.
+  it('writes a partial swap cap as bytes of the profile RAM, not a percentage', () => {
+    const out = gen('general', { memory_swap_max: 25 }, { ramGiB: 16 })
+    expect(out).toMatch(/^MemorySwapMax=4G$/m)
+    expect(out).toContain('# MemorySwapMax: swap budget, 25% of 16 GiB RAM')
+    expect(out).not.toMatch(/^MemorySwapMax=.*%/m)
+    expect(gen('general', { memory_swap_max: 10 }, { ramGiB: 3 })).toMatch(/^MemorySwapMax=307M$/m)
+    expect(swapMaxBytes(1, { ramGiB: 0.01 })).toBe(1024 * 1024)
   })
 
   it('emits both drop-in files with their target paths', () => {

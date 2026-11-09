@@ -11413,11 +11413,11 @@ exports[`generated config: systemd > container-host / container-host 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11461,11 +11461,11 @@ exports[`generated config: systemd > container-host / database-server 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11510,11 +11510,11 @@ exports[`generated config: systemd > container-host / defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11558,11 +11558,11 @@ exports[`generated config: systemd > container-host / desktop 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11605,11 +11605,11 @@ exports[`generated config: systemd > container-host / hardened-multitenant 1`] =
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11653,11 +11653,11 @@ exports[`generated config: systemd > container-host / kubernetes-node 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11701,11 +11701,11 @@ exports[`generated config: systemd > container-host / systemd-defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11747,11 +11747,11 @@ exports[`generated config: systemd > database / container-host 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11796,11 +11796,11 @@ exports[`generated config: systemd > database / database-server 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11845,11 +11845,11 @@ exports[`generated config: systemd > database / defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11894,11 +11894,11 @@ exports[`generated config: systemd > database / desktop 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11942,11 +11942,11 @@ exports[`generated config: systemd > database / hardened-multitenant 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -11991,11 +11991,11 @@ exports[`generated config: systemd > database / kubernetes-node 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12040,11 +12040,11 @@ exports[`generated config: systemd > database / systemd-defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12086,11 +12086,11 @@ exports[`generated config: systemd > desktop / container-host 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12134,11 +12134,11 @@ exports[`generated config: systemd > desktop / database-server 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12183,11 +12183,11 @@ exports[`generated config: systemd > desktop / defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12229,11 +12229,11 @@ exports[`generated config: systemd > desktop / desktop 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12276,11 +12276,11 @@ exports[`generated config: systemd > desktop / hardened-multitenant 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12324,11 +12324,11 @@ exports[`generated config: systemd > desktop / kubernetes-node 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12372,11 +12372,11 @@ exports[`generated config: systemd > desktop / systemd-defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12418,11 +12418,11 @@ exports[`generated config: systemd > general / container-host 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12466,11 +12466,11 @@ exports[`generated config: systemd > general / container-host 2`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12514,11 +12514,11 @@ exports[`generated config: systemd > general / database-server 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12563,11 +12563,11 @@ exports[`generated config: systemd > general / database-server 2`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12612,11 +12612,11 @@ exports[`generated config: systemd > general / defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12658,11 +12658,11 @@ exports[`generated config: systemd > general / defaults 2`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12704,11 +12704,11 @@ exports[`generated config: systemd > general / desktop 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12751,11 +12751,11 @@ exports[`generated config: systemd > general / desktop 2`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12798,11 +12798,11 @@ exports[`generated config: systemd > general / hardened-multitenant 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12846,11 +12846,11 @@ exports[`generated config: systemd > general / hardened-multitenant 2`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12894,11 +12894,11 @@ exports[`generated config: systemd > general / kubernetes-node 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12942,11 +12942,11 @@ exports[`generated config: systemd > general / kubernetes-node 2`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -12990,11 +12990,11 @@ exports[`generated config: systemd > general / systemd-defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -13036,11 +13036,11 @@ exports[`generated config: systemd > general / systemd-defaults 2`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -13082,11 +13082,11 @@ exports[`generated config: systemd > kubernetes / container-host 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -13130,11 +13130,11 @@ exports[`generated config: systemd > kubernetes / database-server 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -13179,11 +13179,11 @@ exports[`generated config: systemd > kubernetes / defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -13227,11 +13227,11 @@ exports[`generated config: systemd > kubernetes / desktop 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -13274,11 +13274,11 @@ exports[`generated config: systemd > kubernetes / hardened-multitenant 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -13322,11 +13322,11 @@ exports[`generated config: systemd > kubernetes / kubernetes-node 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=yes
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no
@@ -13370,11 +13370,11 @@ exports[`generated config: systemd > kubernetes / systemd-defaults 1`] = `
 # ===== /etc/systemd/system.conf.d/99-resource-tuning.conf ===================
 [Manager]
 # DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)
-# DefaultMemoryAccounting: per-unit memory accounting (required for memory limits)
+# DefaultMemoryAccounting: per-unit memory accounting (units with a limit count either way)
 DefaultMemoryAccounting=yes
 # DefaultIOAccounting: per-unit block-I/O accounting
 DefaultIOAccounting=no
-# DefaultTasksAccounting: per-unit task counting (required for TasksMax)
+# DefaultTasksAccounting: per-unit task counting (units with a TasksMax count either way)
 DefaultTasksAccounting=yes
 # DefaultIPAccounting: per-unit network accounting (eBPF)
 DefaultIPAccounting=no

@@ -1644,7 +1644,10 @@ behaviour goes in only once a VM has shown it; facts found that way so far:
   before 5.13, and Ubuntu 18.04 blocks perf at 3 like Debian.
 - systemd 258 removed `DefaultCPUAccounting=`; on cgroup v2 it was a no-op,
   so it is written for cgroup v1 only. `MemorySwapMax=` works on v2 only, and
-  systemd 237 rejects 0, so it is left out on v1.
+  systemd 237 rejects 0, so it is left out on v1. A swap cap between 0 and
+  100% is written in bytes of the profile's RAM: systemd scales
+  `MemorySwapMax=N%` by RAM in every release (232 to 258), but its man page
+  says by swap size, so a percentage could change meaning.
 - systemd 240+ starts `fs.file-max` at 9223372036854775807; Ubuntu 18.04
   (237) keeps the kernel's ~10% of RAM in KiB. Writing 0 locks every
   unprivileged process, SSH logins included, out of opening files.

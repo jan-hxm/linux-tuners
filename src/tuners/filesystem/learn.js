@@ -14,6 +14,18 @@ const procSysFs = () => man(5, 'proc_sys_fs', 'DESCRIPTION', 'proc_sys_fs(5): de
 const inotify = () => man(7, 'inotify', 'DESCRIPTION', 'inotify(7): description')
 const inotifyNotes = () => man(7, 'inotify', 'NOTES', 'inotify(7): notes')
 
+/**
+ * One busy machine behind the examples: the idle test guest holds almost no
+ * open files, watches or async I/O slots, so these show what a loaded one
+ * might look like. The page says they are examples. The limits stay measured.
+ */
+const BUSY = {
+  openFiles: { example: 12000, unit: 'files', label: "Busy server's open files" },
+  ideWatches: { example: 60000, unit: '', label: 'A big IDE project' },
+  queued: { example: 9000, unit: 'events', label: 'Events waiting now' },
+  aioSlots: { example: 20000, unit: 'slots', label: "Database's reserved slots" },
+}
+
 export const LEARN = {
   slug: 'file-limits',
   title: 'How Linux limits open files and file watching',
@@ -56,20 +68,20 @@ export const LEARN = {
       },
       figure: {
         kind: 'compare',
-        title: 'Open-file limits, one per program and one for the machine',
+        title: 'Files a busy server holds open, against the highest hard limit',
         axis: 'open files',
-        scale: 'linear',
+        scale: 'log',
         groups: [
           { id: 'program', label: 'Per program', does: 'Each program has its own soft and hard limit, and no hard limit can go above `fs.nr_open`.' },
           { id: 'machine', label: 'Whole machine', does: 'One table holds every open file of every program.' },
         ],
         bars: [
           { id: 'nr-open', label: 'Highest hard limit', group: 'program', value: { probe: 'filesystem.nrOpen', unit: 'files' }, does: "The ceiling for any program's hard limit, set by `fs.nr_open`." },
-          { id: 'file-max', label: 'Open files, all programs', group: 'machine', tone: 'fit', value: { probe: 'filesystem.fileMax', unit: 'files' }, does: 'The most open files all programs may hold together, set by `fs.file-max`.' },
+          { id: 'file-max', label: "Busy server's open files", group: 'machine', tone: 'fit', value: BUSY.openFiles, does: 'An example total, capped by `fs.file-max`, which reads as no practical limit on most test kernels.' },
         ],
         pins: [
           { key: 'nr_open', bar: 'nr-open' },
-          { key: 'file_max', bar: 'file-max' },
+          { key: 'file_max', bar: 'file-max', value: { probe: 'filesystem.fileMax', unit: 'files' } },
         ],
       },
       body: [
@@ -129,6 +141,7 @@ export const LEARN = {
         bars: [
           { id: 'instances', label: 'Watchers (instances)', value: { probe: 'filesystem.maxUserInstances', unit: '' }, does: 'Each running watcher takes at least one inotify instance, with its own event queue.' },
           { id: 'watches', label: 'Watched files and folders', tone: 'fit', value: { probe: 'filesystem.maxUserWatches', unit: '' }, does: 'Each watch names one file or directory, and a directory watch is not recursive.' },
+          { id: 'ide', label: 'A big IDE project', tone: 'error', value: BUSY.ideWatches, does: 'An example: one watch for every folder and file of a big project can pass the limit.' },
         ],
         pins: [
           { key: 'max_user_instances', bar: 'instances' },
@@ -195,6 +208,8 @@ export const LEARN = {
           { id: 'room', label: 'room in the queue', to: 'queue-limit', tone: 'fit', does: 'Events wait here until the program reads them.' },
           { id: 'overflow', label: 'events dropped', from: 'queue-limit', tone: 'error', does: 'The queue is full, so new events are dropped and the program gets an overflow event.' },
         ],
+        // The tank filled to an example amount, below the measured limit.
+        level: { label: 'example fill', value: BUSY.queued, does: 'An example queue partway through a burst: room is left, but a slow reader is falling behind.' },
         // Schematic: level 1 is the queue limit, as measured.
         curve: {
           points: [[0, 0.05], [0.2, 0.05], [0.4, 0.5], [0.55, 1], [0.7, 1], [0.85, 0.3], [1, 0.05]],
@@ -249,7 +264,7 @@ export const LEARN = {
         title: 'Async I/O request slots reserved, up to the cap',
         axis: 'slots reserved',
         marks: [
-          { id: 'aio-nr', label: 'Reserved now', value: { probe: 'filesystem.aioNr', unit: 'slots' }, does: 'The running total of slots reserved by `io_setup()` calls, all programs together.' },
+          { id: 'aio-nr', label: "Database's reserved slots", value: BUSY.aioSlots, does: 'An example: the running total of slots a database reserved with `io_setup()` calls.' },
           { id: 'cap', label: 'The cap', tone: 'error', value: { probe: 'filesystem.aioMaxNr', unit: 'slots' }, does: 'An `io_setup()` call that would pass it fails with EAGAIN.' },
         ],
         zones: [

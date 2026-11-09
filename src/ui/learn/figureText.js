@@ -16,6 +16,15 @@ export const ABSENT = 'not present on this kernel'
 /** A ValueRef for a card's or node's bare `probe` id. */
 export const probeRef = (probe) => ({ probe, path: '', unit: '' })
 
+/** The ValueRef of a card or node: its `probe`, with its `path` and `unit` when it has them. */
+export const itemRef = (item) => ({ probe: item.probe, path: item.path ?? '', unit: item.unit ?? '' })
+
+/** A card's or node's measured value as text. */
+export const itemValue = (item, evidence) => {
+  const ref = itemRef(item)
+  return formatValue(evidence(ref), ref.unit)
+}
+
 function plural(unit, n) {
   if (!unit) return ''
   return n === 1 && unit.endsWith('s') ? ` ${unit.slice(0, -1)}` : ` ${unit}`
@@ -59,6 +68,27 @@ export function kernelOf(refs, evidence) {
   return null
 }
 
+/**
+ * Whether every image measured the same thing for every ref: each ref is
+ * `ok` with one value on all of them. A kernel picker would then change
+ * nothing, so the page shows one caption instead (sameOnText).
+ * @param {object[]} refs
+ * @param {string[]} imageIds
+ * @param {(ref: object, imageId: string) => object} valueAt
+ */
+export function sameOnEveryImage(refs, imageIds, valueAt) {
+  if (!refs.length || imageIds.length < 2) return false
+  return refs.every((ref) => {
+    const results = imageIds.map((id) => valueAt(ref, id))
+    if (!results.every((r) => r?.status === 'ok')) return false
+    const first = JSON.stringify(results[0].value)
+    return results.every((r) => JSON.stringify(r.value) === first)
+  })
+}
+
+/** The caption of a figure whose values are the same on every image. */
+export const sameOnText = (count) => `Values measured on ${count} test kernels, the same on each.`
+
 /** The line under a figure that says where its numbers come from. */
 export function measuredOn(refs, evidence, imageId) {
   if (!refs.length) return ''
@@ -96,7 +126,7 @@ export function edgeRows(parts) {
 }
 
 function cardText(card, evidence) {
-  const value = card.probe ? `, measured ${formatValue(evidence(probeRef(card.probe)))}` : ''
+  const value = card.probe ? `, measured ${itemValue(card, evidence)}` : ''
   return `${card.title}, ${card.does}${value}`
 }
 
@@ -156,12 +186,12 @@ export function edgeGeometry(parts, edge, gapX, gapY) {
 export function stackRefs(figure) {
   return figure.layers.flatMap((layer) => [
     ...(layer.values ?? []),
-    ...(layer.nodes ?? []).filter((n) => n.probe).map((n) => probeRef(n.probe)),
+    ...(layer.nodes ?? []).filter((n) => n.probe).map(itemRef),
   ])
 }
 
 function nodeText(node, evidence) {
-  const parts = [node.text, node.sub, node.probe ? `measured ${formatValue(evidence(probeRef(node.probe)))}` : null]
+  const parts = [node.text, node.sub, node.probe ? `measured ${itemValue(node, evidence)}` : null]
   return parts.filter(Boolean).join(', ')
 }
 
@@ -241,7 +271,7 @@ export function pinRefs(figure, pin) {
     for (const layer of figure.layers) {
       if (layer.id === target || (layer.bands ?? []).some((b) => b.id === target)) return layer.values ?? []
       const node = (layer.nodes ?? []).find((n) => n.id === target)
-      if (node) return node.probe ? [probeRef(node.probe)] : []
+      if (node) return node.probe ? [itemRef(node)] : []
     }
   }
   if (figure.kind === 'timeline') {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   answerText, answerValue, chooseStep, curvePath, edgeGeometry, edgeRows, figureLabel, formatValue, lineLevels, noText,
-  numberedSources, partsMapLabel, pinRefs, safeHref, splitFootnotes, NOT_MEASURED, NOTHING_FITS,
+  numberedSources, partsMapLabel, pinRefs, safeHref, sameOnEveryImage, sameOnText, splitFootnotes, NOT_MEASURED, NOTHING_FITS,
 } from './figureText.js'
 import { DEMO_DEFS, DEMO_LEARN, valueFor } from '@/learn/__fixtures__/demoKit.js'
 
@@ -172,5 +172,27 @@ describe('footnotes and sources', () => {
     expect(safeHref('https://docs.kernel.org/x')).toBe('https://docs.kernel.org/x')
     expect(safeHref('/swap')).toBe('/swap')
     for (const bad of ['javascript:alert(1)', '//evil.example', 'http://docs.kernel.org', 'data:text/html,x', null]) expect(safeHref(bad)).toBeNull()
+  })
+})
+
+describe('values the same on every image', () => {
+  const ids = ['a', 'b', 'c']
+  const ok = (value) => ({ status: 'ok', value, kernel: '6.1' })
+  const ref = { probe: 'demo.x' }
+  it('is true only when every ref is ok with one value on every image', () => {
+    expect(sameOnEveryImage([ref], ids, () => ok(10))).toBe(true)
+    expect(sameOnEveryImage([ref], ids, () => ok({ min: 1, max: 2 }))).toBe(true)
+    expect(sameOnEveryImage([ref], ids, (_, id) => ok(id === 'c' ? 11 : 10))).toBe(false)
+    expect(sameOnEveryImage([ref], ids, (_, id) => (id === 'c' ? { status: 'absent', reason: 'x' } : ok(10)))).toBe(false)
+    expect(sameOnEveryImage([ref], ids, () => ({ status: 'missing' }))).toBe(false)
+  })
+  it('needs values and more than one image to compare', () => {
+    expect(sameOnEveryImage([], ids, () => ok(10))).toBe(false)
+    expect(sameOnEveryImage([ref], ['a'], () => ok(10))).toBe(false)
+  })
+  it('is false for the fixture stack, which differs on one image, and says so in plain words', () => {
+    const images = ['debian-13', 'ubuntu-24.04', 'fedora-43', 'debian-11', 'ubuntu-18.04']
+    expect(sameOnEveryImage(stackChapter.figure.layers.flatMap((l) => l.values ?? []), images, valueFor)).toBe(false)
+    expect(sameOnText(5)).toBe('Values measured on 5 test kernels, the same on each.')
   })
 })

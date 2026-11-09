@@ -25,7 +25,7 @@ import Chooser from './Chooser.vue'
 import DecisionFlow from './DecisionFlow.vue'
 import { imageIn, setKernel } from './kernelPref.js'
 import {
-  defName, defTitle, hostOf, kernelOf, measuredText, numberedSources, pinRefs, safeHref, splitFootnotes, stackRefs,
+  defName, defTitle, hostOf, kernelOf, measuredText, numberedSources, pinRefs, safeHref, sameOnEveryImage, splitFootnotes, stackRefs,
 } from './figureText.js'
 
 const props = defineProps({
@@ -66,6 +66,12 @@ const figureRefs = computed(() => {
   if (f.kind === 'timeline') return f.lines.map((l) => l.value)
   return []
 })
+
+// Every value the same on every image: no picker, one caption (Design.md
+// "Learning pages > Figures").
+const sameOn = computed(() =>
+  sameOnEveryImage(figureRefs.value, props.images.map((img) => img.id), props.valueFor) ? props.images.length : 0,
+)
 
 const pins = computed(() => props.chapter.pins ?? [])
 const selectedKey = ref(pins.value[0]?.key ?? null)
@@ -112,7 +118,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
 
     <div class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_16rem]" data-part="figure">
       <div class="min-w-0">
-        <div v-if="figureRefs.length" class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div v-if="figureRefs.length && !sameOn" class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
           <span :id="`${uid}-kernels`" class="text-[13px] text-quiet">Measured on</span>
           <div role="group" :aria-labelledby="`${uid}-kernels`" class="flex max-w-full flex-wrap gap-px border border-rule-strong bg-rule-strong" data-kernels>
             <button
@@ -132,7 +138,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
           :figure="figure"
           :evidence="evidence"
           :image-id="imageId"
-          v-bind="figure.kind === 'sideBySide' ? { defsByKey } : { highlight: selected?.layer ?? null }"
+          v-bind="figure.kind === 'sideBySide' ? { defsByKey } : { highlight: selected?.layer ?? null, sameOn }"
         />
         <div v-if="pins.length" role="group" aria-label="Settings in this figure" class="mt-4 flex flex-wrap gap-2" data-pins>
           <button
@@ -161,7 +167,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
             <ul class="m-0 list-none p-0 font-mono text-[13px] text-ink">
               <li v-for="vref in selectedRefs" :key="`${vref.probe}:${vref.path}`" class="break-words">{{ measuredText(vref, evidence) }}</li>
             </ul>
-            <p class="m-0 text-[13px] text-ink-2">{{ selectedKernel ? `${imageLabel}, kernel ${selectedKernel}` : `Not measured on ${imageLabel} yet` }}</p>
+            <p class="m-0 text-[13px] text-ink-2">{{ sameOn ? `The same on all ${sameOn} test kernels` : selectedKernel ? `${imageLabel}, kernel ${selectedKernel}` : `Not measured on ${imageLabel} yet` }}</p>
           </template>
           <template v-if="chapter.look?.cmd">
             <p class="m-0 mt-3 text-[13px] font-medium text-quiet">Look on your machine</p>

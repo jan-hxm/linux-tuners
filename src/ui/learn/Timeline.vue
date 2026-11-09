@@ -9,7 +9,7 @@
  * distances. One image, named from the data.
  */
 import { computed } from 'vue'
-import { curvePath, formatValue, lineLevels, measuredOn, timelineLabel } from './figureText.js'
+import { curvePath, formatValue, lineLevels, measuredOn, sameOnText, timelineLabel } from './figureText.js'
 
 const props = defineProps({
   /** Figure of kind 'timeline' */
@@ -17,6 +17,8 @@ const props = defineProps({
   /** ref => valueFor(ref, imageId) */
   evidence: { type: Function, required: true },
   imageId: { type: String, default: '' },
+  /** How many images measured every value the same (sameOnEveryImage), or 0. */
+  sameOn: { type: Number, default: 0 },
   /** The selected pin's `layer`: a line id draws that line in `fit`. */
   highlight: { type: String, default: null },
 })
@@ -34,7 +36,7 @@ const lines = computed(() => {
 const events = computed(() =>
   [...props.figure.events].sort((a, b) => a.at - b.at).map((e, i) => ({ ...e, n: i + 1, x: e.at * 100 })),
 )
-const caption = computed(() => measuredOn(props.figure.lines.map((l) => l.value), props.evidence, props.imageId))
+const caption = computed(() => (props.sameOn ? sameOnText(props.sameOn) : measuredOn(props.figure.lines.map((l) => l.value), props.evidence, props.imageId)))
 
 const TONE_STROKE = { fit: 'stroke-fit', error: 'stroke-error' }
 const TONE_TEXT = { fit: 'text-fit-text', error: 'text-error' }

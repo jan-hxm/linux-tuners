@@ -120,6 +120,16 @@ describe('ChapterView', () => {
     other.unmount()
   })
 
+  it('drops the kernel buttons when every image measured the same values', () => {
+    // Every image reports what Debian 13 does.
+    const same = (ref) => valueFor(ref, 'debian-13')
+    wrapper = mountChapter(stackChapter, { valueFor: same })
+    expect(wrapper.find('[data-kernels]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Measured on')
+    expect(wrapper.get('[data-part="figure"]').text()).toContain('Values measured on 5 test kernels, the same on each.')
+    expect(wrapper.get('[data-pin-panel]').text()).toContain('The same on all 5 test kernels')
+  })
+
   it('says "not measured" where an image has no capture', async () => {
     const partial = (ref, imageId) => (imageId === 'ubuntu-24.04' ? { status: 'missing' } : valueFor(ref, imageId))
     wrapper = mountChapter(stackChapter, { valueFor: partial })

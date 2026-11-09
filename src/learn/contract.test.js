@@ -381,6 +381,11 @@ const RULE_CASES = [
   ['a backing probe that does not exist', (g) => (g.chapters[3].figure.backedBy.probe = 'demo.nope'), 'chapters[3].figure.backedBy.probe', 'probe'],
   ['a timeline line without a unit', (g) => delete g.chapters[1].figure.lines[0].value.unit, 'chapters[1].figure.lines[0].value', 'shape'],
   ['a path into nothing on a live guide', (g) => (g.chapters[1].figure.lines[0].value.path = 'Normal.max'), 'chapters[1].figure.lines[0].value.probe', 'evidence'],
+  // A card or node naming an object-valued probe must say which field it shows.
+  ['a card probe whose value is an object, with no path', (g) => { delete g.parts.cards[1].path; delete g.parts.cards[1].unit }, 'parts.cards[1].probe', 'evidence'],
+  ['a card path into nothing', (g) => (g.parts.cards[1].path = 'Nope'), 'parts.cards[1].probe', 'evidence'],
+  ['a card path that is not a dotted path', (g) => (g.parts.cards[1].path = 'a..b'), 'parts.cards[1].path', 'shape'],
+  ['a card unit without a probe', (g) => { delete g.parts.cards[1].probe; delete g.parts.cards[1].path }, 'parts.cards[1]', 'shape'],
   // figure ranges
   ['a curve point above 1', (g) => (g.chapters[1].figure.curve[2] = [0.45, 1.2]), 'chapters[1].figure.curve[2]', 'figure range'],
   ['a curve that goes back in time', (g) => (g.chapters[1].figure.curve[2] = [0.1, 0.3]), 'chapters[1].figure.curve[2]', 'figure range'],

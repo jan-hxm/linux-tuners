@@ -22,11 +22,14 @@ import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
 import { LIVE_GUIDES, LEARN_INDEX_ROUTE, guideFacts, loadGuide } from '@/learn/guides.js'
 import { IMAGES_ORDER, valueFor } from '@/learn/evidence.js'
 import {
-  answerText, backedByText, cardGroups, defName, defTitle, edgeRows, formatValue, noText, numberedSources, probeRef,
-  refName, settingText, splitFootnotes, stackRefs,
+  answerText, backedByText, cardGroups, defName, defTitle, edgeRows, formatValue, itemRef, noText, numberedSources,
+  refName, sameOnEveryImage, settingText, splitFootnotes, stackRefs,
 } from '@/ui/learn/figureText.js'
 import { settingHref } from '@/ui/focusSetting.js'
 import { text, code, bold, link, rich, heading, paragraph, list, defs, codeBlock, joinSegments } from './nodes.js'
+
+/** The test images' ids, in the order the pages list them. */
+const IMAGE_IDS = IMAGES_ORDER.map((img) => img.id)
 
 const DOMAINS_BY_ID = Object.fromEntries(TUNER_DOMAINS.map((d) => [d.id, d]))
 
@@ -266,6 +269,10 @@ export async function loadStaticGuides(entries = LIVE_GUIDES) {
 
 /** One value on every image: "Debian 13, kernel 6.12.48: 2,000 pages", or "not measured". */
 function measuredRow(ref, evidence) {
+  const at = (r, id) => valueFor(r, id, evidence)
+  if (sameOnEveryImage([ref], IMAGE_IDS, at)) {
+    return { term: [code(refName(ref))], desc: [text(`${formatValue(at(ref, IMAGE_IDS[0]), ref.unit)} on all ${IMAGE_IDS.length} test kernels.`)] }
+  }
   const parts = IMAGES_ORDER.map((img) => {
     const r = valueFor(ref, img.id, evidence)
     const where = r.kernel ? `${img.label}, kernel ${r.kernel}` : img.label
@@ -314,7 +321,10 @@ function bodyParagraph(para, sources) {
 /** A card's measured value on every kernel, for the Start here list. */
 function cardMeasured(card, evidence) {
   if (!card.probe) return ''
-  const values = IMAGES_ORDER.map((img) => `${img.label} ${formatValue(valueFor(probeRef(card.probe), img.id, evidence))}`)
+  const ref = itemRef(card)
+  const at = (r, id) => valueFor(r, id, evidence)
+  if (sameOnEveryImage([ref], IMAGE_IDS, at)) return ` Measured: ${formatValue(at(ref, IMAGE_IDS[0]), ref.unit)} on all ${IMAGE_IDS.length} test kernels.`
+  const values = IMAGES_ORDER.map((img) => `${img.label} ${formatValue(valueFor(ref, img.id, evidence), ref.unit)}`)
   return ` Measured: ${values.join(', ')}.`
 }
 

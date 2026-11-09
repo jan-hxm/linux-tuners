@@ -23,8 +23,8 @@ export const LEARN = {
       { id: 'programs', title: 'Your programs', does: 'Ask the kernel for memory, and read and write files.', col: 1, row: 1 },
       { id: 'manager', title: "The kernel's memory manager", does: 'Hands out memory, and decides what to free when it runs short.', col: 1, row: 2, probe: 'swap.vmSysctls' },
       { id: 'kswapd', title: 'kswapd', does: 'Frees memory in the background, before programs have to wait.', col: 2, row: 2, probe: 'swap.kswapd' },
-      { id: 'program-memory', title: 'Program memory', does: "Each program's own working data. It has no copy on disk.", col: 1, row: 3, probe: 'swap.memAnon' },
-      { id: 'file-cache', title: 'File cache', does: 'Copies of files kept in RAM, so the next read skips the disk.', col: 2, row: 3, probe: 'swap.memCache' },
+      { id: 'program-memory', title: 'Program memory', does: "Each program's own working data. It has no copy on disk.", col: 1, row: 3, probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' },
+      { id: 'file-cache', title: 'File cache', does: 'Copies of files kept in RAM, so the next read skips the disk.', col: 2, row: 3, probe: 'swap.memCache', path: 'Cached', unit: 'kB' },
       { id: 'swap', title: 'Swap', does: 'Space where program memory waits when RAM runs short.', col: 1, row: 4, probe: 'swap.swaps' },
       { id: 'files', title: 'Your files', does: 'What the file cache copies, and where changes are written back.', col: 2, row: 4 },
     ],
@@ -70,8 +70,8 @@ export const LEARN = {
             label: 'RAM',
             kind: 'nodes',
             nodes: [
-              { id: 'anon', text: 'Program memory', sub: 'no copy on disk', probe: 'swap.memAnon' },
-              { id: 'cache', text: 'File cache', sub: 'a copy of a file', probe: 'swap.memCache' },
+              { id: 'anon', text: 'Program memory', sub: 'no copy on disk', probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' },
+              { id: 'cache', text: 'File cache', sub: 'a copy of a file', probe: 'swap.memCache', path: 'Cached', unit: 'kB' },
               { id: 'names', text: 'File names and details', sub: 'dentries and inodes', probe: 'swap.dentryState' },
             ],
           },
@@ -355,8 +355,8 @@ export const LEARN = {
             label: 'What has been promised',
             kind: 'nodes',
             nodes: [
-              { id: 'committed', text: 'Promised so far', sub: 'Committed_AS', probe: 'swap.memCommit' },
-              { id: 'limit', text: 'Commit limit', sub: 'CommitLimit', probe: 'swap.memCommit' },
+              { id: 'committed', text: 'Promised so far', sub: 'Committed_AS', probe: 'swap.memCommit', path: 'Committed_AS', unit: 'kB' },
+              { id: 'limit', text: 'Commit limit', sub: 'CommitLimit', probe: 'swap.memCommit', path: 'CommitLimit', unit: 'kB' },
             ],
             values: [
               { probe: 'swap.memCommit', path: 'Committed_AS', unit: 'kB' },
@@ -368,7 +368,7 @@ export const LEARN = {
             label: 'RAM and swap',
             kind: 'nodes',
             nodes: [
-              { id: 'ram', text: 'RAM', probe: 'swap.memSize' },
+              { id: 'ram', text: 'RAM', probe: 'swap.memSize', path: 'MemTotal', unit: 'kB' },
               { id: 'swap', text: 'Swap', probe: 'swap.swaps' },
             ],
             values: [

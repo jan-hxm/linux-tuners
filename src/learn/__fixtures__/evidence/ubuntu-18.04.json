@@ -13,7 +13,7 @@
     },
     "demo.reserve": {
       "status": "ok",
-      "value": 4000
+      "value": 3600
     },
     "demo.stalls": {
       "status": "ok",
@@ -36,9 +36,9 @@
           "min": 1000
         },
         "Normal": {
-          "high": 6000,
-          "low": 4000,
-          "min": 2000
+          "high": 5400,
+          "low": 3600,
+          "min": 1800
         }
       }
     },

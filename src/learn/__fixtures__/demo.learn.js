@@ -37,7 +37,7 @@ export const LEARN = {
     picture: 'Programs ask for memory, the [[page cache]] fills the rest, and a worker frees memory before it runs out.',
     cards: [
       { id: 'programs', title: 'Programs', does: 'Ask the kernel for memory.', col: 1, row: 1 },
-      { id: 'cache', title: 'Page cache', does: 'Keeps file data in spare memory.', col: 2, row: 1, probe: 'demo.meminfo' },
+      { id: 'cache', title: 'Page cache', does: 'Keeps file data in spare memory.', col: 2, row: 1, probe: 'demo.meminfo', path: 'Cached', unit: 'kB' },
       { id: 'reserve', title: 'Reserve', does: 'Memory kept free for urgent requests.', col: 3, row: 1, probe: 'demo.reserve' },
       { id: 'worker', title: 'Worker', does: 'Frees memory in the background.', col: 2, row: 2, tone: 'fit', probe: 'demo.worker' },
       { id: 'disk', title: 'Disk', does: 'Holds swapped out memory.', col: 3, row: 2, probe: 'demo.swaps' },

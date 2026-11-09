@@ -12,7 +12,7 @@
  */
 import { computed } from 'vue'
 import RichText from '@/ui/RichText.vue'
-import { cardGroups, edgeGeometry, edgeRows, formatValue, gridSize, partsMapLabel, probeRef } from './figureText.js'
+import { cardGroups, edgeGeometry, edgeRows, gridSize, itemValue, partsMapLabel } from './figureText.js'
 
 const props = defineProps({
   /** PartsMap: { picture, cards, bands?, edges } */
@@ -48,7 +48,7 @@ const edges = computed(() =>
     .filter((e) => e.geo),
 )
 
-const value = (card) => formatValue(props.evidence(probeRef(card.probe)))
+const value = (card) => itemValue(card, props.evidence)
 const cardClass = (card) => (card.tone === 'fit' ? 'border-fit bg-fit-tint' : 'border-rule-strong bg-paper')
 </script>
 

@@ -666,7 +666,10 @@ and expects no issues.
   check on its own.
 - **Probes and evidence.** Every ValueRef, node `probe`, card `probe` and
   `backedBy.probe` names a probe in the tuner's `probes.js`, and a ValueRef
-  has a `unit` and a dotted `path`. A `live` guide needs an evidence file
+  has a `unit` and a dotted `path`. A card or node may add `path` and
+  `unit` to its `probe` the same way, and must when the probe's value is
+  an object (a `meminfoKeys` probe): a live guide fails a bare card or node
+  probe whose value is one. A `live` guide needs an evidence file
   for each of the five images and, in each, an `ok` or `absent` entry for
   every probe it names, with an `ok` value at each ValueRef's path; a
   `draft` may miss evidence but nothing else. A `backedBy.vmTest` must be a
@@ -731,7 +734,11 @@ shows captures, a kernel switcher (`role="group"`, one `aria-pressed` button
 per image of `IMAGES_ORDER`) picks the capture; it is a viewer preference
 (`linux-tuners:learn-kernel`, the image id, checked against the list before
 use and never rendered; `ui/learn/kernelPref.js`) shared by every chapter on
-the page. Under the figure the pins are mono buttons with a dot
+the page. When every image measured the same value for everything the
+figure shows (`sameOnEveryImage` in `figureText.js`), the switcher would
+change nothing, so it is left out and the caption reads "Values measured on
+5 test kernels, the same on each."; the static page says such a value once
+("10 % on all 5 test kernels"). Under the figure the pins are mono buttons with a dot
 (`aria-pressed`, `fit-tint` and a `fit` dot when pressed; a second press
 clears it). The first is selected on load, and its `layer` (a layer, band,
 node or timeline line id) is drawn in `fit-tint`. The margin panel beside the

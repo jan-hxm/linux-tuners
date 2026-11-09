@@ -14,13 +14,13 @@
  *   A number in a figure: the probe id in the tuner's probes.js, a dotted path
  *   into the probe's captured value, and the unit it is shown in.
  *
- * @typedef {{ id: string, title: string, does: string, col: number, row: number, tone?: 'fit', probe?: string }} PartsCard
+ * @typedef {{ id: string, title: string, does: string, col: number, row: number, tone?: 'fit', probe?: string, path?: string, unit?: string }} PartsCard  path and unit as on a ValueRef
  * @typedef {{ picture: string, cards: PartsCard[], bands?: { label: string, rows: [number, number] }[],
  *   edges: { from: string, to: string, label: string }[] }} PartsMap
  *   The "Start here" diagram. Edges join cards that share a row or a column.
  *
  * @typedef {{ id: string, label: string, kind: 'bands'|'nodes',
- *   bands?: { id: string, text: string }[], nodes?: { id: string, text: string, sub?: string, probe?: string }[],
+ *   bands?: { id: string, text: string }[], nodes?: { id: string, text: string, sub?: string, probe?: string, path?: string, unit?: string }[],
  *   values?: ValueRef[] }} StackLayer
  * @typedef {{ kind: 'stack', title: string, layers: StackLayer[] }
  *   | { kind: 'timeline', title: string, schematic: true, lines: { id: string, label: string, value: ValueRef }[],
@@ -389,9 +389,25 @@ export function validateGuide(guide, ctx) {
 
   /** A probe id named by a figure; live guides need it measured on every image. */
   const probeRefs = []
-  function probe(path, id, refPath) {
+  function probe(path, id, refPath, { scalar = false } = {}) {
     if (!isProbe(id)) fail(path, 'probe', `"${id}" is not in the tuner's probes.js`)
-    else probeRefs.push({ path, id, refPath })
+    else probeRefs.push({ path, id, refPath, scalar })
+  }
+
+  /**
+   * A card's or node's own measured value: `probe`, with `path` and `unit`
+   * as on a ValueRef when the probe's value is an object (a meminfoKeys
+   * probe). Without a path it must measure one plain value.
+   */
+  function itemProbe(path, item) {
+    if (item.probe === undefined) {
+      if (item.path !== undefined || item.unit !== undefined) fail(path, 'shape', 'path and unit need a probe')
+      return
+    }
+    if (item.path !== undefined && (typeof item.path !== 'string' || !PATH.test(item.path))) fail(`${path}.path`, 'shape', `"${item.path}" is not a dotted path`)
+    if (item.unit !== undefined && typeof item.unit !== 'string') fail(`${path}.unit`, 'shape', 'must be a string')
+    else if (item.unit) text(`${path}.unit`, item.unit)
+    probe(`${path}.probe`, item.probe, item.path, { scalar: item.path === undefined })
   }
 
   function valueRef(path, ref) {
@@ -431,7 +447,7 @@ export function validateGuide(guide, ctx) {
     const cells = new Set()
     cards.forEach((c, i) => {
       const p = `${path}.cards[${i}]`
-      if (!shape(p, c, ['id', 'title', 'does', 'col', 'row'], ['tone', 'probe'])) return
+      if (!shape(p, c, ['id', 'title', 'does', 'col', 'row'], ['tone', 'probe', 'path', 'unit'])) return
       text(`${p}.title`, c.title)
       text(`${p}.does`, c.does)
       if (!isInt(c.col, 1)) fail(`${p}.col`, 'figure range', 'must be a whole number from 1')
@@ -440,7 +456,7 @@ export function validateGuide(guide, ctx) {
       if (cells.has(cell)) fail(p, 'figure range', `shares column ${c.col}, row ${c.row} with another card`)
       cells.add(cell)
       if (c.tone !== undefined && c.tone !== 'fit') fail(`${p}.tone`, 'shape', `"${c.tone}" is not fit`)
-      if (c.probe !== undefined) probe(`${p}.probe`, c.probe)
+      itemProbe(p, c)
       byId.set(c.id, c)
     })
     const rows = cards.map((c) => c?.row).filter((r) => isInt(r, 1))
@@ -501,10 +517,10 @@ export function validateGuide(guide, ctx) {
           uniqueIds(`${p}.nodes`, nodes, ids)
           nodes.forEach((n, j) => {
             const q = `${p}.nodes[${j}]`
-            if (!shape(q, n, ['id', 'text'], ['sub', 'probe'])) return
+            if (!shape(q, n, ['id', 'text'], ['sub', 'probe', 'path', 'unit'])) return
             text(`${q}.text`, n.text)
             if (n.sub !== undefined) text(`${q}.sub`, n.sub)
-            if (n.probe !== undefined) probe(`${q}.probe`, n.probe)
+            itemProbe(q, n)
           })
         } else fail(`${p}.kind`, 'shape', `"${l.kind}" is not bands or nodes`)
         if (l.values !== undefined) list(`${p}.values`, l.values).forEach((v, j) => valueRef(`${p}.values[${j}]`, v))
@@ -666,10 +682,11 @@ export function validateGuide(guide, ctx) {
         fail('guide', 'evidence', `no evidence file for ${image}; a live guide needs every image captured`)
         continue
       }
-      for (const { path, id, refPath } of probeRefs) {
+      for (const { path, id, refPath, scalar } of probeRefs) {
         const entry = isObj(file.probes) && Object.hasOwn(file.probes, id) ? file.probes[id] : undefined
         if (!entry || (entry.status !== 'ok' && entry.status !== 'absent')) fail(path, 'evidence', `"${id}" has no ok or absent entry for ${image}`)
         else if (entry.status === 'ok' && refPath !== undefined && resolvePath(entry.value, refPath) === undefined) fail(path, 'evidence', `"${id}" on ${image} has nothing at "${refPath}"`)
+        else if (entry.status === 'ok' && scalar && isObj(entry.value)) fail(path, 'evidence', `"${id}" on ${image} is an object; name the field with path (and its unit)`)
       }
     }
   } else if (status !== 'draft') fail('guide', 'shape', `status "${status}" is not draft or live`)

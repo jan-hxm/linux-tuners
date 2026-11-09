@@ -36,6 +36,11 @@ describe('a guide page as static text', () => {
 
   it('lists each figure value on every kernel, with the kernel it was measured on', () => {
     expect(md).toContain('`Normal.min`**: Debian 13, kernel 0.0.0-fixture: 2,000 pages; Ubuntu 24.04, kernel 0.0.1-fixture: 2,000 pages;')
+    expect(md).toContain('Ubuntu 18.04, kernel 0.0.4-fixture: 1,800 pages.')
+    // A value every image measured the same is said once.
+    expect(md).toContain('**Background, Worker:** Frees memory in the background. Measured: yes on all 5 test kernels.')
+    // A card on an object-valued probe shows the field its path names, with its unit.
+    expect(md).toMatch(/\*\*Memory, Page cache:\*\* Keeps file data in spare memory\. Measured: [\d,]+ kB on all 5 test kernels\./)
     expect(md).toContain('Layers from the top:')
     expect(md).toContain('A schematic timeline: the order is real, the distances are not.')
     expect(md).toContain('**Batch off:** demo.batch_order = 0, 1 of 8 lit.')

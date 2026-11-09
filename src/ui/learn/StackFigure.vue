@@ -10,7 +10,7 @@
  * stack, so the figure reads as a list. One image, named from the data.
  */
 import { computed } from 'vue'
-import { formatValue, measuredOn, measuredText, probeRef, refName, stackLabel, stackRefs } from './figureText.js'
+import { formatValue, itemValue, measuredOn, measuredText, sameOnText, refName, stackLabel, stackRefs } from './figureText.js'
 
 const props = defineProps({
   /** Figure of kind 'stack' */
@@ -18,12 +18,14 @@ const props = defineProps({
   /** ref => valueFor(ref, imageId) */
   evidence: { type: Function, required: true },
   imageId: { type: String, default: '' },
+  /** How many images measured every value the same (sameOnEveryImage), or 0. */
+  sameOn: { type: Number, default: 0 },
   /** The selected pin's `layer`, or null. */
   highlight: { type: String, default: null },
 })
 
 const label = computed(() => stackLabel(props.figure, props.evidence, props.highlight))
-const caption = computed(() => measuredOn(stackRefs(props.figure), props.evidence, props.imageId))
+const caption = computed(() => (props.sameOn ? sameOnText(props.sameOn) : measuredOn(stackRefs(props.figure), props.evidence, props.imageId)))
 const on = (id) => id === props.highlight
 const SELECTED = 'border-fit bg-fit-tint'
 const PLAIN = 'border-rule-strong bg-paper'
@@ -64,7 +66,7 @@ const PLAIN = 'border-rule-strong bg-paper'
               >
                 <p class="m-0 text-[15px] font-medium leading-snug text-ink">{{ node.text }}</p>
                 <p v-if="node.sub" class="m-0 text-[13px] leading-snug text-ink-2">{{ node.sub }}</p>
-                <p v-if="node.probe" class="m-0 mt-1 font-mono text-[13px] text-ink-2">{{ formatValue(evidence(probeRef(node.probe))) }}</p>
+                <p v-if="node.probe" class="m-0 mt-1 font-mono text-[13px] text-ink-2">{{ itemValue(node, evidence) }}</p>
               </div>
             </div>
             <ul v-if="layer.values?.length" class="m-0 mt-2 flex list-none flex-wrap gap-x-4 p-0 font-mono text-[13px] text-ink-2">

@@ -277,4 +277,31 @@ export const GLOSSARY = Object.freeze({
     definition:
       'Network address translation: rewriting the addresses or ports of packets on their way through, as home routers and container hosts do. The kernel applies the same rewrite to every packet of a connection.',
   },
+
+  // block-io guide
+  'block-layer': {
+    term: 'Block layer',
+    definition:
+      'The part of the kernel between filesystems and disk drivers. It turns reads and writes into requests, merges and orders them, and hands them to the driver. Its settings for each disk are files under /sys/block/<disk>/queue.',
+  },
+  'io-scheduler': {
+    term: 'I/O scheduler',
+    definition:
+      'The part of the block layer that decides the order in which waiting requests go to a disk. Each disk has its own: none, mq-deadline, bfq or kyber.',
+  },
+  'hardware-queue': {
+    term: 'Hardware queue',
+    definition:
+      'The last queue in the block layer before the disk driver takes a request. How many a disk has depends on the drive and its driver, and never exceeds the number of CPU cores.',
+  },
+  udev: {
+    term: 'udev',
+    definition:
+      'The service that handles device events from the kernel. When a device appears or changes, it checks its rules against the device, and a matching rule can write a setting for it. Local rules live in /etc/udev/rules.d.',
+  },
+  sector: {
+    term: 'Sector',
+    definition:
+      'A numbered block of a disk. Requests name the sectors they read or write, so the kernel can tell when two requests sit next to each other and merge them.',
+  },
 })

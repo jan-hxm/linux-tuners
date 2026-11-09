@@ -25,7 +25,7 @@ export const LEARN = {
     cards: [
       { id: 'programs', title: 'Your programs', does: 'Start processes and threads, and store credentials as keys.', col: 1, row: 1 },
       { id: 'keys', title: 'Kernel keys', does: 'Security data the kernel keeps for each user, up to a quota.', col: 2, row: 1, probe: 'kernel.keyUsers' },
-      { id: 'pids', title: 'Process IDs', does: 'A number for every process and thread. The limits say how many can exist.', col: 1, row: 2, probe: 'kernel.pidMax' },
+      { id: 'pids', title: 'Process IDs', does: 'A number for every process and thread, and the limits say how many can exist.', col: 1, row: 2, probe: 'kernel.pidMax' },
       { id: 'kernel', title: 'The kernel itself', does: 'Runs everything, and can hit a fault in its own code.', col: 1, row: 3 },
       { id: 'console', title: 'The console', does: 'Shows the kernel messages that are urgent enough.', col: 2, row: 3, probe: 'kernel.printk' },
       { id: 'panic', title: 'Panic and reboot', does: 'Stops the machine, then reboots or waits for you.', col: 1, row: 4, probe: 'kernel.panic' },
@@ -40,8 +40,8 @@ export const LEARN = {
       { from: 'programs', to: 'pids', label: 'start processes and threads' },
       { from: 'pids', to: 'kernel', label: 'limits are checked here' },
       { from: 'kernel', to: 'console', label: 'prints messages' },
-      { from: 'kernel', to: 'panic', label: 'a fault can lead to' },
-      { from: 'sysrq', to: 'panic', label: 'can reboot or crash it' },
+      { from: 'kernel', to: 'panic', label: 'a fault may cause' },
+      { from: 'sysrq', to: 'panic', label: 'can force it' },
     ],
   },
   chapters: [
@@ -54,27 +54,15 @@ export const LEARN = {
         limit: 'Ticket numbers wrap around and get reused. A number is free again once its coat has left, so the cap is on numbers in use, not on tickets ever given.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Four limits that can refuse a new process or thread',
-        layers: [
-          { id: 'ask', label: 'A program asks', kind: 'nodes', nodes: [{ id: 'fork', text: 'fork() or a new thread', sub: 'wants a process ID' }] },
-          {
-            id: 'limits',
-            label: 'Limits that can say no',
-            kind: 'nodes',
-            nodes: [
-              { id: 'user', text: 'Per-user process limit', sub: 'RLIMIT_NPROC' },
-              { id: 'threads', text: 'Threads, system-wide', sub: 'kernel.threads-max', probe: 'kernel.threadsMax' },
-              { id: 'pid', text: 'Highest process ID', sub: 'kernel.pid_max', probe: 'kernel.pidMax' },
-              { id: 'cgroup', text: 'Group process limit', sub: 'pids.max' },
-            ],
-            values: [
-              { probe: 'kernel.pidMax', unit: '' },
-              { probe: 'kernel.threadsMax', unit: 'threads' },
-            ],
-          },
-          { id: 'answer', label: 'The answer', kind: 'nodes', nodes: [{ id: 'eagain', text: 'EAGAIN', sub: 'the call fails, nothing is created' }] },
+        kind: 'compare',
+        title: 'The two ceilings on processes and threads',
+        axis: 'how many',
+        scale: 'log',
+        bars: [
+          { id: 'pid', label: 'Highest process ID', value: { probe: 'kernel.pidMax', unit: '' }, does: 'Process IDs wrap at this number, so it caps processes and threads.' },
+          { id: 'threads', label: 'Threads, system-wide', value: { probe: 'kernel.threadsMax', unit: '' }, does: 'Most threads and processes together, sized from RAM at boot.' },
         ],
+        pins: [{ key: 'pid_max', bar: 'pid' }, { key: 'threads_max', bar: 'threads' }],
       },
       body: [
         'Each process and thread gets a [[process ID|pid]]. The kernel counts upward and, when the next number reaches `kernel.pid_max`, wraps back to a low one. Numbers of that value or larger are never given out[^pid]. On 64-bit it can go up to 2^22, which is 4194304[^proc]. The kernel starts at 32768, or 1024 per possible CPU when that is more, and systemd 243 and newer set 4194304.',
@@ -124,35 +112,19 @@ export const LEARN = {
         limit: 'Bank customers rent boxes one by one. Programs and services create keys and keyrings by themselves, so a quota can fill without anyone choosing to fill it.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Two quotas for each user',
-        layers: [
-          { id: 'owner', label: 'Who owns keys', kind: 'nodes', nodes: [{ id: 'user', text: 'A user ID', sub: 'every ID is tracked on its own' }] },
-          {
-            id: 'quota',
-            label: 'The quotas',
-            kind: 'nodes',
-            nodes: [
-              { id: 'count', text: 'Number of keys', sub: 'kernel.keys.maxkeys', probe: 'kernel.maxkeys' },
-              { id: 'bytes', text: 'Bytes of keys', sub: 'kernel.keys.maxbytes', probe: 'kernel.maxbytes' },
-            ],
-            values: [
-              { probe: 'kernel.maxkeys', unit: 'keys' },
-              { probe: 'kernel.maxbytes', unit: 'bytes' },
-            ],
-          },
-          {
-            id: 'root',
-            label: 'Root is separate',
-            kind: 'nodes',
-            nodes: [{ id: 'root-quota', text: 'Root has its own quotas', sub: 'root_maxkeys and root_maxbytes' }],
-            values: [
-              { probe: 'kernel.rootMaxkeys', unit: 'keys' },
-              { probe: 'kernel.rootMaxbytes', unit: 'bytes' },
-            ],
-          },
-          { id: 'table', label: 'Where to look', kind: 'nodes', nodes: [{ id: 'users', text: '/proc/key-users', sub: 'what each user holds', probe: 'kernel.keyUsers' }] },
+        kind: 'compare',
+        title: 'How many keys one user may own',
+        axis: 'keys',
+        scale: 'log',
+        groups: [
+          { id: 'users', label: 'Other users', does: 'Every non-root user ID is tracked against these quotas on its own.' },
+          { id: 'root', label: 'Root', does: 'Root has its own, much higher quotas.' },
         ],
+        bars: [
+          { id: 'user-keys', label: 'Key count', group: 'users', value: { probe: 'kernel.maxkeys', unit: 'keys' }, does: 'Past this many keys, adding one fails with EDQUOT, and a second quota limits their bytes.' },
+          { id: 'root-keys', label: 'Key count', group: 'root', value: { probe: 'kernel.rootMaxkeys', unit: 'keys' }, does: 'The same quota for root, set by kernel.keys.root_maxkeys.' },
+        ],
+        pins: [{ key: 'maxkeys', bar: 'user-keys' }],
       },
       body: [
         'The kernel can hold security data for programs as [[keys|kernel-key]]. Each key has a description and may have a payload, the data itself[^overview]. The facility lets kernel components keep or cache things like authentication and encryption keys[^keyrings].',
@@ -160,8 +132,8 @@ export const LEARN = {
         '`kernel.keys.maxkeys` and `kernel.keys.maxbytes` set those quotas for every non-root user. Root has its own pair[^proc]. The defaults are 200 keys and 20000 bytes, and 1000000 keys and 25000000 bytes for root[^keyfiles]. `/proc/key-users` shows each user\'s holdings against the limits[^proc].',
       ],
       pins: [
-        { key: 'maxkeys', layer: 'quota', here: 'How many keys each non-root user may own. Raise it when adding keys fails with EDQUOT and /proc/key-users shows a user at the limit. Most machines don\'t need to change this.' },
-        { key: 'maxbytes', layer: 'quota', here: 'How many bytes of descriptions and payloads each non-root user may hold. Raise it when the bytes column reaches its maximum. Root has its own limit.' },
+        { key: 'maxkeys', layer: 'user-keys', here: 'How many keys each non-root user may own. Raise it when adding keys fails with EDQUOT and /proc/key-users shows a user at the limit. Most machines don\'t need to change this.' },
+        { key: 'maxbytes', layer: 'users', here: 'How many bytes of descriptions and payloads each non-root user may hold. Raise it when the bytes column reaches its maximum. Root has its own limit.' },
       ],
       choose: [
         {
@@ -203,41 +175,23 @@ export const LEARN = {
         limit: 'A factory halts cleanly. A kernel that has found a fault in its own code cannot be sure it is safe to continue, which is what makes a stop worth considering.',
       },
       figure: {
-        kind: 'stack',
-        title: 'From a fault to a reboot',
-        layers: [
+        kind: 'modes',
+        title: 'What the kernel does after a fault',
+        rows: [
           {
-            id: 'fault',
-            label: 'A fault',
-            kind: 'nodes',
-            nodes: [
-              { id: 'oops', text: 'An oops or BUG', sub: 'kernel.panic_on_oops', probe: 'kernel.panicOnOops' },
-              { id: 'lockup', text: 'A soft lockup', sub: 'kernel.softlockup_panic', probe: 'kernel.softlockupPanic' },
-            ],
-            values: [
-              { probe: 'kernel.panicOnOops', unit: '' },
-              { probe: 'kernel.softlockupPanic', unit: '' },
-              { probe: 'kernel.watchdogThresh', unit: 'seconds' },
-            ],
+            id: 'oops', label: 'An oops or BUG', pin: 'panic_on_oops', value: { probe: 'kernel.panicOnOops', unit: '' },
+            does: 'Whether a fault in kernel code panics the machine or only kills the task.',
+            options: [{ value: 0, label: 'carries on' }, { value: 1, label: 'panics' }],
           },
           {
-            id: 'choice',
-            label: 'What the kernel does',
-            kind: 'nodes',
-            nodes: [
-              { id: 'carry-on', text: 'Carry on', sub: 'the default for both' },
-              { id: 'panic', text: 'Panic', sub: 'the machine stops' },
-            ],
+            id: 'lockup', label: 'A soft lockup', pin: 'softlockup_panic', value: { probe: 'kernel.softlockupPanic', unit: '' },
+            does: 'Whether a CPU stuck in kernel code for 20 seconds panics the machine or is only logged.',
+            options: [{ value: 0, label: 'logged only' }, { value: 1, label: 'panics' }],
           },
           {
-            id: 'after',
-            label: 'After a panic',
-            kind: 'nodes',
-            nodes: [
-              { id: 'wait', text: 'Wait', sub: 'kernel.panic is 0' },
-              { id: 'reboot', text: 'Reboot', sub: 'kernel.panic is a number of seconds' },
-            ],
-            values: [{ probe: 'kernel.panic', unit: 'seconds' }],
+            id: 'after', label: 'After a panic', pin: 'panic', value: { probe: 'kernel.panic', unit: '' },
+            does: 'At 0 the machine stays stopped, and above 0 it reboots after that many seconds.',
+            options: [{ value: 0, label: 'stays stopped' }, { value: 10, label: 'reboots in 10 s' }],
           },
         ],
       },
@@ -298,29 +252,21 @@ export const LEARN = {
         limit: 'Switches in a building are used by trained staff. SysRq works for anyone at the keyboard or serial console, so wiring up too many has a cost.',
       },
       figure: {
-        kind: 'stack',
-        title: 'From a key press to a command',
-        layers: [
+        kind: 'modes',
+        title: 'Commands the keyboard may send',
+        rows: [
           {
-            id: 'entry',
-            label: 'How a command arrives',
-            kind: 'nodes',
-            nodes: [
-              { id: 'keyboard', text: 'Alt+SysRq and a letter', sub: 'on an x86 keyboard' },
-              { id: 'serial', text: 'A break, then a letter', sub: 'on a serial console' },
-              { id: 'trigger', text: 'A write to /proc/sysrq-trigger', sub: 'always allowed for an administrator', probe: 'kernel.sysrqTrigger' },
-            ],
-          },
-          { id: 'gate', label: 'The gate', kind: 'nodes', nodes: [{ id: 'mask', text: 'kernel.sysrq', sub: '0 off, 1 all, else a bitmask', probe: 'kernel.sysrq' }], values: [{ probe: 'kernel.sysrq', unit: '' }] },
-          {
-            id: 'commands',
-            label: 'Some commands',
-            kind: 'nodes',
-            nodes: [
-              { id: 's', text: 's: sync disks' },
-              { id: 'u', text: 'u: remount read-only' },
-              { id: 'b', text: 'b: reboot now' },
-              { id: 'ei', text: 'e and i: end all processes' },
+            id: 'commands', label: 'Allowed commands', bits: true, allValues: true, pin: 'sysrq', value: { probe: 'kernel.sysrq', unit: '' },
+            does: 'Each lit segment is a group of commands the keyboard and serial console may use.',
+            options: [
+              { value: 2, label: 'log level' },
+              { value: 4, label: 'keyboard' },
+              { value: 8, label: 'dumps' },
+              { value: 16, label: 'sync', does: 'The letter s syncs all mounted filesystems.' },
+              { value: 32, label: 'read-only', does: 'The letter u remounts filesystems read-only.' },
+              { value: 64, label: 'signals', does: 'The letters e, i and k send signals to processes.' },
+              { value: 128, label: 'reboot', does: 'The letters b and o reboot or power off at once.' },
+              { value: 256, label: 'RT nice', does: 'Lets the keyboard set all real-time tasks to normal priority.' },
             ],
           },
         ],
@@ -331,7 +277,7 @@ export const LEARN = {
         'The letter s tries to sync all mounted filesystems and u tries to remount them read-only. The letter b reboots at once, without syncing or unmounting[^keys]. The letters e and i send SIGTERM and SIGKILL to every process except init[^keys].',
       ],
       pins: [
-        { key: 'sysrq', layer: 'gate', here: 'Which SysRq commands the keyboard may use. 0 turns them off, 1 allows all, and 176 allows sync, remount read-only and reboot. Remember that anyone at the keyboard can then use them.' },
+        { key: 'sysrq', layer: 'commands', here: 'Which SysRq commands the keyboard may use. 0 turns them off, 1 allows all, and 176 allows sync, remount read-only and reboot. Remember that anyone at the keyboard can then use them.' },
       ],
       choose: [
         {
@@ -378,6 +324,7 @@ export const LEARN = {
           { label: 'Console level 4', cells: 8, lit: 4, setting: { key: 'printk', value: '4 4 1 7' } },
           { label: 'Console level 1', cells: 8, lit: 1, setting: { key: 'printk', value: '1 4 1 7' } },
         ],
+        legend: { lit: 'printed', off: 'not printed' },
         backedBy: { probe: 'kernel.printk' },
       },
       body: [

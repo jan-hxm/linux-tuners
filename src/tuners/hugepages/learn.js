@@ -32,18 +32,18 @@ export const LEARN = {
       { id: 'pool', title: 'Reserved pool', does: 'Huge pages set aside for programs that ask for them by name.', col: 1, row: 3, probe: 'hugepages.poolPages' },
       { id: 'thp', title: 'Transparent huge pages', does: 'Huge pages the kernel builds on its own, with no pool.', col: 2, row: 3, probe: 'hugepages.thpEnabled' },
       { id: 'ksm', title: 'KSM', does: 'Finds identical pages and keeps one copy of each.', col: 3, row: 3, probe: 'hugepages.ksmRun' },
-      { id: 'tlb', title: "The CPU's TLB", does: 'Remembers recent address lookups. A huge page needs far fewer entries.', col: 1, row: 4 },
+      { id: 'tlb', title: "The CPU's TLB", does: 'Remembers recent address lookups, and a huge page needs far fewer entries.', col: 1, row: 4 },
       { id: 'pages', title: 'Small pages', does: 'Most memory is still in small pages, where identical copies can be merged.', col: 3, row: 4 },
     ],
-    bands: [{ label: 'Three ways to change how memory is used', rows: [3, 3] }],
+    bands: [{ label: 'Three memory tricks', rows: [3, 3] }],
     edges: [
       { from: 'programs', to: 'manager', label: 'ask for memory' },
       { from: 'manager', to: 'pool', label: 'hands out reserved pages' },
-      { from: 'pool', to: 'thp', label: 'the other way to get huge pages' },
-      { from: 'thp', to: 'ksm', label: 'a different trick: merge, not enlarge' },
-      { from: 'pool', to: 'tlb', label: 'one entry covers a huge page' },
-      { from: 'ksm', to: 'pages', label: 'merges identical copies' },
-      { from: 'tlb', to: 'pages', label: 'one entry per small page' },
+      { from: 'pool', to: 'thp', label: 'the other way' },
+      { from: 'thp', to: 'ksm', label: 'merge, not enlarge' },
+      { from: 'pool', to: 'tlb', label: 'one entry each' },
+      { from: 'ksm', to: 'pages', label: 'merges copies' },
+      { from: 'tlb', to: 'pages', label: 'one entry per page' },
     ],
   },
   chapters: [
@@ -63,17 +63,17 @@ export const LEARN = {
             id: 'programs',
             label: 'Your programs',
             kind: 'nodes',
-            nodes: [{ id: 'ask', text: 'A program that asks for huge pages', sub: 'with mmap or System V shared memory' }],
+            nodes: [{ id: 'ask', text: 'Asks for huge pages', sub: 'mmap or SysV memory', does: 'A program that names huge pages when it asks for memory.' }],
           },
           {
             id: 'pool',
             label: 'The pool',
             kind: 'nodes',
             nodes: [
-              { id: 'total', text: 'Pages in the pool', sub: 'HugePages_Total' },
-              { id: 'free', text: 'Not yet in use', sub: 'HugePages_Free' },
-              { id: 'reserved', text: 'Promised, not yet used', sub: 'HugePages_Rsvd' },
-              { id: 'surplus', text: 'Extra pages beyond the pool', sub: 'HugePages_Surp' },
+              { id: 'total', text: 'Pages in pool', sub: 'HugePages_Total', does: 'All huge pages the kernel holds in reserve.' },
+              { id: 'free', text: 'Not yet used', sub: 'HugePages_Free', does: 'Pool pages no program has touched yet.' },
+              { id: 'reserved', text: 'Promised, unused', sub: 'HugePages_Rsvd', does: 'Pages promised to a program that has not used them yet.' },
+              { id: 'surplus', text: 'Extra pages', sub: 'HugePages_Surp', does: 'Pages taken beyond the pool, returned when unused.' },
             ],
             values: [
               { probe: 'hugepages.poolMeminfo', path: 'HugePages_Total', unit: 'pages' },
@@ -88,15 +88,15 @@ export const LEARN = {
             label: 'The two settings',
             kind: 'nodes',
             nodes: [
-              { id: 'size', text: 'vm.nr_hugepages', sub: 'how many pages the pool keeps', probe: 'hugepages.poolPages' },
-              { id: 'grow', text: 'vm.nr_overcommit_hugepages', sub: 'how many extra pages it may take', probe: 'hugepages.surplusPages' },
+              { id: 'size', text: 'vm.nr_hugepages', sub: 'pool size', does: 'How many pages the pool keeps.', probe: 'hugepages.poolPages' },
+              { id: 'grow', text: 'vm.nr_overcommit_hugepages', sub: 'extra allowed', does: 'How many extra pages the pool may take on demand.', probe: 'hugepages.surplusPages' },
             ],
           },
           {
             id: 'ram',
             label: 'Normal memory',
             kind: 'nodes',
-            nodes: [{ id: 'rest', text: 'Everything else', sub: 'what the pool leaves for programs and file cache' }],
+            nodes: [{ id: 'rest', text: 'Everything else', sub: 'programs and cache', does: 'What the pool leaves for programs and file cache.' }],
             values: [{ probe: 'hugepages.memTotal', path: 'MemTotal', unit: 'kB' }],
           },
         ],
@@ -153,37 +153,16 @@ export const LEARN = {
         limit: 'Joining tables takes staff a moment and needs clear floor. The kernel needs free memory in one piece, and the next chapter covers what happens when there is none.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Which memory may get a transparent huge page',
-        layers: [
+        kind: 'modes',
+        title: 'Which memory may get a huge page',
+        rows: [
           {
-            id: 'memory',
-            label: 'A program\'s memory',
-            kind: 'nodes',
-            nodes: [
-              { id: 'advised', text: 'Marked by the program', sub: 'madvise with MADV_HUGEPAGE' },
-              { id: 'plain', text: 'Not marked', sub: 'the program says nothing' },
-            ],
-          },
-          {
-            id: 'setting',
-            label: 'transparent_hugepage/enabled',
-            kind: 'bands',
-            bands: [
-              { id: 'always', text: 'always: enabled system wide' },
-              { id: 'madvise', text: 'madvise: only the marked regions' },
-              { id: 'never', text: 'never: off, though kernels from 6.1 still act on a collapse request' },
-            ],
-            values: [{ probe: 'hugepages.thpEnabled', unit: '' }],
-          },
-          {
-            id: 'daemon',
-            label: 'In the background',
-            kind: 'nodes',
-            nodes: [{ id: 'khugepaged', text: 'khugepaged', sub: 'joins small pages into huge ones', probe: 'hugepages.khugepagedDir' }],
-            values: [
-              { probe: 'hugepages.thpMeminfo', path: 'AnonHugePages', unit: 'kB' },
-              { probe: 'hugepages.minFree', unit: 'kB' },
+            id: 'setting', label: 'enabled', pin: 'thp_enabled', allValues: true, value: { probe: 'hugepages.thpEnabled', unit: '' },
+            does: 'Which anonymous memory the kernel may back with huge pages on its own.',
+            options: [
+              { value: 'always', label: 'always', does: 'Every large region qualifies, system wide.' },
+              { value: 'madvise', label: 'madvise', does: 'Only regions the program marked with MADV_HUGEPAGE.' },
+              { value: 'never', label: 'never', does: 'Off, though kernels from 6.1 still act on a collapse request.' },
             ],
           },
         ],
@@ -191,7 +170,7 @@ export const LEARN = {
       body: [
         '[[Transparent huge pages|thp]] give a program huge pages without any change to it and without a reserved pool[^objective]. They work for [[anonymous memory|anonymous-memory]] and for tmpfs and shmem[^objective]. One huge page takes a single [[TLB]] entry where many small pages would need one each, which means fewer TLB misses[^objective].',
         '`transparent_hugepage/enabled` sets this for anonymous memory and takes three values. With `always`, huge pages are enabled system wide. With `madvise`, only regions the program marked with [[madvise]] and MADV_HUGEPAGE qualify. With `never` they are off, although on kernels from 6.1 an explicit collapse request can still produce one[^sysfs][^collapse]. The [[khugepaged]] thread collapses small pages into huge ones while the setting is `always` or `madvise`[^sysfs].',
-        'With `always`, a program can use more memory than it needs: it may map a large region, touch one byte, and be given a 2M page[^objective]. That is why the docs let you limit huge pages to madvise regions[^objective]. When khugepaged starts, the kernel may also raise `vm.min_free_kbytes` to help huge page allocations, as the figure shows on our test kernels.',
+        'With `always`, a program can use more memory than it needs: it may map a large region, touch one byte, and be given a 2M page[^objective]. That is why the docs let you limit huge pages to madvise regions[^objective]. When khugepaged starts, the kernel may also raise `vm.min_free_kbytes` to help huge page allocations.',
       ],
       pins: [
         { key: 'thp_enabled', layer: 'setting', here: 'Which memory may get huge pages on its own. madvise gives them only to programs that ask. always gives them to everything that qualifies and can waste RAM. never turns it off.' },
@@ -234,35 +213,18 @@ export const LEARN = {
         limit: 'Guests move themselves. The kernel has to copy memory to another place, and that costs processor time that every program on the machine shares.',
       },
       figure: {
-        kind: 'stack',
-        title: 'What happens when no free block is there',
-        layers: [
+        kind: 'modes',
+        title: 'How hard the kernel tries for a free block',
+        rows: [
           {
-            id: 'fault',
-            label: 'A program touches new memory',
-            kind: 'nodes',
-            nodes: [{ id: 'touch', text: 'The kernel looks for a free 2M block', sub: 'for memory eligible for huge pages' }],
-          },
-          {
-            id: 'modes',
-            label: 'transparent_hugepage/defrag',
-            kind: 'nodes',
-            nodes: [
-              { id: 'always', text: 'always', sub: 'stall, reclaim and compact at once' },
-              { id: 'defer', text: 'defer', sub: 'wake background helpers, no waiting' },
-              { id: 'defer-madvise', text: 'defer+madvise', sub: 'wait if the memory asked, else defer' },
-              { id: 'madvise', text: 'madvise', sub: 'wait only if the memory asked' },
-              { id: 'never', text: 'never', sub: 'small pages unless a block is free' },
-            ],
-            values: [{ probe: 'hugepages.thpDefrag', unit: '' }],
-          },
-          {
-            id: 'helpers',
-            label: 'Who makes the block',
-            kind: 'nodes',
-            nodes: [
-              { id: 'direct', text: 'The program itself', sub: 'it waits', probe: 'hugepages.compactStall' },
-              { id: 'kcompactd', text: 'kcompactd', sub: 'in the background', probe: 'hugepages.kcompactd' },
+            id: 'modes', label: 'defrag', pin: 'thp_defrag', value: { probe: 'hugepages.thpDefrag', unit: '' },
+            does: 'How long a program may wait while the kernel makes a free 2M block.',
+            options: [
+              { value: 'always', label: 'always', does: 'The program stalls, reclaims and compacts at once.' },
+              { value: 'defer', label: 'defer', does: 'Wakes background helpers and never waits.' },
+              { value: 'defer+madvise', label: 'defer+madvise', does: 'Waits if the memory asked for huge pages, else defers.' },
+              { value: 'madvise', label: 'madvise', does: 'Waits only if the memory asked for huge pages.' },
+              { value: 'never', label: 'never', does: 'Takes a huge page only if one is free.' },
             ],
           },
         ],
@@ -313,37 +275,16 @@ export const LEARN = {
         limit: 'The teacher can only compare what she reads. The kernel also has to scan memory to find twins, and that costs processor time.',
       },
       figure: {
-        kind: 'stack',
-        title: 'How KSM finds identical pages',
-        layers: [
+        kind: 'modes',
+        title: 'Whether KSM scans for twins',
+        rows: [
           {
-            id: 'marked',
-            label: 'Programs',
-            kind: 'nodes',
-            nodes: [{ id: 'mergeable', text: 'Memory marked as mergeable', sub: 'madvise with MADV_MERGEABLE' }],
-          },
-          {
-            id: 'scanner',
-            label: 'The scanner, ksmd',
-            kind: 'nodes',
-            nodes: [
-              { id: 'switch', text: 'ksm/run', sub: 'whether it scans at all', probe: 'hugepages.ksmRun' },
-              { id: 'batch', text: 'ksm/pages_to_scan', sub: 'pages per batch', probe: 'hugepages.ksmPagesToScan' },
-              { id: 'pause', text: 'ksm/sleep_millisecs', sub: 'sleep between batches', probe: 'hugepages.ksmSleep' },
-            ],
-            values: [
-              { probe: 'hugepages.ksmRun', unit: '' },
-              { probe: 'hugepages.ksmPagesToScan', unit: 'pages' },
-              { probe: 'hugepages.ksmSleep', unit: 'ms' },
-            ],
-          },
-          {
-            id: 'result',
-            label: 'The result',
-            kind: 'nodes',
-            nodes: [
-              { id: 'shared', text: 'Shared pages in use', sub: 'pages_shared', probe: 'hugepages.ksmShared' },
-              { id: 'saved', text: 'Extra mappings sharing them', sub: 'pages_sharing', probe: 'hugepages.ksmSharing' },
+            id: 'switch', label: 'ksm/run', pin: 'ksm_run', allValues: true, value: { probe: 'hugepages.ksmRun', unit: '' },
+            does: 'Whether the scanner ksmd runs, on memory programs marked with MADV_MERGEABLE.',
+            options: [
+              { value: 0, label: 'stopped', does: 'Stops ksmd but keeps pages already merged.' },
+              { value: 1, label: 'running', does: 'ksmd scans and merges identical pages.' },
+              { value: 2, label: 'unmerge', does: 'Stops ksmd and unmerges every shared page.' },
             ],
           },
         ],
@@ -355,8 +296,8 @@ export const LEARN = {
       ],
       pins: [
         { key: 'ksm_run', layer: 'switch', here: 'Whether ksmd runs. Off, nothing is merged. On, it scans only memory that programs marked as mergeable. It was built for hosts that run many similar virtual machines.' },
-        { key: 'ksm_pages_to_scan', layer: 'batch', here: 'How many pages ksmd scans before it sleeps. Higher finds identical pages sooner and costs more processor time. Lower is gentler.' },
-        { key: 'ksm_sleep_millisecs', layer: 'pause', here: 'How long ksmd sleeps between batches. Longer scans more slowly and uses less processor time. Change pages_to_scan first and leave this alone.' },
+        { key: 'ksm_pages_to_scan', layer: 'switch', here: 'How many pages ksmd scans before it sleeps. Higher finds identical pages sooner and costs more processor time. Lower is gentler.' },
+        { key: 'ksm_sleep_millisecs', layer: 'switch', here: 'How long ksmd sleeps between batches. Longer scans more slowly and uses less processor time. Change pages_to_scan first and leave this alone.' },
       ],
       choose: [
         {
@@ -403,30 +344,20 @@ export const LEARN = {
         limit: 'Books are alike. Mappings differ widely in size, and a tiny one counts the same as a huge one.',
       },
       figure: {
-        kind: 'stack',
-        title: 'What counts toward the limit',
-        layers: [
+        kind: 'compare',
+        title: 'Memory mappings one process may hold',
+        axis: 'mappings',
+        scale: 'linear',
+        bars: [
           {
-            id: 'sources',
-            label: 'What creates a mapping',
-            kind: 'nodes',
-            nodes: [
-              { id: 'malloc', text: 'malloc', sub: 'a side effect of the call' },
-              { id: 'calls', text: 'mmap, mprotect and madvise', sub: 'called directly' },
-              { id: 'libs', text: 'Shared libraries', sub: 'when they load' },
-            ],
-          },
-          {
-            id: 'limit',
-            label: 'The limit per process',
-            kind: 'nodes',
-            nodes: [{ id: 'cap', text: 'vm.max_map_count', sub: 'the most mappings one process may hold', probe: 'hugepages.mapCount' }],
-            values: [{ probe: 'hugepages.mapCount', unit: 'maps' }],
+            id: 'cap', label: 'Per process', tone: 'fit', value: { probe: 'hugepages.mapCount', unit: '' },
+            does: 'The most mappings one process may hold, counting malloc, mmap, mprotect, madvise and loaded shared libraries.',
           },
         ],
+        pins: [{ key: 'max_map_count', bar: 'cap' }],
       },
       body: [
-        'A memory map area is one region of a process\'s address space. Map areas are created as a side effect of malloc, directly by mmap, mprotect and madvise, and when shared libraries load[^maxmap]. `vm.max_map_count` is the most a process may have, and the kernel default is 65530[^maxmap]. The figure shows the value each of our test kernels starts with.',
+        'A memory map area is one region of a process\'s address space. Map areas are created as a side effect of malloc, directly by mmap, mprotect and madvise, and when shared libraries load[^maxmap]. `vm.max_map_count` is the most a process may have, and the kernel default is 65530[^maxmap]. The bar shows the value each of our test kernels starts with.',
         'Most applications need fewer than a thousand maps. Some programs, malloc debuggers in particular, use one or two per allocation[^maxmap]. Once a process would pass the limit, mmap fails with ENOMEM[^mmap]. So does a call that splits a mapping in two, such as mprotect on part of it or munmap in its middle[^mmap][^mprotect].',
       ],
       pins: [
@@ -453,7 +384,7 @@ export const LEARN = {
       },
       look: {
         cmd: 'sysctl vm.max_map_count',
-        for: 'The most mappings one process may hold. The kernel default is 65530, and the figure shows what each test kernel sets.',
+        for: 'The most mappings one process may hold. The kernel default is 65530, and the bar shows what each test kernel sets.',
       },
       sources: {
         maxmap: vm('max-map-count', 'max_map_count'),
@@ -470,30 +401,16 @@ export const LEARN = {
         limit: 'Tidying a shelf costs you little. The kernel throws away cached file data to make room, and a program may have needed it again soon.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Where a new allocation lands',
-        layers: [
+        kind: 'modes',
+        title: 'What happens when local memory runs out',
+        rows: [
           {
-            id: 'request',
-            label: 'A program asks for memory',
-            kind: 'nodes',
-            nodes: [{ id: 'local-full', text: 'The local node has run out' }],
-          },
-          {
-            id: 'choice',
-            label: 'vm.zone_reclaim_mode',
-            kind: 'nodes',
-            nodes: [
-              { id: 'off', text: '0: off', sub: 'allocate from other nodes' },
-              { id: 'on', text: '1: on', sub: 'free local memory first' },
+            id: 'choice', label: 'Zone reclaim', pin: 'zone_reclaim_mode', value: { probe: 'hugepages.zoneReclaim', unit: '' },
+            does: 'Whether the kernel frees memory on the local node first, or allocates from another node.',
+            options: [
+              { value: 0, label: 'off', does: 'Allocate from other nodes at once.' },
+              { value: 1, label: 'on', does: 'Free local memory first, then look further.' },
             ],
-            values: [{ probe: 'hugepages.zoneReclaim', unit: '' }],
-          },
-          {
-            id: 'nodes',
-            label: 'Memory nodes',
-            kind: 'nodes',
-            nodes: [{ id: 'node0', text: 'Node 0', sub: 'present even on a machine with one node', probe: 'hugepages.numaNode0' }],
           },
         ],
       },

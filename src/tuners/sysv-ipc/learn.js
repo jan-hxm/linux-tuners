@@ -13,8 +13,8 @@ const man = (section, page, anchor, label) => ({
   label: `${page}(${section}): ${label}`,
 })
 const SYSVIPC = man(7, 'sysvipc', 'DESCRIPTION', 'Description')
-const PROC_KERNEL = man(5, 'proc_sys_kernel', '', 'kernel files')
-const PROC_SYSVIPC = man(5, 'proc_sysvipc', '', '/proc/sysvipc')
+const PROC_KERNEL = man(5, 'proc_sys_kernel', 'DESCRIPTION', 'kernel files')
+const PROC_SYSVIPC = man(5, 'proc_sysvipc', 'DESCRIPTION', '/proc/sysvipc')
 
 export const LEARN = {
   slug: 'ipc',
@@ -155,7 +155,7 @@ export const LEARN = {
       },
       body: [
         'A segment is not tied to the programs that use it. Removing one with `shmctl()` marks it for destruction, and the kernel destroys it only after every program has detached[^shmctl]. If nobody removes it, the pages it used stay in memory or swap[^shmctl].',
-        'The `ipcrm` tool removes a segment by hand, as root or as the segment\'s creator or owner. It also waits for every attached program to detach before the segment goes[^ipcrm].',
+        'The `ipcrm` tool removes a segment by hand, as root or as the segment\'s creator or owner. The segment still goes only after every attached program has detached[^ipcrm].',
         'When `kernel.shm_rmid_forced` is 1, the kernel destroys a segment once its attach count reaches zero, after a detach or when a process ends. It also destroys segments that were created but never attached, when the creating process exits[^rmid]. The manual page warns that this can break applications[^proc-kernel].',
       ],
       pins: [
@@ -204,6 +204,13 @@ export const LEARN = {
         title: 'The four semaphore limits',
         layers: [
           {
+            id: 'setting',
+            label: 'kernel.sem',
+            kind: 'nodes',
+            nodes: [{ id: 'order', text: 'Four numbers, in this order', sub: 'SEMMSL, SEMMNS, SEMOPM, SEMMNI' }],
+            values: [{ probe: 'sysv-ipc.sem', unit: '' }],
+          },
+          {
             id: 'system',
             label: 'The machine',
             kind: 'nodes',
@@ -211,7 +218,6 @@ export const LEARN = {
               { id: 'all-sets', text: 'All semaphore sets', sub: 'SEMMNI at most', probe: 'sysv-ipc.sysvipcSem' },
               { id: 'all-semaphores', text: 'All semaphores together', sub: 'SEMMNS at most' },
             ],
-            values: [{ probe: 'sysv-ipc.sem', unit: '' }],
           },
           { id: 'set', label: 'One set', kind: 'nodes', nodes: [{ id: 'one-set', text: 'A set of semaphores', sub: 'SEMMSL at most' }] },
           { id: 'call', label: 'One call', kind: 'nodes', nodes: [{ id: 'one-call', text: 'A semop() call', sub: 'SEMOPM operations at most' }] },
@@ -220,10 +226,10 @@ export const LEARN = {
       body: [
         'A [[semaphore]] is a counter that programs use to take turns. Semaphores come in groups called sets, and `semop()` applies operations to one set[^semop]. Adding to a counter never blocks. Taking away more than it holds makes the caller wait[^semop]. The operations of one call happen together or not at all[^semop].',
         '`kernel.sem` holds four limits, in this order[^sem]. SEMMSL is the most semaphores in one set. SEMMNS is the most in all sets together. SEMOPM is the most operations in one `semop()` call. SEMMNI is the most sets[^sem].',
-        'Going over a limit makes a call fail. `semget()` fails with EINVAL for too many semaphores in a set, and with ENOSPC past SEMMNI or SEMMNS[^semget-err]. `semop()` fails with E2BIG past SEMOPM[^semop-err]. Before Linux 3.19 the three defaults were 250, 32 and 128; now they are 32000, 500 and 32000[^semget-notes][^semop-notes].',
+        'Going over a limit makes a call fail. `semget()` fails with EINVAL for too many semaphores in a set, and with ENOSPC past SEMMNI or SEMMNS[^semget-err]. `semop()` fails with E2BIG past SEMOPM[^semop-err]. Before Linux 3.19 SEMMSL, SEMOPM and SEMMNI defaulted to 250, 32 and 128; now they are 32000, 500 and 32000[^semget-notes][^semop-notes].',
       ],
       pins: [
-        { key: 'sem', layer: 'system', here: 'Four numbers: SEMMSL, SEMMNS, SEMOPM, SEMMNI, in that order. Write all four. Old installation guides list numbers below the defaults, which only lower the limits. Raise one only when software asks.' },
+        { key: 'sem', layer: 'setting', here: 'Four numbers: SEMMSL, SEMMNS, SEMOPM, SEMMNI, in that order. Write all four. Old installation guides list numbers below the defaults, which only lower the limits. Raise one only when software asks.' },
       ],
       choose: [
         {
@@ -294,8 +300,8 @@ export const LEARN = {
       },
       body: [
         'System V message queues let programs exchange data as separate messages[^sysv]. `msgget()` makes a queue and `msgsnd()` adds a message to one[^msgget][^msgsnd]. All three limits here are set per [[IPC namespace|namespace]][^limits].',
-        '`kernel.msgmni` is the most queues that may exist, 32000 by default. `msgget()` fails with ENOSPC when a new queue would pass it[^msgget-err][^msgget-notes]. `kernel.msgmax` is the longest message text, 8192 bytes by default, and a longer message fails with EINVAL[^limits][^msgsnd].',
-        '`kernel.msgmnb` is the size a new queue starts with, 16384 bytes by default[^limits]. When a queue is full, `msgsnd()` waits, or fails with EAGAIN if the program asked not to wait[^msgsnd]. Raising one queue above msgmnb needs the capability CAP_SYS_RESOURCE[^msgctl].',
+        '`kernel.msgmni` is the most queues that may exist, 32000 by default. `msgget()` fails with ENOSPC when a new queue would pass it[^msgget-err][^msgget-notes]. `kernel.msgmax` is the longest message text, 8192 bytes by default, and a longer message fails with EINVAL[^limits][^msgsnd-err].',
+        '`kernel.msgmnb` is the size a new queue starts with, 16384 bytes by default[^msgget][^limits]. When a queue is full, `msgsnd()` waits, or fails with EAGAIN if the program asked not to wait[^msgsnd]. Raising one queue above msgmnb needs the capability CAP_SYS_RESOURCE[^msgctl].',
       ],
       pins: [
         { key: 'msgmni', layer: 'machine', here: 'The most queues that may exist at once. A new queue past it fails with ENOSPC. Raise it only when software asks, since the default is already large.' },
@@ -337,6 +343,7 @@ export const LEARN = {
         'msgget-err': man(2, 'msgget', 'ERRORS', 'Errors'),
         'msgget-notes': man(2, 'msgget', 'NOTES', 'Notes'),
         msgsnd: man(2, 'msgsnd', 'DESCRIPTION', 'Description'),
+        'msgsnd-err': man(2, 'msgsnd', 'ERRORS', 'Errors'),
         msgctl: man(2, 'msgctl', 'DESCRIPTION', 'Description'),
         limits: kernel('msgmax-msgmnb-and-msgmni', 'msgmax, msgmnb and msgmni'),
       },

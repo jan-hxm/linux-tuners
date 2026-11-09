@@ -132,6 +132,7 @@ export const LEARN = {
       figure: {
         kind: 'modes',
         title: 'The scheduler each disk runs',
+        kernels: true,
         rows: diskRows(
           'Scheduler',
           [
@@ -244,6 +245,7 @@ export const LEARN = {
       figure: {
         kind: 'compare',
         title: 'Most the kernel reads ahead, per disk',
+        kernels: true,
         axis: 'read-ahead',
         scale: 'linear',
         bars: diskBars('ReadAhead', 'kB'),

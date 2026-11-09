@@ -19,6 +19,11 @@ const rc = (anchor, name) => ({ url: `${RC}#${anchor}`, label: `systemd.resource
 const sc = (anchor, name) => ({ url: `${SC}#${anchor}`, label: `systemd-system.conf(5): ${name}` })
 const cg = (anchor, name) => ({ url: `${CG}#${anchor}`, label: `Control Group v2: ${name}` })
 
+const ONOFF = [
+  { value: 'yes', label: 'On', does: 'The counter runs for every service.' },
+  { value: 'no', label: 'Off', does: 'Nothing is counted unless a unit asks.' },
+]
+
 export const LEARN = {
   slug: 'systemd-resources',
   title: 'How systemd shares out resources',
@@ -62,29 +67,15 @@ export const LEARN = {
         limit: 'A bookkeeper can count one team on its own. The kernel switches a counter on for a whole branch at once, so siblings and parents are counted as well.',
       },
       figure: {
-        kind: 'tree',
-        title: 'How systemd sorts the machine into a tree',
-        root: {
-          id: 'root-slice',
-          label: '-.slice',
-          does: 'The root, the folder `/sys/fs/cgroup` itself, which systemd (process 1) fills with groups.',
-          children: [
-            {
-              id: 'system-slice',
-              label: 'system.slice',
-              value: { probe: 'systemd.memoryCurrent', unit: 'bytes', label: 'Memory used now' },
-              does: 'Holds system services, and counts their CPU time, memory and tasks, plus disk and network use once switched on.',
-            },
-            { id: 'user-slice', label: 'user.slice', does: 'Holds logged-in users and their programs.' },
-            { id: 'init-scope', label: 'init.scope', does: 'The group systemd itself runs in.' },
-          ],
-        },
-        pins: [
-          { key: 'default_memory_accounting', node: 'root-slice' },
-          { key: 'default_tasks_accounting', node: 'root-slice' },
-          { key: 'default_io_accounting', node: 'root-slice' },
-          { key: 'default_ip_accounting', node: 'root-slice' },
-          { key: 'default_cpu_accounting', node: 'root-slice' },
+        kind: 'modes',
+        title: 'What each counter does by default, for every service',
+        kernels: true,
+        rows: [
+          { id: 'memory', label: 'Memory', pin: 'default_memory_accounting', value: { probe: 'systemd.defaultMemoryAccounting', unit: '' }, options: ONOFF },
+          { id: 'tasks', label: 'Tasks', pin: 'default_tasks_accounting', value: { probe: 'systemd.defaultTasksAccounting', unit: '' }, options: ONOFF },
+          { id: 'io', label: 'Disk I/O', pin: 'default_io_accounting', value: { probe: 'systemd.defaultIoAccounting', unit: '' }, options: ONOFF },
+          { id: 'ip', label: 'Network (IP)', pin: 'default_ip_accounting', value: { probe: 'systemd.defaultIpAccounting', unit: '' }, options: ONOFF },
+          { id: 'cpu', label: 'CPU time', pin: 'default_cpu_accounting', value: { probe: 'systemd.defaultCpuAccounting', unit: '' }, options: ONOFF },
         ],
       },
       body: [
@@ -93,11 +84,11 @@ export const LEARN = {
         'systemd turns a controller on for a unit that has a setting for it, and the accounting defaults turn one on for every unit[^enable]. Memory and task counting are on by default; disk and network counting are off[^defaults]. CPU time is counted on cgroup v2 whatever the setting, so systemd 258 deprecated DefaultCPUAccounting[^history]. On the older cgroup v1 layout, each controller has a tree of its own[^units-ctl].',
       ],
       pins: [
-        { key: 'default_memory_accounting', layer: 'root-slice', here: 'Counts the memory each service uses. It is on by default. A memory limit on a unit turns the count on for it anyway. Most machines don\'t need to change this.' },
-        { key: 'default_tasks_accounting', layer: 'root-slice', here: 'Counts the processes and threads in each service. It is on by default. Most machines don\'t need to change this.' },
-        { key: 'default_io_accounting', layer: 'root-slice', here: 'Counts what each service reads and writes on disk. It is off by default. Turn it on to find out which service keeps the disk busy.' },
-        { key: 'default_ip_accounting', layer: 'root-slice', here: 'Counts the network bytes and packets of each system service. It is off by default, and does not cover services a user runs.' },
-        { key: 'default_cpu_accounting', layer: 'root-slice', here: 'Only matters on the older cgroup v1 layout. On cgroup v2, CPU time is always counted, and systemd 258 deprecated the setting.' },
+        { key: 'default_memory_accounting', layer: 'memory', here: 'Counts the memory each service uses. It is on by default. A memory limit on a unit turns the count on for it anyway. Most machines don\'t need to change this.' },
+        { key: 'default_tasks_accounting', layer: 'tasks', here: 'Counts the processes and threads in each service. It is on by default. Most machines don\'t need to change this.' },
+        { key: 'default_io_accounting', layer: 'io', here: 'Counts what each service reads and writes on disk. It is off by default. Turn it on to find out which service keeps the disk busy.' },
+        { key: 'default_ip_accounting', layer: 'ip', here: 'Counts the network bytes and packets of each system service. It is off by default, and does not cover services a user runs.' },
+        { key: 'default_cpu_accounting', layer: 'cpu', here: 'Only matters on the older cgroup v1 layout. On cgroup v2, CPU time is always counted, and systemd 258 deprecated the setting.' },
       ],
       choose: [
         {
@@ -289,8 +280,12 @@ export const LEARN = {
             {
               id: 'system-slice',
               label: 'system.slice',
+              value: { example: 100, unit: '', label: 'io.weight' },
               does: 'Its `io.weight` is its share of a busy disk against user.slice.',
-              children: [{ id: 'system-service', label: 'A service', does: 'Shares the disk time of the slice with its siblings, by their own weights.' }],
+              children: [
+                { id: 'web-service', label: 'web.service', value: { example: 100, unit: '', label: 'io.weight' }, does: 'Shares the disk time of the slice with its siblings, by their own weights.' },
+                { id: 'backup-service', label: 'backup.service', value: { example: 10, unit: '', label: 'io.weight' }, does: 'A batch job given a tenth of the weight, so the web service keeps the disk.' },
+              ],
             },
             {
               id: 'user-slice',
@@ -351,21 +346,22 @@ export const LEARN = {
       },
       figure: {
         kind: 'compare',
-        title: 'Task limits on the machine, and the tasks in one slice now',
+        title: 'Task limits on the machine, and one busy service',
         axis: 'tasks',
         scale: 'log',
         groups: [
           { id: 'machine', label: 'Machine limits', does: 'Caps for the whole machine, set by the kernel.' },
-          { id: 'slice', label: 'One slice', does: 'What system.slice holds right now, against its caps.' },
+          { id: 'service', label: 'One service', does: 'The cap each service gets, and a busy service against it.' },
         ],
         bars: [
           { id: 'pid-max', label: 'Process numbers', group: 'machine', value: { probe: 'systemd.pidMax', unit: '' }, does: 'The kernel hands out process numbers only below `kernel.pid_max`.' },
           { id: 'threads-max', label: 'Threads', group: 'machine', value: { probe: 'systemd.threadsMax', unit: '' }, does: 'Caps threads on the machine, sized from RAM at boot.' },
-          { id: 'tasks', label: 'Tasks now', group: 'slice', tone: 'fit', value: { probe: 'systemd.pidsCurrent', unit: '' }, does: 'Counted in `pids.current`, capped by TasksMax, while each service gets DefaultTasksMax, 15% of the smallest machine limit.' },
+          { id: 'default-tasks-max', label: 'DefaultTasksMax', group: 'service', tone: 'error', value: { probe: 'systemd.defaultTasksMax', unit: '' }, does: 'The cap each service gets, 15% of the smallest machine limit.' },
+          { id: 'tasks', label: 'A busy service', group: 'service', tone: 'fit', value: { example: 300, unit: '', label: 'Tasks now' }, does: 'Counted in `pids.current`, so far well under the cap.' },
         ],
         pins: [
-          { key: 'default_tasks_max', bar: 'tasks' },
-          { key: 'tasks_max', bar: 'tasks' },
+          { key: 'default_tasks_max', bar: 'default-tasks-max' },
+          { key: 'tasks_max', bar: 'tasks', value: { probe: 'systemd.systemSliceTasksMax', unit: '' } },
         ],
       },
       body: [
@@ -374,7 +370,7 @@ export const LEARN = {
         'DefaultTasksMax sets TasksMax for every unit except slices[^default-tasks]. It defaults to 15% of the smallest of pid_max, threads-max and the root cgroup\'s pids.max[^default-tasks]. TasksMax on a slice caps every process of every unit in it[^slice].',
       ],
       pins: [
-        { key: 'default_tasks_max', layer: 'tasks', here: 'The task cap each service gets unless it sets its own. Raise it for services with many threads, such as databases and Java programs. Lower it to hold runaway services tighter.' },
+        { key: 'default_tasks_max', layer: 'default-tasks-max', here: 'The task cap each service gets unless it sets its own. Raise it for services with many threads, such as databases and Java programs. Lower it to hold runaway services tighter.' },
         { key: 'tasks_max', layer: 'tasks', here: 'A cap on tasks for the whole slice. Use it so logged-in users, or one runaway workload, cannot use up the machine\'s tasks and stop system services from starting new ones.' },
       ],
       choose: [
@@ -419,22 +415,19 @@ export const LEARN = {
       },
       figure: {
         kind: 'compare',
-        title: 'The kernel ceiling on open files for one process',
+        title: 'Open files one process may have',
         axis: 'open files',
-        scale: 'linear',
+        scale: 'log',
+        kernels: true,
         bars: [
-          {
-            id: 'nr-open',
-            label: 'fs.nr_open',
-            tone: 'error',
-            value: { probe: 'systemd.nrOpen', unit: 'files' },
-            does: 'The most open files any process may have; the NOFILE and MEMLOCK defaults of systemd are not measured here.',
-          },
+          { id: 'soft', label: 'Soft limit', tone: 'fit', value: { probe: 'systemd.defaultLimitNofileSoft', unit: '' }, does: 'Where each service process starts, and what it may open without asking.' },
+          { id: 'hard', label: 'Hard limit', value: { probe: 'systemd.defaultLimitNofile', unit: '' }, does: 'How far a process may raise its own soft limit.' },
+          { id: 'nr-open', label: 'fs.nr_open', tone: 'error', value: { probe: 'systemd.nrOpen', unit: '' }, does: 'The kernel ceiling: no process may have more open files than this.' },
         ],
         pins: [
-          { key: 'default_limit_nofile_soft', bar: 'nr-open' },
-          { key: 'default_limit_nofile_hard', bar: 'nr-open' },
-          { key: 'default_limit_memlock', bar: 'nr-open' },
+          { key: 'default_limit_nofile_soft', bar: 'soft' },
+          { key: 'default_limit_nofile_hard', bar: 'hard' },
+          { key: 'default_limit_memlock', bar: 'hard', value: { probe: 'systemd.defaultLimitMemlock', unit: 'bytes' } },
         ],
       },
       body: [
@@ -443,9 +436,9 @@ export const LEARN = {
         'The kernel adds its own cap, fs.nr_open, on the open files any one process can have[^nr-open]. DefaultLimitMEMLOCK caps the bytes a process may lock into RAM with calls such as `mlock()`[^memlock]. It defaults to 8M[^defaults].',
       ],
       pins: [
-        { key: 'default_limit_nofile_soft', layer: 'nr-open', here: 'Where each process starts. Keep it at 1024 so older programs that use select() keep working. Programs that need more raise their own soft limit, up to the hard one.' },
-        { key: 'default_limit_nofile_hard', layer: 'nr-open', here: 'How far a process may raise its own soft limit. Raise it for servers with many connections, such as proxies and databases. Keep it at or above the soft limit.' },
-        { key: 'default_limit_memlock', layer: 'nr-open', here: 'How much memory one process may lock into RAM. Raise it for a program whose mlock() calls fail, such as some databases. Most machines don\'t need to change this.' },
+        { key: 'default_limit_nofile_soft', layer: 'soft', here: 'Where each process starts. Keep it at 1024 so older programs that use select() keep working. Programs that need more raise their own soft limit, up to the hard one.' },
+        { key: 'default_limit_nofile_hard', layer: 'hard', here: 'How far a process may raise its own soft limit. Raise it for servers with many connections, such as proxies and databases. Keep it at or above the soft limit.' },
+        { key: 'default_limit_memlock', layer: 'hard', here: 'How much memory one process may lock into RAM. Raise it for a program whose mlock() calls fail, such as some databases. Most machines don\'t need to change this.' },
       ],
       choose: [
         {

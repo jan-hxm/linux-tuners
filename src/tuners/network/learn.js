@@ -67,7 +67,7 @@ export const LEARN = {
         bars: [
           { id: 'r-min', label: 'Smallest', group: 'receive', value: { probe: 'network.tcpRmem', path: '0', unit: 'bytes' }, does: 'The least a TCP receive buffer may shrink to.' },
           { id: 'r-start', label: 'Start', group: 'receive', tone: 'fit', value: { probe: 'network.tcpRmem', path: '1', unit: 'bytes' }, does: 'The size a new connection starts with, before the kernel grows it.' },
-          { id: 'r-max', label: 'Largest', group: 'receive', value: { probe: 'network.tcpRmem', path: '2', unit: 'bytes' }, does: 'The most the kernel grows a TCP receive buffer to.' },
+          { id: 'r-max', label: 'Largest', group: 'receive', value: { probe: 'network.tcpRmem', path: '2', unit: 'bytes' }, does: 'The most the kernel grows a TCP receive buffer to (larger on Fedora).' },
           { id: 'r-cap', label: 'Program cap', group: 'receive', tone: 'error', value: { probe: 'network.rmemMax', unit: 'bytes' }, does: 'The most a program may ask for with `SO_RCVBUF`.' },
           { id: 'w-min', label: 'Smallest', group: 'send', value: { probe: 'network.tcpWmem', path: '0', unit: 'bytes' }, does: 'The least a TCP send buffer may shrink to.' },
           { id: 'w-start', label: 'Start', group: 'send', tone: 'fit', value: { probe: 'network.tcpWmem', path: '1', unit: 'bytes' }, does: 'The size a new connection starts with, before the kernel grows it.' },
@@ -133,6 +133,7 @@ export const LEARN = {
       },
       figure: {
         kind: 'tree',
+        kernels: true,
         title: 'Where arriving traffic waits before your program',
         root: {
           id: 'arrivals',
@@ -443,9 +444,9 @@ export const LEARN = {
         marks: [
           {
             id: 'entries',
-            label: 'In use now',
-            value: { probe: 'network.conntrackCount', unit: 'connections' },
-            does: 'Connections tracked right now, which is 0 on a test machine with no traffic.',
+            label: 'Busy server',
+            value: { example: 41000, unit: 'connections', label: 'Busy server' },
+            does: 'An example count of tracked connections on a busy server, to show a table that is filling up.',
           },
           {
             id: 'limit',

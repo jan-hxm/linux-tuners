@@ -59,6 +59,7 @@ export const LEARN = {
       },
       figure: {
         kind: 'modes',
+        kernels: true,
         title: 'Who can read kernel addresses and the kernel log',
         rows: [
           {
@@ -193,6 +194,7 @@ export const LEARN = {
       },
       figure: {
         kind: 'modes',
+        kernels: true,
         title: 'Who may look into a program, and what a crash leaves',
         groups: [
           { id: 'looking', label: 'Debuggers', does: 'A debugger or tracer reads another program, and that memory can hold credentials.' },
@@ -277,6 +279,7 @@ export const LEARN = {
       },
       figure: {
         kind: 'modes',
+        kernels: true,
         title: 'Kernel features an ordinary user may reach',
         rows: [
           {
@@ -313,7 +316,7 @@ export const LEARN = {
             does: 'The lit number is how many each user may create, not a switch.',
             options: [
               { value: 0, label: 'blocked', does: 'Creating one fails for everyone, root included.' },
-              { value: 'allowed', label: 'allowed', does: 'Each user may create namespaces up to a limit.' },
+              { min: 1, label: 'allowed', does: 'Each user may create namespaces up to a limit.' },
             ],
           },
         ],
@@ -377,6 +380,7 @@ export const LEARN = {
       },
       figure: {
         kind: 'modes',
+        kernels: true,
         title: 'Which traps the kernel refuses in shared folders',
         rows: [
           {
@@ -485,6 +489,7 @@ export const LEARN = {
       },
       figure: {
         kind: 'modes',
+        kernels: true,
         title: 'What the kernel believes about arriving packets',
         groups: [
           { id: 'spoofing', label: 'Spoofing' },

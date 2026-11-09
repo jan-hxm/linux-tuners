@@ -247,7 +247,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
       <component :is="sub" :class="SUBHEAD">Look on your machine</component>
       <div class="pt-3" data-part="look">
         <pre tabindex="0" :aria-label="`Command: ${chapter.look.cmd}`" class="m-0 overflow-x-auto border border-rule bg-paper-hover p-3 font-mono text-[15px] text-ink"><code>{{ chapter.look.cmd }}</code></pre>
-        <p class="m-0 mt-2 text-[15px] leading-[1.55] text-ink-2">Look for <RichText :text="chapter.look.for" />.</p>
+        <p class="m-0 mt-2 text-[15px] leading-[1.55] text-ink-2"><RichText :text="chapter.look.for" /></p>
       </div>
     </template>
 

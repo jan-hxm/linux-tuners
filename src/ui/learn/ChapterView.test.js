@@ -43,6 +43,10 @@ describe('ChapterView', () => {
       if (pin.exists()) await pin.trigger('click')
       const text = wrapper.text()
       expect(text, chapter.id).not.toMatch(/\[\[|\]\]|\*\*|`/)
+      // look.for is a whole sentence: shown as written, no doubled full stop.
+      const look = wrapper.get('[data-part="look"]').text()
+      expect(look, chapter.id).not.toContain('Look for')
+      expect(look, chapter.id).not.toMatch(/[^.]\.\.(?!\.)/)
       wrapper.unmount()
       wrapper = null
     }

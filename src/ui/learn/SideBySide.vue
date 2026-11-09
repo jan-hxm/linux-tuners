@@ -23,6 +23,7 @@ const props = defineProps({
 
 const label = computed(() => sideBySideLabel(props.figure, props.defsByKey))
 const backed = computed(() => backedByText(props.figure.backedBy))
+const caption = computed(() => [`${props.figure.title}.`, backed.value].filter(Boolean).join(' '))
 
 function cellClass(i, lit) {
   if (i === 0 && lit > 0) return 'border-fit bg-fit'
@@ -47,6 +48,6 @@ function cellClass(i, lit) {
         </li>
       </ul>
     </div>
-    <p class="m-0 mt-2 text-[13px] text-quiet">{{ figure.title }}.<template v-if="backed"> {{ backed }}</template></p>
+    <p class="m-0 mt-2 text-[13px] text-quiet">{{ caption }}</p>
   </div>
 </template>

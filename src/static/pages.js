@@ -401,7 +401,7 @@ export function learnDoc({ entry, learn, evidence, defsByKey = {} }) {
       ]),
       heading(3, 'Look on your machine'),
       codeBlock(ch.look.cmd),
-      paragraph(text('Look for '), rich(ch.look.for), text('.')),
+      paragraph(rich(ch.look.for)),
       heading(3, 'Sources'),
       list(sources.map((src) => [text(`[${src.n}] `), link(src.label, src.url)])),
     )

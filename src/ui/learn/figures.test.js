@@ -140,6 +140,7 @@ describe('SideBySide', () => {
     expect(second.findAll('[data-cell]')[0].classes()).toContain('bg-fit')
     expect(second.findAll('[data-cell]')[1].classes()).toContain('bg-fit-tint')
     expect(first.text()).toContain('demo.batch_order = 0')
+    expect(w.text()).toMatch(/[a-z]\. Checked on real kernels/)
     expect(w.text()).toContain('Checked on real kernels by the VM test "on a swap file it reads ahead at the default and not at 0".')
     // The cells wrap on a phone.
     expect(first.get('.flex-wrap.gap-1').exists()).toBe(true)

@@ -24,13 +24,13 @@ export const LEARN = {
       'Think of a library with a front desk. Every book you borrow is written in a ledger. The desk limits how many books one reader may hold and how many the whole library has out. Notices, and orders for the stacks, have limits of their own.',
     cards: [
       { id: 'open-programs', title: 'Programs that open files', does: 'Open files, sockets and pipes, and read and write them.', col: 1, row: 1 },
-      { id: 'process-limit', title: 'Per-process limit', does: 'How many files one program may hold open. It cannot be raised past fs.nr_open.', col: 2, row: 1, probe: 'filesystem.nrOpen' },
-      { id: 'file-table', title: 'System-wide table', does: 'One entry for every open file on the machine, capped by fs.file-max.', col: 3, row: 1, probe: 'filesystem.fileNr', tone: 'fit' },
+      { id: 'process-limit', title: 'Per-process limit', does: 'How many files one program may hold open, never above `fs.nr_open`.', col: 2, row: 1, probe: 'filesystem.nrOpen' },
+      { id: 'file-table', title: 'System-wide table', does: 'One entry for every open file on the machine, capped by `fs.file-max`.', col: 3, row: 1, probe: 'filesystem.fileNr', tone: 'fit' },
       { id: 'watch-programs', title: 'Programs that watch files', does: 'Editors, sync tools and dev servers that want to hear about changes.', col: 1, row: 2 },
-      { id: 'watches', title: 'inotify instances and watches', does: 'Each instance holds watches on files and directories. Both are counted per user.', col: 2, row: 2, probe: 'filesystem.inotifyDir', tone: 'fit' },
-      { id: 'event-queue', title: 'Event queue', does: 'Changes wait here until the program reads them. A full queue drops events.', col: 3, row: 2, probe: 'filesystem.maxQueuedEvents' },
-      { id: 'aio-programs', title: 'Programs that queue disk requests', does: 'Programs, often databases, that ask for many reads and writes at once.', col: 1, row: 3 },
-      { id: 'aio-slots', title: 'Request slots', does: 'Slots reserved with io_setup(), counted across the machine and capped by fs.aio-max-nr.', col: 2, row: 3, probe: 'filesystem.aioNr', tone: 'fit' },
+      { id: 'watches', title: 'inotify instances and watches', does: 'Each instance holds watches on files and directories, and both are counted per user.', col: 2, row: 2, probe: 'filesystem.inotifyDir', tone: 'fit' },
+      { id: 'event-queue', title: 'Event queue', does: 'Changes wait here until the program reads them, and a full queue drops events.', col: 3, row: 2, probe: 'filesystem.maxQueuedEvents' },
+      { id: 'aio-programs', title: 'Programs queuing disk I/O', does: 'Programs, often databases, that ask for many reads and writes at once.', col: 1, row: 3 },
+      { id: 'aio-slots', title: 'Request slots', does: 'Slots reserved with `io_setup()`, counted across the machine and capped by `fs.aio-max-nr`.', col: 2, row: 3, probe: 'filesystem.aioNr', tone: 'fit' },
     ],
     bands: [
       { label: 'Open files', rows: [1, 1] },
@@ -38,8 +38,8 @@ export const LEARN = {
       { label: 'Async I/O', rows: [3, 3] },
     ],
     edges: [
-      { from: 'open-programs', to: 'process-limit', label: 'each open() is checked against it' },
-      { from: 'process-limit', to: 'file-table', label: 'each open file takes an entry' },
+      { from: 'open-programs', to: 'process-limit', label: 'open() is checked' },
+      { from: 'process-limit', to: 'file-table', label: 'files take entries' },
       { from: 'watch-programs', to: 'watches', label: 'add watches' },
       { from: 'watches', to: 'event-queue', label: 'changes become events' },
       { from: 'aio-programs', to: 'aio-slots', label: 'reserve slots' },
@@ -55,33 +55,21 @@ export const LEARN = {
         limit: 'Books are real objects. Open files are only entries in a table, and one file opened twice can take two entries.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Where an open file is counted',
-        layers: [
-          { id: 'program', label: 'Your program', kind: 'nodes', nodes: [{ id: 'open', text: 'A program opens a file', sub: 'open(2) returns a file descriptor' }] },
-          {
-            id: 'process',
-            label: 'Per-process limit',
-            kind: 'nodes',
-            nodes: [
-              { id: 'soft', text: 'Soft limit', sub: 'what the kernel enforces' },
-              { id: 'hard', text: 'Hard limit', sub: 'ceiling for the soft limit' },
-            ],
-          },
-          {
-            id: 'ceiling',
-            label: 'Highest hard limit',
-            kind: 'nodes',
-            nodes: [{ id: 'nr-open', text: 'fs.nr_open', sub: 'no hard limit can go above it' }],
-            values: [{ probe: 'filesystem.nrOpen', unit: 'files' }],
-          },
-          {
-            id: 'table',
-            label: 'System-wide table',
-            kind: 'nodes',
-            nodes: [{ id: 'entries', text: 'Open files, all programs', sub: 'capped by fs.file-max', probe: 'filesystem.fileNr' }],
-            values: [{ probe: 'filesystem.fileMax', unit: 'files' }],
-          },
+        kind: 'compare',
+        title: 'Open-file limits, one per program and one for the machine',
+        axis: 'open files',
+        scale: 'linear',
+        groups: [
+          { id: 'program', label: 'Per program', does: 'Each program has its own soft and hard limit, and no hard limit can go above `fs.nr_open`.' },
+          { id: 'machine', label: 'Whole machine', does: 'One table holds every open file of every program.' },
+        ],
+        bars: [
+          { id: 'nr-open', label: 'Highest hard limit', group: 'program', value: { probe: 'filesystem.nrOpen', unit: 'files' }, does: "The ceiling for any program's hard limit, set by `fs.nr_open`." },
+          { id: 'file-max', label: 'Open files, all programs', group: 'machine', tone: 'fit', value: { probe: 'filesystem.fileMax', unit: 'files' }, does: 'The most open files all programs may hold together, set by `fs.file-max`.' },
+        ],
+        pins: [
+          { key: 'nr_open', bar: 'nr-open' },
+          { key: 'file_max', bar: 'file-max' },
         ],
       },
       body: [
@@ -90,8 +78,8 @@ export const LEARN = {
         'fs.file-max limits open files for all programs together[^procsys]. Calls that hit it fail with ENFILE, and the kernel log shows a line starting "VFS: file-max limit"[^file-max]. Processes with CAP_SYS_ADMIN can override it[^procsys].',
       ],
       pins: [
-        { key: 'nr_open', layer: 'ceiling', here: "The highest value a program's open-file limit can be raised to. Most machines don't need to change this. Keep it at or above the default." },
-        { key: 'file_max', layer: 'table', here: 'How many files all programs together may have open. Raise it when the log reports the limit reached. Keep it well above the number in use.' },
+        { key: 'nr_open', layer: 'nr-open', here: "The highest value a program's open-file limit can be raised to. Most machines don't need to change this. Keep it at or above the default." },
+        { key: 'file_max', layer: 'file-max', here: 'How many files all programs together may have open. Raise it when the log reports the limit reached. Keep it well above the number in use.' },
       ],
       choose: [
         {
@@ -134,27 +122,17 @@ export const LEARN = {
         limit: 'A slip covers one shelf, never the shelves inside it. Watching a whole room takes a slip for every shelf, and the kernel adds none for you.',
       },
       figure: {
-        kind: 'stack',
-        title: 'What a file watcher holds',
-        layers: [
-          { id: 'watcher', label: 'A file watcher', kind: 'nodes', nodes: [{ id: 'init', text: 'Calls inotify_init()', sub: 'gets a file descriptor' }] },
-          {
-            id: 'instances',
-            label: 'Instances',
-            kind: 'nodes',
-            nodes: [{ id: 'instance', text: 'inotify instance', sub: 'has its own event queue', probe: 'filesystem.inotifyDir' }],
-            values: [{ probe: 'filesystem.maxUserInstances', unit: 'per user' }],
-          },
-          {
-            id: 'watches',
-            label: 'Watches',
-            kind: 'nodes',
-            nodes: [
-              { id: 'dir-watch', text: 'Watch on a directory', sub: 'not recursive' },
-              { id: 'file-watch', text: 'Watch on a file' },
-            ],
-            values: [{ probe: 'filesystem.maxUserWatches', unit: 'per user' }],
-          },
+        kind: 'compare',
+        title: 'What one user may hold: watchers and what they watch',
+        axis: 'per user',
+        scale: 'log',
+        bars: [
+          { id: 'instances', label: 'Watchers (instances)', value: { probe: 'filesystem.maxUserInstances', unit: '' }, does: 'Each running watcher takes at least one inotify instance, with its own event queue.' },
+          { id: 'watches', label: 'Watched files and folders', tone: 'fit', value: { probe: 'filesystem.maxUserWatches', unit: '' }, does: 'Each watch names one file or directory, and a directory watch is not recursive.' },
+        ],
+        pins: [
+          { key: 'max_user_instances', bar: 'instances' },
+          { key: 'max_user_watches', bar: 'watches' },
         ],
       },
       body: [
@@ -207,16 +185,26 @@ export const LEARN = {
         limit: 'A tray holds paper in order. The kernel also merges identical events in a row, so the queue is not a count of what happened.',
       },
       figure: {
-        kind: 'timeline',
-        title: 'The event queue of one watcher during a burst of changes',
-        schematic: true,
-        lines: [{ id: 'queue-limit', label: 'Queue limit', value: { probe: 'filesystem.maxQueuedEvents', unit: 'events' } }],
-        curve: [[0, 0.05], [0.2, 0.05], [0.4, 0.3], [0.55, 0.5], [0.7, 0.5], [0.85, 0.2], [1, 0.05]],
-        events: [
-          { at: 0.2, label: 'A burst of changes starts' },
-          { at: 0.55, label: 'The queue is full and events are dropped', tone: 'error' },
-          { at: 0.85, label: 'The program has read the queue down', tone: 'fit' },
+        kind: 'gauge',
+        title: "Events waiting in one watcher's queue, up to the limit",
+        axis: 'queued events',
+        marks: [
+          { id: 'queue-limit', label: 'Queue limit', tone: 'error', value: { probe: 'filesystem.maxQueuedEvents', unit: 'events' }, does: 'Past it the kernel drops events and sends one overflow event instead.' },
         ],
+        zones: [
+          { id: 'room', label: 'room in the queue', to: 'queue-limit', tone: 'fit', does: 'Events wait here until the program reads them.' },
+          { id: 'overflow', label: 'events dropped', from: 'queue-limit', tone: 'error', does: 'The queue is full, so new events are dropped and the program gets an overflow event.' },
+        ],
+        // Schematic: level 1 is the queue limit, as measured.
+        curve: {
+          points: [[0, 0.05], [0.2, 0.05], [0.4, 0.5], [0.55, 1], [0.7, 1], [0.85, 0.3], [1, 0.05]],
+          events: [
+            { at: 0.2, label: 'a burst starts' },
+            { at: 0.55, label: 'the queue is full', tone: 'error', does: 'The queue reached the limit, so further events are dropped.' },
+            { at: 0.85, label: 'the program caught up', tone: 'fit', does: 'The program has read the queue down.' },
+          ],
+        },
+        pins: [{ key: 'max_queued_events', mark: 'queue-limit' }],
       },
       body: [
         "When a watched file changes, the kernel adds an event to the instance's queue. The program reads the events with read(2)[^inotify]. If successive events are identical and the older is still unread, they are merged into one[^notes]. That is why a program cannot use inotify to count file events reliably[^notes].",
@@ -257,28 +245,18 @@ export const LEARN = {
         limit: 'Real seats take floor space. Here the limit is a counter, and raising it sets nothing aside.',
       },
       figure: {
-        kind: 'stack',
-        title: 'How request slots are counted',
-        layers: [
-          { id: 'database', label: 'A database', kind: 'nodes', nodes: [{ id: 'setup', text: 'Calls io_setup(n)', sub: 'asks for room for n operations' }] },
-          {
-            id: 'count',
-            label: 'Slots reserved',
-            kind: 'nodes',
-            nodes: [{ id: 'aio-nr', text: 'fs.aio-nr', sub: 'the running total, all programs', probe: 'filesystem.aioNr' }],
-            values: [{ probe: 'filesystem.aioNr', unit: 'slots' }],
-          },
-          {
-            id: 'cap',
-            label: 'The cap',
-            kind: 'nodes',
-            nodes: [
-              { id: 'within', text: 'Below the cap', sub: 'the context is created' },
-              { id: 'over', text: 'At the cap', sub: 'io_setup() fails with EAGAIN' },
-            ],
-            values: [{ probe: 'filesystem.aioMaxNr', unit: 'slots' }],
-          },
+        kind: 'gauge',
+        title: 'Async I/O request slots reserved, up to the cap',
+        axis: 'slots reserved',
+        marks: [
+          { id: 'aio-nr', label: 'Reserved now', value: { probe: 'filesystem.aioNr', unit: 'slots' }, does: 'The running total of slots reserved by `io_setup()` calls, all programs together.' },
+          { id: 'cap', label: 'The cap', tone: 'error', value: { probe: 'filesystem.aioMaxNr', unit: 'slots' }, does: 'An `io_setup()` call that would pass it fails with EAGAIN.' },
         ],
+        zones: [
+          { id: 'free', label: 'slots still free', from: 'aio-nr', to: 'cap', tone: 'fit', does: 'A new `io_setup()` call succeeds while it stays below the cap.' },
+          { id: 'refused', label: 'requests refused', from: 'cap', tone: 'error', does: 'Calls that would pass the cap fail with EAGAIN.' },
+        ],
+        pins: [{ key: 'aio_max_nr', mark: 'cap' }],
       },
       body: [
         'With [[native async I/O|native-aio]], a program first calls io_setup(2) to create a context able to process n operations at once[^io].',

@@ -160,6 +160,6 @@ export const GLOSSARY = Object.freeze({
   'native-aio': {
     term: 'Native async I/O',
     definition:
-      'The kernel interface where a program calls io_setup() to reserve request slots, then queues reads and writes and carries on while they run. Databases use it. It is not the same as io_uring.',
+      'The kernel interface where a program calls io_setup() to reserve request slots, then queues reads and writes and carries on while they run. Some databases use it. It is not the same as io_uring.',
   },
 })

@@ -10,8 +10,9 @@ const FS = 'https://docs.kernel.org/admin-guide/sysctl/fs.html'
 const MAN = 'https://man7.org/linux/man-pages'
 const fs = (anchor, name) => ({ url: `${FS}#${anchor}`, label: `sysctl/fs: ${name}` })
 const man = (section, page, anchor, label) => ({ url: `${MAN}/man${section}/${page}.${section}.html${anchor ? `#${anchor}` : ''}`, label })
-const procSysFs = () => man(5, 'proc_sys_fs', '', 'proc_sys_fs(5)')
-const inotify = () => man(7, 'inotify', '', 'inotify(7)')
+const procSysFs = () => man(5, 'proc_sys_fs', 'DESCRIPTION', 'proc_sys_fs(5): description')
+const inotify = () => man(7, 'inotify', 'DESCRIPTION', 'inotify(7): description')
+const inotifyNotes = () => man(7, 'inotify', 'NOTES', 'inotify(7): notes')
 
 export const LEARN = {
   slug: 'file-limits',
@@ -28,7 +29,7 @@ export const LEARN = {
       { id: 'watch-programs', title: 'Programs that watch files', does: 'Editors, sync tools and dev servers that want to hear about changes.', col: 1, row: 2 },
       { id: 'watches', title: 'inotify instances and watches', does: 'Each instance holds watches on files and directories. Both are counted per user.', col: 2, row: 2, probe: 'filesystem.inotifyDir', tone: 'fit' },
       { id: 'event-queue', title: 'Event queue', does: 'Changes wait here until the program reads them. A full queue drops events.', col: 3, row: 2, probe: 'filesystem.maxQueuedEvents' },
-      { id: 'aio-programs', title: 'Programs that queue disk requests', does: 'Databases that ask for many reads and writes at once.', col: 1, row: 3 },
+      { id: 'aio-programs', title: 'Programs that queue disk requests', does: 'Programs, often databases, that ask for many reads and writes at once.', col: 1, row: 3 },
       { id: 'aio-slots', title: 'Request slots', does: 'Slots reserved with io_setup(), counted across the machine and capped by fs.aio-max-nr.', col: 2, row: 3, probe: 'filesystem.aioNr', tone: 'fit' },
     ],
     bands: [
@@ -84,9 +85,9 @@ export const LEARN = {
         ],
       },
       body: [
-        'A program refers to an open file by a small number, a [[file descriptor]]. Each call to open() also creates an entry in a system-wide table of open files[^open]. A program that reaches its own limit on descriptors gets the error EMFILE[^rlimit].',
-        'fs.nr_open puts a ceiling on how far that per-process limit can be raised[^procsys]. The ceiling holds for privileged and unprivileged programs alike[^procsys]. Its default is 1048576[^nr-open]. Trying to raise the hard limit above it fails[^rlimit].',
-        'fs.file-max limits open files for all programs together[^procsys]. Calls that hit it fail with ENFILE, and the kernel log says "VFS: file-max limit reached"[^file-max]. Processes with CAP_SYS_ADMIN can override it[^procsys].',
+        'A program refers to an open file by a small number, a [[file descriptor]]. Each call to open() also creates an entry in a system-wide table of open files[^open]. The kernel enforces a soft limit on descriptors, and a hard limit is the ceiling the soft limit can be raised to[^rlimit]. A program that reaches its limit gets the error EMFILE[^rlimit].',
+        'fs.nr_open puts a ceiling on how far that per-process limit can be raised[^procsys]. The ceiling holds for privileged and unprivileged programs alike[^procsys]. Its default is 1048576[^nr-open]. Trying to raise a hard limit above it fails with EPERM[^rlimit-err].',
+        'fs.file-max limits open files for all programs together[^procsys]. Calls that hit it fail with ENFILE, and the kernel log shows a line starting "VFS: file-max limit"[^file-max]. Processes with CAP_SYS_ADMIN can override it[^procsys].',
       ],
       pins: [
         { key: 'nr_open', layer: 'ceiling', here: "The highest value a program's open-file limit can be raised to. Most machines don't need to change this. Keep it at or above the default." },
@@ -100,24 +101,25 @@ export const LEARN = {
           yes: { key: 'file_max', dir: 'raise' },
         },
         {
-          q: 'Does a program need a per-process limit higher than the hard limit it can get?',
-          check: 'grep "open files" /proc/self/limits',
-          hint: 'The Hard limit column is the highest a program can set for itself. fs.nr_open is the ceiling above it.',
+          q: 'Does a program need an open-file limit above fs.nr_open?',
+          check: 'sysctl fs.nr_open',
+          hint: "No hard limit can be raised above this number, root included. Raising it changes no program's limit by itself: that program's hard limit must be raised too.",
           yes: { key: 'nr_open', dir: 'raise' },
           no: { leave: true, why: 'The defaults are enough until a program asks for more files than they allow.' },
         },
       ],
       symptoms: {
-        low: 'Programs fail to open files with "Too many open files", even the login you need to fix it.',
+        low: 'Programs fail to open files with "Too many open files in system", even the login you need to fix it.',
         high: 'Nothing visible. A limit only matters when programs open that many files.',
       },
       look: {
         cmd: 'cat /proc/sys/fs/file-nr',
-        for: 'Three numbers: files open now, free entries (always 0 on current kernels), and the fs.file-max limit.',
+        for: 'Three numbers: files open now, free entries (always 0 since Linux 2.6), and the fs.file-max limit.',
       },
       sources: {
         open: man(2, 'open', 'DESCRIPTION', 'open(2): description'),
         rlimit: man(2, 'getrlimit', 'DESCRIPTION', 'getrlimit(2): description'),
+        'rlimit-err': man(2, 'getrlimit', 'ERRORS', 'getrlimit(2): errors'),
         procsys: procSysFs(),
         'nr-open': fs('nr-open', 'nr_open'),
         'file-max': fs('file-max-file-nr', 'file-max and file-nr'),
@@ -157,8 +159,8 @@ export const LEARN = {
       },
       body: [
         '[[inotify]] lets a program ask the kernel to report events on files and directories[^inotify]. Calling inotify_init(2) creates an instance with its own event queue and returns a file descriptor[^init]. The program then adds watches, each naming a file or directory and the events it wants[^add].',
-        'Watching a directory is not recursive. To follow subdirectories, the program must add a watch for each one[^inotify]. A tool that follows a big source tree therefore needs many watches.',
-        'Both limits count per real user ID[^inotify]. A user over the instance limit gets EMFILE from inotify_init(2)[^init]. Over the watch limit, inotify_add_watch(2) fails with ENOSPC, which also covers the kernel failing to allocate what it needs[^add].',
+        'Watching a directory is not recursive. To follow subdirectories, the program must add a watch for each one[^notes]. A tool that follows a big source tree therefore needs many watches.',
+        'Both limits count per user[^inotify]. A user over the instance limit gets EMFILE from inotify_init(2)[^init-err]. Over the watch limit, inotify_add_watch(2) fails with ENOSPC, which also covers the kernel failing to allocate what it needs[^add-err].',
       ],
       pins: [
         { key: 'max_user_watches', layer: 'watches', here: "How many files and directories one user may watch in total. Raise it when a watcher reports it cannot watch more. All of that user's watchers share it." },
@@ -189,8 +191,11 @@ export const LEARN = {
       },
       sources: {
         inotify: inotify(),
-        init: man(2, 'inotify_init', 'ERRORS', 'inotify_init(2): errors'),
-        add: man(2, 'inotify_add_watch', 'ERRORS', 'inotify_add_watch(2): errors'),
+        notes: inotifyNotes(),
+        init: man(2, 'inotify_init', 'DESCRIPTION', 'inotify_init(2): description'),
+        'init-err': man(2, 'inotify_init', 'ERRORS', 'inotify_init(2): errors'),
+        add: man(2, 'inotify_add_watch', 'DESCRIPTION', 'inotify_add_watch(2): description'),
+        'add-err': man(2, 'inotify_add_watch', 'ERRORS', 'inotify_add_watch(2): errors'),
       },
     },
     {
@@ -214,9 +219,9 @@ export const LEARN = {
         ],
       },
       body: [
-        "When a watched file changes, the kernel adds an event to the instance's queue. The program reads the events with read(2)[^inotify]. If successive events are identical and the older is still unread, they are merged into one[^inotify]. That is why a program cannot use inotify to count file events reliably[^inotify].",
-        'fs.inotify.max_queued_events is the upper limit on events in a queue. It is applied when a program calls inotify_init(2)[^inotify]. Events beyond the limit are dropped, but an IN_Q_OVERFLOW event is always generated[^inotify].',
-        'A program that receives IN_Q_OVERFLOW knows its queue overflowed, though not which changes it missed. A larger limit gives a slow reader more room before that happens.',
+        "When a watched file changes, the kernel adds an event to the instance's queue. The program reads the events with read(2)[^inotify]. If successive events are identical and the older is still unread, they are merged into one[^notes]. That is why a program cannot use inotify to count file events reliably[^notes].",
+        'fs.inotify.max_queued_events is the upper limit on events in a queue. The kernel reads it when a program calls inotify_init(2), so it sets the limit of each new queue[^inotify]. Events beyond the limit are dropped, but an IN_Q_OVERFLOW event is always generated[^inotify].',
+        'The overflow event names no watch, so the program learns that events were lost but not which ones[^inotify]. A careful program then rescans what it watches[^notes]. A larger limit gives a slow reader more room before that happens.',
       ],
       pins: [
         { key: 'max_queued_events', layer: 'queue-limit', here: 'How many events one queue holds before the kernel drops the rest. Raise it when a tool reports lost events. It is read when an instance is created, so restart the watcher after changing it.' },
@@ -240,12 +245,13 @@ export const LEARN = {
       },
       sources: {
         inotify: inotify(),
+        notes: inotifyNotes(),
       },
     },
     {
       id: 'async-io',
       title: 'Asynchronous I/O',
-      oneLine: 'Databases reserve request slots before they queue reads and writes. One setting caps the slots reserved across the whole machine.',
+      oneLine: 'Programs such as databases reserve request slots before they queue reads and writes. One setting caps the slots reserved across the whole machine.',
       picture: {
         text: 'A restaurant takes table reservations before guests arrive. Each booking holds seats for a number of people. The restaurant stops taking bookings once all its bookable seats are promised.',
         limit: 'Real seats take floor space. Here the limit is a counter, and raising it sets nothing aside.',
@@ -275,9 +281,9 @@ export const LEARN = {
         ],
       },
       body: [
-        'With [[native async I/O|native-aio]], a program first calls io_setup(2) to create a context able to process n operations at once[^io]. Many databases use this interface.',
-        'fs.aio-nr is the running total of events asked for by io_setup calls across all active contexts[^procsys]. fs.aio-max-nr is the highest value it may reach. When aio-nr reaches the limit, io_setup fails with EAGAIN[^aio].',
-        'Raising fs.aio-max-nr does not preallocate or resize any kernel data structures[^aio]. Several instances on one host can add up past the limit, since all count together.',
+        'With [[native async I/O|native-aio]], a program first calls io_setup(2) to create a context able to process n operations at once[^io].',
+        'fs.aio-nr is the running total of events asked for by io_setup calls across all active contexts[^procsys]. fs.aio-max-nr is the highest value it may reach. An io_setup call that would take aio-nr past it fails with EAGAIN[^aio][^io-err].',
+        'Raising fs.aio-max-nr does not preallocate or resize any kernel data structures[^aio]. Since every program counts toward one total, several databases on one host can reach the limit together, though none would alone[^procsys].',
       ],
       pins: [
         { key: 'aio_max_nr', layer: 'cap', here: 'The most request slots all programs together may reserve. Raise it when a database cannot set up async I/O. Raising it reserves nothing by itself.' },
@@ -301,6 +307,7 @@ export const LEARN = {
       },
       sources: {
         io: man(2, 'io_setup', 'DESCRIPTION', 'io_setup(2): description'),
+        'io-err': man(2, 'io_setup', 'ERRORS', 'io_setup(2): errors'),
         procsys: procSysFs(),
         aio: fs('aio-nr-aio-max-nr', 'aio-nr and aio-max-nr'),
       },

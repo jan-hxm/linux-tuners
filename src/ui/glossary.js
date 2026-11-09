@@ -321,4 +321,26 @@ export const GLOSSARY = Object.freeze({
     definition:
       'A cap the kernel keeps for each process, such as how many files it may have open. Each has a soft value the kernel enforces and a hard value the soft one may be raised to. A new process inherits the limits of the one that started it.',
   },
+
+  // hugepages guide
+  khugepaged: {
+    term: 'khugepaged',
+    definition:
+      'A kernel thread that scans memory in the background and collapses runs of small pages into huge pages. It starts when transparent huge pages are enabled and stops when they are all off.',
+  },
+  compaction: {
+    term: 'Compaction',
+    definition:
+      'The kernel moving pages around so that free memory gathers into larger blocks in one piece. Huge pages need such a block, and moving pages costs processor time, so programs can briefly slow down while it runs.',
+  },
+  ksm: {
+    term: 'KSM',
+    definition:
+      'Kernel samepage merging: a kernel thread, ksmd, scans memory that programs have marked as mergeable and replaces pages with identical content by one shared copy. A page is copied again when a program writes to it.',
+  },
+  madvise: {
+    term: 'madvise',
+    definition:
+      'A system call with which a program tells the kernel how it expects to use a range of its memory, for example that it wants huge pages there (MADV_HUGEPAGE) or that identical pages in it may be merged (MADV_MERGEABLE).',
+  },
 })

@@ -28,10 +28,10 @@ export const LEARN = {
     picture:
       'Think of a company. systemd is the office manager: it puts every program into a team, and every team into a department. The kernel is the bookkeeper. It counts what each team and department uses, and holds each one to the budget set for it.',
     cards: [
-      { id: 'systemd', title: 'systemd', does: 'The first program to start. It starts every service and sorts it into the tree.', col: 1, row: 1, probe: 'systemd.pid1' },
-      { id: 'kernel', title: "The kernel's cgroups", does: 'Groups of processes the kernel counts and limits together.', col: 2, row: 1, probe: 'systemd.controllers' },
-      { id: 'root', title: '-.slice', does: 'The root of the tree. Everything on the machine sits under it.', col: 1, row: 2 },
-      { id: 'limits', title: 'Weights and limits', does: 'Settings on a slice or a service that the kernel enforces.', col: 2, row: 2, tone: 'fit' },
+      { id: 'systemd', title: 'systemd', does: 'The first program to start; it starts every service and sorts it into the tree.', col: 1, row: 1, probe: 'systemd.pid1' },
+      { id: 'kernel', title: "The kernel's cgroups", does: 'Groups of processes the kernel counts and limits together, as systemd asks.', col: 2, row: 1, probe: 'systemd.controllers' },
+      { id: 'root', title: '-.slice', does: 'The root of the tree, with everything on the machine under it.', col: 1, row: 2 },
+      { id: 'limits', title: 'Weights and limits', does: 'Settings on a slice or a service that the kernel enforces, which the root and any branch can carry.', col: 2, row: 2, tone: 'fit' },
       { id: 'system-slice', title: 'system.slice', does: 'Where system services go.', col: 1, row: 3, probe: 'systemd.systemSlice' },
       { id: 'user-slice', title: 'user.slice', does: 'Where logged-in users and their programs go.', col: 2, row: 3, probe: 'systemd.userSlice' },
       { id: 'service', title: 'A service', does: 'One program, such as a web server, in a group of its own.', col: 1, row: 4 },
@@ -42,12 +42,12 @@ export const LEARN = {
       { label: 'The tree', rows: [2, 4] },
     ],
     edges: [
-      { from: 'systemd', to: 'kernel', label: 'asks it to make groups and set limits' },
+      { from: 'systemd', to: 'kernel', label: 'asks for groups' },
       { from: 'systemd', to: 'root', label: 'builds the tree' },
       { from: 'kernel', to: 'limits', label: 'enforces' },
-      { from: 'root', to: 'limits', label: 'can carry them, as can any branch' },
+      { from: 'root', to: 'limits', label: 'can carry' },
       { from: 'root', to: 'system-slice', label: 'holds' },
-      { from: 'system-slice', to: 'user-slice', label: 'share CPU, memory and disk with' },
+      { from: 'system-slice', to: 'user-slice', label: 'share resources with' },
       { from: 'system-slice', to: 'service', label: 'holds' },
       { from: 'user-slice', to: 'session', label: 'holds' },
     ],
@@ -65,12 +65,12 @@ export const LEARN = {
         kind: 'stack',
         title: 'How systemd sorts the machine into a tree',
         layers: [
-          { id: 'manager', label: 'The manager', kind: 'nodes', nodes: [{ id: 'pid1', text: 'systemd', sub: 'process 1, builds the tree', probe: 'systemd.pid1' }] },
+          { id: 'manager', label: 'The manager', kind: 'nodes', nodes: [{ id: 'pid1', text: 'systemd', sub: 'process 1', does: 'Process 1, which builds the tree.', probe: 'systemd.pid1' }] },
           {
             id: 'root',
             label: 'The root',
             kind: 'nodes',
-            nodes: [{ id: 'root-slice', text: '-.slice', sub: 'the folder /sys/fs/cgroup' }],
+            nodes: [{ id: 'root-slice', text: '-.slice', sub: 'the cgroup folder', does: 'It is the folder `/sys/fs/cgroup` itself.' }],
             values: [
               { probe: 'systemd.controllers', unit: '' },
               { probe: 'systemd.subtreeControl', unit: '' },
@@ -83,7 +83,7 @@ export const LEARN = {
             nodes: [
               { id: 'system-slice', text: 'system.slice', sub: 'system services', probe: 'systemd.systemSlice' },
               { id: 'user-slice', text: 'user.slice', sub: 'logged-in users', probe: 'systemd.userSlice' },
-              { id: 'init-scope', text: 'init.scope', sub: 'systemd itself', probe: 'systemd.initScope' },
+              { id: 'init-scope', text: 'init.scope', sub: 'systemd itself', does: 'The group systemd itself runs in.', probe: 'systemd.initScope' },
             ],
           },
           {
@@ -93,9 +93,9 @@ export const LEARN = {
             nodes: [
               { id: 'cpu', text: 'CPU time', sub: 'cpu.stat', probe: 'systemd.cpuStat' },
               { id: 'memory', text: 'Memory', sub: 'memory.current' },
-              { id: 'io', text: 'Disk reads and writes', sub: 'io.stat, once IOWeight is set' },
-              { id: 'tasks', text: 'Tasks', sub: 'pids.current' },
-              { id: 'network', text: 'Network traffic', sub: 'IPAccounting=' },
+              { id: 'io', text: 'Disk use', sub: 'io.stat', does: 'Counted in `io.stat` once IOWeight is set.' },
+              { id: 'tasks', text: 'Tasks', sub: 'pids.current', does: 'Counted in `pids.current`.' },
+              { id: 'network', text: 'Network traffic', sub: 'IPAccounting=', does: 'Counted once `IPAccounting=` is on.' },
             ],
             values: [
               { probe: 'systemd.memoryCurrent', unit: 'bytes' },
@@ -107,8 +107,8 @@ export const LEARN = {
             label: 'Which layout',
             kind: 'nodes',
             nodes: [
-              { id: 'unified', text: 'cgroup v2', sub: 'one tree for every controller' },
-              { id: 'legacy', text: 'cgroup v1', sub: 'older systems, a tree per controller', probe: 'systemd.v1Layout' },
+              { id: 'unified', text: 'cgroup v2', sub: 'one tree', does: 'One tree for every controller.' },
+              { id: 'legacy', text: 'cgroup v1', sub: 'a tree each', does: 'Older systems, with a tree per controller.', probe: 'systemd.v1Layout' },
             ],
           },
         ],
@@ -235,16 +235,16 @@ export const LEARN = {
         title: 'Memory used by one slice that keeps growing',
         schematic: true,
         lines: [
-          { id: 'max', label: 'MemoryMax, the hard limit', value: { probe: 'systemd.memoryMax', unit: '' } },
-          { id: 'high', label: 'MemoryHigh, the soft limit', value: { probe: 'systemd.memoryHigh', unit: '' } },
+          { id: 'max', label: 'MemoryMax, hard limit', does: 'At it the OOM killer runs inside the unit.', value: { probe: 'systemd.memoryMax', unit: '' } },
+          { id: 'high', label: 'MemoryHigh, soft limit', does: 'Above it the slice is slowed, never killed.', value: { probe: 'systemd.memoryHigh', unit: '' } },
         ],
         // Two lines sit at 2/3 (max) and 1/3 (high).
         curve: [[0, 0.1], [0.1, 0.12], [0.3, 0.33], [0.45, 0.37], [0.6, 0.45], [0.72, 0.67], [0.78, 0.67], [0.84, 0.3], [1, 0.3]],
         events: [
-          { at: 0.1, label: 'The slice starts using more memory' },
-          { at: 0.3, label: 'Past MemoryHigh: the slice is slowed and its memory reclaimed', tone: 'fit' },
-          { at: 0.72, label: 'At MemoryMax: the OOM killer ends a process in the slice', tone: 'error' },
-          { at: 0.84, label: 'Its memory is free again, and the rest of the machine ran on' },
+          { at: 0.1, label: 'Use grows', does: 'The slice starts using more memory.' },
+          { at: 0.3, label: 'Past MemoryHigh', does: 'The slice is slowed and its memory reclaimed.', tone: 'fit' },
+          { at: 0.72, label: 'At MemoryMax', does: 'The OOM killer ends a process in the slice.', tone: 'error' },
+          { at: 0.84, label: 'Memory freed', does: 'Its memory is free again, and the rest of the machine ran on.' },
         ],
       },
       body: [
@@ -309,7 +309,7 @@ export const LEARN = {
         layers: [
           {
             id: 'slices',
-            label: 'Slices that use the disk',
+            label: 'Slices',
             kind: 'nodes',
             nodes: [
               { id: 'system-slice', text: 'system.slice', sub: 'io.weight' },
@@ -318,18 +318,18 @@ export const LEARN = {
           },
           {
             id: 'splitter',
-            label: 'What can split it by weight',
+            label: 'What splits by weight',
             kind: 'nodes',
             nodes: [
-              { id: 'iocost', text: 'The io cost model', sub: 'off until it is turned on', probe: 'systemd.ioCostQos' },
-              { id: 'bfq', text: 'The BFQ scheduler', sub: 'for a disk that uses it' },
+              { id: 'iocost', text: 'The io cost model', sub: 'off by default', does: 'Off until it is turned on in `io.cost.qos`.', probe: 'systemd.ioCostQos' },
+              { id: 'bfq', text: 'The BFQ scheduler', sub: 'per disk', does: 'Splits by weight for a disk that uses BFQ.' },
             ],
           },
           {
             id: 'disk',
             label: 'The disk',
             kind: 'nodes',
-            nodes: [{ id: 'boot-disk', text: 'The boot disk', sub: 'vda on our test machines' }],
+            nodes: [{ id: 'boot-disk', text: 'The boot disk', sub: 'vda in our tests', does: 'The disk named vda on our test machines.' }],
             values: [{ probe: 'systemd.bootDiskScheduler', unit: '' }],
           },
         ],
@@ -387,11 +387,11 @@ export const LEARN = {
         layers: [
           {
             id: 'kernel',
-            label: 'Kernel limits for the machine',
+            label: 'Machine limits',
             kind: 'nodes',
             nodes: [
-              { id: 'pid-max', text: 'Process numbers', sub: 'kernel.pid_max' },
-              { id: 'threads-max', text: 'Threads', sub: 'kernel.threads-max' },
+              { id: 'pid-max', text: 'Process numbers', sub: 'kernel.pid_max', does: 'The kernel hands out process numbers only below it.' },
+              { id: 'threads-max', text: 'Threads', sub: 'kernel.threads-max', does: 'Caps threads on the machine, sized from RAM at boot.' },
             ],
             values: [
               { probe: 'systemd.pidMax', unit: '' },
@@ -400,9 +400,9 @@ export const LEARN = {
           },
           {
             id: 'slice',
-            label: 'One slice: TasksMax',
+            label: 'One slice',
             kind: 'nodes',
-            nodes: [{ id: 'system-slice', text: 'system.slice', sub: 'pids.max caps everything in it' }],
+            nodes: [{ id: 'system-slice', text: 'system.slice', sub: 'TasksMax', does: 'TasksMax sets `pids.max`, which caps everything in the slice.' }],
             values: [
               { probe: 'systemd.pidsMax', unit: '' },
               { probe: 'systemd.pidsCurrent', unit: 'tasks' },
@@ -410,9 +410,9 @@ export const LEARN = {
           },
           {
             id: 'unit',
-            label: 'Each service: DefaultTasksMax',
+            label: 'Each service',
             kind: 'nodes',
-            nodes: [{ id: 'service', text: 'A service', sub: '15% of the smallest machine limit, unless it sets its own' }],
+            nodes: [{ id: 'service', text: 'A service', sub: 'DefaultTasksMax', does: 'Gets 15% of the smallest machine limit, unless it sets its own.' }],
           },
         ],
       },
@@ -473,12 +473,12 @@ export const LEARN = {
             id: 'kernel',
             label: 'Kernel ceiling',
             kind: 'nodes',
-            nodes: [{ id: 'nr-open', text: 'fs.nr_open', sub: 'no process may have more open files' }],
+            nodes: [{ id: 'nr-open', text: 'fs.nr_open', sub: 'open files', does: 'No process may have more open files than this.' }],
             values: [{ probe: 'systemd.nrOpen', unit: 'files' }],
           },
-          { id: 'hard', label: 'Hard limit', kind: 'nodes', nodes: [{ id: 'hard-nofile', text: 'DefaultLimitNOFILE, hard part', sub: '524288 by default' }] },
-          { id: 'soft', label: 'Soft limit', kind: 'nodes', nodes: [{ id: 'soft-nofile', text: 'DefaultLimitNOFILE, soft part', sub: '1024 by default' }] },
-          { id: 'memlock', label: 'Locked memory', kind: 'nodes', nodes: [{ id: 'memlock-limit', text: 'DefaultLimitMEMLOCK', sub: '8M by default' }] },
+          { id: 'hard', label: 'Hard limit', kind: 'nodes', nodes: [{ id: 'hard-nofile', text: 'NOFILE, hard part', sub: '524288 by default', does: 'The ceiling a process may raise its soft limit to.' }] },
+          { id: 'soft', label: 'Soft limit', kind: 'nodes', nodes: [{ id: 'soft-nofile', text: 'NOFILE, soft part', sub: '1024 by default', does: 'The limit each process starts with and the kernel enforces.' }] },
+          { id: 'memlock', label: 'Locked memory', kind: 'nodes', nodes: [{ id: 'memlock-limit', text: 'DefaultLimitMEMLOCK', sub: '8M by default', does: 'Bytes a process may lock into RAM.' }] },
         ],
       },
       body: [

@@ -1174,5 +1174,6 @@ export function hostOf(url) {
  */
 export function safeHref(url) {
   if (typeof url !== 'string') return null
-  return /^https:\/\/[^\s]+$/.test(url) || /^\/(?!\/)[^\s]*$/.test(url) ? url : null
+  // A same-origin path, never "//host" or "/\host" (browsers read both as another host).
+  return /^https:\/\/[^\s\\]+$/.test(url) || /^\/(?![/\\])[^\s\\]*$/.test(url) ? url : null
 }

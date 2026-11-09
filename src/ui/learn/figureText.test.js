@@ -199,6 +199,9 @@ describe('footnotes and sources', () => {
   it('allows only https and same-site links', () => {
     expect(safeHref('https://docs.kernel.org/x')).toBe('https://docs.kernel.org/x')
     expect(safeHref('/swap')).toBe('/swap')
+    // A backslash after the slash reads as another host in browsers.
+    expect(safeHref('/\\evil.example')).toBeNull()
+    expect(safeHref('https://a\\b')).toBeNull()
     for (const bad of ['javascript:alert(1)', '//evil.example', 'http://docs.kernel.org', 'data:text/html,x', null]) expect(safeHref(bad)).toBeNull()
   })
 })

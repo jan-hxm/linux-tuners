@@ -65,7 +65,7 @@ describe('labels built from the data', () => {
 
   it('names the scale bar with its shares', () => {
     const label = partsMapLabel(DEMO_LEARN.parts, on('debian-13'))
-    expect(label).toContain('Memory, 3,000,000 kB, drawn to scale: Programs, 500,000 kB, 17 %: Memory the programs wrote to; Page cache, 1,000,000 kB, 33 %; Free or kernel, the rest: Everything else, free or kept by the kernel.')
+    expect(label).toContain('Memory, 2.9 GiB, drawn to scale: Programs, 488 MiB, 17 %: Memory the programs wrote to; Page cache, 977 MiB, 33 %; Free or kernel, the rest: Everything else, free or kept by the kernel.')
   })
 
   it('reads a gauge from the top, with its zoom, pins and curve', () => {
@@ -74,7 +74,7 @@ describe('labels built from the data', () => {
     expect(label).toContain('Marks from the top: high 6,000 pages; low 4,000 pages; min 2,000 pages: Below it a program frees memory itself (selected).')
     expect(label).toContain('Zones from the top: worker sleeps (above high); worker frees (min to high): The worker frees memory in the background; programs wait (below min)')
     expect(label).toContain('Settings on the scale: demo.floor_kbytes on min; demo.gap_factor from low to high.')
-    expect(label).toContain('The thin bar is all memory, 3,000,000 kB; the bracket at its foot is the part drawn large, 1.1 % of it.')
+    expect(label).toContain('The thin bar is all memory, 2.9 GiB; the bracket at its foot is the part drawn large, 1.1 % of it.')
     expect(label).toContain('A schematic curve over time, not to scale: a program waits: Free memory fell below min, then worker sleeps.')
     const schematic = figureLabel(gaugeChapter.figure, on('arch'), { defsByKey: DEMO_DEFS })
     expect(schematic).toContain('A schematic scale of free pages: the marks are not measured on this kernel.')
@@ -129,7 +129,7 @@ describe('pins', () => {
   it('finds the values a pin points at by layer, band, node or line', () => {
     expect(pinRefs(stackChapter.figure, { layer: 'free-memory' })).toHaveLength(3)
     expect(pinRefs(stackChapter.figure, { layer: 'below-min' })).toHaveLength(3)
-    expect(pinRefs(stackChapter.figure, { layer: 'kswapd' })).toEqual([{ probe: 'demo.worker', path: '', unit: '' }])
+    expect(pinRefs(stackChapter.figure, { layer: 'kswapd' })).toEqual([{ probe: 'demo.worker', path: '', unit: '', label: 'kswapd0' }])
     expect(pinRefs(stackChapter.figure, { layer: 'app' })).toEqual([])
     expect(pinRefs(timelineChapter.figure, { layer: 'low' })).toHaveLength(1)
     expect(pinRefs(sideChapter.figure, { key: 'batch_order' })).toEqual([])
@@ -296,8 +296,8 @@ describe('figures v2 geometry', () => {
   it('writes a tip as plain words and its value with the kernel', () => {
     expect(plainTip('Holds `swapped out` **memory**.')).toBe('Holds swapped out memory.')
     const ref = { probe: 'demo.reserve', unit: 'kB' }
-    expect(tipValue(ref, on('debian-13'))).toBe('4,000 kB, kernel 0.0.0-fixture')
-    expect(tipValue(ref, on('debian-13'), 5)).toBe('4,000 kB on all 5 test kernels')
+    expect(tipValue(ref, on('debian-13'))).toBe('3.9 MiB (4,000 kB), kernel 0.0.0-fixture')
+    expect(tipValue(ref, on('debian-13'), 5)).toBe('3.9 MiB (4,000 kB) on all 5 test kernels')
     expect(tipValue(ref, on('arch'))).toBe(NOT_MEASURED)
   })
 })

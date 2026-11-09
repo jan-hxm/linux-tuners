@@ -22,8 +22,8 @@ import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
 import { LIVE_GUIDES, LEARN_INDEX_ROUTE, guideFacts, loadGuide } from '@/learn/guides.js'
 import { IMAGES_ORDER, valueFor } from '@/learn/evidence.js'
 import {
-  answerText, backedByText, cardGroups, cellCounts, defName, defTitle, edgeRows, figureRefs, formatValue, gaugePinPlace, inSentence, itemRef, noText,
-  numberedSources, refName, sameOnEveryImage, scaleRefs, settingText, sideBySideLegend, splitFootnotes,
+  answerText, backedByText, cardGroups, cellCounts, comparePinPlace, defName, defTitle, edgeRows, figureRefs, formatValue, gaugePinPlace, inSentence, itemRef, noText,
+  numberedSources, refName, sameOnEveryImage, scaleRefs, settingText, sideBySideLegend, splitFootnotes, treeNodes, treePinPlace,
 } from '@/ui/learn/figureText.js'
 import { settingHref } from '@/ui/focusSetting.js'
 import { text, code, bold, link, rich, heading, paragraph, list, defs, codeBlock, joinSegments } from './nodes.js'
@@ -271,12 +271,12 @@ export async function loadStaticGuides(entries = LIVE_GUIDES) {
 function measuredRow(ref, evidence) {
   const at = (r, id) => valueFor(r, id, evidence)
   if (sameOnEveryImage([ref], IMAGE_IDS, at)) {
-    return { term: [code(refName(ref))], desc: [text(`${formatValue(at(ref, IMAGE_IDS[0]), ref.unit)} on all ${IMAGE_IDS.length} test kernels.`)] }
+    return { term: [code(refName(ref))], desc: [text(`${formatValue(at(ref, IMAGE_IDS[0]), ref.unit, { exact: true })} on all ${IMAGE_IDS.length} test kernels.`)] }
   }
   const parts = IMAGES_ORDER.map((img) => {
     const r = valueFor(ref, img.id, evidence)
     const where = r.kernel ? `${img.label}, kernel ${r.kernel}` : img.label
-    return `${where}: ${formatValue(r, ref.unit)}`
+    return `${where}: ${formatValue(r, ref.unit, { exact: true })}`
   })
   return { term: [code(refName(ref))], desc: [text(`${parts.join('; ')}.`)] }
 }
@@ -323,8 +323,36 @@ function figureBlocks(figure, evidence, defsByKey) {
       const events = [...(figure.curve.events ?? [])].sort((a, b) => a.at - b.at)
       if (events.length) blocks.push(list(events.map((e) => [text(e.label), ...tipInline(e.does)]), { ordered: true }))
     }
+  } else if (figure.kind === 'compare') {
+    blocks.push(paragraph(text(`Bars on a ${figure.scale === 'log' ? 'log' : 'linear'} scale of ${figure.axis}, drawn from each kernel's capture${figure.groups?.length ? ', by group' : ''}:`)))
+    const groups = figure.groups?.length ? figure.groups.map((g) => ({ ...g, bars: figure.bars.filter((b) => b.group === g.id) })) : [{ label: null, bars: figure.bars }]
+    blocks.push(list(groups.flatMap((g) => g.bars.map((b) => [bold(g.label ? `${g.label}, ${b.label}` : b.label), ...tipInline(b.does)]))))
+    if (figure.marks?.length) blocks.push(paragraph(text('Lines across the bars: '), ...joinSegments(figure.marks.map((m) => [bold(m.label), ...tipInline(m.does)]), '; '), text('.')))
+    if (figure.pins?.length) {
+      blocks.push(paragraph(text('Settings drawn: '), ...joinSegments(figure.pins.map((p) => [code(defName(p.key, defsByKey)), text(` ${comparePinPlace(figure, p)}`)]), '; '), text('.')))
+    }
+  } else if (figure.kind === 'tree') {
+    blocks.push(paragraph(text('A tree from the top:')))
+    blocks.push(list(treeNodes(figure).map((n) => [bold(n.label), text(n.parent ? `, in ${n.parent.label}` : ', at the top'), ...tipInline(n.does)])))
+    if (figure.pins?.length) {
+      blocks.push(paragraph(text('Settings drawn: '), ...joinSegments(figure.pins.map((p) => [code(defName(p.key, defsByKey)), text(` ${treePinPlace(figure, p)}`)]), '; '), text('.')))
+    }
+  } else if (figure.kind === 'modes') {
+    blocks.push(paragraph(text("One row of choices per setting; the page lights the one each kernel's capture measured.")))
+    const optionText = (o) => [text(String(o.value) === o.label ? o.label : `${o.label} (${o.value})`), ...tipInline(o.does)]
+    blocks.push(list(figure.rows.map((r) => {
+      const group = figure.groups?.find((g) => g.id === r.group)?.label
+      return [
+        bold(group ? `${group}, ${r.label}` : r.label),
+        ...tipInline(r.does),
+        text(r.bits ? ': any of ' : ': one of '),
+        ...joinSegments(r.options.map(optionText), ', '),
+        ...(r.pin ? [text('. Set by '), code(defName(r.pin, defsByKey))] : []),
+        text('.'),
+      ]
+    })))
   }
-  const refs = figureRefs(figure)
+  const refs = figureRefs(figure, defsByKey)
   if (refs.length) blocks.push(paragraph(text('Measured on each kernel:')), defs(refs.map((r) => measuredRow(r, evidence))))
   return blocks
 }
@@ -344,8 +372,8 @@ function cardMeasured(card, evidence) {
   if (!card.probe) return ''
   const ref = itemRef(card)
   const at = (r, id) => valueFor(r, id, evidence)
-  if (sameOnEveryImage([ref], IMAGE_IDS, at)) return ` Measured: ${formatValue(at(ref, IMAGE_IDS[0]), ref.unit)} on all ${IMAGE_IDS.length} test kernels.`
-  const values = IMAGES_ORDER.map((img) => `${img.label} ${formatValue(valueFor(ref, img.id, evidence), ref.unit)}`)
+  if (sameOnEveryImage([ref], IMAGE_IDS, at)) return ` Measured: ${formatValue(at(ref, IMAGE_IDS[0]), ref.unit, { exact: true })} on all ${IMAGE_IDS.length} test kernels.`
+  const values = IMAGES_ORDER.map((img) => `${img.label} ${formatValue(valueFor(ref, img.id, evidence), ref.unit, { exact: true })}`)
   return ` Measured: ${values.join(', ')}.`
 }
 

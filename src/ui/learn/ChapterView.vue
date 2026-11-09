@@ -24,11 +24,14 @@ import StackFigure from './StackFigure.vue'
 import Timeline from './Timeline.vue'
 import SideBySide from './SideBySide.vue'
 import Gauge from './Gauge.vue'
+import CompareFigure from './CompareFigure.vue'
+import TreeFigure from './TreeFigure.vue'
+import ModesFigure from './ModesFigure.vue'
 import Chooser from './Chooser.vue'
 import DecisionFlow from './DecisionFlow.vue'
 import { imageIn, setKernel } from './kernelPref.js'
 import {
-  defName, defTitle, figureRefs as refsOf, hostOf, kernelOf, measuredText, numberedSources, pinRefs, safeHref, sameOnEveryImage, splitFootnotes,
+  defName, defTitle, drawnPinKeys, figureRefs as refsOf, hostOf, kernelOf, measuredText, numberedSources, pinRefs, safeHref, sameOnEveryImage, splitFootnotes,
 } from './figureText.js'
 
 const props = defineProps({
@@ -46,7 +49,9 @@ const props = defineProps({
   headingLevel: { type: Number, default: 2, validator: (n) => n >= 1 && n <= 5 },
 })
 
-const FIGURES = { stack: StackFigure, timeline: Timeline, sideBySide: SideBySide, gauge: Gauge }
+const FIGURES = { stack: StackFigure, timeline: Timeline, sideBySide: SideBySide, gauge: Gauge, compare: CompareFigure, tree: TreeFigure, modes: ModesFigure }
+/** Figures that draw settings themselves, whose pin buttons control the panel. */
+const DRAWS_PINS = new Set(['gauge', 'compare', 'tree', 'modes'])
 
 const uid = useId()
 const headId = `${uid}-title`
@@ -62,9 +67,9 @@ const evidence = computed(() => {
 
 const figure = computed(() => props.chapter.figure)
 const figureComponent = computed(() => FIGURES[figure.value?.kind] ?? null)
-const figureRefs = computed(() => refsOf(figure.value))
-/** Pins the figure draws itself (a gauge's), whose buttons in the row show only below md. */
-const drawnKeys = computed(() => new Set(figure.value?.kind === 'gauge' ? (figure.value.pins ?? []).map((p) => p.key) : []))
+const figureRefs = computed(() => refsOf(figure.value, props.defsByKey))
+/** Pins the figure draws itself, whose buttons in the row show only below md. */
+const drawnKeys = computed(() => new Set(drawnPinKeys(figure.value)))
 
 // Every value the same on every image: no picker, one caption (Design.md
 // "Learning pages > Figures").
@@ -76,7 +81,7 @@ const pins = computed(() => props.chapter.pins ?? [])
 const selectedKey = ref(pins.value[0]?.key ?? null)
 watch(() => props.chapter.id, () => (selectedKey.value = pins.value[0]?.key ?? null))
 const selected = computed(() => pins.value.find((p) => p.key === selectedKey.value) ?? null)
-const selectedRefs = computed(() => (selected.value && figure.value ? pinRefs(figure.value, selected.value) : []))
+const selectedRefs = computed(() => (selected.value && figure.value ? pinRefs(figure.value, selected.value, props.defsByKey) : []))
 const selectedKernel = computed(() => kernelOf(selectedRefs.value, evidence.value))
 const docsHref = computed(() => (selected.value ? safeHref(props.defsByKey[selected.value.key]?.kernelDocsUrl) : null))
 const tune = (key) => (props.tuneHref ? safeHref(props.tuneHref(key)) : null)
@@ -141,7 +146,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
           :highlight="selected?.layer ?? null"
           :same-on="sameOn"
           :selected-key="selectedKey"
-          v-bind="figure.kind === 'gauge' ? { controls: panelId } : {}"
+          v-bind="DRAWS_PINS.has(figure.kind) ? { controls: panelId } : {}"
           @select="togglePin"
         />
         <div v-if="pins.length" role="group" aria-label="Settings in this figure" class="mt-4 flex flex-wrap gap-2" data-pins>
@@ -169,7 +174,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
           <template v-if="selectedRefs.length">
             <p class="m-0 mt-3 text-[13px] font-medium text-quiet">Measured</p>
             <ul class="m-0 list-none p-0 font-mono text-[13px] text-ink">
-              <li v-for="vref in selectedRefs" :key="`${vref.probe}:${vref.path}`" class="break-words">{{ measuredText(vref, evidence) }}</li>
+              <li v-for="vref in selectedRefs" :key="`${vref.probe}:${vref.path}`" class="break-words">{{ measuredText(vref, evidence, { exact: true }) }}</li>
             </ul>
             <p class="m-0 text-[13px] text-ink-2">{{ sameOn ? `The same on all ${sameOn} test kernels` : selectedKernel ? `${imageLabel}, kernel ${selectedKernel}` : `Not measured on ${imageLabel} yet` }}</p>
           </template>

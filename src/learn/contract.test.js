@@ -103,13 +103,16 @@ describe('guides together', () => {
 
   it('the fixture uses every figure kind, every optional field and every template part', () => {
     const kinds = DEMO.chapters.map((c) => c.figure.kind)
-    expect(new Set(kinds)).toEqual(new Set(['stack', 'timeline', 'sideBySide', 'gauge']))
+    expect(new Set(kinds)).toEqual(new Set(['stack', 'timeline', 'sideBySide', 'gauge', 'compare', 'tree', 'modes']))
     for (const ch of DEMO.chapters) expect(Object.keys(ch)).toEqual(['id', 'title', ...TEMPLATE_PARTS])
     const json = JSON.stringify(DEMO)
     for (const needle of [
       '"tone":"fit"', '"tone":"error"', '"bands":[', '"sub":', '"layer":', '"vmTest":', '"backedBy":{"probe"', '"leave":true', '"dir":"raise"', '"dir":"lower"', '"to":', '[^', '[[', '**', '`',
       // Figures v2: tips, the scale bar, side-by-side cells, the gauge and its parts.
       '"does":', '"scale":{', '"start":', '"asked":', '"legend":{', '"kind":"gauge"', '"axis":', '"range":{', '"zoom":{', '"fullPerUnit":', '"curve":{"points"', '"events":[', '"mark":', '"from":', '"value":{"probe"',
+      // Figures v3: compare (log scale, groups, an index path, a mark, pins), tree, modes (bits, groups, a pin, allValues), ValueRef labels.
+      '"kind":"compare"', '"scale":"log"', '"groups":[', '"group":', '"path":"2"', '"marks":[', '"bar":', '"kind":"tree"', '"children":[', '"node":',
+      '"kind":"modes"', '"bits":true', '"allValues":true', '"pin":', '"options":[', '"label":"Largest buffer"',
     ]) {
       expect(json, needle).toContain(needle)
     }
@@ -201,6 +204,19 @@ describe('valueFor', () => {
     expect(valueFor({ probe: 'toString' }, 'debian-13', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
     expect(valueFor(ref, 'toString', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
     expect(resolvePath({ a: [5, 6] }, 'a.1')).toBe(6)
+  })
+
+  it('picks one word of a string by a numeric path, as a number when it is one', () => {
+    expect(resolvePath('4096 131072 6291456', '2')).toBe(6291456)
+    expect(resolvePath('4096\t131072  6291456 ', '1')).toBe(131072)
+    expect(resolvePath('cubic reno', '0')).toBe('cubic')
+    expect(resolvePath('4096 131072', '2')).toBeUndefined()
+    expect(resolvePath('4096 131072', 'x')).toBeUndefined()
+    expect(resolvePath({ a: '1 2 3' }, 'a.0')).toBe(1)
+    expect(resolvePath('1 2 3', '0.1')).toBeUndefined()
+    const sizes = { probe: 'demo.bufSizes', path: '1', unit: 'bytes' }
+    expect(valueFor(sizes, 'debian-13', FIXTURE_EVIDENCE)).toMatchObject({ status: 'ok', value: 131072 })
+    expect(valueFor(sizes, 'ubuntu-18.04', FIXTURE_EVIDENCE)).toMatchObject({ status: 'ok', value: 87380 })
   })
 
   it('reads the committed captures by default', () => {
@@ -478,6 +494,59 @@ const RULE_CASES = [
   ['a gauge pin with both a mark and a gap', (g) => (g.chapters[4].figure.pins[0].from = 'low'), 'chapters[4].figure.pins[0].from', 'shape'],
   ['a gauge pin value from an unknown probe', (g) => (g.chapters[4].figure.pins[0].value.probe = 'demo.nope'), 'chapters[4].figure.pins[0].value.probe', 'probe'],
   ['a pin layer naming a gauge part that does not exist', (g) => (g.chapters[4].pins[0].layer = 'max'), 'chapters[4].pins[0].layer', 'pins'],
+  // value labels
+  ['a long value label', (g) => (g.chapters[5].figure.bars[2].value.label = words(5)), 'chapters[5].figure.bars[2].value.label', 'figure words'],
+  ['markup in a value label', (g) => (g.chapters[5].figure.bars[2].value.label = 'the `max`'), 'chapters[5].figure.bars[2].value.label', 'rich text'],
+  ['a stack value with no path and no label', (g) => ch0(g).figure.layers[1].values.push({ probe: 'demo.reserve', unit: 'kB' }), 'chapters[0].figure.layers[1].values[3]', 'figure words'],
+  // compare
+  ['a compare scale that is neither', (g) => (g.chapters[5].figure.scale = 'square'), 'chapters[5].figure.scale', 'shape'],
+  ['a compare bar in another unit', (g) => (g.chapters[5].figure.bars[1].value.unit = 'kB'), 'chapters[5].figure.bars[1].value.unit', 'figure range'],
+  ['a compare mark in another unit', (g) => (g.chapters[5].figure.marks[0].value.unit = 'kB'), 'chapters[5].figure.marks[0].value.unit', 'figure range'],
+  ['a long bar label', (g) => (g.chapters[5].figure.bars[0].label = words(5)), 'chapters[5].figure.bars[0].label', 'figure words'],
+  ['a long compare axis', (g) => (g.chapters[5].figure.axis = words(5)), 'chapters[5].figure.axis', 'figure words'],
+  ['a two-sentence bar tip', (g) => (g.chapters[5].figure.bars[0].does = 'One. Two.'), 'chapters[5].figure.bars[0].does', 'figure words'],
+  ['a bar from an unknown probe', (g) => (g.chapters[5].figure.bars[0].value.probe = 'demo.nope'), 'chapters[5].figure.bars[0].value.probe', 'probe'],
+  ['a string index past the last word', (g) => (g.chapters[5].figure.bars[2].value.path = '3'), 'chapters[5].figure.bars[2].value.probe', 'evidence'],
+  ['a bar in a group that does not exist', (g) => (g.chapters[5].figure.bars[0].group = 'nowhere'), 'chapters[5].figure.bars[0].group', 'figure range'],
+  ['a bar outside every group of a grouped figure', (g) => delete g.chapters[5].figure.bars[0].group, 'chapters[5].figure.bars[0]', 'figure range'],
+  ['a group on a figure without groups', (g) => delete g.chapters[5].figure.groups, 'chapters[5].figure.bars[0].group', 'figure range'],
+  ['thirteen bars', (g) => g.chapters[5].figure.bars.push(...Array.from({ length: 9 }, (_, i) => ({ ...structuredClone(g.chapters[5].figure.bars[0]), id: `extra-${i}` }))), 'chapters[5].figure.bars', 'word budget'],
+  ['two bars with one id', (g) => (g.chapters[5].figure.bars[1].id = 'buf-min'), 'chapters[5].figure.bars[1].id', 'unique id'],
+  ['a bar tone that does not exist', (g) => (g.chapters[5].figure.bars[0].tone = 'warn'), 'chapters[5].figure.bars[0].tone', 'shape'],
+  ['a compare pin on a bar that does not exist', (g) => (g.chapters[5].figure.pins[0].bar = 'nowhere'), 'chapters[5].figure.pins[0].bar', 'figure range'],
+  ['a compare pin on a mark that does not exist', (g) => (g.chapters[5].figure.pins[1].mark = 'nowhere'), 'chapters[5].figure.pins[1].mark', 'figure range'],
+  ['a compare pin the chapter does not pin', (g) => (g.chapters[5].figure.pins[0].key = 'reserve_kbytes'), 'chapters[5].figure.pins[0].key', 'pins'],
+  ['a key drawn twice on a compare figure', (g) => (g.chapters[5].figure.pins[1] = { key: 'buf_sizes', bar: 'buf-min' }), 'chapters[5].figure.pins[1].key', 'pins'],
+  ['a pin layer naming a compare part that does not exist', (g) => (g.chapters[5].pins[0].layer = 'nowhere'), 'chapters[5].pins[0].layer', 'pins'],
+  // tree
+  ['a tree four levels deep', (g) => (g.chapters[6].figure.root.children[0].children[0].children = [{ id: 'deep', label: 'Deep' }]), 'chapters[6].figure.root.children[0].children[0].children', 'figure range'],
+  ['a tree of thirteen nodes', (g) => g.chapters[6].figure.root.children[1].children.push(...Array.from({ length: 7 }, (_, i) => ({ id: `extra-${i}`, label: 'Extra' }))), 'chapters[6].figure', 'figure range'],
+  ['two tree nodes with one id', (g) => (g.chapters[6].figure.root.children[1].children[0].id = 'web-service'), 'chapters[6].figure.root.children[1].children[0].id', 'unique id'],
+  ['a long tree node', (g) => (g.chapters[6].figure.root.label = words(5)), 'chapters[6].figure.root.label', 'figure words'],
+  ['a tree node value from an unknown probe', (g) => (g.chapters[6].figure.root.children[0].value.probe = 'demo.nope'), 'chapters[6].figure.root.children[0].value.probe', 'probe'],
+  ['an unknown tree node field', (g) => (g.chapters[6].figure.root.colour = 'red'), 'chapters[6].figure.root.colour', 'shape'],
+  ['a tree pin on a node that does not exist', (g) => (g.chapters[6].figure.pins[0].node = 'nowhere'), 'chapters[6].figure.pins[0].node', 'figure range'],
+  ['a tree pin the chapter does not pin', (g) => (g.chapters[6].figure.pins[0].key = 'reserve_kbytes'), 'chapters[6].figure.pins[0].key', 'pins'],
+  ['a tree pin on an unknown key', (g) => (g.chapters[6].figure.pins[0].key = 'nope'), 'chapters[6].figure.pins[0].key', 'def key'],
+  // modes
+  ['a modes row with one option', (g) => g.chapters[7].figure.rows[0].options.splice(1), 'chapters[7].figure.rows[0].options', 'shape'],
+  ['a modes option listed twice', (g) => (g.chapters[7].figure.rows[0].options[1].value = 'always'), 'chapters[7].figure.rows[0].options[1].value', 'figure range'],
+  ['a modes option the pinned def does not write', (g) => (g.chapters[7].figure.rows[0].options[2].value = 'sometimes'), 'chapters[7].figure.rows[0].options[2].value', 'mode value'],
+  ['a pinned modes row without allValues listing a value the def lacks', (g) => {
+    delete g.chapters[7].figure.rows[3].allValues
+    delete g.chapters[7].figure.rows[2].pin
+    g.chapters[7].figure.rows[3].pin = 'scheduler'
+  }, 'chapters[7].figure.rows[3].options[3].value', 'mode value'],
+  ['a bits option that is not a power of two', (g) => (g.chapters[7].figure.rows[1].options[0].value = 3), 'chapters[7].figure.rows[1].options[0].value', 'figure range'],
+  ['bits set to false', (g) => (g.chapters[7].figure.rows[1].bits = false), 'chapters[7].figure.rows[1].bits', 'shape'],
+  ['a long option label', (g) => (g.chapters[7].figure.rows[0].options[0].label = words(5)), 'chapters[7].figure.rows[0].options[0].label', 'figure words'],
+  ['a long modes row label', (g) => (g.chapters[7].figure.rows[0].label = words(5)), 'chapters[7].figure.rows[0].label', 'figure words'],
+  ['an option value that is neither a number nor a string', (g) => (g.chapters[7].figure.rows[0].options[0].value = null), 'chapters[7].figure.rows[0].options[0].value', 'shape'],
+  ['a modes row pin on an unknown key', (g) => (g.chapters[7].figure.rows[0].pin = 'nope'), 'chapters[7].figure.rows[0].pin', 'def key'],
+  ['a modes row pin the chapter does not pin', (g) => (g.chapters[7].figure.rows[0].pin = 'reserve_kbytes'), 'chapters[7].figure.rows[0].pin', 'pins'],
+  ['a key drawn on two modes rows', (g) => (g.chapters[7].figure.rows[3].pin = 'scheduler'), 'chapters[7].figure.rows[3].pin', 'pins'],
+  ['a modes row in a group that does not exist', (g) => (g.chapters[7].figure.rows[0].group = 'nowhere'), 'chapters[7].figure.rows[0].group', 'figure range'],
+  ['a modes row value from an unknown probe', (g) => (g.chapters[7].figure.rows[0].value.probe = 'demo.nope'), 'chapters[7].figure.rows[0].value.probe', 'probe'],
 ]
 
 describe('each rule fails a broken fixture', () => {

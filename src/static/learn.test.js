@@ -26,7 +26,7 @@ describe('a guide page as static text', () => {
   it('has the header block, Start here, the chapter map and every chapter in order', () => {
     const h2 = doc.blocks.filter((b) => b.kind === 'heading' && b.level === 2).map((b) => b.text)
     expect(h2.slice(0, 2 + DEMO_LEARN.chapters.length)).toEqual(['Start here', 'The chapters', ...DEMO_LEARN.chapters.map((c) => c.title)])
-    expect(md).toContain('5 chapters · 7 settings · 5 min read · Figures measured on 5 kernels')
+    expect(md).toContain('8 chapters · 13 settings · 5 min read · Figures measured on 5 kernels')
     expect(md).toContain('[Tune these settings in the Swap & memory tuner](https://linux-tuners.dev/swap)')
     const parts = doc.blocks.filter((b) => b.kind === 'heading' && b.level === 3).map((b) => b.text)
     for (const part of ['Picture it', 'Settings here', 'Should you change it?', "What you notice if it's wrong", 'Look on your machine', 'Sources']) {
@@ -40,7 +40,7 @@ describe('a guide page as static text', () => {
     // A value every image measured the same is said once.
     expect(md).toContain('**Background, Worker:** Frees memory in the background. Measured: yes on all 5 test kernels.')
     // A card on an object-valued probe shows the field its path names, with its unit.
-    expect(md).toMatch(/\*\*Memory, Page cache:\*\* Keeps file data in spare memory\. Measured: [\d,]+ kB on all 5 test kernels\./)
+    expect(md).toMatch(/\*\*Memory, Page cache:\*\* Keeps file data in spare memory\. Measured: [\d.,]+ MiB \([\d,]+ kB\) on all 5 test kernels\./)
     expect(md).toContain('Layers from the top:')
     expect(md).toContain('A schematic timeline: the order is real, the distances are not.')
     expect(md).toContain('**Batch off:** demo.batch_order = 0: 1 asked for, 0 read along, 11 stays on disk, of 12.')
@@ -53,6 +53,28 @@ describe('a guide page as static text', () => {
     expect(md).toContain('Settings on the scale: `demo.floor_kbytes` on min; `demo.gap_factor` from low to high.')
     expect(md).toContain('a program waits (Free memory fell below min)')
     expect(md).toContain('Checked on real kernels by the VM test')
+  })
+
+  it('lists compare, tree and modes figures with every kernel\'s value, sizes readable and exact', () => {
+    expect(md).toContain("Bars on a log scale of buffer size, drawn from each kernel's capture, by group:")
+    expect(md).toContain('**Each socket, Largest** (Automatic tuning grows a busy socket up to this)')
+    expect(md).toContain('Lines across the bars: **Asked-for ceiling** (A program that sets its own buffer size gets at most this).')
+    expect(md).toContain('Settings drawn: `demo.buf_sizes` on Largest; `demo.buf_max` on the asked-for ceiling line.')
+    // A bar read by index from a string of three numbers, on every kernel, named by its label.
+    expect(md).toContain('`Start`**: Debian 13, kernel 0.0.0-fixture: 128 KiB (131,072 bytes);')
+    expect(md).toContain('Ubuntu 18.04, kernel 0.0.4-fixture: 85.3 KiB (87,380 bytes).')
+    expect(md).toContain('`Largest buffer`**: 6 MiB (6,291,456 bytes) on all 5 test kernels.')
+    expect(md).toContain('`Extra per socket`**: Debian 13, kernel 0.0.0-fixture: 16 MiB (16,777,216 bytes);')
+    expect(md).toMatch(/Ubuntu 18\.04, kernel 0\.0\.4-fixture: not present on this kernel\./)
+    // The tree, top down.
+    expect(md).toContain('**Root slice**, at the top (Holds every process on the machine)')
+    expect(md).toContain('**web.service**, in System services')
+    expect(md).toContain('Settings drawn: `CPUWeight` on System services.')
+    expect(md).toContain('`System CPU weight`**: 100 on all 5 test kernels.')
+    // Modes: the choices, then the value each kernel measured.
+    expect(md).toContain('**Kernel, Huge pages** (When the kernel backs memory with huge pages): one of always, when asked (madvise) (Only memory a program marks for it), never. Set by `demo.page_mode`.')
+    expect(md).toContain('**Kernel, Magic keys**: any of console level (2), keyboard (4)')
+    expect(md).toContain('`Magic keys`**: Debian 13, kernel 0.0.0-fixture: 438;')
   })
 
   it('writes the chooser as the static flow and the marks as [n]', () => {

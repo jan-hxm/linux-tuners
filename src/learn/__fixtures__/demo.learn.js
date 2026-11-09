@@ -24,6 +24,27 @@ export const DEFS = [
       { value: 'strict', sysctlValue: '2', label: '2: strict, never promise more' },
     ],
   },
+  // Figures v3: compare, tree and modes.
+  { key: 'buf_sizes', sysctlName: 'demo.buf_sizes', title: 'Socket buffer sizes', shortDesc: 'The smallest, starting and largest buffer of a socket.', unit: 'bytes', kernelDefault: '4096 131072 6291456' },
+  { key: 'buf_max', sysctlName: 'demo.buf_max', title: 'Buffer ceiling', shortDesc: 'The most a program may ask for.', unit: 'bytes', kernelDefault: 212992 },
+  { key: 'unit_weight', sysctlName: 'CPUWeight', title: 'CPU weight', shortDesc: 'A share of CPU time against siblings.', unit: '', kernelDefault: 100 },
+  {
+    key: 'page_mode', sysctlName: 'demo.page_mode', title: 'Huge page mode', shortDesc: 'When the kernel backs memory with huge pages.', unit: 'mode', kernelDefault: 'madvise',
+    options: [
+      { value: 'always', label: 'always' },
+      { value: 'madvise', label: 'madvise: only memory that asks for it' },
+      { value: 'never', label: 'never' },
+    ],
+  },
+  { key: 'key_mask', sysctlName: 'demo.key_mask', title: 'Magic key mask', shortDesc: 'Which magic keys work, as a sum of bits.', unit: '', kernelDefault: 176, kernelMin: 0, kernelMax: 511 },
+  {
+    key: 'scheduler', sysctlName: 'demo.scheduler', title: 'I/O scheduler', shortDesc: 'How a disk orders its requests.', unit: '', kernelDefault: 'mq-deadline',
+    options: [
+      { value: 'none', label: 'none' },
+      { value: 'mq-deadline', label: 'mq-deadline' },
+      { value: 'bfq', label: 'bfq' },
+    ],
+  },
 ]
 
 export const DEFS_BY_KEY = Object.fromEntries(DEFS.map((d) => [d.key, d]))
@@ -311,6 +332,208 @@ export const LEARN = {
         high: 'More memory stays free than needed.',
       },
       look: { cmd: "grep -A 4 'zone *Normal' /proc/zoneinfo", for: 'The min, low and high lines of the Normal zone, in pages.' },
+      sources: { vm: VM_DOCS },
+    },
+    {
+      id: 'comparing-sizes',
+      title: 'Comparing sizes',
+      oneLine: 'A socket buffer has three sizes, thousands of times apart, so the bars share a log scale.',
+      picture: {
+        text: 'Think of glasses, a jug and a barrel side by side. Each step up holds many times more than the last.',
+        limit: 'A barrel stays one size; a socket buffer grows and shrinks between its sizes.',
+      },
+      figure: {
+        kind: 'compare',
+        title: 'Receive buffer sizes',
+        axis: 'buffer size',
+        scale: 'log',
+        groups: [
+          { id: 'per-socket', label: 'Each socket', does: 'Sizes the kernel gives each new socket, and lets it grow to.' },
+          { id: 'whole-system', label: 'Whole system' },
+        ],
+        bars: [
+          { id: 'buf-min', label: 'Smallest', group: 'per-socket', value: { probe: 'demo.bufSizes', path: '0', unit: 'bytes' }, does: 'A socket keeps at least this much, even when memory is short.' },
+          { id: 'buf-start', label: 'Start', group: 'per-socket', tone: 'fit', value: { probe: 'demo.bufSizes', path: '1', unit: 'bytes' } },
+          { id: 'buf-largest', label: 'Largest', group: 'per-socket', value: { probe: 'demo.bufSizes', path: '2', unit: 'bytes', label: 'Largest buffer' }, does: 'Automatic tuning grows a busy socket up to this.' },
+          { id: 'buf-total', label: 'Extra per socket', group: 'whole-system', value: { probe: 'demo.bufTotal', unit: 'bytes' } },
+        ],
+        marks: [
+          { id: 'ceiling', label: 'Asked-for ceiling', tone: 'error', value: { probe: 'demo.bufMax', unit: 'bytes' }, does: 'A program that sets its own buffer size gets at most this.' },
+        ],
+        pins: [
+          { key: 'buf_sizes', bar: 'buf-largest' },
+          { key: 'buf_max', mark: 'ceiling' },
+        ],
+      },
+      body: ['The three sizes are one setting, written as three numbers.[^ip] The ceiling caps only a size a program asks for itself.[^ip]'],
+      pins: [
+        { key: 'buf_sizes', layer: 'per-socket', here: 'Sets the smallest, starting and largest buffer of each socket.' },
+        { key: 'buf_max', layer: 'ceiling', here: 'Caps the buffer a program asks for by itself.' },
+      ],
+      choose: [
+        {
+          q: 'Do long transfers stall below the line speed?',
+          check: 'sysctl net.ipv4.tcp_rmem',
+          hint: 'The last number is the largest buffer a socket can grow to.',
+          yes: { key: 'buf_sizes', dir: 'raise' },
+          no: { leave: true, why: 'The buffers keep up with the line.' },
+        },
+      ],
+      symptoms: {
+        low: 'Fast links stay slow over long distances.',
+        high: 'Many busy sockets hold a lot of memory.',
+      },
+      look: { cmd: 'sysctl net.ipv4.tcp_rmem net.core.rmem_max', for: 'Three sizes in bytes, then the ceiling.' },
+      sources: { ip: { url: 'https://docs.kernel.org/networking/ip-sysctl.html', label: 'IP sysctl' } },
+    },
+    {
+      id: 'sharing-the-cpu',
+      title: 'Sharing the CPU',
+      oneLine: 'Services sit in slices, and each slice shares the CPU with its siblings by weight.',
+      picture: {
+        text: 'Think of a family budget split between households, and each household splitting its share again.',
+        limit: 'Money left over is gone; CPU time a slice does not use goes to the others.',
+      },
+      figure: {
+        kind: 'tree',
+        title: 'Where a service runs',
+        root: {
+          id: 'root-slice',
+          label: 'Root slice',
+          does: 'Holds every process on the machine.',
+          children: [
+            {
+              id: 'system-slice',
+              label: 'System services',
+              value: { probe: 'demo.sliceWeight', unit: '', label: 'System CPU weight' },
+              does: 'Holds the services the system starts.',
+              children: [
+                { id: 'web-service', label: 'web.service' },
+                { id: 'db-service', label: 'db.service', does: 'A database, sharing the slice with the web server.' },
+              ],
+            },
+            {
+              id: 'user-slice',
+              label: 'User sessions',
+              value: { probe: 'demo.userWeight', unit: '' },
+              children: [{ id: 'login', label: 'Your login' }],
+            },
+          ],
+        },
+        pins: [{ key: 'unit_weight', node: 'system-slice' }],
+      },
+      body: ['A slice with twice the weight of its sibling gets twice the CPU time when both are busy.[^rc]'],
+      pins: [{ key: 'unit_weight', layer: 'system-slice', here: 'Sets the share of the system services against your sessions.' }],
+      choose: [
+        {
+          q: 'Do your sessions feel slow while services are busy?',
+          check: 'systemctl show -p CPUWeight user.slice',
+          hint: 'A weight of 100 is the default share.',
+          yes: { key: 'unit_weight', dir: 'lower' },
+          no: { leave: true, why: 'The default weights share the CPU evenly.' },
+        },
+      ],
+      symptoms: {
+        low: 'Services fall behind while you work.',
+        high: 'Your sessions lag while services run.',
+      },
+      look: { cmd: 'systemctl show -p CPUWeight system.slice', for: 'The weight of the system slice.' },
+      sources: { rc: { url: 'https://man7.org/linux/man-pages/man5/systemd.resource-control.5.html', label: 'systemd.resource-control(5)' } },
+    },
+    {
+      id: 'picking-a-mode',
+      title: 'Picking a mode',
+      oneLine: 'Some settings choose one of a few modes, and one sums several switches into one number.',
+      picture: {
+        text: 'Think of a row of light switches. Most rows let one switch be on; one row lets any of them be on.',
+        limit: 'A switch stays where you put it; the kernel may refuse a mode the hardware lacks.',
+      },
+      figure: {
+        kind: 'modes',
+        title: 'Modes set on this kernel',
+        groups: [
+          { id: 'kernel', label: 'Kernel' },
+          { id: 'disks', label: 'Disks', does: 'Each disk picks its own scheduler.' },
+        ],
+        rows: [
+          {
+            id: 'page-mode',
+            label: 'Huge pages',
+            group: 'kernel',
+            pin: 'page_mode',
+            value: { probe: 'demo.pageMode', unit: '' },
+            does: 'When the kernel backs memory with huge pages.',
+            options: [
+              { value: 'always', label: 'always' },
+              { value: 'madvise', label: 'when asked', does: 'Only memory a program marks for it.' },
+              { value: 'never', label: 'never' },
+            ],
+          },
+          {
+            id: 'key-mask',
+            label: 'Magic keys',
+            group: 'kernel',
+            pin: 'key_mask',
+            bits: true,
+            value: { probe: 'demo.keyMask', unit: '' },
+            options: [
+              { value: 2, label: 'console level' },
+              { value: 4, label: 'keyboard' },
+              { value: 8, label: 'debug dumps' },
+              { value: 16, label: 'sync' },
+              { value: 32, label: 'remount read-only' },
+              { value: 64, label: 'signals' },
+              { value: 128, label: 'reboot' },
+              { value: 256, label: 'nice real-time' },
+            ],
+          },
+          {
+            id: 'ssd-scheduler',
+            label: 'SSD',
+            group: 'disks',
+            pin: 'scheduler',
+            value: { probe: 'demo.schedSsd', unit: '' },
+            options: [
+              { value: 'none', label: 'none' },
+              { value: 'mq-deadline', label: 'mq-deadline' },
+              { value: 'bfq', label: 'bfq' },
+            ],
+          },
+          {
+            id: 'hdd-scheduler',
+            label: 'Hard disk',
+            group: 'disks',
+            allValues: true,
+            value: { probe: 'demo.schedHdd', unit: '' },
+            options: [
+              { value: 'none', label: 'none' },
+              { value: 'mq-deadline', label: 'mq-deadline' },
+              { value: 'bfq', label: 'bfq' },
+              { value: 'kyber', label: 'kyber' },
+            ],
+          },
+        ],
+      },
+      body: ['A mode setting takes one word.[^vm] The key mask adds up one number per key group, so 176 is 16 plus 32 plus 128.[^vm]'],
+      pins: [
+        { key: 'page_mode', layer: 'page-mode', here: 'Picks when the kernel uses huge pages.' },
+        { key: 'key_mask', layer: 'key-mask', here: 'Picks which magic keys work.' },
+        { key: 'scheduler', layer: 'disks', here: 'Picks how each disk orders its requests.' },
+      ],
+      choose: [
+        {
+          q: 'Does the machine use a fast SSD?',
+          check: 'cat /sys/block/sda/queue/scheduler',
+          hint: 'The word in brackets is the scheduler in use.',
+          yes: { key: 'scheduler', to: 'none' },
+          no: { leave: true, why: 'A slower disk gains from a scheduler.' },
+        },
+      ],
+      symptoms: {
+        low: 'A disk orders requests it could have served at once.',
+        high: 'A slow disk serves requests in a poor order.',
+      },
+      look: { cmd: 'cat /sys/kernel/mm/transparent_hugepage/enabled', for: 'The word in brackets is the mode in use.' },
       sources: { vm: VM_DOCS },
     },
   ],

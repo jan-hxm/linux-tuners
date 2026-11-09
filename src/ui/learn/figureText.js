@@ -43,29 +43,64 @@ function plural(unit, n) {
   return n === 1 && unit.endsWith('s') ? ` ${unit.slice(0, -1)}` : ` ${unit}`
 }
 
+/** Units counted in bytes, with how many bytes one of them is ('kB' is the kernel's KiB). */
+export const BYTE_UNITS = Object.freeze({ bytes: 1, kB: 1024 })
+export const isByteUnit = (unit) => typeof unit === 'string' && Object.hasOwn(BYTE_UNITS, unit)
+const BINARY = ['bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
+
+/** A number to one decimal where that helps: 94.8, 6, 1,024. */
+const shortNum = (x) => (Number.isInteger(x) ? x.toLocaleString('en-US') : Math.abs(x) < 100 ? (Math.round(x * 10) / 10).toLocaleString('en-US') : Math.round(x).toLocaleString('en-US'))
+
+/**
+ * A size in a byte unit as people read it: 6291456 bytes is "6 MiB", 97076 kB
+ * "94.8 MiB", 128 kB "128 KiB". The kernel's kB is 1024 bytes.
+ */
+export function humanBytes(v, unit) {
+  const b = v * BYTE_UNITS[unit]
+  let k = unit === 'kB' ? 1 : 0
+  while (k < BINARY.length - 1 && Math.abs(b) >= 1024 ** (k + 1)) k++
+  const x = b / 1024 ** k
+  if (k === 0) return `${x.toLocaleString('en-US')} ${x === 1 ? 'byte' : 'bytes'}`
+  return `${shortNum(x)} ${BINARY[k]}`
+}
+
+/** A number with its unit as measured, singular for one: "6,291,456 bytes". */
+const exactNumber = (v, unit) => `${v.toLocaleString('en-US')}${plural(unit, v)}`
+
 /**
  * One evidence result as text: a number with its unit, a string, yes/no, a
- * list, or "not measured" / "not present on this kernel".
+ * list, or "not measured" / "not present on this kernel". A number in bytes
+ * or kB reads in KiB, MiB or GiB; `exact` adds the number as measured after
+ * it, "6 MiB (6,291,456 bytes)", for the tooltip, the panel and the static page.
  * @param {{ status: string, value?: unknown }} result
  * @param {string} [unit]
+ * @param {{ exact?: boolean }} [opts]
  */
-export function formatValue(result, unit = '') {
+export function formatValue(result, unit = '', { exact = false } = {}) {
   if (!result || result.status === 'missing') return NOT_MEASURED
   if (result.status === 'absent') return ABSENT
   if (result.status !== 'ok') return NOT_MEASURED
   const v = result.value
-  if (typeof v === 'number' && Number.isFinite(v)) return `${v.toLocaleString('en-US')}${plural(unit, v)}`
+  if (typeof v === 'number' && Number.isFinite(v)) {
+    const raw = exactNumber(v, unit)
+    if (!isByteUnit(unit)) return raw
+    const human = humanBytes(v, unit)
+    return exact && human !== raw ? `${human} (${raw})` : human
+  }
   if (typeof v === 'string') return unit ? `${v} ${unit}` : v
   if (typeof v === 'boolean') return v ? 'yes' : 'no'
   if (Array.isArray(v) && v.every((x) => typeof x === 'string' || typeof x === 'number')) return v.length ? v.join(', ') : 'none'
   return NOT_MEASURED
 }
 
-/** What a ValueRef is called in a figure: its path, or the probe id without one. */
-export const refName = (ref) => ref.path || ref.probe
+/** What a ValueRef is called in a figure: its label, else its path, else the probe id. */
+export const refName = (ref) => ref.label || ref.path || ref.probe
 
-/** "Normal.min: 4,096 pages", or "Normal.min: not measured". */
-export const measuredText = (ref, evidence) => `${refName(ref)}: ${formatValue(evidence(ref), ref.unit)}`
+/** "min: 2,000 pages", or "min: not measured"; `exact` as in formatValue. */
+export const measuredText = (ref, evidence, { exact = false } = {}) => `${refName(ref)}: ${formatValue(evidence(ref), ref.unit, { exact })}`
+
+/** A ref named by the part that shows it, unless it has a label of its own. */
+export const named = (ref, label) => (ref && !ref.label && label ? { ...ref, label } : ref)
 
 /**
  * The kernel the figure's values were measured on: the first `ok` or
@@ -108,7 +143,7 @@ export const plainTip = (tip) => (typeof tip === 'string' ? parseRichText(tip).m
  */
 export function tipValue(ref, evidence, sameOn = 0) {
   const r = evidence(ref)
-  const text = formatValue(r, ref.unit)
+  const text = formatValue(r, ref.unit, { exact: true })
   if (sameOn && r?.status === 'ok') return `${text} on all ${sameOn} test kernels`
   return r?.kernel && (r.status === 'ok' || r.status === 'absent') ? `${text}, kernel ${r.kernel}` : text
 }
@@ -270,7 +305,7 @@ export function edgeGeometry(parts, edge, gapX, gapY) {
 export function stackRefs(figure) {
   return figure.layers.flatMap((layer) => [
     ...(layer.values ?? []),
-    ...(layer.nodes ?? []).filter((n) => n.probe).map(itemRef),
+    ...(layer.nodes ?? []).filter((n) => n.probe).map((n) => named(itemRef(n), n.text)),
   ])
 }
 
@@ -400,7 +435,8 @@ export function gaugeModel(figure, evidence) {
   const unit = figure.marks[0]?.value?.unit ?? ''
   const marks = figure.marks.map((m) => {
     const r = evidence(m.value)
-    return { ...m, v: r?.status === 'ok' && isNum(r.value) ? r.value : null, text: formatValue(r, m.value.unit), result: r }
+    const v = r?.status === 'ok' && isNum(r.value) ? r.value : null
+    return { ...m, v, text: formatValue(r, m.value.unit), num: v === null ? formatValue(r, m.value.unit) : fmt(v), result: r }
   })
   const values = marks.map((m) => m.v)
   const measured = values.length > 0 && values.every((v) => v !== null) && values.every((v, i) => i === 0 || v >= values[i - 1])
@@ -524,6 +560,275 @@ export function gaugeLabel(figure, evidence, { defsByKey = {}, highlight = null 
   return out.join(' ')
 }
 
+// Compare ----------------------------------------------------------------------
+
+/**
+ * The powers of `base` a log axis from base^lo to base^hi ticks at: every
+ * s-th power, s the smallest step that keeps it to five ticks (for bytes 1 to 5
+ * or 10 powers of two, so 4 KiB, 16 KiB, ... or 1 KiB, 1 MiB, 1 GiB).
+ * Every tick lies on the axis.
+ */
+export function logTicks(lo, hi, base = 10) {
+  const steps = base === 2 ? [1, 2, 3, 4, 5, 10] : [1, 2, 3]
+  const count = (s) => Math.floor(hi / s) - Math.ceil(lo / s) + 1
+  const s = steps.find((x) => count(x) <= 5) ?? steps.at(-1)
+  const out = []
+  for (let e = Math.ceil(lo / s) * s; e <= hi; e += s) out.push(e)
+  return out
+}
+
+const COMPACT = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+
+/** A tick's words: a size for a byte unit, "10K" or "1M" for big numbers, else the number. */
+export function tickText(v, unit) {
+  if (isByteUnit(unit)) return humanBytes(v, unit)
+  return Math.abs(v) >= 10000 ? COMPACT.format(v) : fmt(v)
+}
+
+function readNumber(ref, evidence, unit) {
+  const result = evidence(ref)
+  const v = result?.status === 'ok' && isNum(result.value) ? result.value : null
+  const status = v !== null ? 'ok' : result?.status === 'absent' ? 'absent' : 'missing'
+  return { v, status, result, text: formatValue(result, unit) }
+}
+
+/**
+ * A compare figure on one image: one bar per item on one shared scale,
+ * `linear` from 0 to a round top, or `log` from the power of 2 (bytes) or 10
+ * below the smallest value (one further down when it is a power itself, so
+ * its bar never has zero length) to the one at or above the largest. A bar's `x` is its
+ * end, 0 to 1; a bar that is not measured has no `x` and keeps its row as a
+ * labelled gap, never a zero bar. Marks are vertical lines on the same scale.
+ */
+export function compareModel(figure, evidence) {
+  const unit = figure.bars[0]?.value?.unit ?? ''
+  const pinsOf = (kind, id) => (figure.pins ?? []).filter((p) => p[kind] === id).map((p) => p.key)
+  const bars = figure.bars.map((b) => ({ ...b, ...readNumber(b.value, evidence, unit), pins: pinsOf('bar', b.id) }))
+  const marks = (figure.marks ?? []).map((m) => ({ ...m, ...readNumber(m.value, evidence, unit), pins: pinsOf('mark', m.id) }))
+  const values = [...bars, ...marks].map((x) => x.v).filter((v) => v !== null)
+  const log = figure.scale === 'log'
+  let at = () => 0
+  let ticks = []
+  let from = 0
+  let to = 1
+  let measured = false
+  if (log) {
+    const pos = values.filter((v) => v > 0)
+    if (pos.length) {
+      measured = true
+      const base = isByteUnit(unit) ? 2 : 10
+      const lg = (v) => Math.log(v) / Math.log(base)
+      // One power below the smallest value when it is a power itself, so its bar has a length.
+      const least = lg(Math.min(...pos))
+      const lo = Math.abs(least - Math.round(least)) < 1e-9 ? Math.round(least) - 1 : Math.floor(least)
+      let hi = Math.ceil(lg(Math.max(...pos)) - 1e-9)
+      if (hi <= lo) hi = lo + 1
+      from = base ** lo
+      to = base ** hi
+      at = (v) => (v > 0 ? clamp01((lg(v) - lo) / (hi - lo)) : 0)
+      ticks = logTicks(lo, hi, base).map((e) => base ** e)
+    }
+  } else if (values.length) {
+    measured = true
+    const max = Math.max(0, ...values)
+    // A byte unit ticks at round numbers of the unit it reads in (KiB, MiB, ...).
+    let per = 1
+    if (isByteUnit(unit)) {
+      const mult = BYTE_UNITS[unit]
+      let k = unit === 'kB' ? 1 : 0
+      while (k < BINARY.length - 1 && max * mult >= 1024 ** (k + 1)) k++
+      per = 1024 ** k / mult
+    }
+    const top = niceTop(max / per)
+    to = top * per
+    at = (v) => clamp01(v / to)
+    ticks = scaleTicks(0, top).map((t) => t * per)
+  }
+  for (const x of [...bars, ...marks]) x.x = measured && x.v !== null ? at(x.v) : null
+  const groups = figure.groups?.length
+    ? figure.groups.map((g) => ({ ...g, bars: bars.filter((b) => b.group === g.id) }))
+    : [{ id: null, label: null, bars }]
+  return {
+    log, unit, measured, from, to, bars, marks, groups,
+    ticks: ticks.map((v) => ({ value: v, x: at(v), text: tickText(v, unit) })),
+  }
+}
+
+/** The axis line under a compare figure: "buffer size, log scale, 4 KiB to 8 MiB". */
+export function compareAxisText(figure, model) {
+  if (!model.measured) return `${figure.axis}, not measured`
+  const unit = !isByteUnit(model.unit) && model.unit && !figure.axis.endsWith(model.unit) ? ` ${model.unit}` : ''
+  return `${figure.axis}, ${model.log ? 'log scale, ' : ''}${tickText(model.from, model.unit)} to ${tickText(model.to, model.unit)}${unit}`
+}
+
+/** Every ValueRef a compare figure shows, each named by its bar or mark. */
+export const compareRefs = (figure) => [
+  ...figure.bars.map((b) => named(b.value, b.label)),
+  ...(figure.marks ?? []).map((m) => named(m.value, m.label)),
+]
+
+/** Where a setting drawn on a compare figure sits: "on Default" or "on the socket limit line". */
+export function comparePinPlace(figure, pin) {
+  if (pin.bar) return `on ${figure.bars.find((b) => b.id === pin.bar)?.label ?? pin.bar}`
+  return `on the ${inSentence(figure.marks?.find((m) => m.id === pin.mark)?.label ?? pin.mark)} line`
+}
+
+export function compareCaption(figure, evidence, imageId, sameOn = 0) {
+  const model = compareModel(figure, evidence)
+  const parts = [`${figure.title}.`]
+  if (!model.measured) parts.push(`No values measured on ${imageId} yet, so no bars are drawn.`)
+  else {
+    if (model.log) {
+      const step = model.ticks.length > 1 ? Math.round(model.ticks[1].value / model.ticks[0].value) : 0
+      parts.push(step ? `Log scale: each tick is ${fmt(step)} times the one before.` : 'Log scale.')
+    } else parts.push('Drawn to scale.')
+    parts.push(sameOn ? sameOnText(sameOn) : measuredOn(compareRefs(figure), evidence, imageId))
+  }
+  return parts.join(' ')
+}
+
+export function compareLabel(figure, evidence, { defsByKey = {}, highlight = null } = {}) {
+  const model = compareModel(figure, evidence)
+  const tip = (x) => (x.does ? `: ${plainTip(x.does).replace(/\.$/, '')}` : '')
+  const sel = (id) => (id === highlight ? ' (selected)' : '')
+  const groups = model.groups.map((g) => {
+    const bars = g.bars.map((b) => `${b.label} ${b.text}${tip(b)}${sel(b.id)}`).join('; ')
+    return g.label ? `${g.label}${tip(g)}${sel(g.id)}: ${bars}.` : `${bars}.`
+  })
+  const out = [`${figure.title}.`, `Bars on a ${model.log ? 'log' : 'linear'} scale of ${compareAxisText(figure, model)}.`, ...groups]
+  if (model.marks.length) out.push(`Lines across the bars: ${model.marks.map((m) => `${m.label} at ${m.text}${tip(m)}${sel(m.id)}`).join('; ')}.`)
+  if (figure.pins?.length) out.push(`Settings drawn: ${figure.pins.map((p) => `${defName(p.key, defsByKey)} ${comparePinPlace(figure, p)}`).join('; ')}.`)
+  return out.join(' ')
+}
+
+// Tree -------------------------------------------------------------------------
+
+/**
+ * The nodes of a tree figure top down, each with its depth (0 the root), its
+ * parent, whether it is its parent's last child and, for the connector
+ * lines, `rails`: for each level from 1 to depth - 1, whether the line of
+ * that level runs on past this row (its node there has a later sibling).
+ */
+export function treeNodes(figure) {
+  const out = []
+  const walk = (node, depth, parent, last, rails) => {
+    if (!node || typeof node !== 'object') return
+    out.push({ ...node, depth, parent, last, rails })
+    const kids = Array.isArray(node.children) ? node.children : []
+    const next = depth > 0 ? [...rails, !last] : rails
+    kids.forEach((child, i) => walk(child, depth + 1, node, i === kids.length - 1, next))
+  }
+  walk(figure.root, 0, null, true, [])
+  return out
+}
+
+/** A tree node's value line, or '' for none; a probe that only says "exists" shows none. */
+export function treeValue(node, evidence) {
+  if (!node.value) return ''
+  const r = evidence(node.value)
+  return r?.status === 'ok' && r.value === true ? '' : formatValue(r, node.value.unit)
+}
+
+export const treeRefs = (figure) => treeNodes(figure).filter((n) => n.value).map((n) => named(n.value, n.label))
+
+export function treePinPlace(figure, pin) {
+  return `on ${treeNodes(figure).find((n) => n.id === pin.node)?.label ?? pin.node}`
+}
+
+export function treeCaption(figure, evidence, imageId, sameOn = 0) {
+  const refs = treeRefs(figure)
+  if (!refs.length) return `${figure.title}.`
+  return `${figure.title}. ${sameOn ? sameOnText(sameOn) : measuredOn(refs, evidence, imageId)}`
+}
+
+export function treeLabel(figure, evidence, { defsByKey = {}, highlight = null } = {}) {
+  const nodes = treeNodes(figure)
+  const items = nodes.map((n) => {
+    const value = treeValue(n, evidence)
+    const tip = n.does ? `: ${plainTip(n.does).replace(/\.$/, '')}` : ''
+    const where = n.parent ? `, in ${n.parent.label}` : ', at the top'
+    return `${n.label}${value ? ` ${value}` : ''}${where}${tip}${n.id === highlight ? ' (selected)' : ''}`
+  })
+  const out = [`${figure.title}. A tree from the top: ${items.join('; ')}.`]
+  if (figure.pins?.length) out.push(`Settings drawn: ${figure.pins.map((p) => `${defName(p.key, defsByKey)} ${treePinPlace(figure, p)}`).join('; ')}.`)
+  return out.join(' ')
+}
+
+// Modes ------------------------------------------------------------------------
+
+/**
+ * A modes row's segments on one image: its options, the one whose value
+ * equals the measured value lit (compared as text, so 0 and "0" match). With
+ * `bits`, every option whose bit is set in the value lights (176 lights 16, 32
+ * and 128), and an option of 0 lights only for 0. A value, or bits, that no
+ * option names add one more lit segment labelled with the raw value, so a
+ * value is never silently dropped. A value not measured lights nothing.
+ * @returns {{ value: unknown, label: string, does?: string, lit: boolean, extra: boolean }[]}
+ */
+export function modeSegments(row, result) {
+  const segs = row.options.map((o) => ({ ...o, lit: false, extra: false }))
+  if (result?.status !== 'ok') return segs
+  const v = result.value
+  const raw = typeof v === 'string' || typeof v === 'number' ? String(v) : formatValue(result)
+  if (row.bits) {
+    const n = typeof v === 'number' ? v : typeof v === 'string' && /^\d+$/.test(v.trim()) ? Number(v) : NaN
+    if (!Number.isSafeInteger(n) || n < 0) return [...segs, { value: v, label: raw, lit: true, extra: true }]
+    let rest = n
+    for (const s of segs) {
+      const bit = Number(s.value)
+      if (bit === 0) s.lit = n === 0
+      else if (Math.floor(n / bit) % 2 === 1) {
+        s.lit = true
+        rest -= bit
+      }
+    }
+    if (rest > 0) segs.push({ value: rest, label: String(rest), lit: true, extra: true })
+    return segs
+  }
+  const match = segs.find((s) => String(s.value) === raw)
+  if (match) match.lit = true
+  else segs.push({ value: v, label: raw, lit: true, extra: true })
+  return segs
+}
+
+/** A modes figure on one image: its rows with their segments, grouped as the figure says. */
+export function modesModel(figure, evidence) {
+  const rows = figure.rows.map((row) => {
+    const result = evidence(row.value)
+    const status = result?.status === 'ok' ? 'ok' : result?.status === 'absent' ? 'absent' : 'missing'
+    const segments = modeSegments(row, result)
+    const lit = segments.filter((s) => s.lit).map((s) => s.label)
+    return { ...row, status, segments, text: status === 'ok' ? lit.join(' + ') || 'none' : formatValue(result, row.value.unit) }
+  })
+  const groups = figure.groups?.length
+    ? figure.groups.map((g) => ({ ...g, rows: rows.filter((r) => r.group === g.id) }))
+    : [{ id: null, label: null, rows }]
+  return { rows, groups, measured: rows.some((r) => r.status === 'ok') }
+}
+
+export const modesRefs = (figure) => figure.rows.map((r) => named(r.value, r.label))
+
+export function modesCaption(figure, evidence, imageId, sameOn = 0) {
+  return `${figure.title}. The lit segment is the value measured. ${sameOn ? sameOnText(sameOn) : measuredOn(modesRefs(figure), evidence, imageId)}`
+}
+
+export function modesLabel(figure, evidence, { defsByKey = {}, highlight = null } = {}) {
+  const model = modesModel(figure, evidence)
+  const tip = (x) => (x.does ? ` (${plainTip(x.does).replace(/\.$/, '')})` : '')
+  const sel = (id) => (id === highlight ? ' (selected)' : '')
+  const rowText = (r) => {
+    const name = `${r.label}${tip(r)}${sel(r.id)}${r.pin ? `, set by ${defName(r.pin, defsByKey)}` : ''}`
+    if (r.status !== 'ok') return `${name}: ${r.options.map((o) => o.label).join(', ')}; ${r.text}`
+    const segs = r.segments.map((s) => `${s.label}${s.extra ? ' (set, not a listed value)' : s.lit ? ' (set)' : ''}${s.extra ? '' : tip(s)}`)
+    return `${name}: ${segs.join(', ')}`
+  }
+  const groups = model.groups.map((g) => {
+    const rows = g.rows.map(rowText).join('; ')
+    return g.label ? `${g.label}${tip(g)}${sel(g.id)}: ${rows}.` : `${rows}.`
+  })
+  return [`${figure.title}. One row per setting, the value set lit.`, ...groups].join(' ')
+}
+
 // Any figure -----------------------------------------------------------------
 
 export function figureLabel(figure, evidence, { defsByKey = {}, highlight = null } = {}) {
@@ -531,24 +836,53 @@ export function figureLabel(figure, evidence, { defsByKey = {}, highlight = null
   if (figure.kind === 'timeline') return timelineLabel(figure, evidence)
   if (figure.kind === 'sideBySide') return sideBySideLabel(figure, defsByKey)
   if (figure.kind === 'gauge') return gaugeLabel(figure, evidence, { defsByKey, highlight })
+  if (figure.kind === 'compare') return compareLabel(figure, evidence, { defsByKey, highlight })
+  if (figure.kind === 'tree') return treeLabel(figure, evidence, { defsByKey, highlight })
+  if (figure.kind === 'modes') return modesLabel(figure, evidence, { defsByKey, highlight })
   return figure.title ?? ''
 }
 
-/** Every ValueRef a chapter figure shows, for the kernel switcher and the static page. */
-export function figureRefs(figure) {
+/**
+ * Every ValueRef a chapter figure shows, for the kernel switcher and the
+ * static page, each named by the part that shows it (a mark, a bar, a node)
+ * unless it has a `label` of its own; a gauge pin's own value by its setting.
+ */
+export function figureRefs(figure, defsByKey = {}) {
   if (!figure) return []
   if (figure.kind === 'stack') return stackRefs(figure)
-  if (figure.kind === 'timeline') return figure.lines.map((l) => l.value)
-  if (figure.kind === 'gauge') return gaugeRefs(figure)
+  if (figure.kind === 'timeline') return figure.lines.map((l) => named(l.value, l.label))
+  if (figure.kind === 'gauge') {
+    return [
+      ...figure.marks.map((m) => named(m.value, m.label)),
+      ...(figure.zoom ? [named(figure.zoom.full, figure.zoom.label)] : []),
+      ...(figure.pins ?? []).filter((p) => p.value).map((p) => named(p.value, defName(p.key, defsByKey))),
+    ]
+  }
+  if (figure.kind === 'compare') return compareRefs(figure)
+  if (figure.kind === 'tree') return treeRefs(figure)
+  if (figure.kind === 'modes') return modesRefs(figure)
   return []
 }
 
 /**
- * The values the margin panel shows for a pin: the refs of the layer, band
- * or node its `layer` names (a band stands for its layer), or a timeline
- * line's value. Nothing when the pin names no part of the figure.
+ * The settings a figure draws itself (a gauge's, compare's or tree's `pins`,
+ * a modes row's `pin`), whose buttons in the row under it show only below md.
+ * @returns {string[]}
  */
-export function pinRefs(figure, pin) {
+export function drawnPinKeys(figure) {
+  if (!figure) return []
+  if (figure.kind === 'gauge' || figure.kind === 'compare' || figure.kind === 'tree') return (figure.pins ?? []).map((p) => p.key)
+  if (figure.kind === 'modes') return figure.rows.filter((r) => r.pin).map((r) => r.pin)
+  return []
+}
+
+/**
+ * The values the margin panel shows for a pin: the refs of the part its
+ * `layer` names (a band stands for its layer, a group for its bars or rows)
+ * and, on a figure that draws the setting, the part it is drawn on. Nothing
+ * when the pin names no part of the figure.
+ */
+export function pinRefs(figure, pin, defsByKey = {}) {
   const target = pin?.layer
   if (figure?.kind === 'gauge' && pin) {
     const drawn = (figure.pins ?? []).find((p) => p.key === pin.key)
@@ -558,19 +892,39 @@ export function pinRefs(figure, pin) {
       ...(zone ? [zone.from, zone.to] : figure.marks.some((m) => m.id === target) ? [target] : []),
     ]
     const marks = figure.marks.filter((m) => markIds.includes(m.id)).reverse()
-    return [...(drawn?.value ? [drawn.value] : []), ...marks.map((m) => m.value)]
+    return [...(drawn?.value ? [named(drawn.value, defName(drawn.key, defsByKey))] : []), ...marks.map((m) => named(m.value, m.label))]
+  }
+  if (figure?.kind === 'compare' && pin) {
+    const drawn = (figure.pins ?? []).find((p) => p.key === pin.key)
+    const ids = [drawn?.bar ?? drawn?.mark, target].filter(Boolean)
+    const parts = [...figure.bars, ...(figure.marks ?? [])]
+    const out = []
+    for (const id of ids) {
+      const inGroup = figure.bars.filter((b) => b.group === id)
+      for (const part of inGroup.length ? inGroup : parts.filter((x) => x.id === id)) if (!out.includes(part)) out.push(part)
+    }
+    return out.map((x) => named(x.value, x.label))
+  }
+  if (figure?.kind === 'tree' && pin) {
+    const drawn = (figure.pins ?? []).find((p) => p.key === pin.key)
+    const ids = new Set([drawn?.node, target].filter(Boolean))
+    return treeNodes(figure).filter((n) => ids.has(n.id) && n.value).map((n) => named(n.value, n.label))
+  }
+  if (figure?.kind === 'modes' && pin) {
+    const rows = figure.rows.filter((r) => r.pin === pin.key || r.id === target || (target && r.group === target))
+    return rows.map((r) => named(r.value, r.label))
   }
   if (!target) return []
   if (figure.kind === 'stack') {
     for (const layer of figure.layers) {
       if (layer.id === target || (layer.bands ?? []).some((b) => b.id === target)) return layer.values ?? []
       const node = (layer.nodes ?? []).find((n) => n.id === target)
-      if (node) return node.probe ? [itemRef(node)] : []
+      if (node) return node.probe ? [named(itemRef(node), node.text)] : []
     }
   }
   if (figure.kind === 'timeline') {
     const line = figure.lines.find((l) => l.id === target)
-    if (line) return [line.value]
+    if (line) return [named(line.value, line.label)]
   }
   return []
 }

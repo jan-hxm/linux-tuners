@@ -150,4 +150,65 @@ export const GLOSSARY = Object.freeze({
     definition:
       'The kernel stopping the whole machine on purpose because it cannot safely go on. Every program stops with it; the kernel.panic setting decides whether the machine then reboots on its own.',
   },
+  // security guide
+  capability: {
+    term: 'Capability',
+    definition:
+      "One slice of root's power that the kernel checks on its own, such as CAP_SYSLOG to read the kernel log or CAP_SYS_PTRACE to trace any process. Root holds them all; a program can be given one without the rest.",
+  },
+  kaslr: {
+    term: 'KASLR',
+    definition:
+      'Kernel address space layout randomisation: the kernel placing its own code and data at different addresses each boot, when it is built for it, so an attack cannot count on where they are.',
+  },
+  aslr: {
+    term: 'ASLR',
+    definition:
+      "Address space layout randomisation: the kernel placing a program's stack, libraries and heap at random addresses each time it starts, so an attack on the program cannot count on where they are.",
+  },
+  vdso: {
+    term: 'vDSO',
+    definition:
+      'A small shared library the kernel maps into every program, so a few frequent system calls, such as reading the clock, run without entering the kernel.',
+  },
+  ptrace: {
+    term: 'ptrace',
+    definition:
+      'The system call that debuggers and tracers such as gdb and strace use to watch another process, stop it, and read or change its memory and registers.',
+  },
+  'core-dump': {
+    term: 'Core dump',
+    definition:
+      "A file holding a copy of a program's memory at the moment it crashed, for a debugger such as gdb to inspect afterwards.",
+  },
+  setuid: {
+    term: 'Setuid program',
+    definition:
+      "A program file marked to run with its owner's rights, often root's, whoever starts it. passwd works this way, so any user can change their own password.",
+  },
+  'sticky-bit': {
+    term: 'Sticky bit',
+    definition:
+      "A permission bit on a folder: files in it can be renamed or deleted only by their owner, the folder's owner or a privileged process. /tmp has it, so users cannot remove each other's files.",
+  },
+  fifo: {
+    term: 'FIFO',
+    definition:
+      'A named pipe: a name in a folder that one program writes into and another reads from. The data passes through the kernel and is never stored on disk.',
+  },
+  spoofing: {
+    term: 'Spoofing',
+    definition:
+      'Sending network packets with a false sender address, so they seem to come from a machine that never sent them.',
+  },
+  'icmp-redirect': {
+    term: 'ICMP redirect',
+    definition:
+      'A message from a router telling a host to send traffic for some destination through a different router on the same network.',
+  },
+  'syn-flood': {
+    term: 'SYN flood',
+    definition:
+      "An attack that sends many requests to open TCP connections and never completes them, to fill the server's list of half-open connections so real clients cannot connect.",
+  },
 })

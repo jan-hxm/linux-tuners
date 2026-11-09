@@ -379,7 +379,10 @@ export function learnDoc({ entry, learn, evidence, defsByKey = {} }) {
         code(q.check),
         text(' ('),
         ...rich(q.hint),
-        text(`). Yes: ${answerText(q.yes, defsByKey)} No: ${noText(ch.choose, i, defsByKey)}`),
+        text('). Yes: '),
+        ...rich(answerText(q.yes, defsByKey)),
+        text(' No: '),
+        ...rich(noText(ch.choose, i, defsByKey)),
       ]), { ordered: true }),
       heading(3, "What you notice if it's wrong"),
       defs([

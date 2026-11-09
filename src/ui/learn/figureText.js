@@ -264,12 +264,51 @@ export function defTitle(key, defsByKey = {}) {
   return def?.title ?? ''
 }
 
-/** What an Answer tells the reader to do, as one sentence. */
+/**
+ * How a `to` answer's value reads: what the file gets (an option's
+ * sysctlValue, else its value) and the words its control shows for it (an
+ * option's label, a toggle's on or off label, a segment's label), with the
+ * leading "<value>: " or the "<value> (...)" wrapping taken off, so
+ * "madvise: only memory that asks for it" reads as madvise and "only memory
+ * that asks for it". `words` is '' when the label only repeats the value.
+ */
+export function answerValue(def, to) {
+  const option = Array.isArray(def?.options) ? def.options.find((o) => o.value === to) : null
+  const shown = String(option ? (option.sysctlValue ?? option.value) : to)
+  let label = ''
+  if (option) label = option.label ?? ''
+  else if (def?.control === 'toggle' && def.toggleLabels) label = (to === 1 ? def.toggleLabels.on : to === 0 ? def.toggleLabels.off : '') ?? ''
+  else if (Array.isArray(def?.segmentLabels)) label = def.segmentLabels[to] ?? ''
+  let words = String(label).trim()
+  for (const v of new Set([shown, String(to)])) {
+    if (words === v) words = ''
+    else if (words.startsWith(`${v}: `)) words = words.slice(v.length + 2)
+    else if (words.startsWith(`${v} (`) && words.endsWith(')')) words = words.slice(v.length + 2, -1)
+  }
+  return { shown, words: words.trim() }
+}
+
+/** A code span for RichText, or plain text when the value holds a backtick. */
+const codeSpan = (s) => (s.includes('`') ? s : `\`${s}\``)
+
+/**
+ * What an Answer tells the reader to do, as one sentence of RichText (a `to`
+ * value is a code span, and a `leave` answer's `why` is RichText already).
+ */
 export function answerText(answer, defsByKey = {}) {
   if (!answer) return ''
   if (answer.leave) return `Leave it as it is: ${String(answer.why).replace(/\.$/, '')}.`
+  const name = defName(answer.key, defsByKey)
+  if (Object.hasOwn(answer, 'to')) {
+    const def = Object.hasOwn(defsByKey, answer.key) ? defsByKey[answer.key] : null
+    const { shown, words } = answerValue(def, answer.to)
+    const said = words.replace(/\.$/, '')
+    // Words that hold brackets of their own follow a colon, not more brackets.
+    const tail = !said ? '' : /[()]/.test(said) ? `: ${said}` : ` (${said})`
+    return `Set ${name} to ${codeSpan(shown)}${tail}.`
+  }
   const verb = answer.dir === 'raise' ? 'Raise' : 'Lower'
-  return `${verb} ${defName(answer.key, defsByKey)}.`
+  return `${verb} ${name}.`
 }
 
 /** What a missing `no` on the last question leads to. */

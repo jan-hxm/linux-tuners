@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  answerText, chooseStep, curvePath, edgeGeometry, edgeRows, figureLabel, formatValue, lineLevels, noText,
+  answerText, answerValue, chooseStep, curvePath, edgeGeometry, edgeRows, figureLabel, formatValue, lineLevels, noText,
   numberedSources, partsMapLabel, pinRefs, safeHref, splitFootnotes, NOT_MEASURED, NOTHING_FITS,
 } from './figureText.js'
 import { DEMO_DEFS, DEMO_LEARN, valueFor } from '@/learn/__fixtures__/demoKit.js'
@@ -124,8 +124,37 @@ describe('chooser steps', () => {
     expect(answerText({ key: 'reserve_kbytes', dir: 'raise' }, DEMO_DEFS)).toBe('Raise demo.reserve_kbytes.')
     expect(answerText({ key: 'zzz', dir: 'lower' }, DEMO_DEFS)).toBe('Lower zzz.')
     expect(answerText({ leave: true, why: 'it is fine.' })).toBe('Leave it as it is: it is fine.')
+    expect(answerText({ key: 'mode', to: 'relaxed' }, DEMO_DEFS)).toBe('Set demo.mode to `0` (relaxed, promise more than there is).')
     expect(noText(choose, 0)).toBe('Go to question 2.')
     expect(noText(lastWithoutNo, 0)).toBe('Leave it as it is: none of these questions matched your machine.')
+  })
+})
+
+describe('answer values', () => {
+  it('shows what the file gets and the words the control shows', () => {
+    const select = { options: [{ value: 'madvise', label: 'madvise: only memory that asks' }, { value: 'cubic', label: 'cubic (kernel default)' }, { value: 'fq', label: 'fq' }, { value: 'allowed', label: 'allowed (kernel limit)' }, { value: 'blocked', sysctlValue: '0', label: '0: blocked for everyone' }] }
+    expect(answerValue(select, 'madvise')).toEqual({ shown: 'madvise', words: 'only memory that asks' })
+    expect(answerValue(select, 'cubic')).toEqual({ shown: 'cubic', words: 'kernel default' })
+    expect(answerValue(select, 'fq')).toEqual({ shown: 'fq', words: '' })
+    expect(answerValue(select, 'blocked')).toEqual({ shown: '0', words: 'blocked for everyone' })
+    const toggle = { control: 'toggle', toggleLabels: { on: 'on: merge', off: 'off: kernel default' } }
+    expect(answerValue(toggle, 1)).toEqual({ shown: '1', words: 'on: merge' })
+    expect(answerValue(toggle, 0)).toEqual({ shown: '0', words: 'off: kernel default' })
+    expect(answerValue({ segmentLabels: ['0: off', '1: all', '2: loopback'] }, 2)).toEqual({ shown: '2', words: 'loopback' })
+    expect(answerValue(null, 5)).toEqual({ shown: '5', words: '' })
+  })
+
+  it('says a to answer as a sentence with the value in code', () => {
+    const defs = {
+      sysrq: { sysctlName: 'kernel.sysrq', options: [{ value: 'reboot', sysctlValue: '176', label: '176: sync, remount, reboot (Ubuntu)' }] },
+      odd: { sysctlName: 'demo.odd', options: [{ value: 'a`b', label: 'a`b' }] },
+      plain: { sysctlName: 'demo.plain', kernelMin: 0, kernelMax: 10 },
+    }
+    // Words with brackets of their own follow a colon.
+    expect(answerText({ key: 'sysrq', to: 'reboot' }, defs)).toBe('Set kernel.sysrq to `176`: sync, remount, reboot (Ubuntu).')
+    // A backtick in the value would break the code span, so it stays plain.
+    expect(answerText({ key: 'odd', to: 'a`b' }, defs)).toBe('Set demo.odd to a`b.')
+    expect(answerText({ key: 'plain', to: 4 }, defs)).toBe('Set demo.plain to `4`.')
   })
 })
 

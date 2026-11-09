@@ -10,7 +10,7 @@ import { IMAGES } from '../../vm/lib/images.mjs'
 import { GLOSSARY } from '@/ui/glossary.js'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { TUNERS } from '@/tuners/registry.js'
-import { validateGuide, commandIssues, footnotes, visibleText, sentences, wordCount, TEMPLATE_PARTS, BANNED_WORDS } from './schema.js'
+import { validateGuide, answerValueIssue, commandIssues, footnotes, visibleText, sentences, wordCount, TEMPLATE_PARTS, BANNED_WORDS } from './schema.js'
 import { IMAGES_ORDER, GUEST_MEMORY_MIB, loadEvidence, valueFor, validateEvidence, resolvePath } from './evidence.js'
 import { LEARN as DEMO, DEFS_BY_KEY as DEMO_DEFS } from './__fixtures__/demo.learn.js'
 import { PROBES as DEMO_PROBES } from './__fixtures__/demo.probes.js'
@@ -92,7 +92,7 @@ describe('guides together', () => {
     expect(new Set(kinds)).toEqual(new Set(['stack', 'timeline', 'sideBySide']))
     for (const ch of DEMO.chapters) expect(Object.keys(ch)).toEqual(['id', 'title', ...TEMPLATE_PARTS])
     const json = JSON.stringify(DEMO)
-    for (const needle of ['"tone":"fit"', '"tone":"error"', '"bands":[', '"sub":', '"layer":', '"vmTest":', '"backedBy":{"probe"', '"leave":true', '"dir":"raise"', '"dir":"lower"', '[^', '[[', '**', '`']) {
+    for (const needle of ['"tone":"fit"', '"tone":"error"', '"bands":[', '"sub":', '"layer":', '"vmTest":', '"backedBy":{"probe"', '"leave":true', '"dir":"raise"', '"dir":"lower"', '"to":', '[^', '[[', '**', '`']) {
       expect(json, needle).toContain(needle)
     }
     expect(DEMO.chapters[0].choose.some((q) => q.no === undefined)).toBe(true)
@@ -202,6 +202,36 @@ describe('text helpers', () => {
   })
 })
 
+describe('answerValueIssue', () => {
+  const options = { options: [{ value: 'none' }, { value: 'blocked', sysctlValue: '0' }], kernelMin: 0, kernelMax: 0 }
+  const bool = { kernelMin: 0, kernelMax: 1, step: 1 }
+  const stepped = { kernelMin: 100, kernelMax: 1000, step: 100 }
+
+  it('takes an option value of a def with options, and only that', () => {
+    expect(answerValueIssue(options, 'none')).toBeNull()
+    expect(answerValueIssue(options, 'blocked')).toBeNull()
+    expect(answerValueIssue(options, '0')).toContain('not one of')
+    expect(answerValueIssue(options, 0)).toContain('not one of')
+  })
+
+  it('takes a number in the range and on the step of a numeric def', () => {
+    expect(answerValueIssue(bool, 0)).toBeNull()
+    expect(answerValueIssue(bool, 1)).toBeNull()
+    expect(answerValueIssue(stepped, 300)).toBeNull()
+    expect(answerValueIssue({ kernelMin: 0, kernelMax: 10 }, 7)).toBeNull()
+    expect(answerValueIssue(bool, 2)).toContain('outside')
+    expect(answerValueIssue(bool, -1)).toContain('outside')
+    expect(answerValueIssue(bool, 0.5)).toContain('step')
+    expect(answerValueIssue(stepped, 250)).toContain('step')
+    expect(answerValueIssue(bool, '1')).toContain('not a number')
+    expect(answerValueIssue(bool, Infinity)).toContain('not a number')
+  })
+
+  it('refuses a def with neither options nor a range', () => {
+    for (const def of [{}, null, { kernelMin: 0 }, { kernelMin: 0, kernelMax: 0 }]) expect(answerValueIssue(def, 1)).toContain('dir')
+  })
+})
+
 describe('commandIssues', () => {
   it.each([
     'cat /proc/swaps',
@@ -287,6 +317,11 @@ const RULE_CASES = [
   ['the last question without a no', (g) => delete ch0(g).choose[1].no, 'chapters[0].choose[1].no', 'shape'],
   ['an answer that is neither', (g) => (ch0(g).choose[1].no = { leave: false, why: 'x' }), 'chapters[0].choose[1].no.leave', 'shape'],
   ['an answer direction that is not raise or lower', (g) => (ch0(g).choose[0].yes.dir = 'up'), 'chapters[0].choose[0].yes.dir', 'shape'],
+  ['an answer value that is not an option', (g) => (g.chapters[3].choose[0].yes.to = 'loose'), 'chapters[3].choose[0].yes.to', 'answer value'],
+  ['an answer value by sysctlValue, not option value', (g) => (g.chapters[3].choose[0].yes.to = '0'), 'chapters[3].choose[0].yes.to', 'answer value'],
+  ['an answer value on a def with no options or range', (g) => (ch0(g).choose[0].yes = { key: 'reserve_kbytes', to: 8000 }), 'chapters[0].choose[0].yes.to', 'answer value'],
+  ['an answer with both a value and a direction', (g) => (g.chapters[3].choose[0].yes.dir = 'raise'), 'chapters[3].choose[0].yes.dir', 'shape'],
+  ['an answer value with an unknown key', (g) => (g.chapters[3].choose[0].yes.key = 'nope'), 'chapters[3].choose[0].yes.key', 'def key'],
   ['a two-line symptom', (g) => (ch0(g).symptoms.low = 'One.\nTwo.'), 'chapters[0].symptoms.low', 'shape'],
   ['an empty picture limit', (g) => (ch0(g).picture.limit = ' '), 'chapters[0].picture.limit', 'shape'],
   // budgets

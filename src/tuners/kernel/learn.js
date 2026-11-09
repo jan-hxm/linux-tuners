@@ -337,14 +337,14 @@ export const LEARN = {
         {
           q: 'Is the machine sometimes so frozen that only the power button helps, and are SysRq letters ignored?',
           check: 'sysctl kernel.sysrq',
-          hint: 'A value of 0 means SysRq is off. 176 allows sync, remount read-only and reboot.',
-          yes: { key: 'sysrq', dir: 'raise' },
+          hint: 'A value of 0 means SysRq is off. 176 allows sync, remount read-only and reboot, enough to restart a hung machine.',
+          yes: { key: 'sysrq', to: 'reboot' },
         },
         {
           q: 'Can people you do not trust reach the keyboard or the serial console?',
           check: 'sysctl kernel.sysrq',
           hint: 'At 1 anyone there can reboot the machine or end every process.',
-          yes: { key: 'sysrq', dir: 'lower' },
+          yes: { key: 'sysrq', to: 'off' },
           no: { leave: true, why: 'The setting only matters once a machine hangs, and a distribution default is a reasonable start.' },
         },
       ],

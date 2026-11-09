@@ -52,6 +52,20 @@ export const GUIDES = {
     learn: () => import('../tuners/swap/learn.js').then((m) => m.LEARN),
     probes: () => import('../tuners/swap/probes.js').then((m) => m.PROBES),
   },
+  networking: {
+    tunerId: 'network',
+    route: {
+      title: 'How Linux handles network connections | linux-tuners.dev',
+      description:
+        'A beginner guide to the Linux network stack: socket buffers, listen queues, congestion control, ports, TIME-WAIT and connection tracking.',
+      ogTitle: 'How Linux handles network connections',
+      priority: 0.8,
+      changefreq: 'monthly',
+      jsonLdType: 'TechArticle',
+    },
+    learn: () => import('../tuners/network/learn.js').then((m) => m.LEARN),
+    probes: () => import('../tuners/network/probes.js').then((m) => m.PROBES),
+  },
 }
 
 /** The /learn index's own route metadata; the route exists only while a guide is live. */

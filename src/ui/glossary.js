@@ -150,4 +150,40 @@ export const GLOSSARY = Object.freeze({
     definition:
       'The kernel stopping the whole machine on purpose because it cannot safely go on. Every program stops with it; the kernel.panic setting decides whether the machine then reboots on its own.',
   },
+  // network guide
+  socket: {
+    term: 'Socket',
+    definition:
+      'The kernel object a program uses for one network connection or one listening port. Each socket has a receive buffer for data that has arrived and a send buffer for data on its way out.',
+  },
+  handshake: {
+    term: 'TCP handshake',
+    definition:
+      'The three packets that open a TCP connection: the client sends SYN, the server answers SYN-ACK, and the client confirms with ACK. Only then does the connection count as established.',
+  },
+  'congestion-control': {
+    term: 'Congestion control',
+    definition:
+      'How TCP decides how much data a connection may have in flight before replies come back, so it fills the path without overflowing it. The kernel can hold several algorithms, such as cubic and reno.',
+  },
+  qdisc: {
+    term: 'Queueing discipline (qdisc)',
+    definition:
+      'The queue in front of a network interface that holds packets waiting to leave and decides which goes next. tc qdisc show lists the ones each interface has.',
+  },
+  mtu: {
+    term: 'MTU',
+    definition:
+      'Maximum transmission unit: the largest packet a network link carries in one piece. A path through tunnels or VPNs can have a smaller one than the links at either end.',
+  },
+  'time-wait': {
+    term: 'TIME-WAIT',
+    definition:
+      'The state a TCP connection stays in for a while after it closes, so late packets from it cannot be mistaken for a new connection between the same addresses and ports.',
+  },
+  nat: {
+    term: 'NAT',
+    definition:
+      'Network address translation: rewriting the addresses or ports of packets on their way through, as home routers and container hosts do. The kernel applies the same rewrite to every packet of a connection.',
+  },
 })

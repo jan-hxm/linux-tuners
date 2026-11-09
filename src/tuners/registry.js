@@ -187,6 +187,7 @@ export const TUNERS = [
   {
     id: 'network',
     status: 'live',
+    guide: { slug: 'networking', status: 'draft' },
     question: 'Does it drop connections under load, or fall short of the link speed?',
     path: '/network',
     navLabel: 'Network',

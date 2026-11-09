@@ -56,11 +56,13 @@ export const LEARN = {
       figure: {
         kind: 'compare',
         title: 'The two ceilings on processes and threads',
+        kernels: true,
         axis: 'how many',
         scale: 'log',
         bars: [
           { id: 'pid', label: 'Highest process ID', value: { probe: 'kernel.pidMax', unit: '' }, does: 'Process IDs wrap at this number, so it caps processes and threads.' },
           { id: 'threads', label: 'Threads, system-wide', value: { probe: 'kernel.threadsMax', unit: '' }, does: 'Most threads and processes together, sized from RAM at boot.' },
+          { id: 'jvm', label: 'A busy JVM host', value: { example: 15000, unit: '', label: 'Busy JVM host threads' }, does: 'An example of a host running many Java services, about half of an old 32,768 ceiling.' },
         ],
         pins: [{ key: 'pid_max', bar: 'pid' }, { key: 'threads_max', bar: 'threads' }],
       },
@@ -122,6 +124,7 @@ export const LEARN = {
         ],
         bars: [
           { id: 'user-keys', label: 'Key count', group: 'users', value: { probe: 'kernel.maxkeys', unit: 'keys' }, does: 'Past this many keys, adding one fails with EDQUOT, and a second quota limits their bytes.' },
+          { id: 'busy-keys', label: 'A busy host user', group: 'users', value: { example: 180, unit: 'keys', label: 'Busy host user keys' }, does: 'An example of a user on a busy container host, close enough to the limit that a few more keys fail.' },
           { id: 'root-keys', label: 'Key count', group: 'root', value: { probe: 'kernel.rootMaxkeys', unit: 'keys' }, does: 'The same quota for root, set by kernel.keys.root_maxkeys.' },
         ],
         pins: [{ key: 'maxkeys', bar: 'user-keys' }],
@@ -254,6 +257,7 @@ export const LEARN = {
       figure: {
         kind: 'modes',
         title: 'Commands the keyboard may send',
+        kernels: true,
         rows: [
           {
             id: 'commands', label: 'Allowed commands', bits: true, allValues: true, pin: 'sysrq', value: { probe: 'kernel.sysrq', unit: '' },

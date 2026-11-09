@@ -58,7 +58,7 @@ const GUIDE_CASES = Object.entries(LEARN_MODULES).map(([file, mod]) => {
  * Every other rule holds for them. The list only shrinks: take a guide out
  * when it moves.
  */
-const FIGURES_V1 = new Set(['filesystem', 'hugepages', 'kernel', 'network', 'security', 'systemd', 'sysv-ipc'])
+const FIGURES_V1 = new Set(['filesystem', 'hugepages', 'kernel', 'network', 'security', 'systemd'])
 
 const DEMO_CTX = { defsByKey: DEMO_DEFS, probes: DEMO_PROBES, evidence: FIXTURE_EVIDENCE, glossary: GLOSSARY, status: 'live' }
 const ALL_CASES = [{ name: 'demo (fixture, live)', guide: DEMO, ctx: DEMO_CTX }, ...GUIDE_CASES]

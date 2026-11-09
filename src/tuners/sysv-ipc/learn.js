@@ -59,40 +59,20 @@ export const LEARN = {
         limit: 'A whiteboard has one writer at a time by habit. Shared memory does not make programs take turns, so they often pair it with the counters in a later chapter.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Where a shared memory segment sits',
-        layers: [
-          {
-            id: 'programs',
-            label: 'Your programs',
-            kind: 'nodes',
-            nodes: [
-              { id: 'a', text: 'Program A', sub: 'writes into the segment' },
-              { id: 'b', text: 'Program B', sub: 'reads what A wrote' },
-            ],
-          },
+        kind: 'compare',
+        title: 'The segment count limit',
+        axis: 'segments',
+        scale: 'log',
+        bars: [
           {
             id: 'segments',
-            label: 'Segments',
-            kind: 'nodes',
-            nodes: [{ id: 'segment', text: 'A shared memory segment', sub: 'one block, one identifier', probe: 'sysv-ipc.sysvipcShm' }],
-          },
-          {
-            id: 'limits',
-            label: 'Limits',
-            kind: 'nodes',
-            nodes: [
-              { id: 'count', text: 'How many segments', sub: 'kernel.shmmni' },
-              { id: 'size', text: 'Size of one segment', sub: 'kernel.shmmax, not offered' },
-              { id: 'total', text: 'All segments together', sub: 'kernel.shmall, not offered' },
-            ],
-            values: [
-              { probe: 'sysv-ipc.shmmni', unit: 'segments' },
-              { probe: 'sysv-ipc.shmmax', unit: 'bytes' },
-              { probe: 'sysv-ipc.shmall', unit: 'pages' },
-            ],
+            label: 'Segments allowed',
+            tone: 'fit',
+            value: { probe: 'sysv-ipc.shmmni', unit: 'segments' },
+            does: 'The most segments at once; shmmax and shmall are not offered, as both default to no limit.',
           },
         ],
+        pins: [{ key: 'shmmni', bar: 'segments' }],
       },
       body: [
         'Shared memory lets several programs use one region of memory[^sysv]. A program asks for a [[segment|shm-segment]] with `shmget()`. The call returns the identifier of the segment for a given key, and a new segment starts filled with zeros[^shmget].',
@@ -100,7 +80,7 @@ export const LEARN = {
         'Two older limits barely matter now. `kernel.shmmax` caps the size of one segment, and `kernel.shmall` caps all segments together, counted in pages[^shmmax][^shmall]. Since Linux 3.16 both default to effectively no limit[^shmget-notes], so this tuner does not offer them.',
       ],
       pins: [
-        { key: 'shmmni', layer: 'limits', here: 'The most segments that may exist at once. A full list makes shmget() fail with ENOSPC. Raise it only when software you run asks for more. Most machines don\'t need to change this.' },
+        { key: 'shmmni', layer: 'segments', here: 'The most segments that may exist at once. A full list makes shmget() fail with ENOSPC. Raise it only when software you run asks for more. Most machines don\'t need to change this.' },
       ],
       choose: [
         {
@@ -139,18 +119,19 @@ export const LEARN = {
         limit: 'The cleaners cannot tell a forgotten board from one a colleague means to come back to. The kernel cannot either, so the rule can remove a board somebody still wanted.',
       },
       figure: {
-        kind: 'timeline',
-        title: 'Life of a segment shared by two programs',
-        schematic: true,
-        lines: [{ id: 'forced', label: 'Removal when unused (1 = on)', value: { probe: 'sysv-ipc.shmRmidForced', unit: '' } }],
-        // Level is how many programs have the segment attached: none, one, two.
-        curve: [[0, 0], [0.1, 0], [0.15, 0.3], [0.3, 0.3], [0.4, 0.6], [0.55, 0.6], [0.6, 0.3], [0.75, 0.3], [0.8, 0], [1, 0]],
-        events: [
-          { at: 0.15, label: 'Program A creates the segment and attaches' },
-          { at: 0.4, label: 'Program B attaches too' },
-          { at: 0.6, label: 'Program B detaches' },
-          { at: 0.8, label: 'Program A detaches or exits, and the segment is destroyed if the setting is on', tone: 'fit' },
-          { at: 0.95, label: 'If the setting is off, the segment stays until someone removes it', tone: 'error' },
+        kind: 'modes',
+        title: 'Removal of unused segments',
+        rows: [
+          {
+            id: 'rmid',
+            label: 'Remove when unused',
+            pin: 'shm_rmid_forced',
+            value: { probe: 'sysv-ipc.shmRmidForced', unit: '' },
+            options: [
+              { value: 0, label: 'Off', does: 'A segment stays until someone removes it, even with nobody attached.' },
+              { value: 1, label: 'On', does: 'The kernel destroys a segment once its last program detaches or exits.' },
+            ],
+          },
         ],
       },
       body: [
@@ -159,7 +140,7 @@ export const LEARN = {
         'When `kernel.shm_rmid_forced` is 1, the kernel destroys a segment once its attach count reaches zero, after a detach or when a process ends. It also destroys segments that were created but never attached, when the creating process exits[^rmid]. The manual page warns that this can break applications[^proc-kernel].',
       ],
       pins: [
-        { key: 'shm_rmid_forced', layer: 'forced', here: 'Off by default. On, the kernel destroys a segment when its last user leaves. That frees forgotten ones but breaks software that leaves a segment for a later program. Leave it off unless you know the software.' },
+        { key: 'shm_rmid_forced', layer: 'rmid', here: 'Off by default. On, the kernel destroys a segment when its last user leaves. That frees forgotten ones but breaks software that leaves a segment for a later program. Leave it off unless you know the software.' },
       ],
       choose: [
         {
@@ -200,28 +181,17 @@ export const LEARN = {
         limit: 'A car park has one sign. The kernel groups semaphores into sets, and a program can change several signs of a set in one step.',
       },
       figure: {
-        kind: 'stack',
+        kind: 'compare',
         title: 'The four semaphore limits',
-        layers: [
-          {
-            id: 'setting',
-            label: 'kernel.sem',
-            kind: 'nodes',
-            nodes: [{ id: 'order', text: 'Four numbers, in this order', sub: 'SEMMSL, SEMMNS, SEMOPM, SEMMNI' }],
-            values: [{ probe: 'sysv-ipc.sem', unit: '' }],
-          },
-          {
-            id: 'system',
-            label: 'The machine',
-            kind: 'nodes',
-            nodes: [
-              { id: 'all-sets', text: 'All semaphore sets', sub: 'SEMMNI at most', probe: 'sysv-ipc.sysvipcSem' },
-              { id: 'all-semaphores', text: 'All semaphores together', sub: 'SEMMNS at most' },
-            ],
-          },
-          { id: 'set', label: 'One set', kind: 'nodes', nodes: [{ id: 'one-set', text: 'A set of semaphores', sub: 'SEMMSL at most' }] },
-          { id: 'call', label: 'One call', kind: 'nodes', nodes: [{ id: 'one-call', text: 'A semop() call', sub: 'SEMOPM operations at most' }] },
+        axis: 'count',
+        scale: 'log',
+        bars: [
+          { id: 'per-set', label: 'Per set', value: { probe: 'sysv-ipc.sem', path: '0', unit: '', label: 'SEMMSL' }, does: 'SEMMSL: the most semaphores in one set.' },
+          { id: 'in-total', label: 'In total', value: { probe: 'sysv-ipc.sem', path: '1', unit: '', label: 'SEMMNS' }, does: 'SEMMNS: the most semaphores in all sets together.' },
+          { id: 'per-call', label: 'Per call', value: { probe: 'sysv-ipc.sem', path: '2', unit: '', label: 'SEMOPM' }, does: 'SEMOPM: the most operations in one semop() call.' },
+          { id: 'sets', label: 'Sets', value: { probe: 'sysv-ipc.sem', path: '3', unit: '', label: 'SEMMNI' }, does: 'SEMMNI: the most semaphore sets.' },
         ],
+        pins: [{ key: 'sem', bar: 'per-set' }],
       },
       body: [
         'A [[semaphore]] is a counter that programs use to take turns. Semaphores come in groups called sets, and `semop()` applies operations to one set[^semop]. Adding to a counter never blocks. Taking away more than it holds makes the caller wait[^semop]. The operations of one call happen together or not at all[^semop].',
@@ -229,7 +199,7 @@ export const LEARN = {
         'Going over a limit makes a call fail. `semget()` fails with EINVAL for too many semaphores in a set, and with ENOSPC past SEMMNI or SEMMNS[^semget-err]. `semop()` fails with E2BIG past SEMOPM[^semop-err]. Before Linux 3.19 SEMMSL, SEMOPM and SEMMNI defaulted to 250, 32 and 128; now they are 32000, 500 and 32000[^semget-notes][^semop-notes].',
       ],
       pins: [
-        { key: 'sem', layer: 'setting', here: 'Four numbers: SEMMSL, SEMMNS, SEMOPM, SEMMNI, in that order. Write all four. Old installation guides list numbers below the defaults, which only lower the limits. Raise one only when software asks.' },
+        { key: 'sem', layer: 'per-set', here: 'Four numbers: SEMMSL, SEMMNS, SEMOPM, SEMMNI, in that order. Write all four. Old installation guides list numbers below the defaults, which only lower the limits. Raise one only when software asks.' },
       ],
       choose: [
         {
@@ -279,22 +249,22 @@ export const LEARN = {
             id: 'sender',
             label: 'A program sends',
             kind: 'nodes',
-            nodes: [{ id: 'send', text: 'One message', sub: 'text up to kernel.msgmax bytes' }],
-            values: [{ probe: 'sysv-ipc.msgmax', unit: 'bytes' }],
+            nodes: [{ id: 'send', text: 'One message', sub: 'Up to msgmax bytes', does: 'The text of one message may be up to kernel.msgmax bytes long.' }],
+            values: [{ probe: 'sysv-ipc.msgmax', unit: 'bytes', label: 'msgmax' }],
           },
           {
             id: 'queue',
             label: 'One queue',
             kind: 'nodes',
-            nodes: [{ id: 'one-queue', text: 'A message queue', sub: 'holds kernel.msgmnb bytes to start', probe: 'sysv-ipc.sysvipcMsg' }],
-            values: [{ probe: 'sysv-ipc.msgmnb', unit: 'bytes' }],
+            nodes: [{ id: 'one-queue', text: 'A message queue', sub: 'Starts at msgmnb', does: 'A new queue holds kernel.msgmnb bytes of message text to start.', probe: 'sysv-ipc.sysvipcMsg' }],
+            values: [{ probe: 'sysv-ipc.msgmnb', unit: 'bytes', label: 'msgmnb' }],
           },
           {
             id: 'machine',
             label: 'The machine',
             kind: 'nodes',
-            nodes: [{ id: 'all-queues', text: 'All message queues', sub: 'at most kernel.msgmni' }],
-            values: [{ probe: 'sysv-ipc.msgmni', unit: 'queues' }],
+            nodes: [{ id: 'all-queues', text: 'All message queues', sub: 'At most msgmni', does: 'The machine allows at most kernel.msgmni queues.' }],
+            values: [{ probe: 'sysv-ipc.msgmni', unit: 'queues', label: 'msgmni' }],
           },
         ],
       },

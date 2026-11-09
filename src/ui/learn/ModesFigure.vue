@@ -42,11 +42,13 @@ const hasPins = computed(() => props.figure.rows.some((r) => r.pin))
 const ROW = computed(() => (hasPins.value ? 'md:grid-cols-[9rem_minmax(0,1fr)_auto]' : 'md:grid-cols-[9rem_minmax(0,1fr)]'))
 const on = (id) => id !== null && id === props.highlight
 
-const SEG = 'inline-flex min-h-8 items-center px-2.5 text-[13px] leading-tight'
+// Each segment draws its own border, so a row that wraps leaves no filled
+// gap after its last segment.
+const SEG = 'inline-flex min-h-8 items-center border-[1.5px] px-2.5 text-[13px] leading-tight'
 const segClass = (s) => [
   SEG,
-  s.lit ? 'bg-ink font-medium text-paper' : 'bg-paper text-ink-2',
-  s.extra ? 'border-[1.5px] border-dashed border-paper font-mono' : '',
+  s.lit ? 'border-ink bg-ink font-medium text-paper' : 'border-rule-strong bg-paper text-ink-2',
+  s.extra ? 'border-dashed font-mono' : '',
 ]
 const segTip = (s) => (s.lit ? 'Set on this kernel.' : '')
 </script>
@@ -87,7 +89,7 @@ const segTip = (s) => (s.lit ? 'Set on this kernel.' : '')
             <span v-else aria-hidden="true" class="text-[15px] leading-snug text-ink" :data-row-label="r.id">{{ r.label }}</span>
           </div>
           <div class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-            <div class="flex max-w-full flex-wrap gap-px border-[1.5px] border-ink bg-ink">
+            <div class="flex max-w-full flex-wrap gap-1">
               <template v-for="s in r.segments" :key="String(s.value)">
                 <FigureTip
                   v-if="s.does"

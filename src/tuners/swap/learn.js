@@ -6,11 +6,34 @@
  * `sources`; `[[term]]` names an entry in ui/glossary.js. Figure labels
  * name a part in a few words; what it does is its `does`, shown as a
  * tooltip on the page and inline on the static page.
+ *
+ * The settings' defaults are measured on the test VMs. Sizes that would only
+ * show an idle 3 GiB guest are examples of a busy machine instead (`BUSY`),
+ * which the page says are examples. No figure shows the kernel buttons: the
+ * watermarks differ a little between the images, which no chapter is about.
  */
 
 /** Pages of 4 kB: the page size on x86-64, which every VM test image runs. */
 const KB_PER_PAGE = 4
 const pages = (path) => ({ probe: 'swap.zoneWatermarks', path, unit: 'pages' })
+
+/** kB in one GiB, for the example sizes. */
+const GIB = 1024 * 1024
+/**
+ * One busy machine, the example behind the RAM and commit figures: 16 GiB of
+ * RAM, 9 GiB of it program memory and 5 GiB file cache, 4 GiB of swap, and
+ * more promised than the commit limit allows, which mode 0 permits. The
+ * commit limit follows the formula with the measured overcommit_ratio of 50:
+ * 4 GiB of swap plus half of 16 GiB.
+ */
+const BUSY = {
+  ram: { example: 16 * GIB, unit: 'kB', label: 'RAM' },
+  programs: { example: 9 * GIB, unit: 'kB', label: 'Program memory' },
+  cache: { example: 5 * GIB, unit: 'kB', label: 'File cache' },
+  swap: { example: 4 * GIB, unit: 'kB', label: 'Swap' },
+  committed: { example: 14 * GIB, unit: 'kB', label: 'Promised so far' },
+  limit: { example: 12 * GIB, unit: 'kB', label: 'Commit limit' },
+}
 
 const VM = 'https://docs.kernel.org/admin-guide/sysctl/vm.html'
 const CONCEPTS = 'https://docs.kernel.org/admin-guide/mm/concepts.html'
@@ -29,8 +52,8 @@ export const LEARN = {
       { id: 'programs', title: 'Your programs', does: 'They ask the kernel for memory, and read and write files.', col: 1, row: 1 },
       { id: 'manager', title: 'Memory manager', does: 'The part of the kernel that hands out memory, and decides what to free when it runs short.', col: 1, row: 2, probe: 'swap.vmSysctls' },
       { id: 'kswapd', title: 'kswapd', does: 'Frees memory in the background, before programs have to wait.', col: 2, row: 2, probe: 'swap.kswapd' },
-      { id: 'program-memory', title: 'Program memory', does: "Each program's own working data, with no copy on disk.", col: 1, row: 3, probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' },
-      { id: 'file-cache', title: 'File cache', does: 'Copies of files kept in RAM, so the next read skips the disk.', col: 2, row: 3, probe: 'swap.memCache', path: 'Cached', unit: 'kB' },
+      { id: 'program-memory', title: 'Program memory', does: "Each program's own working data, with no copy on disk.", col: 1, row: 3 },
+      { id: 'file-cache', title: 'File cache', does: 'Copies of files kept in RAM, so the next read skips the disk.', col: 2, row: 3 },
       { id: 'swap', title: 'Swap', does: 'Space where program memory waits when RAM runs short.', col: 1, row: 4, probe: 'swap.swaps' },
       { id: 'files', title: 'Your files', does: 'What the file cache copies, and where changes are written back.', col: 2, row: 4 },
     ],
@@ -48,10 +71,10 @@ export const LEARN = {
     ],
     scale: {
       label: 'RAM',
-      total: { probe: 'swap.memSize', path: 'MemTotal', unit: 'kB' },
+      total: BUSY.ram,
       segments: [
-        { id: 'program-memory', label: 'Program memory', value: { probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' }, does: 'Memory programs wrote to that has no file behind it, `AnonPages` in /proc/meminfo.' },
-        { id: 'file-cache', label: 'File cache', value: { probe: 'swap.memCache', path: 'Cached', unit: 'kB' }, does: 'Copies of files kept in RAM, `Cached` in /proc/meminfo.' },
+        { id: 'program-memory', label: 'Program memory', value: BUSY.programs, does: 'Memory programs wrote to that has no file behind it, `AnonPages` in /proc/meminfo.' },
+        { id: 'file-cache', label: 'File cache', value: BUSY.cache, does: 'Copies of files kept in RAM, `Cached` in /proc/meminfo.' },
         { id: 'rest', label: 'Free or kernel', does: 'Free memory, and what the kernel holds for itself, such as its own caches.' },
       ],
     },
@@ -85,10 +108,11 @@ export const LEARN = {
             label: 'RAM',
             kind: 'nodes',
             nodes: [
-              { id: 'anon', text: 'Program memory', does: 'It has no copy on disk, so it goes to swap before its RAM is reused.', probe: 'swap.memAnon', path: 'AnonPages', unit: 'kB' },
-              { id: 'cache', text: 'File cache', does: 'A copy of a file, which the kernel can drop and read again.', probe: 'swap.memCache', path: 'Cached', unit: 'kB' },
+              { id: 'anon', text: 'Program memory', does: 'It has no copy on disk, so it goes to swap before its RAM is reused.' },
+              { id: 'cache', text: 'File cache', does: 'A copy of a file, which the kernel can drop and read again.' },
               { id: 'names', text: 'File names', does: 'Names and details of files the kernel looked up: dentries and inodes.', probe: 'swap.dentryState' },
             ],
+            values: [BUSY.programs, BUSY.cache],
           },
           {
             id: 'disk',
@@ -283,6 +307,8 @@ export const LEARN = {
           { id: 'flushing', label: 'background writing', from: 'background', to: 'ceiling', tone: 'fit', does: 'The flusher threads write changed data out while programs keep going.' },
           { id: 'throttled', label: 'writers must help', from: 'ceiling', tone: 'error', does: 'A program that keeps writing must write data out itself, so it slows down.' },
         ],
+        // The tank filled to an example amount, between the two measured marks.
+        level: { label: 'example fill', value: { example: 14, unit: '%', label: 'Dirty data now' }, does: 'An example amount of changed data: past background, so the flushers write while programs keep going.' },
         // Schematic: level 1 is the background mark and 2 the limit, as measured.
         curve: {
           points: [[0, 0.2], [0.1, 0.2], [0.3, 1], [0.5, 1.8], [0.6, 2], [0.75, 2], [0.85, 1.2], [1, 0.4]],
@@ -372,26 +398,20 @@ export const LEARN = {
             label: 'What has been promised',
             kind: 'nodes',
             nodes: [
-              { id: 'committed', text: 'Promised so far', sub: 'Committed_AS', does: 'Everything promised so far, used or not.', probe: 'swap.memCommit', path: 'Committed_AS', unit: 'kB' },
-              { id: 'limit', text: 'Commit limit', sub: 'CommitLimit', does: 'The limit mode 2 enforces: all of swap plus a share of RAM.', probe: 'swap.memCommit', path: 'CommitLimit', unit: 'kB' },
+              { id: 'committed', text: 'Promised so far', sub: 'Committed_AS', does: 'Everything promised so far, used or not.' },
+              { id: 'limit', text: 'Commit limit', sub: 'CommitLimit', does: 'The limit mode 2 enforces: all of swap plus a share of RAM.' },
             ],
-            values: [
-              { probe: 'swap.memCommit', path: 'Committed_AS', unit: 'kB' },
-              { probe: 'swap.memCommit', path: 'CommitLimit', unit: 'kB' },
-            ],
+            values: [BUSY.committed, BUSY.limit],
           },
           {
             id: 'memory',
             label: 'RAM and swap',
             kind: 'nodes',
             nodes: [
-              { id: 'ram', text: 'RAM', probe: 'swap.memSize', path: 'MemTotal', unit: 'kB' },
+              { id: 'ram', text: 'RAM' },
               { id: 'swap', text: 'Swap', probe: 'swap.swaps' },
             ],
-            values: [
-              { probe: 'swap.memSize', path: 'MemTotal', unit: 'kB' },
-              { probe: 'swap.memSize', path: 'SwapTotal', unit: 'kB' },
-            ],
+            values: [BUSY.ram, BUSY.swap],
           },
         ],
       },

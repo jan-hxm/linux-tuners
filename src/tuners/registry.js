@@ -235,6 +235,7 @@ export const TUNERS = [
       why: 'The I/O scheduler and read-ahead for each kind of disk, where the kernel picks one default for all of them.',
       defaultsFine: "Machines with a single kind of disk where the kernel's default scheduler already suits the workload.",
     },
+    guide: { slug: 'disk-io', status: 'draft' },
   },
   {
     id: 'hugepages',

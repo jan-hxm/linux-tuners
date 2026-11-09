@@ -19,7 +19,7 @@ import { computed, useId } from 'vue'
 import FigureTip from './FigureTip.vue'
 import TipStrip from './TipStrip.vue'
 import FigurePin from './FigurePin.vue'
-import { compareAxisText, compareCaption, compareLabel, compareModel, comparePinPlace, defName, tipValue } from './figureText.js'
+import { compareAxisText, compareCaption, compareLabel, compareModel, comparePinPlace, defName, isExample, tipValue } from './figureText.js'
 
 const props = defineProps({
   /** Figure of kind 'compare' */
@@ -64,6 +64,11 @@ const anchored = (x) => (x > 0.55 ? { marginRight: pct(1 - x), justifyContent: '
 const tickStyle = (x) => (x < 0.06 ? { left: '0' } : x > 0.94 ? { right: '0' } : { left: pct(x), transform: 'translateX(-50%)' })
 const BAR_FILL = { fit: 'bg-fit', error: 'bg-error' }
 const MARK_LINE = { fit: 'bg-fit', error: 'bg-error' }
+// An example bar is hatched in its tone with a dashed edge, so it never
+// reads as a measured one (Design.md "Learning pages > Figures").
+const HATCH_TOKEN = { fit: '--t-fit', error: '--t-error' }
+const exampleFill = (tone) =>
+  `repeating-linear-gradient(135deg, rgb(var(${HATCH_TOKEN[tone] ?? '--t-ink'})) 0 2px, rgb(var(--t-paper)) 2px 6px)`
 const MARK_TEXT = { fit: 'text-fit-text', error: 'text-error' }
 const on = (id) => id !== null && id === props.highlight
 const tipOf = (x) => tipValue(x.value, props.evidence, props.sameOn)
@@ -146,8 +151,9 @@ const pinLabel = (key) => {
             <div
               v-if="b.x !== null"
               class="absolute inset-y-2 left-0 border-[1.5px] border-ink"
-              :class="BAR_FILL[b.tone] ?? 'bg-ink'"
-              :style="{ width: pct(b.x) }"
+              :class="isExample(b.value) ? 'border-dashed' : (BAR_FILL[b.tone] ?? 'bg-ink')"
+              :style="isExample(b.value) ? { width: pct(b.x), backgroundImage: exampleFill(b.tone) } : { width: pct(b.x) }"
+              :data-example="isExample(b.value) || undefined"
               data-bar-fill
             />
             <div
@@ -165,7 +171,7 @@ const pinLabel = (key) => {
             />
           </div>
           <div class="hidden flex-col items-start gap-1 py-1 md:flex">
-            <span aria-hidden="true" class="font-mono text-[13px] text-ink-2" data-bar-value>{{ b.text }}</span>
+            <span aria-hidden="true" class="font-mono text-[13px] text-ink-2" data-bar-value>{{ b.text }}<span v-if="isExample(b.value)" class="font-sans text-quiet"> example</span></span>
             <FigurePin
               v-for="key in b.pins"
               :key="key"

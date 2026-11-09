@@ -248,3 +248,21 @@ describe('ChapterView with a v3 figure', () => {
     expect(panel).toContain('Smallest: 4 KiB (4,096 bytes)')
   })
 })
+
+describe('example bars', () => {
+  it('draw hatched with a dashed edge and say "example" beside the value', () => {
+    const figure = {
+      kind: 'compare', title: 'Limits', axis: 'files', scale: 'linear',
+      bars: [
+        { id: 'limit', label: 'Limit', value: { example: 100, unit: '', label: 'Limit' } },
+        { id: 'use', label: 'In use', value: { example: 40, unit: '', label: 'In use' } },
+      ],
+    }
+    const w = mount(CompareFigure, { props: { figure, evidence: (ref) => ({ status: 'ok', value: ref.example }) } })
+    const fill = w.get('[data-bar="use"] [data-bar-fill]')
+    expect(fill.attributes('data-example')).toBe('true')
+    expect(fill.classes()).toContain('border-dashed')
+    expect(w.get('[data-bar="use"] [data-bar-value]').text()).toContain('example')
+    w.unmount()
+  })
+})

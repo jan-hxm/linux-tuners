@@ -680,9 +680,11 @@ export function compareModel(figure, evidence) {
       measured = true
       const base = isByteUnit(unit) ? 2 : 10
       const lg = (v) => Math.log(v) / Math.log(base)
-      // One power below the smallest value when it is a power itself, so its bar has a length.
       const least = lg(Math.min(...pos))
-      const lo = Math.abs(least - Math.round(least)) < 1e-9 ? Math.round(least) - 1 : Math.floor(least)
+      // Start one power lower when the smallest value sits on a power or
+      // within a fifth of a power above it (1,024 on a base-10 axis), so its
+      // bar has a visible length instead of a sliver.
+      const lo = least - Math.floor(least + 1e-9) < 0.2 ? Math.floor(least + 1e-9) - 1 : Math.floor(least)
       let hi = Math.ceil(lg(Math.max(...pos)) - 1e-9)
       if (hi <= lo) hi = lo + 1
       from = base ** lo

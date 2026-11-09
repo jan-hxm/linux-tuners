@@ -282,3 +282,17 @@ describe('any v3 figure', () => {
     for (const image of IMAGE_IDS) for (const fig of [compare, tree, modes]) expect(figureLabel(fig, on(image), { defsByKey: DEMO_DEFS })).not.toContain('—')
   })
 })
+
+describe('compare log axis start', () => {
+  const fig = (values) => ({
+    kind: 'compare', title: 't', axis: 'files', scale: 'log',
+    bars: values.map((v, i) => ({ id: `b${i}`, label: `B${i}`, value: { example: v, unit: '', label: `B${i}` } })),
+  })
+  const ex = (ref) => ({ status: 'ok', value: ref.example })
+  it('starts a power lower when the smallest value is just above a power, so its bar has a length', () => {
+    // 1,024 sits a fifth of a power above 1,000: the axis starts at 100.
+    expect(compareModel(fig([1024, 524288]), ex).from).toBe(100)
+    // 3,000 is well above 1,000: the axis starts at 1,000.
+    expect(compareModel(fig([3000, 524288]), ex).from).toBe(1000)
+  })
+})

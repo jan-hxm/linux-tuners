@@ -23,6 +23,20 @@ const disks = (probe) => [
   { id: 'virtio', text: 'Virtual disk', sub: 'vda', probe: `block-io.virtio${probe}` },
 ]
 
+/** One modes row per disk, lit from the attribute's probe. */
+const diskRows = (probe, options, pinDisk, key) =>
+  disks(probe).map((d) => ({
+    id: d.id,
+    label: d.text,
+    ...(d.id === pinDisk ? { pin: key } : {}),
+    value: { probe: d.probe, unit: '' },
+    options,
+  }))
+
+/** One compare bar per disk, from the attribute's probe. */
+const diskBars = (probe, unit) =>
+  disks(probe).map((d) => ({ id: d.id, label: d.text, value: { probe: d.probe, unit } }))
+
 export const LEARN = {
   slug: 'disk-io',
   title: 'How Linux reads and writes disks',
@@ -62,29 +76,17 @@ export const LEARN = {
         limit: 'A librarian can look at the shelves. The kernel cannot see inside the disk, so it believes the flag, even where a virtual disk reports it wrong.',
       },
       figure: {
-        kind: 'stack',
+        kind: 'modes',
         title: 'What each disk reports',
-        layers: [
-          { id: 'disks', label: 'Your disks', kind: 'nodes', nodes: disks('Rotational') },
-          {
-            id: 'flag',
-            label: 'queue/rotational',
-            kind: 'bands',
-            bands: [
-              { id: 'spins', text: '1: rotational', does: 'A disk that spins and moves a head.' },
-              { id: 'flash', text: '0: non-rotational', does: 'Flash with no moving parts.' },
-            ],
-          },
-          {
-            id: 'rules',
-            label: 'Who writes it',
-            kind: 'nodes',
-            nodes: [
-              { id: 'driver', text: 'The disk itself', sub: 'when found', does: 'The flag is set when the disk is found.' },
-              { id: 'udevd', text: 'udev', sub: 'your rule', does: 'Your rule writes the flag when the disk appears.', probe: 'block-io.udevd' },
-            ],
-          },
-        ],
+        rows: diskRows(
+          'Rotational',
+          [
+            { value: 1, label: 'Spins', does: 'A disk that spins and moves a head.' },
+            { value: 0, label: 'Flash', does: 'Flash with no moving parts.' },
+          ],
+          'virtio',
+          'rotational',
+        ),
       },
       body: [
         'The kernel reaches each disk through the [[block layer]], which keeps settings for every disk under `/sys/block/<disk>/queue`[^abi-rot]. One of them, rotational, says whether the disk is of rotational type[^abi-rot]. A hard disk has moving parts, so random access costs it time; flash has no such penalty[^background].',
@@ -128,23 +130,19 @@ export const LEARN = {
         limit: 'A clerk sees every letter in the building. A scheduler only reorders requests waiting in the same queue, and the order they finish in is not guaranteed.',
       },
       figure: {
-        kind: 'stack',
-        title: 'The four schedulers',
-        layers: [
-          { id: 'requests', label: 'Waiting requests', kind: 'nodes', nodes: [{ id: 'queued', text: 'Requests for one disk', sub: 'reads and writes' }] },
-          {
-            id: 'schedulers',
-            label: 'The scheduler',
-            kind: 'nodes',
-            nodes: [
-              { id: 'none', text: 'none', sub: 'no reordering' },
-              { id: 'mq-deadline', text: 'mq-deadline', sub: 'sector order', does: 'Serves requests in sector order, with deadlines.' },
-              { id: 'bfq', text: 'bfq', sub: 'fair shares', does: 'Gives each program a fair share and keeps apps quick.' },
-              { id: 'kyber', text: 'kyber', sub: 'latency targets', does: 'Throttles requests to meet latency targets.' },
-            ],
-          },
-          { id: 'disks', label: 'What each disk runs', kind: 'nodes', nodes: disks('Scheduler') },
-        ],
+        kind: 'modes',
+        title: 'The scheduler each disk runs',
+        rows: diskRows(
+          'Scheduler',
+          [
+            { value: 'none', label: 'none', does: 'Places requests in the queue without reordering them.' },
+            { value: 'mq-deadline', label: 'mq-deadline', does: 'Serves requests in sector order, with deadlines.' },
+            { value: 'bfq', label: 'bfq', does: 'Gives each program a fair share and keeps apps quick.' },
+            { value: 'kyber', label: 'kyber', does: 'Throttles requests to meet latency targets.' },
+          ],
+          'hdd',
+          'scheduler',
+        ),
       },
       body: [
         'Reads and writes reach the block layer as requests[^operation]. An [[I/O scheduler|io-scheduler]] may reorder them, for fairness or for speed, and only among requests in the same queue[^sched]. Each disk names its choices in `/sys/block/<disk>/queue/scheduler`, with the active one in brackets. Writing a name there switches to it, and tries to load its module if needed[^abi-sched].',
@@ -196,13 +194,12 @@ export const LEARN = {
         limit: 'Guests at the back of a cloakroom line can see how long it is. A request that arrives at a deep queue waits behind everything already in it.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Where requests wait',
-        layers: [
-          { id: 'programs', label: 'Programs', kind: 'nodes', nodes: [{ id: 'send', text: 'Programs send requests' }] },
-          { id: 'scheduler-queue', label: 'Held by scheduler', kind: 'nodes', nodes: disks('Requests') },
-          { id: 'hardware', label: 'Hardware queues', kind: 'nodes', nodes: [{ id: 'dispatch', text: 'Hardware dispatch queues', sub: 'before the driver', does: 'The last step before the driver.' }] },
-        ],
+        kind: 'compare',
+        title: 'Requests the scheduler may hold, per disk',
+        axis: 'requests',
+        scale: 'log',
+        bars: diskBars('Requests', ''),
+        pins: [{ key: 'nr_requests', bar: 'hdd' }],
       },
       body: [
         'The kernel\'s request queueing, blk-mq, has two stages: software staging queues and [[hardware queues|hardware-queue]][^operation]. Requests wait in the software stage when a scheduler is attached or when they may be merged[^operation]. The hardware stage is the last step before the disk\'s driver takes over[^hw].',
@@ -245,13 +242,12 @@ export const LEARN = {
         limit: 'Carrying a chapter costs the friend nothing. Reading ahead keeps the disk busy and takes room in RAM, even for data no program asks for.',
       },
       figure: {
-        kind: 'sideBySide',
-        title: 'Pages read ahead in one go, at most, in 4 KiB pages',
-        states: [
-          { label: 'The usual default', cells: 64, lit: 32, setting: { key: 'read_ahead_kb', value: 128 } },
-          { label: 'Fedora 43, hard disk', cells: 64, lit: 64, setting: { key: 'read_ahead_kb', value: 256 } },
-        ],
-        backedBy: { vmTest: 'each kind of disk starts with the read-ahead the drawer says, and the lsblk check works' },
+        kind: 'compare',
+        title: 'Most the kernel reads ahead, per disk',
+        axis: 'read-ahead',
+        scale: 'linear',
+        bars: diskBars('ReadAhead', 'kB'),
+        pins: [{ key: 'read_ahead_kb', bar: 'hdd' }],
       },
       body: [
         'Reading a file goes through the [[page cache]], which keeps file data in RAM[^page-cache]. [[Read-ahead|readahead]] reads content into the page cache before the program asks for it[^ra]. It starts when a read finds a page missing, or reaches a page that an earlier read-ahead marked[^ra].',
@@ -259,7 +255,7 @@ export const LEARN = {
         'A wider window helps programs that stream large files, such as backups and media servers. Random reads gain little from it, and the extra pages take room other files could use.',
       ],
       pins: [
-        { key: 'read_ahead_kb', here: 'The most the kernel reads ahead on this disk, in KiB. Higher helps backups, media and large scans; lower suits small random reads. 128 suits mixed use.' },
+        { key: 'read_ahead_kb', layer: 'hdd', here: 'The most the kernel reads ahead on this disk, in KiB. Higher helps backups, media and large scans; lower suits small random reads. 128 suits mixed use.' },
       ],
       choose: [
         {

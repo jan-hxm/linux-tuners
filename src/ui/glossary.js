@@ -169,7 +169,7 @@ export const GLOSSARY = Object.freeze({
   'soft-lockup': {
     term: 'Soft lockup',
     definition:
-      'A bug that makes the kernel loop in kernel mode for more than 20 seconds (twice kernel.watchdog_thresh) without giving other tasks a chance to run. The watchdog logs it, and kernel.softlockup_panic can turn it into a panic.',
+      'A bug that makes the kernel loop in kernel mode for more than twice kernel.watchdog_thresh (20 seconds by default) without giving other tasks a chance to run. The watchdog logs it, and kernel.softlockup_panic can turn it into a panic.',
   },
   loglevel: {
     term: 'Log level',

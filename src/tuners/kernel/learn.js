@@ -11,7 +11,8 @@ const SYSCTL = 'https://docs.kernel.org/admin-guide/sysctl/kernel.html'
 const KEYS = 'https://docs.kernel.org/security/keys/core.html'
 const sysctl = (anchor, name) => ({ url: `${SYSCTL}#${anchor}`, label: `sysctl/kernel: ${name}` })
 const keys = (anchor, name) => ({ url: `${KEYS}#${anchor}`, label: `Kernel key retention service: ${name}` })
-const man = (section, page, name) => ({ url: `https://man7.org/linux/man-pages/man${section}/${page}.${section}.html`, label: name })
+const man = (section, page, name, anchor = 'DESCRIPTION') => ({ url: `https://man7.org/linux/man-pages/man${section}/${page}.${section}.html#${anchor}`, label: name })
+const SYSRQ = 'https://docs.kernel.org/admin-guide/sysrq.html'
 
 export const LEARN = {
   slug: 'kernel-limits',
@@ -76,17 +77,17 @@ export const LEARN = {
         ],
       },
       body: [
-        'Each process and thread gets a [[process ID|pid]]. The kernel counts upward and, when the next number reaches `kernel.pid_max`, wraps back to a low one. Numbers of that value or larger are never given out[^pid]. The default is 32768, and on 64-bit it can go up to 2^22[^proc].',
+        'Each process and thread gets a [[process ID|pid]]. The kernel counts upward and, when the next number reaches `kernel.pid_max`, wraps back to a low one. Numbers of that value or larger are never given out[^pid]. On 64-bit it can go up to 2^22, which is 4194304[^proc]. The kernel starts at 32768, or 1024 per possible CPU when that is more, and systemd 243 and newer set 4194304.',
         'A new process or thread can fail with the error EAGAIN for four reasons: the per-user process limit, `kernel.threads-max`, `kernel.pid_max`, or the process limit of the cgroup it belongs to[^fork]. Only the middle two are set here.',
-        '`kernel.threads-max` is the system-wide cap on threads created with fork()[^threads]. At boot the kernel sizes it so that, with that many threads, their structures take at most an eighth of RAM pages. A value outside the allowed range is refused with EINVAL[^threads].',
+        '`kernel.threads-max` is the system-wide limit on processes and threads together[^fork]. At boot the kernel sizes it so that, with that many threads, their structures take at most an eighth of RAM pages[^threads]. A value outside 1 to 0x3fffffff is refused with EINVAL[^threads]. Upstream kernels before 5.4 also quietly cut a higher value back to the boot size.',
       ],
       pins: [
-        { key: 'pid_max', layer: 'pid', here: 'Where process IDs wrap, and so a ceiling on processes and threads. Raise it only when fork fails with EAGAIN near this number. Most machines don\'t need to change this.' },
+        { key: 'pid_max', layer: 'pid', here: 'Where process IDs wrap, and so a ceiling on processes and threads. Raise it only when fork fails with EAGAIN near this number. systemd 243 and newer already set the highest value.' },
         { key: 'threads_max', layer: 'threads', here: 'The system-wide thread cap, set from RAM at boot. Raise it only when it is the limit being reached. Lowering it makes new threads fail sooner.' },
       ],
       choose: [
         {
-          q: 'Do programs fail to start with "Resource temporarily unavailable" while the process count is close to kernel.pid_max?',
+          q: 'Do programs fail to start with "Resource temporarily unavailable" while processes and threads together come close to kernel.pid_max?',
           check: 'sysctl kernel.pid_max kernel.threads-max',
           hint: 'These are the two ceilings. Compare them with the number of processes and threads running.',
           yes: { key: 'pid_max', dir: 'raise' },
@@ -110,7 +111,7 @@ export const LEARN = {
       sources: {
         pid: sysctl('pid-max', 'pid_max'),
         threads: sysctl('threads-max', 'threads-max'),
-        proc: man(5, 'proc_sys_kernel', 'proc_sys_kernel(5)'),
+        proc: man(5, 'proc_sys_kernel', 'proc_sys_kernel(5): description'),
         fork: { url: 'https://man7.org/linux/man-pages/man2/fork.2.html#ERRORS', label: 'fork(2): errors' },
       },
     },
@@ -120,7 +121,7 @@ export const LEARN = {
       oneLine: 'The kernel keeps small secrets for programs, such as tokens and keys. Each user may hold only so many, and so many bytes of them.',
       picture: {
         text: 'A bank gives each customer one safe-deposit box with a limit: so many items, and so much weight. Past either limit the clerk refuses, however much room the vault has.',
-        limit: 'Bank customers rent boxes one by one. Programs create keys by themselves, often without the user knowing, so a quota can fill without anyone choosing to fill it.',
+        limit: 'Bank customers rent boxes one by one. Programs and services create keys and keyrings by themselves, so a quota can fill without anyone choosing to fill it.',
       },
       figure: {
         kind: 'stack',
@@ -156,7 +157,7 @@ export const LEARN = {
       body: [
         'The kernel can hold security data for programs as [[keys|kernel-key]]. Each key has a description and may have a payload, the data itself[^overview]. The facility lets kernel components keep or cache things like authentication and encryption keys[^keyrings].',
         'Every user ID is tracked against two quotas: how many keys it owns, and how much space their descriptions and payloads use. A change that would put the user over quota is refused with the error EDQUOT[^service].',
-        '`kernel.keys.maxkeys` and `kernel.keys.maxbytes` set those quotas for every non-root user. Root has its own pair[^proc]. The defaults are 200 keys and 20000 bytes[^keyrings]. `/proc/key-users` shows each user\'s holdings against the limits[^proc].',
+        '`kernel.keys.maxkeys` and `kernel.keys.maxbytes` set those quotas for every non-root user. Root has its own pair[^proc]. The defaults are 200 keys and 20000 bytes, and 1000000 keys and 25000000 bytes for root[^keyfiles]. `/proc/key-users` shows each user\'s holdings against the limits[^proc].',
       ],
       pins: [
         { key: 'maxkeys', layer: 'quota', here: 'How many keys each non-root user may own. Raise it when adding keys fails with EDQUOT and /proc/key-users shows a user at the limit. Most machines don\'t need to change this.' },
@@ -179,7 +180,7 @@ export const LEARN = {
       ],
       symptoms: {
         low: 'Adding a key fails with EDQUOT once a user holds its limit of keys or bytes.',
-        high: 'Users can hold more keys, and the kernel memory those keys use is not swapped out.',
+        high: 'Users can hold more keys, and most keys sit in kernel memory that cannot be swapped out.',
       },
       look: {
         cmd: 'cat /proc/key-users',
@@ -188,7 +189,8 @@ export const LEARN = {
       sources: {
         overview: keys('key-overview', 'Overview'),
         service: keys('key-service-overview', 'Service overview'),
-        keyrings: man(7, 'keyrings', 'keyrings(7)'),
+        keyrings: man(7, 'keyrings', 'keyrings(7): description'),
+        keyfiles: man(7, 'keyrings', 'keyrings(7): files', 'FILES'),
         proc: keys('new-procfs-files', 'New procfs files'),
       },
     },
@@ -241,7 +243,7 @@ export const LEARN = {
       },
       body: [
         'An [[oops|oops]] is the kernel reporting a fault or a BUG in its own code. With `kernel.panic_on_oops` at 0 it tries to continue. At 1 it panics at once[^oops].',
-        'A [[soft lockup|soft-lockup]] is the kernel looping in kernel mode for more than 20 seconds, twice the default of `kernel.watchdog_thresh`[^lockup]. By default it is only logged. Setting `kernel.softlockup_panic` to 1 makes it panic[^softlockup].',
+        'A [[soft lockup|soft-lockup]] is the kernel looping in kernel mode for more than 20 seconds without giving other tasks a chance to run[^lockup]. The threshold is twice `kernel.watchdog_thresh`, which is 10 by default[^thresh]. By default the kernel logs it and carries on[^detector]. Setting `kernel.softlockup_panic` to 1 makes it panic instead[^softlockup].',
         'A [[panic|kernel-panic]] stops the machine. `kernel.panic` decides what follows. At 0 the kernel loops forever, below 0 it reboots at once, and above 0 it reboots after that many seconds[^panic]. Panic on oops needs a non-zero `kernel.panic` to end in a reboot[^oops].',
       ],
       pins: [
@@ -258,8 +260,8 @@ export const LEARN = {
         },
         {
           q: 'Did an oops in the kernel log come before the machine began to misbehave?',
-          check: 'sudo dmesg | grep -i -e oops -e "BUG:"',
-          hint: 'Any line means the kernel hit a fault in its own code and, by default, carried on.',
+          check: 'sudo dmesg | grep -e Oops -e BUG',
+          hint: 'A line with Oops or BUG means the kernel hit a fault in its own code and, by default, carried on.',
           yes: { key: 'panic_on_oops', dir: 'raise' },
         },
         {
@@ -272,7 +274,7 @@ export const LEARN = {
       ],
       symptoms: {
         low: 'After a fault the kernel carries on, and after a panic the machine stays stopped until someone resets it.',
-        high: 'Any oops or lockup stops the machine at once, and it reboots by itself if kernel.panic is above 0.',
+        high: 'Any oops or soft lockup stops the machine at once, and it reboots by itself if kernel.panic is above 0.',
       },
       look: {
         cmd: 'sysctl kernel.panic kernel.panic_on_oops kernel.softlockup_panic',
@@ -282,7 +284,9 @@ export const LEARN = {
         oops: sysctl('panic-on-oops', 'panic_on_oops'),
         softlockup: sysctl('softlockup-panic', 'softlockup_panic'),
         panic: sysctl('panic', 'panic'),
-        lockup: { url: 'https://docs.kernel.org/admin-guide/lockup-watchdogs.html#softlockup-detector', label: 'Lockup watchdogs: softlockup detector' },
+        lockup: { url: 'https://docs.kernel.org/admin-guide/lockup-watchdogs.html#softlockup-detector-and-hardlockup-detector-aka-nmi-watchdog', label: 'Lockup watchdogs: soft and hard lockups' },
+        detector: { url: 'https://docs.kernel.org/admin-guide/lockup-watchdogs.html#softlockup-detector', label: 'Lockup watchdogs: softlockup detector' },
+        thresh: sysctl('watchdog-thresh', 'watchdog_thresh'),
       },
     },
     {
@@ -322,9 +326,9 @@ export const LEARN = {
         ],
       },
       body: [
-        'On an x86 keyboard you press Alt, SysRq and a command letter. A serial console sends a break, then the letter within 5 seconds[^sysrq]. Writing one letter to `/proc/sysrq-trigger` is always allowed for an administrator, whatever the setting[^sysrq].',
-        '`kernel.sysrq` decides what the keyboard may do. 0 disables SysRq and 1 enables everything. Any other number is a bitmask: 16 allows sync, 32 remount read-only, 64 signalling of processes and 128 reboot and power off[^sysrq]. So 176 allows 16, 32 and 128.',
-        'The letter s syncs mounted filesystems and u remounts them read-only. The letter b reboots at once, without syncing or unmounting[^sysrq]. The letters e and i send SIGTERM and SIGKILL to every process except init[^sysrq].',
+        'On an x86 keyboard you press Alt, SysRq and a command letter. A serial console sends a break, then the letter within 5 seconds[^use]. Writing one letter to `/proc/sysrq-trigger` is always allowed for an administrator, whatever the setting[^enable].',
+        '`kernel.sysrq` decides what the keyboard may do. 0 disables SysRq and 1 enables everything. Any other number is a bitmask: 16 allows sync, 32 remount read-only, 64 signalling of processes and 128 reboot and power off[^enable]. So 176, which is 16 + 32 + 128, allows sync, remount read-only and reboot.',
+        'The letter s tries to sync all mounted filesystems and u tries to remount them read-only. The letter b reboots at once, without syncing or unmounting[^keys]. The letters e and i send SIGTERM and SIGKILL to every process except init[^keys].',
       ],
       pins: [
         { key: 'sysrq', layer: 'gate', here: 'Which SysRq commands the keyboard may use. 0 turns them off, 1 allows all, and 176 allows sync, remount read-only and reboot. Remember that anyone at the keyboard can then use them.' },
@@ -353,7 +357,9 @@ export const LEARN = {
         for: '0 is off and 1 is everything. Other numbers add up the allowed functions, for example 16 for sync, 32 for remount read-only and 128 for reboot.',
       },
       sources: {
-        sysrq: { url: 'https://docs.kernel.org/admin-guide/sysrq.html', label: 'Linux Magic System Request Key Hacks' },
+        enable: { url: `${SYSRQ}#how-do-i-enable-the-magic-sysrq-key`, label: 'Magic SysRq: how to enable it' },
+        use: { url: `${SYSRQ}#how-do-i-use-the-magic-sysrq-key`, label: 'Magic SysRq: how to use it' },
+        keys: { url: `${SYSRQ}#what-are-the-command-keys`, label: 'Magic SysRq: the command keys' },
       },
     },
     {
@@ -362,7 +368,7 @@ export const LEARN = {
       oneLine: 'Every kernel message has a level of urgency. One setting holds four numbers that decide which levels print on the console.',
       picture: {
         text: 'A building has an intercom. Fire alarms always sound, but chatter about the lifts only plays if the volume is turned up. Turning the intercom down does not stop the log book from filling.',
-        limit: 'A log book is a real place. For the kernel, only the console printing is covered by this setting, and the sources used here do not say how long other copies keep a message.',
+        limit: 'A log book keeps every page. The kernel log buffer is a fixed-size ring, so once it is full the newest messages push out the oldest.',
       },
       figure: {
         kind: 'sideBySide',
@@ -375,7 +381,7 @@ export const LEARN = {
         backedBy: { probe: 'kernel.printk' },
       },
       body: [
-        'Every kernel message has a [[log level|loglevel]] from 0 (emergency) to 7 (debug). A message with no level gets the default message level[^syslog].',
+        'Every kernel message has a [[log level|loglevel]] from 0 (emergency) to 7 (debug). A message with no level gets the default message level[^syslog]. The kernel log buffer keeps messages of every level, whatever the console shows[^syslog].',
         '`kernel.printk` holds four numbers: the console level, the default message level, the minimum console level and the default console level[^printk]. The kernel prints a message on the console only if its level is lower than the console level[^syslog].',
         'The console level is 7 by default, and 4 when the boot command line has `quiet`[^syslog]. A program can change it with a syslog call, between 1 and 8, but never below the minimum console level[^syslog].',
       ],
@@ -398,7 +404,7 @@ export const LEARN = {
         },
       ],
       symptoms: {
-        low: 'Only the most urgent messages reach the console. Warnings and anything below them stay off it.',
+        low: 'Only the most urgent messages reach the console. Warnings and less urgent messages stay off it.',
         high: 'The console fills with notices, information and debug lines.',
       },
       look: {

@@ -66,6 +66,20 @@ export const GUIDES = {
     learn: () => import('../tuners/security/learn.js').then((m) => m.LEARN),
     probes: () => import('../tuners/security/probes.js').then((m) => m.PROBES),
   },
+  'file-limits': {
+    tunerId: 'filesystem',
+    route: {
+      title: 'How Linux limits open files and file watching | linux-tuners.dev',
+      description:
+        'A beginner guide to Linux file limits: open files, inotify watches and queues, and async I/O slots, with figures measured on five kernels.',
+      ogTitle: 'How Linux limits open files and file watching',
+      priority: 0.8,
+      changefreq: 'monthly',
+      jsonLdType: 'TechArticle',
+    },
+    learn: () => import('../tuners/filesystem/learn.js').then((m) => m.LEARN),
+    probes: () => import('../tuners/filesystem/probes.js').then((m) => m.PROBES),
+  },
 }
 
 /** The /learn index's own route metadata; the route exists only while a guide is live. */

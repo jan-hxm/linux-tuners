@@ -211,4 +211,16 @@ export const GLOSSARY = Object.freeze({
     definition:
       "An attack that sends many requests to open TCP connections and never completes them, to fill the server's list of half-open connections so real clients cannot connect.",
   },
+
+  // filesystem guide
+  inotify: {
+    term: 'inotify',
+    definition:
+      'A kernel feature that tells a program when files or directories change. The program adds a watch for each file or directory it cares about, and reads the events from a queue. Editors, sync tools and dev servers use it.',
+  },
+  'native-aio': {
+    term: 'Native async I/O',
+    definition:
+      'The kernel interface where a program calls io_setup() to reserve request slots, then queues reads and writes and carries on while they run. Some databases use it. It is not the same as io_uring.',
+  },
 })

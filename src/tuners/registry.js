@@ -132,6 +132,7 @@ export const TUNERS = [
       why: "The open-file and inotify ceilings that file watchers, databases and container nodes hit first. It sets fs.nr_open, which bounds systemd's file limit.",
       defaultsFine: 'Machines that never hit a "too many open files" or inotify limit error, which covers most servers and desktops.',
     },
+    guide: { slug: 'file-limits', status: 'draft' },
   },
   {
     id: 'kernel',

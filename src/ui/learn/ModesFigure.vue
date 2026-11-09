@@ -5,16 +5,18 @@
  * image lit (figureText.js modeSegments): the option that equals it, every
  * set bit for a `bits` row, or an extra segment with the raw value when no
  * option names it, so a value is never silently dropped. A value absent on
- * this kernel lights nothing and says so. `groups` are headings over their
- * rows (one per disk, say). A row's setting (`pin`) is a pressed-state
- * button at its end from `md` up; the row under the figure has it below
- * `md`. Segments wrap on a phone. The root is a figure named from the data.
+ * this kernel lights nothing and says so. An option may be a range of
+ * numbers (`min`, `max`), lit when the number falls in it. `groups` are
+ * headings over their rows (one per disk, say). A row's setting (`pin`) is
+ * not drawn in the row, where its long name would crowd the options: the
+ * pin row under the figure has it at every width, and the row of the
+ * pressed setting is highlighted. Segments wrap on a phone. The root is a
+ * figure named from the data.
  */
 import { computed, useId } from 'vue'
 import FigureTip from './FigureTip.vue'
 import TipStrip from './TipStrip.vue'
-import FigurePin from './FigurePin.vue'
-import { defName, modesCaption, modesLabel, modesModel, tipValue } from './figureText.js'
+import { isExample, isRangeOption, modesCaption, modesLabel, modesModel, rowPinKey, tipValue } from './figureText.js'
 
 const props = defineProps({
   /** Figure of kind 'modes' */
@@ -22,25 +24,25 @@ const props = defineProps({
   /** ref => valueFor(ref, imageId) */
   evidence: { type: Function, required: true },
   imageId: { type: String, default: '' },
+  /** The image's name as the reader sees it (Debian 13), for the caption; the id when unset. */
+  imageLabel: { type: String, default: '' },
   /** How many images measured every value the same (sameOnEveryImage), or 0. */
   sameOn: { type: Number, default: 0 },
   /** The selected pin's `layer`: a row or group id. */
   highlight: { type: String, default: null },
-  /** The selected pin's key: its button on the figure is pressed. */
+  /** The selected pin's key: the row that draws it is highlighted. */
   selectedKey: { type: String, default: null },
   defsByKey: { type: Object, default: () => ({}) },
-  /** The id of the panel a pin button controls. */
-  controls: { type: String, default: null },
 })
-const emit = defineEmits(['select'])
 
 const scope = useId()
 const model = computed(() => modesModel(props.figure, props.evidence))
 const label = computed(() => modesLabel(props.figure, props.evidence, { defsByKey: props.defsByKey, highlight: props.highlight }))
-const caption = computed(() => modesCaption(props.figure, props.evidence, props.imageId, props.sameOn))
-const hasPins = computed(() => props.figure.rows.some((r) => r.pin))
-const ROW = computed(() => (hasPins.value ? 'md:grid-cols-[9rem_minmax(0,1fr)_auto]' : 'md:grid-cols-[9rem_minmax(0,1fr)]'))
+const caption = computed(() => modesCaption(props.figure, props.evidence, (props.imageLabel || props.imageId), props.sameOn))
+const ROW = 'md:grid-cols-[9rem_minmax(0,1fr)]'
 const on = (id) => id !== null && id === props.highlight
+/** A row is highlighted when the selected pin names it, or when it draws the selected setting. */
+const rowOn = (r) => on(r.id) || (props.selectedKey !== null && rowPinKey(r) === props.selectedKey)
 
 // Each segment draws its own border, so a row that wraps leaves no filled
 // gap after its last segment.
@@ -50,7 +52,12 @@ const segClass = (s) => [
   s.lit ? 'border-ink bg-ink font-medium text-paper' : 'border-rule-strong bg-paper text-ink-2',
   s.extra ? 'border-dashed font-mono' : '',
 ]
-const segTip = (s) => (s.lit ? 'Set on this kernel.' : '')
+/** A lit option's line in its tooltip; a lit range adds the number it holds. */
+const segTip = (s, r) => {
+  if (!s.lit) return ''
+  const where = isExample(r.value) ? 'The example value' : 'Set on this kernel'
+  return isRangeOption(s) ? `${where}: ${r.valueText}.` : `${where}.`
+}
 </script>
 
 <template>
@@ -71,10 +78,10 @@ const segTip = (s) => (s.lit ? 'Set on this kernel.' : '')
           v-for="r in g.rows"
           :key="r.id"
           class="grid grid-cols-1 items-center gap-x-3 gap-y-1 py-1.5"
-          :class="[ROW, on(r.id) ? 'bg-fit-tint' : '']"
+          :class="[ROW, rowOn(r) ? 'bg-fit-tint' : '']"
           :data-row="r.id"
           :data-status="r.status"
-          :data-selected="on(r.id) || undefined"
+          :data-selected="rowOn(r) || undefined"
         >
           <div class="min-w-0">
             <FigureTip
@@ -90,32 +97,21 @@ const segTip = (s) => (s.lit ? 'Set on this kernel.' : '')
           </div>
           <div class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
             <div class="flex max-w-full flex-wrap gap-1">
-              <template v-for="s in r.segments" :key="String(s.value)">
+              <template v-for="s in r.segments" :key="s.key">
                 <FigureTip
                   v-if="s.does"
                   :label="s.label"
                   :tip="s.does"
-                  :value="segTip(s)"
+                  :value="segTip(s, r)"
                   :scope="scope"
                   :class="[segClass(s), 'underline decoration-dotted underline-offset-4']"
-                  :data-segment="String(s.value)"
+                  :data-segment="s.key"
                   :data-lit="s.lit || undefined"
                 >{{ s.label }}</FigureTip>
-                <span v-else aria-hidden="true" :class="segClass(s)" :data-segment="String(s.value)" :data-lit="s.lit || undefined" :data-extra="s.extra || undefined">{{ s.label }}</span>
+                <span v-else aria-hidden="true" :class="segClass(s)" :data-segment="s.key" :data-lit="s.lit || undefined" :data-extra="s.extra || undefined">{{ s.label }}</span>
               </template>
             </div>
             <span v-if="r.status !== 'ok'" aria-hidden="true" class="text-[13px] text-ink-2" data-row-status>{{ r.text }}</span>
-          </div>
-          <div v-if="hasPins" class="hidden md:block">
-            <FigurePin
-              v-if="r.pin"
-              :name="defName(r.pin, defsByKey)"
-              :label="`${defName(r.pin, defsByKey)}, sets ${r.label}`"
-              :pressed="r.pin === selectedKey"
-              :controls="controls"
-              :data-figure-pin="r.pin"
-              @select="emit('select', r.pin)"
-            />
           </div>
         </div>
       </div>

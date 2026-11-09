@@ -99,6 +99,7 @@ describe('chapter index and facts', () => {
       gap_factor: 'reading-the-gauge',
       buf_sizes: 'comparing-sizes',
       buf_max: 'comparing-sizes',
+      buf_auto: 'comparing-sizes',
       unit_weight: 'sharing-the-cpu',
       page_mode: 'picking-a-mode',
       key_mask: 'picking-a-mode',
@@ -109,7 +110,7 @@ describe('chapter index and facts', () => {
   })
 
   it('says chapters, settings, minutes and kernels', () => {
-    expect(guideFacts(DEMO_LEARN, 5)).toEqual(['8 chapters', '13 settings', '5 min read', 'Figures measured on 5 kernels'])
+    expect(guideFacts(DEMO_LEARN, 5)).toEqual(['8 chapters', '14 settings', '5 min read', 'Figures measured on 5 kernels'])
     expect(guideFacts({ ...DEMO_LEARN, chapters: DEMO_LEARN.chapters.slice(0, 1) }, 1)).toEqual(['1 chapter', '2 settings', '5 min read', 'Figures measured on 1 kernel'])
   })
 

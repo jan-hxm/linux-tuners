@@ -80,7 +80,7 @@ describe('learning figures axe sweep', { timeout: 30_000 }, () => {
 
     // Every figure tooltip open in turn (figure parts, scale legend, gauge
     // marks and zones, compare bars, tree nodes, mode segments), and every
-    // pin drawn on a gauge, compare, tree or modes figure.
+    // pin drawn on a gauge, compare or tree figure (a modes row's stays in the row under it).
     for (const kind of ['compare', 'tree', 'modes']) expect(wrapper.find(`[data-figure="${kind}"]`).exists(), kind).toBe(true)
     const tips = wrapper.findAll('button[aria-describedby]')
     expect(tips.length).toBeGreaterThan(20)
@@ -90,11 +90,12 @@ describe('learning figures axe sweep', { timeout: 30_000 }, () => {
     }
     expect(await violations()).toEqual([])
     const drawn = wrapper.findAll('[data-gauge-pin], [data-figure-pin]')
-    expect(drawn.length).toBeGreaterThanOrEqual(8)
+    expect(drawn.length).toBeGreaterThanOrEqual(6)
     for (const pin of drawn) await pin.trigger('click')
     expect(await violations()).toEqual([])
 
-    // Each kernel, the ones without a capture too (absent bars, nodes and modes among them).
+    // Each kernel on the figures that show the buttons, the ones without a
+    // capture too (absent bars, nodes and modes among them).
     for (const button of wrapper.get('[data-kernels]').findAll('button')) {
       await button.trigger('click')
       expect(await violations()).toEqual([])

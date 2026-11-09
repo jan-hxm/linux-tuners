@@ -26,7 +26,7 @@ describe('a guide page as static text', () => {
   it('has the header block, Start here, the chapter map and every chapter in order', () => {
     const h2 = doc.blocks.filter((b) => b.kind === 'heading' && b.level === 2).map((b) => b.text)
     expect(h2.slice(0, 2 + DEMO_LEARN.chapters.length)).toEqual(['Start here', 'The chapters', ...DEMO_LEARN.chapters.map((c) => c.title)])
-    expect(md).toContain('8 chapters · 13 settings · 5 min read · Figures measured on 5 kernels')
+    expect(md).toContain('8 chapters · 14 settings · 5 min read · Figures measured on 5 kernels')
     expect(md).toContain('[Tune these settings in the Swap & memory tuner](https://linux-tuners.dev/swap)')
     const parts = doc.blocks.filter((b) => b.kind === 'heading' && b.level === 3).map((b) => b.text)
     for (const part of ['Picture it', 'Settings here', 'Should you change it?', "What you notice if it's wrong", 'Look on your machine', 'Sources']) {
@@ -52,14 +52,26 @@ describe('a guide page as static text', () => {
     expect(md).toContain('**programs wait** (below min): A program asking for memory frees some itself.')
     expect(md).toContain('Settings on the scale: `demo.floor_kbytes` on min; `demo.gap_factor` from low to high.')
     expect(md).toContain('a program waits (Free memory fell below min)')
+    expect(md).toContain('The scale is filled to **free now** (An example of free memory between low and high).')
+    expect(md).toContain('`Free now`**: example: 5,000 pages.')
     expect(md).toContain('Checked on real kernels by the VM test')
   })
 
   it('lists compare, tree and modes figures with every kernel\'s value, sizes readable and exact', () => {
     expect(md).toContain("Bars on a log scale of buffer size, drawn from each kernel's capture, by group:")
     expect(md).toContain('**Each socket, Largest** (Automatic tuning grows a busy socket up to this)')
-    expect(md).toContain('Lines across the bars: **Asked-for ceiling** (A program that sets its own buffer size gets at most this).')
-    expect(md).toContain('Settings drawn: `demo.buf_sizes` on Largest; `demo.buf_max` on the asked-for ceiling line.')
+    expect(md).toContain('Lines across the bars: **Asked-for ceiling** (A program that sets its own buffer size gets at most this); **A program asks**')
+    expect(md).toContain('Settings drawn: `demo.buf_sizes` on Largest; `demo.buf_max` on the asked-for ceiling line; `demo.buf_auto` on Largest.')
+    // Examples are said once, as examples, apart from the measured values.
+    expect(md).toContain('Example values, to show the idea:')
+    expect(md).toContain('`A program asks`**: example: 1 MiB (1,048,576 bytes).')
+    expect(md).toContain('`Auto tuning`**: example: 1.')
+    expect(md).toContain('`low level`**: example: 4,000 pages.')
+    expect(md).not.toMatch(/kernel [^:]*: 1 MiB \(1,048,576 bytes\)/)
+    // A range option names its numbers.
+    expect(md).toContain('**Kernel, Reserve**: one of none (0), small (1 to 3,999), large (4,000 or more) (Four thousand kB or more).')
+    expect(md).toContain('`SSD`**')
+    expect(md).toContain('`Fast disk choice`**: example: none.')
     // A bar read by index from a string of three numbers, on every kernel, named by its label.
     expect(md).toContain('`Start`**: Debian 13, kernel 0.0.0-fixture: 128 KiB (131,072 bytes);')
     expect(md).toContain('Ubuntu 18.04, kernel 0.0.4-fixture: 85.3 KiB (87,380 bytes).')

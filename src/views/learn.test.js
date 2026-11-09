@@ -100,7 +100,7 @@ describe('a live guide', { timeout: 30_000 }, () => {
     const { wrapper: w } = await mountAt('/learn/demo')
     expect(w.get('h1').text()).toBe(DEMO_LEARN.title)
     expect(w.get('nav[aria-label="Breadcrumb"]').text()).toContain('Learn')
-    expect(w.get('[data-facts]').findAll('li').map((li) => li.text())).toEqual(['8 chapters', '13 settings', '5 min read', 'Figures measured on 5 kernels'])
+    expect(w.get('[data-facts]').findAll('li').map((li) => li.text())).toEqual(['8 chapters', '14 settings', '5 min read', 'Figures measured on 5 kernels'])
     expect(w.get('[data-tune-link]').attributes('href')).toBe('/swap')
     expect(w.get('#start-here [role="figure"]').attributes('aria-label')).toContain('Parts map.')
     // The map of chapters, with the settings each pins.
@@ -150,11 +150,17 @@ describe('a live guide', { timeout: 30_000 }, () => {
     expect(toggle.attributes('aria-expanded')).toBe('false')
   })
 
-  it('follows the shared kernel choice in the parts map', async () => {
+  it('shares the kernel choice between the figures with buttons, and keeps the parts map on the first image', async () => {
     const { wrapper: w } = await mountAt('/learn/demo')
-    await w.findAll('[data-kernels]')[0].findAll('button')[2].trigger('click')
-    for (const group of w.findAll('[data-kernels]')) expect(group.get('[aria-pressed="true"]').text()).toBe('Fedora 43')
-    expect(localStorage.getItem('linux-tuners:learn-kernel')).toBe('fedora-43')
+    // The stack, compare, tree and modes figures ask for the buttons; the gauge does not.
+    expect(w.findAll('[data-kernels]')).toHaveLength(4)
+    await w.findAll('[data-kernels]')[0].findAll('button')[4].trigger('click')
+    for (const group of w.findAll('[data-kernels]')) expect(group.get('[aria-pressed="true"]').text()).toBe('Ubuntu 18.04')
+    expect(localStorage.getItem('linux-tuners:learn-kernel')).toBe('ubuntu-18.04')
+    // The parts map has no buttons, so it shows Debian 13 (reserve 4,000, not Ubuntu 18.04's 3,600).
+    const card = w.get('[data-card="reserve"]').text()
+    expect(card).toContain('4,000')
+    expect(card).not.toContain('3,600')
   })
 
   it('gives the tuner page a "How it works" link and the cards their chapter lookup', async () => {

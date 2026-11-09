@@ -10,8 +10,11 @@
  *
  * The kernel switcher (which VM capture the numbers come from) is a group of
  * pressed-state buttons, remembered per viewer (kernelPref.js) and shared by
- * every chapter on the page. The figures get `evidence`, a function
- * `ref => valueFor(ref, imageId)` for the chosen image, so a figure never
+ * every chapter on the page. A figure shows it only when it asks for it
+ * (`kernels: true`) and its measured values differ between the images;
+ * otherwise it shows the first image, Debian 13. Example values are the same
+ * on every image and never count. The figures get `evidence`, a function
+ * `ref => valueFor(ref, imageId)` for the shown image, so a figure never
  * looks a capture up by itself and a missing one reads "not measured".
  *
  * Footnote marks `[^id]` aren't RichText markup, so the body is split at
@@ -31,7 +34,8 @@ import Chooser from './Chooser.vue'
 import DecisionFlow from './DecisionFlow.vue'
 import { imageIn, setKernel } from './kernelPref.js'
 import {
-  defName, defTitle, drawnPinKeys, figureRefs as refsOf, hostOf, kernelOf, measuredText, numberedSources, pinRefs, safeHref, sameOnEveryImage, splitFootnotes,
+  EXAMPLES_TEXT, defName, defTitle, drawnPinKeys, figureRefs as refsOf, hostOf, isExample, kernelOf, measuredRefs, measuredText, numberedSources, pinRefs, safeHref,
+  sameOnEveryImage, splitFootnotes,
 } from './figureText.js'
 
 const props = defineProps({
@@ -51,31 +55,35 @@ const props = defineProps({
 
 const FIGURES = { stack: StackFigure, timeline: Timeline, sideBySide: SideBySide, gauge: Gauge, compare: CompareFigure, tree: TreeFigure, modes: ModesFigure }
 /** Figures that draw settings themselves, whose pin buttons control the panel. */
-const DRAWS_PINS = new Set(['gauge', 'compare', 'tree', 'modes'])
+const DRAWS_PINS = new Set(['gauge', 'compare', 'tree'])
 
 const uid = useId()
 const headId = `${uid}-title`
 const panelId = `${uid}-pin`
 const sourceId = (id) => `${props.chapter.id}-source-${id}`
 
-const imageId = computed(() => imageIn(props.images))
+const figure = computed(() => props.chapter.figure)
+const figureComponent = computed(() => FIGURES[figure.value?.kind] ?? null)
+const figureRefs = computed(() => refsOf(figure.value, props.defsByKey))
+/** What the kernel buttons would switch: the measured values, not the examples. */
+const measured = computed(() => measuredRefs(figureRefs.value))
+/** Pins the figure draws itself, whose buttons in the row show only below md. */
+const drawnKeys = computed(() => new Set(drawnPinKeys(figure.value)))
+
+// Every measured value the same on every image: one caption that says so
+// (Design.md "Learning pages > Figures").
+const sameOn = computed(() =>
+  sameOnEveryImage(measured.value, props.images.map((img) => img.id), props.valueFor) ? props.images.length : 0,
+)
+// The buttons only where the figure asks for them and they would change something.
+const picker = computed(() => figure.value?.kernels === true && measured.value.length > 0 && !sameOn.value)
+
+const imageId = computed(() => (picker.value ? imageIn(props.images) : (props.images[0]?.id ?? '')))
 const imageLabel = computed(() => props.images.find((img) => img.id === imageId.value)?.label ?? imageId.value)
 const evidence = computed(() => {
   const id = imageId.value
   return (vref) => props.valueFor(vref, id)
 })
-
-const figure = computed(() => props.chapter.figure)
-const figureComponent = computed(() => FIGURES[figure.value?.kind] ?? null)
-const figureRefs = computed(() => refsOf(figure.value, props.defsByKey))
-/** Pins the figure draws itself, whose buttons in the row show only below md. */
-const drawnKeys = computed(() => new Set(drawnPinKeys(figure.value)))
-
-// Every value the same on every image: no picker, one caption (Design.md
-// "Learning pages > Figures").
-const sameOn = computed(() =>
-  sameOnEveryImage(figureRefs.value, props.images.map((img) => img.id), props.valueFor) ? props.images.length : 0,
-)
 
 const pins = computed(() => props.chapter.pins ?? [])
 const selectedKey = ref(pins.value[0]?.key ?? null)
@@ -83,6 +91,17 @@ watch(() => props.chapter.id, () => (selectedKey.value = pins.value[0]?.key ?? n
 const selected = computed(() => pins.value.find((p) => p.key === selectedKey.value) ?? null)
 const selectedRefs = computed(() => (selected.value && figure.value ? pinRefs(figure.value, selected.value, props.defsByKey) : []))
 const selectedKernel = computed(() => kernelOf(selectedRefs.value, evidence.value))
+/** The panel's heading over its values: measured, examples, or both. */
+const selectedHeading = computed(() => {
+  const examples = selectedRefs.value.filter(isExample).length
+  return examples === 0 ? 'Measured' : examples === selectedRefs.value.length ? 'Example values' : 'Values'
+})
+/** Where the panel's measured values come from, or that they are all examples. */
+const selectedSource = computed(() => {
+  if (selectedRefs.value.every(isExample)) return EXAMPLES_TEXT
+  if (sameOn.value) return `The same on all ${sameOn.value} test kernels`
+  return selectedKernel.value ? `${imageLabel.value}, kernel ${selectedKernel.value}` : `Not measured on ${imageLabel.value} yet`
+})
 const docsHref = computed(() => (selected.value ? safeHref(props.defsByKey[selected.value.key]?.kernelDocsUrl) : null))
 const tune = (key) => (props.tuneHref ? safeHref(props.tuneHref(key)) : null)
 
@@ -122,7 +141,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
 
     <div class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_16rem]" data-part="figure">
       <div class="min-w-0">
-        <div v-if="figureRefs.length && !sameOn" class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div v-if="picker" class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
           <span :id="`${uid}-kernels`" class="text-[13px] text-quiet">Measured on</span>
           <div role="group" :aria-labelledby="`${uid}-kernels`" class="flex max-w-full flex-wrap gap-px border border-rule-strong bg-rule-strong" data-kernels>
             <button
@@ -142,6 +161,7 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
           :figure="figure"
           :evidence="evidence"
           :image-id="imageId"
+          :image-label="imageLabel"
           :defs-by-key="defsByKey"
           :highlight="selected?.layer ?? null"
           :same-on="sameOn"
@@ -172,11 +192,11 @@ const LINK = 'underline underline-offset-[3px] hover:decoration-2'
           <p class="m-0 mt-3 text-[13px] font-medium text-quiet">What it changes here</p>
           <p class="m-0 text-ink"><RichText :text="selected.here" /></p>
           <template v-if="selectedRefs.length">
-            <p class="m-0 mt-3 text-[13px] font-medium text-quiet">Measured</p>
+            <p class="m-0 mt-3 text-[13px] font-medium text-quiet">{{ selectedHeading }}</p>
             <ul class="m-0 list-none p-0 font-mono text-[13px] text-ink">
               <li v-for="vref in selectedRefs" :key="`${vref.probe}:${vref.path}`" class="break-words">{{ measuredText(vref, evidence, { exact: true }) }}</li>
             </ul>
-            <p class="m-0 text-[13px] text-ink-2">{{ sameOn ? `The same on all ${sameOn} test kernels` : selectedKernel ? `${imageLabel}, kernel ${selectedKernel}` : `Not measured on ${imageLabel} yet` }}</p>
+            <p class="m-0 text-[13px] text-ink-2">{{ selectedSource }}</p>
           </template>
           <p v-if="docsHref" class="m-0 mt-3 text-[13px] text-ink-2">
             Source: <a :href="docsHref" :class="LINK" target="_blank" rel="noopener">{{ hostOf(docsHref) }} ↗</a>

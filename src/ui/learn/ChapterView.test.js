@@ -5,7 +5,7 @@ import ChapterView from './ChapterView.vue'
 import { KERNEL_STORAGE_KEY, storedKernel } from './kernelPref.js'
 import { DEMO_DEFS, DEMO_DOCS, DEMO_IMAGES, DEMO_LEARN, valueFor } from '@/learn/__fixtures__/demoKit.js'
 
-const [stackChapter, timelineChapter, sideChapter, , gaugeChapter] = DEMO_LEARN.chapters
+const [stackChapter, timelineChapter, sideChapter, , gaugeChapter, compareChapter] = DEMO_LEARN.chapters
 
 const mountChapter = (chapter = stackChapter, props = {}) =>
   mount(ChapterView, {
@@ -122,10 +122,49 @@ describe('ChapterView', () => {
     expect(localStorage.getItem(KERNEL_STORAGE_KEY)).toBe('fedora-43')
     expect(buttons[2].attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-pin-panel]').text()).toContain('Fedora 43, kernel 0.0.2-fixture')
-    // A second chapter on the page shows the same kernel.
-    const other = mountChapter(timelineChapter)
+    // A second chapter with buttons on the page shows the same kernel.
+    const other = mountChapter(compareChapter)
     expect(other.get('[data-kernels] [aria-pressed="true"]').text()).toBe('Fedora 43')
     other.unmount()
+    // A figure that does not ask for the buttons stays on the first image.
+    const gauge = mountChapter(gaugeChapter)
+    expect(gauge.find('[data-kernels]').exists()).toBe(false)
+    expect(gauge.get('[data-part="figure"]').text()).toContain('Free now is an example, to show the idea. The rest is measured on Debian 13, kernel 0.0.0-fixture.')
+    gauge.unmount()
+  })
+
+  it('shows no kernel buttons on a figure that does not ask, even where the captures differ', async () => {
+    // The gauge's watermarks differ on Ubuntu 18.04, but the chapter is not about that.
+    localStorage.setItem(KERNEL_STORAGE_KEY, 'ubuntu-18.04')
+    storedKernel.value = 'ubuntu-18.04'
+    wrapper = mountChapter(gaugeChapter)
+    expect(wrapper.find('[data-kernels]').exists()).toBe(false)
+    const figure = wrapper.get('[data-part="figure"]')
+    expect(figure.text()).toContain('Free now is an example, to show the idea. The rest is measured on Debian 13, kernel 0.0.0-fixture.')
+    expect(figure.text()).not.toContain('0.0.4-fixture')
+    // The panel follows the same rule.
+    await wrapper.findAll('[data-gauge-pin]')[1].trigger('click')
+    expect(wrapper.get('[data-pin-panel]').text()).toContain('high: 6,000 pages')
+    expect(wrapper.get('[data-pin-panel]').text()).toContain('Debian 13, kernel 0.0.0-fixture')
+  })
+
+  it('shows no kernel buttons on a figure of examples, and says they are examples', async () => {
+    wrapper = mountChapter(timelineChapter)
+    expect(wrapper.find('[data-kernels]').exists()).toBe(false)
+    const figure = wrapper.get('[data-part="figure"]')
+    expect(figure.text()).toContain('Example values, to show the idea.')
+    expect(figure.text()).not.toContain('kernel 0.0')
+    const panel = wrapper.get('[data-pin-panel]')
+    expect(panel.text()).toContain('Example values')
+    expect(panel.text()).toContain('low level: 4,000 pages (example)')
+    expect(panel.text()).not.toContain('Measured')
+  })
+
+  it('names the examples in a figure that mixes them with measured values', () => {
+    wrapper = mountChapter(compareChapter)
+    expect(wrapper.get('[data-part="figure"]').text()).toContain(
+      'A program asks and Auto tuning are examples, to show the idea. The rest is measured on Debian 13, kernel 0.0.0-fixture.',
+    )
   })
 
   it('drops the kernel buttons when every image measured the same values', () => {

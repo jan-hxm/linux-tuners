@@ -22,6 +22,8 @@ const props = defineProps({
   /** ref => valueFor(ref, imageId) */
   evidence: { type: Function, required: true },
   imageId: { type: String, default: '' },
+  /** The image's name as the reader sees it (Debian 13), for the caption; the id when unset. */
+  imageLabel: { type: String, default: '' },
   /** How many images measured every value the same (sameOnEveryImage), or 0. */
   sameOn: { type: Number, default: 0 },
   /** The selected pin's `layer`: a node id. */
@@ -37,7 +39,7 @@ const emit = defineEmits(['select'])
 const scope = useId()
 const nodes = computed(() => treeNodes(props.figure))
 const label = computed(() => treeLabel(props.figure, props.evidence, { defsByKey: props.defsByKey, highlight: props.highlight }))
-const caption = computed(() => treeCaption(props.figure, props.evidence, props.imageId, props.sameOn))
+const caption = computed(() => treeCaption(props.figure, props.evidence, (props.imageLabel || props.imageId), props.sameOn))
 const pinsOn = (id) => (props.figure.pins ?? []).filter((p) => p.node === id)
 
 /** Indent per level, and where a level's connector line runs, in rem. */

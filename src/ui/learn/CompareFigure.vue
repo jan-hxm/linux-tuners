@@ -27,6 +27,8 @@ const props = defineProps({
   /** ref => valueFor(ref, imageId) */
   evidence: { type: Function, required: true },
   imageId: { type: String, default: '' },
+  /** The image's name as the reader sees it (Debian 13), for the caption; the id when unset. */
+  imageLabel: { type: String, default: '' },
   /** How many images measured every value the same (sameOnEveryImage), or 0. */
   sameOn: { type: Number, default: 0 },
   /** The selected pin's `layer`: a bar, mark or group id. */
@@ -42,7 +44,7 @@ const emit = defineEmits(['select'])
 const scope = useId()
 const model = computed(() => compareModel(props.figure, props.evidence))
 const label = computed(() => compareLabel(props.figure, props.evidence, { defsByKey: props.defsByKey, highlight: props.highlight }))
-const caption = computed(() => compareCaption(props.figure, props.evidence, props.imageId, props.sameOn))
+const caption = computed(() => compareCaption(props.figure, props.evidence, (props.imageLabel || props.imageId), props.sameOn))
 const axis = computed(() => compareAxisText(props.figure, model.value))
 const barPins = computed(() => (props.figure.pins ?? []).filter((p) => p.bar))
 // Every row shares one set of columns, so every track has the same width.

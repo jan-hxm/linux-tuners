@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  answerText, answerValue, cellKinds, chooseStep, curvePath, edgeGeometry, edgeRows, figureLabel, figureRefs, formatValue, gaugeCaption,
+  answerText, answerValue, cellKinds, chooseStep, curvePath, edgeGeometry, edgeRows, figureLabel, figureRefs, formatValue, gaugeCaption, gaugeLabel,
   gaugeModel, lineLevels, niceTop, noText, numberedSources, partsMapLabel, pinRefs, plainTip, safeHref, sameOnEveryImage, sameOnText, scaleModel,
   scaleTicks, splitFootnotes, tipValue, NOT_MEASURED, NOTHING_FITS,
 } from './figureText.js'
@@ -291,7 +291,19 @@ describe('figures v2 geometry', () => {
     const fig = gaugeChapter.figure
     expect(pinRefs(fig, { key: 'floor_kbytes', layer: 'min' }).map((r) => r.path ?? r.probe)).toEqual(['demo.reserve', 'Normal.min'])
     expect(pinRefs(fig, { key: 'gap_factor', layer: 'min-high' }).map((r) => r.path)).toEqual(['Normal.high', 'Normal.low', 'Normal.min'])
-    expect(figureRefs(fig)).toHaveLength(5)
+    expect(figureRefs(fig)).toHaveLength(6)
+  })
+
+  it('fills a gauge to its level, and says the level is an example', () => {
+    const fig = gaugeChapter.figure
+    const m = gaugeModel(fig, on('debian-13'))
+    expect(m.level).toMatchObject({ label: 'free now', v: 5000, num: '5,000', text: '5,000 pages' })
+    expect(m.level.y).toBeCloseTo(5000 / 8000)
+    expect(gaugeLabel(fig, on('debian-13'))).toContain('Filled to free now, 5,000 pages: An example of free memory between low and high.')
+    expect(gaugeCaption(fig, on('debian-13'), 'Debian 13')).toContain('Free now is an example, to show the idea. The rest is measured on Debian 13, kernel 0.0.0-fixture.')
+    // A schematic gauge has no scale to fill, so it draws and says no level.
+    expect(gaugeModel(fig, on('arch')).level.y).toBeNull()
+    expect(gaugeLabel(fig, on('arch'))).not.toContain('Filled to')
   })
 
   it('writes a tip as plain words and its value with the kernel', () => {

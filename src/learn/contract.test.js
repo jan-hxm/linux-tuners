@@ -10,7 +10,7 @@ import { IMAGES } from '../../vm/lib/images.mjs'
 import { GLOSSARY } from '@/ui/glossary.js'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { TUNERS } from '@/tuners/registry.js'
-import { validateGuide, answerValueIssue, commandIssues, footnotes, visibleText, sentences, wordCount, TEMPLATE_PARTS, BANNED_WORDS } from './schema.js'
+import { validateGuide, answerValueIssue, commandIssues, exampleIssue, footnotes, visibleText, sentences, wordCount, TEMPLATE_PARTS, BANNED_WORDS } from './schema.js'
 import { IMAGES_ORDER, GUEST_MEMORY_MIB, loadEvidence, valueFor, validateEvidence, resolvePath } from './evidence.js'
 import { LEARN as DEMO, DEFS_BY_KEY as DEMO_DEFS } from './__fixtures__/demo.learn.js'
 import { PROBES as DEMO_PROBES } from './__fixtures__/demo.probes.js'
@@ -219,6 +219,15 @@ describe('valueFor', () => {
     expect(valueFor(sizes, 'ubuntu-18.04', FIXTURE_EVIDENCE)).toMatchObject({ status: 'ok', value: 87380 })
   })
 
+  it('reads an example as ok on every image, with no kernel', () => {
+    const ex = { example: 41000, unit: 'entries', label: 'Busy server' }
+    for (const { id } of IMAGES_ORDER) expect(valueFor(ex, id, FIXTURE_EVIDENCE)).toEqual({ status: 'ok', value: 41000, example: true })
+    expect(valueFor(ex, 'arch', {})).toEqual({ status: 'ok', value: 41000, example: true })
+    expect(valueFor({ example: 'never', unit: '', label: 'Mode' }, 'debian-13', {})).toMatchObject({ value: 'never', example: true })
+    expect(valueFor({ example: NaN, unit: '', label: 'x' }, 'debian-13', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
+    expect(valueFor({ example: '', unit: '', label: 'x' }, 'debian-13', FIXTURE_EVIDENCE)).toEqual({ status: 'missing' })
+  })
+
   it('reads the committed captures by default', () => {
     expect(valueFor(ref, 'debian-13')).toEqual(COMMITTED_EVIDENCE['debian-13'] ? expect.any(Object) : { status: 'missing' })
     expect(GUEST_MEMORY_MIB).toBe(3072)
@@ -231,6 +240,21 @@ describe('text helpers', () => {
   it('finds footnotes and leaves them out of what a reader sees', () => {
     expect(footnotes('A.[^vm] B `x.y`.[^proc-5]')).toEqual(['vm', 'proc-5'])
     expect(visibleText('Free `vm.min_free_kbytes` and [[reclaim]].[^vm]', { codeAs: 'code' })).toBe('Free code and reclaim.')
+  })
+
+  it('holds an example to plausible bounds for its unit', () => {
+    expect(exampleIssue(41000, 'entries')).toBeNull()
+    expect(exampleIssue(-1, '')).toBeNull()
+    expect(exampleIssue('madvise', '')).toBeNull()
+    expect(exampleIssue(100, '%')).toBeNull()
+    expect(exampleIssue(2 ** 50, 'bytes')).toBeNull()
+    expect(exampleIssue(-1, 'kB')).toContain('below 0')
+    expect(exampleIssue(101, '%')).toContain('past 100')
+    expect(exampleIssue(2 ** 41, 'kB')).toContain('past')
+    expect(exampleIssue(2 ** 60, 'pages')).toContain('past')
+    expect(exampleIssue(NaN, '')).toContain('finite')
+    expect(exampleIssue(null, '')).toContain('finite')
+    expect(exampleIssue('x'.repeat(41), '')).toContain('40 characters')
   })
 
   it('counts words and splits sentences', () => {
@@ -436,7 +460,23 @@ const RULE_CASES = [
   ['a card probe that does not exist', (g) => (g.parts.cards[1].probe = 'demo.nope'), 'parts.cards[1].probe', 'probe'],
   ['a backing probe that does not exist', (g) => (g.chapters[3].figure.backedBy.probe = 'demo.nope'), 'chapters[3].figure.backedBy.probe', 'probe'],
   ['a timeline line without a unit', (g) => delete g.chapters[1].figure.lines[0].value.unit, 'chapters[1].figure.lines[0].value', 'shape'],
-  ['a path into nothing on a live guide', (g) => (g.chapters[1].figure.lines[0].value.path = 'Normal.max'), 'chapters[1].figure.lines[0].value.probe', 'evidence'],
+  ['a path into nothing on a live guide', (g) => (ch0(g).figure.layers[1].values[0].path = 'Normal.max'), 'chapters[0].figure.layers[1].values[0].probe', 'evidence'],
+  // examples
+  ['an example that also names a probe', (g) => (g.chapters[5].figure.bars[0].value.example = 4096), 'chapters[5].figure.bars[0].value', 'shape'],
+  ['an example without a label', (g) => delete g.chapters[1].figure.lines[0].value.label, 'chapters[1].figure.lines[0].value', 'shape'],
+  ['an example with a path', (g) => (g.chapters[1].figure.lines[0].value.path = 'Normal.low'), 'chapters[1].figure.lines[0].value.path', 'shape'],
+  ['an example that is not a finite number', (g) => (g.chapters[1].figure.lines[0].value.example = Infinity), 'chapters[1].figure.lines[0].value.example', 'example'],
+  ['an example that is neither a number nor a string', (g) => (g.chapters[1].figure.lines[0].value.example = true), 'chapters[1].figure.lines[0].value.example', 'example'],
+  ['an empty example string', (g) => (g.chapters[1].figure.lines[0].value.example = ' '), 'chapters[1].figure.lines[0].value.example', 'example'],
+  ['a negative example size', (g) => (g.chapters[5].figure.marks[1].value.example = -1), 'chapters[5].figure.marks[1].value.example', 'example'],
+  ['an example size past 1 PiB', (g) => (g.chapters[5].figure.marks[1].value.example = 2 ** 51), 'chapters[5].figure.marks[1].value.example', 'example'],
+  ['an example share past 100 %', (g) => Object.assign(g.chapters[1].figure.lines[0].value, { unit: '%', example: 150 }), 'chapters[1].figure.lines[0].value.example', 'example'],
+  ['a long example label', (g) => (g.chapters[1].figure.lines[0].value.label = words(5)), 'chapters[1].figure.lines[0].value.label', 'figure words'],
+  ['an em dash in an example', (g) => Object.assign(g.chapters[1].figure.lines[0].value, { unit: '', example: 'a — b' }), 'chapters[1].figure.lines[0].value.example', 'em dash'],
+  // kernel buttons
+  ['kernel buttons on a figure of examples only', (g) => (g.chapters[1].figure.kernels = true), 'chapters[1].figure.kernels', 'kernels'],
+  ['kernel buttons on a side by side', (g) => (g.chapters[2].figure.kernels = true), 'chapters[2].figure.kernels', 'kernels'],
+  ['kernels set to false', (g) => (ch0(g).figure.kernels = false), 'chapters[0].figure.kernels', 'shape'],
   // A card or node naming an object-valued probe must say which field it shows.
   ['a card probe whose value is an object, with no path', (g) => { delete g.parts.cards[1].path; delete g.parts.cards[1].unit }, 'parts.cards[1].probe', 'evidence'],
   ['a card path into nothing', (g) => (g.parts.cards[1].path = 'Nope'), 'parts.cards[1].probe', 'evidence'],
@@ -492,6 +532,10 @@ const RULE_CASES = [
   ['a gauge pin the chapter does not pin', (g) => (g.chapters[4].figure.pins[0].key = 'reserve_kbytes'), 'chapters[4].figure.pins[0].key', 'pins'],
   ['a key drawn twice on a gauge', (g) => (g.chapters[4].figure.pins[1].key = 'floor_kbytes'), 'chapters[4].figure.pins[1].key', 'pins'],
   ['a gauge pin with both a mark and a gap', (g) => (g.chapters[4].figure.pins[0].from = 'low'), 'chapters[4].figure.pins[0].from', 'shape'],
+  ['a gauge level in another unit', (g) => (g.chapters[4].figure.level.value.unit = 'kB'), 'chapters[4].figure.level.value.unit', 'figure range'],
+  ['a gauge level without a value', (g) => delete g.chapters[4].figure.level.value, 'chapters[4].figure.level', 'shape'],
+  ['a long gauge level label', (g) => (g.chapters[4].figure.level.label = words(5)), 'chapters[4].figure.level.label', 'figure words'],
+  ['a gauge level value from an unknown probe', (g) => (g.chapters[4].figure.level.value = { probe: 'demo.nope', unit: 'pages' }), 'chapters[4].figure.level.value.probe', 'probe'],
   ['a gauge pin value from an unknown probe', (g) => (g.chapters[4].figure.pins[0].value.probe = 'demo.nope'), 'chapters[4].figure.pins[0].value.probe', 'probe'],
   ['a pin layer naming a gauge part that does not exist', (g) => (g.chapters[4].pins[0].layer = 'max'), 'chapters[4].pins[0].layer', 'pins'],
   // value labels
@@ -533,10 +577,10 @@ const RULE_CASES = [
   ['a modes option listed twice', (g) => (g.chapters[7].figure.rows[0].options[1].value = 'always'), 'chapters[7].figure.rows[0].options[1].value', 'figure range'],
   ['a modes option the pinned def does not write', (g) => (g.chapters[7].figure.rows[0].options[2].value = 'sometimes'), 'chapters[7].figure.rows[0].options[2].value', 'mode value'],
   ['a pinned modes row without allValues listing a value the def lacks', (g) => {
-    delete g.chapters[7].figure.rows[3].allValues
-    delete g.chapters[7].figure.rows[2].pin
-    g.chapters[7].figure.rows[3].pin = 'scheduler'
-  }, 'chapters[7].figure.rows[3].options[3].value', 'mode value'],
+    delete g.chapters[7].figure.rows[4].allValues
+    delete g.chapters[7].figure.rows[3].pin
+    g.chapters[7].figure.rows[4].pin = 'scheduler'
+  }, 'chapters[7].figure.rows[4].options[3].value', 'mode value'],
   ['a bits option that is not a power of two', (g) => (g.chapters[7].figure.rows[1].options[0].value = 3), 'chapters[7].figure.rows[1].options[0].value', 'figure range'],
   ['bits set to false', (g) => (g.chapters[7].figure.rows[1].bits = false), 'chapters[7].figure.rows[1].bits', 'shape'],
   ['a long option label', (g) => (g.chapters[7].figure.rows[0].options[0].label = words(5)), 'chapters[7].figure.rows[0].options[0].label', 'figure words'],
@@ -544,7 +588,20 @@ const RULE_CASES = [
   ['an option value that is neither a number nor a string', (g) => (g.chapters[7].figure.rows[0].options[0].value = null), 'chapters[7].figure.rows[0].options[0].value', 'shape'],
   ['a modes row pin on an unknown key', (g) => (g.chapters[7].figure.rows[0].pin = 'nope'), 'chapters[7].figure.rows[0].pin', 'def key'],
   ['a modes row pin the chapter does not pin', (g) => (g.chapters[7].figure.rows[0].pin = 'reserve_kbytes'), 'chapters[7].figure.rows[0].pin', 'pins'],
-  ['a key drawn on two modes rows', (g) => (g.chapters[7].figure.rows[3].pin = 'scheduler'), 'chapters[7].figure.rows[3].pin', 'pins'],
+  ['a key drawn on two modes rows', (g) => (g.chapters[7].figure.rows[4].pin = 'scheduler'), 'chapters[7].figure.rows[4].pin', 'pins'],
+  // modes option ranges
+  ['a range in a bits row', (g) => (g.chapters[7].figure.rows[1].options[0] = { min: 1, label: 'some' }), 'chapters[7].figure.rows[1].options[0]', 'figure range'],
+  ['two ranges that overlap', (g) => (g.chapters[7].figure.rows[2].options[2].min = 3000), 'chapters[7].figure.rows[2].options[2]', 'figure range'],
+  ['a value inside a range', (g) => g.chapters[7].figure.rows[2].options.push({ value: 5000, label: 'big' }), 'chapters[7].figure.rows[2].options[3].value', 'figure range'],
+  ['a range whose max is below its min', (g) => (g.chapters[7].figure.rows[2].options[1].max = 0), 'chapters[7].figure.rows[2].options[1].max', 'figure range'],
+  ['a range min that is not a number', (g) => (g.chapters[7].figure.rows[2].options[1].min = '1'), 'chapters[7].figure.rows[2].options[1].min', 'shape'],
+  ['a range with a value too', (g) => (g.chapters[7].figure.rows[2].options[1].value = 3), 'chapters[7].figure.rows[2].options[1].value', 'shape'],
+  // a pin's own value
+  ['a compare pin value from an unknown probe', (g) => (g.chapters[5].figure.pins[2].value = { probe: 'demo.nope', unit: '' }), 'chapters[5].figure.pins[2].value.probe', 'probe'],
+  ['a tree pin value without a unit', (g) => (g.chapters[6].figure.pins[0].value = { example: 1, label: 'Weight' }), 'chapters[6].figure.pins[0].value', 'shape'],
+  ['an unknown field on a modes row pin', (g) => (g.chapters[7].figure.rows[3].pin.colour = 'red'), 'chapters[7].figure.rows[3].pin.colour', 'shape'],
+  ['a modes row pin object on an unknown key', (g) => (g.chapters[7].figure.rows[3].pin.key = 'nope'), 'chapters[7].figure.rows[3].pin.key', 'def key'],
+  ['a modes row pin value with a long label', (g) => (g.chapters[7].figure.rows[3].pin.value.label = words(5)), 'chapters[7].figure.rows[3].pin.value.label', 'figure words'],
   ['a modes row in a group that does not exist', (g) => (g.chapters[7].figure.rows[0].group = 'nowhere'), 'chapters[7].figure.rows[0].group', 'figure range'],
   ['a modes row value from an unknown probe', (g) => (g.chapters[7].figure.rows[0].value.probe = 'demo.nope'), 'chapters[7].figure.rows[0].value.probe', 'probe'],
 ]
@@ -555,6 +612,28 @@ describe('each rule fails a broken fixture', () => {
     const hit = issues.find((i) => i.path === path && i.rule === rule)
     expect(hit, `no "${rule}" issue at ${path} in ${JSON.stringify(issues, null, 1)}`).toBeTruthy()
     expect(hit.message.startsWith(`${rule}: `)).toBe(true)
+  })
+
+  it('takes an example wherever a value goes, and never checks one against the evidence', () => {
+    const ex = (example, unit, label) => ({ example, unit, label })
+    const issues = broken((g) => {
+      g.parts.scale.total = ex(16777216, 'kB', 'RAM')
+      g.parts.scale.segments[0].value = ex(9437184, 'kB', 'Programs')
+      ch0(g).figure.layers[1].values = [ex(2000, 'pages', 'A busy moment')]
+      g.chapters[4].figure.marks = g.chapters[4].figure.marks.map((m, i) => ({ ...m, value: ex(1000 * (i + 1), 'pages', m.label) }))
+      g.chapters[4].figure.pins[0].value = ex(4000, 'kB', 'Floor')
+      g.chapters[4].figure.zoom.full = ex(16777216, 'kB', 'All memory')
+      g.chapters[5].figure.bars[0].value = ex(8192, 'bytes', 'Smallest')
+      g.chapters[6].figure.root.children[0].value = ex(200, '', 'System weight')
+      g.chapters[6].figure.pins[0].value = ex(100, '', 'Default weight')
+      g.chapters[7].figure.rows[0].value = ex('never', '', 'Huge pages')
+      g.chapters[7].figure.rows[2].value = ex(-1, '', 'Reserve')
+    })
+    expect(issues).toEqual([])
+  })
+
+  it('lets a pinned modes row hold ranges the def does not write', () => {
+    expect(broken((g) => g.chapters[7].figure.rows[0].options.push({ min: 1, max: 9, label: 'some' }))).toEqual([])
   })
 
   it('needs evidence for every image once live', () => {

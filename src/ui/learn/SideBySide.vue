@@ -19,6 +19,7 @@ const props = defineProps({
   /** Unused: side by side shows settings, not captures. Every figure takes the same props. */
   evidence: { type: Function, default: null },
   imageId: { type: String, default: '' },
+  imageLabel: { type: String, default: '' },
   sameOn: { type: Number, default: 0 },
   highlight: { type: String, default: null },
   selectedKey: { type: String, default: null },

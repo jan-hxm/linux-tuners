@@ -13,7 +13,7 @@
 import { computed, useId } from 'vue'
 import FigureTip from './FigureTip.vue'
 import TipStrip from './TipStrip.vue'
-import { itemRef, measuredOn, shownItemValue, measuredText, sameOnText, refName, stackLabel, stackRefs, tipValue } from './figureText.js'
+import { itemRef, measuredOn, shownItemValue, measuredText, refName, stackLabel, stackRefs, tipValue } from './figureText.js'
 
 const props = defineProps({
   /** Figure of kind 'stack' */
@@ -21,6 +21,8 @@ const props = defineProps({
   /** ref => valueFor(ref, imageId) */
   evidence: { type: Function, required: true },
   imageId: { type: String, default: '' },
+  /** The image's name as the reader sees it (Debian 13), for the caption; the id when unset. */
+  imageLabel: { type: String, default: '' },
   /** How many images measured every value the same (sameOnEveryImage), or 0. */
   sameOn: { type: Number, default: 0 },
   /** The selected pin's `layer`, or null. */
@@ -33,7 +35,7 @@ defineEmits(['select'])
 
 const scope = useId()
 const label = computed(() => stackLabel(props.figure, props.evidence, props.highlight))
-const caption = computed(() => (props.sameOn ? sameOnText(props.sameOn) : measuredOn(stackRefs(props.figure), props.evidence, props.imageId)))
+const caption = computed(() => measuredOn(stackRefs(props.figure), props.evidence, props.imageLabel || props.imageId, props.sameOn))
 const on = (id) => id === props.highlight
 const SELECTED = 'border-fit bg-fit-tint'
 const PLAIN = 'border-ink bg-paper'

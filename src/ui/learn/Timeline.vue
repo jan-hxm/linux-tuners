@@ -12,7 +12,7 @@
 import { computed, useId } from 'vue'
 import FigureTip from './FigureTip.vue'
 import TipStrip from './TipStrip.vue'
-import { curvePath, formatValue, lineLevels, measuredOn, sameOnText, timelineLabel, tipValue } from './figureText.js'
+import { curvePath, formatValue, lineLevels, measuredOn, timelineLabel, tipValue } from './figureText.js'
 
 const props = defineProps({
   /** Figure of kind 'timeline' */
@@ -20,6 +20,8 @@ const props = defineProps({
   /** ref => valueFor(ref, imageId) */
   evidence: { type: Function, required: true },
   imageId: { type: String, default: '' },
+  /** The image's name as the reader sees it (Debian 13), for the caption; the id when unset. */
+  imageLabel: { type: String, default: '' },
   /** How many images measured every value the same (sameOnEveryImage), or 0. */
   sameOn: { type: Number, default: 0 },
   /** The selected pin's `layer`: a line id draws that line in `fit`. */
@@ -45,7 +47,7 @@ const tipLines = computed(() => lines.value.filter((l) => l.does))
 const events = computed(() =>
   [...props.figure.events].sort((a, b) => a.at - b.at).map((e, i) => ({ ...e, n: i + 1, x: e.at * 100 })),
 )
-const caption = computed(() => (props.sameOn ? sameOnText(props.sameOn) : measuredOn(props.figure.lines.map((l) => l.value), props.evidence, props.imageId)))
+const caption = computed(() => measuredOn(props.figure.lines.map((l) => l.value), props.evidence, props.imageLabel || props.imageId, props.sameOn))
 
 const TONE_STROKE = { fit: 'stroke-fit', error: 'stroke-error' }
 const TONE_TEXT = { fit: 'text-fit-text', error: 'text-error' }

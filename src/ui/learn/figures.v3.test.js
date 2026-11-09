@@ -50,8 +50,9 @@ describe('CompareFigure', () => {
     expect(w.get('[data-bar="buf-largest"] [data-bar-value]').text()).toBe('6 MiB')
     expect(w.get('[data-axis]').text()).toBe('buffer size, log scale, 2 KiB to 16 MiB')
     expect(w.findAll('[data-group]').map((g) => g.attributes('data-group'))).toEqual(['per-socket', 'whole-system'])
-    // The mark is a line across every bar, named above them.
-    expect(w.findAll('[data-mark-line]')).toHaveLength(4)
+    // Each mark is a line across every bar, named above them; the example one too.
+    expect(w.findAll('[data-mark-line]')).toHaveLength(8)
+    expect(w.get('[data-mark-label="ask"]').text()).toContain('1 MiB')
     expect(w.get('[data-mark-label="ceiling"]').text()).toContain('208 KiB')
   })
 
@@ -71,8 +72,17 @@ describe('CompareFigure', () => {
     expect(w.get('[data-bar="buf-start"] [data-bar-value]').text()).toBe('85.3 KiB')
   })
 
+  it('says in the tooltip that an example line is an example', () => {
+    const w = mountFigure(CompareFigure, 'comparing-sizes')
+    const tip = w.get('[data-mark-label="ask"]')
+    expect(w.get(`#${tip.attributes('aria-describedby')}`).text()).toBe('An example of a size a program sets for itself. 1 MiB (1,048,576 bytes), example')
+    expect(w.text()).toContain('A program asks and Auto tuning are examples, to show the idea. The rest is measured on debian-13')
+  })
+
   it('draws no bar and no number where nothing is measured', () => {
-    const w = mountFigure(CompareFigure, 'comparing-sizes', 'arch')
+    const fig = chapter('comparing-sizes').figure
+    const measuredOnly = { ...fig, marks: fig.marks.slice(0, 1), pins: fig.pins.slice(0, 2) }
+    const w = mount(CompareFigure, { props: { figure: measuredOnly, evidence: on('arch'), imageId: 'arch', defsByKey: DEMO_DEFS } })
     expect(w.findAll('[data-bar-fill]')).toHaveLength(0)
     expect(w.findAll('[data-tick]')).toHaveLength(0)
     expect(w.get('[role="figure"]').attributes('aria-label')).not.toMatch(/\d{3,}/)
@@ -81,7 +91,7 @@ describe('CompareFigure', () => {
   it('draws its settings beside their bar and line, as pressed-state buttons from md up', async () => {
     const w = mountFigure(CompareFigure, 'comparing-sizes', 'debian-13', { selectedKey: 'buf_max', controls: 'panel' })
     const pins = w.findAll('[data-figure-pin]')
-    expect(pins.map((p) => p.attributes('data-figure-pin'))).toEqual(['buf_max', 'buf_sizes'])
+    expect(pins.map((p) => p.attributes('data-figure-pin'))).toEqual(['buf_max', 'buf_sizes', 'buf_auto'])
     expect(pins[0].attributes('aria-pressed')).toBe('true')
     expect(pins[0].attributes('aria-controls')).toBe('panel')
     expect(pins[1].attributes('aria-label')).toBe('demo.buf_sizes, on Largest')
@@ -153,23 +163,66 @@ describe('ModesFigure', () => {
     expect(w.get('[data-row="hdd-scheduler"] [data-row-status]').text()).toBe(ABSENT)
   })
 
-  it('says a lit option with a tip is set, and draws each row setting at its end', async () => {
+  it('says a lit option with a tip is set, and keeps the settings out of the rows', () => {
     const w = mountFigure(ModesFigure, 'picking-a-mode', 'debian-13', { selectedKey: 'scheduler', highlight: 'disks' })
     const seg = w.get('[data-row="page-mode"] [data-segment="madvise"]')
     expect(seg.element.tagName).toBe('BUTTON')
     expect(w.get(`#${seg.attributes('aria-describedby')}`).text()).toBe('Only memory a program marks for it. Set on this kernel.')
-    expect(w.findAll('[data-figure-pin]').map((p) => p.attributes('data-figure-pin'))).toEqual(['page_mode', 'key_mask', 'scheduler'])
-    expect(w.get('[data-figure-pin="scheduler"]').attributes('aria-pressed')).toBe('true')
+    // A row's setting is not drawn in the row, where its name would crowd the options.
+    expect(w.findAll('[data-figure-pin]')).toHaveLength(0)
     expect(w.get('[data-group="disks"]').classes()).toContain('bg-fit-tint')
-    await w.get('[data-figure-pin="key_mask"]').trigger('click')
-    expect(w.emitted('select')).toEqual([['key_mask']])
+    expect(w.get('[role="figure"]').attributes('aria-label')).toContain('SSD, set by demo.scheduler')
+  })
+
+  it('highlights the row that draws the selected setting', () => {
+    const w = mountFigure(ModesFigure, 'picking-a-mode', 'debian-13', { selectedKey: 'key_mask' })
+    expect(w.get('[data-row="key-mask"]').classes()).toContain('bg-fit-tint')
+    expect(w.get('[data-row="key-mask"]').attributes('data-selected')).toBe('true')
+    expect(w.get('[data-row="page-mode"]').classes()).not.toContain('bg-fit-tint')
+  })
+
+  it('lights the range the number falls in, and says the number in its tooltip', () => {
+    const w = mountFigure(ModesFigure, 'picking-a-mode')
+    expect(lit(w, 'reserve-size')).toEqual(['large'])
+    expect(w.get('[data-row="reserve-size"]').findAll('[data-segment]').map((s) => s.attributes('data-segment'))).toEqual(['0', '1-3999', '4000+'])
+    const seg = w.get('[data-row="reserve-size"] [data-segment="4000+"]')
+    expect(w.get(`#${seg.attributes('aria-describedby')}`).text()).toBe('Four thousand kB or more. Set on this kernel: 4,000.')
+    expect(lit(mountFigure(ModesFigure, 'picking-a-mode', 'ubuntu-18.04'), 'reserve-size')).toEqual(['small'])
   })
 })
 
 describe('ChapterView with a v3 figure', () => {
   const mountChapter = (id) => mount(ChapterView, { props: { chapter: chapter(id), images: DEMO_IMAGES, valueFor, defsByKey: DEMO_DEFS } })
 
-  it.each(['comparing-sizes', 'sharing-the-cpu', 'picking-a-mode'])('%s: the drawn pins select the chapter pin and the row keeps them for phones', async (id) => {
+  it('picking-a-mode: the row under the figure holds the settings at every width, and a press highlights the row', async () => {
+    const w = mountChapter('picking-a-mode')
+    expect(w.find('[data-figure-pin]').exists()).toBe(false)
+    const buttons = w.findAll('[data-pins] button')
+    for (const b of buttons) expect(b.classes()).not.toContain('md:hidden')
+    expect(w.get('[data-row="page-mode"]').classes()).toContain('bg-fit-tint')
+    await buttons[1].trigger('click')
+    expect(w.get('[data-row="key-mask"]').classes()).toContain('bg-fit-tint')
+    expect(w.get('[data-pin-panel]').text()).toContain('demo.key_mask')
+  })
+
+  it('shows a pin\'s own value in the panel under its setting, instead of the part it sits on', async () => {
+    const w = mountChapter('comparing-sizes')
+    await w.get('[data-figure-pin="buf_auto"]').trigger('click')
+    const panel = w.get('[data-pin-panel]').text()
+    expect(panel).toContain('Example values')
+    expect(panel).toContain('Auto tuning: 1 (example)')
+    expect(panel).toContain('Example values, to show the idea.')
+    expect(panel).not.toContain('Largest buffer')
+    const modes = mountChapter('picking-a-mode')
+    await modes.findAll('[data-pins] button')[2].trigger('click')
+    const text = modes.get('[data-pin-panel]').text()
+    expect(text).toContain('Fast disk choice: none (example)')
+    expect(text).toContain('Hard disk: bfq')
+    expect(text).toContain('Values')
+    expect(text).toContain('Debian 13, kernel 0.0.0-fixture')
+  })
+
+  it.each(['comparing-sizes', 'sharing-the-cpu'])('%s: the drawn pins select the chapter pin and the row keeps them for phones', async (id) => {
     const w = mountChapter(id)
     expect(w.find('[data-kernels]').exists()).toBe(true)
     const drawn = w.findAll('[data-figure-pin]')

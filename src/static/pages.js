@@ -22,8 +22,9 @@ import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
 import { LIVE_GUIDES, LEARN_INDEX_ROUTE, guideFacts, loadGuide } from '@/learn/guides.js'
 import { IMAGES_ORDER, valueFor } from '@/learn/evidence.js'
 import {
-  answerText, backedByText, cardGroups, cellCounts, comparePinPlace, defName, defTitle, edgeRows, figureRefs, formatValue, gaugePinPlace, inSentence, itemRef, noText,
-  numberedSources, refName, sameOnEveryImage, scaleRefs, settingText, sideBySideLegend, splitFootnotes, treeNodes, treePinPlace,
+  answerText, backedByText, cardGroups, cellCounts, comparePinPlace, defName, defTitle, edgeRows, figureRefs, formatValue, gaugePinPlace, inSentence, isExample,
+  isRangeOption, itemRef, noText, numberedSources, rangeText, refName, rowPinKey, sameOnEveryImage, scaleRefs, settingText, sideBySideLegend, splitFootnotes,
+  treeNodes, treePinPlace,
 } from '@/ui/learn/figureText.js'
 import { settingHref } from '@/ui/focusSetting.js'
 import { text, code, bold, link, rich, heading, paragraph, list, defs, codeBlock, joinSegments } from './nodes.js'
@@ -267,9 +268,13 @@ export async function loadStaticGuides(entries = LIVE_GUIDES) {
   }))
 }
 
-/** One value on every image: "Debian 13, kernel 6.12.48: 2,000 pages", or "not measured". */
+/**
+ * One value on every image: "Debian 13, kernel 6.12.48: 2,000 pages", or
+ * "not measured"; an example once, as one: "example: 41,000 entries".
+ */
 function measuredRow(ref, evidence) {
   const at = (r, id) => valueFor(r, id, evidence)
+  if (isExample(ref)) return { term: [code(refName(ref))], desc: [text(`example: ${formatValue(at(ref, IMAGE_IDS[0]), ref.unit, { exact: true })}.`)] }
   if (sameOnEveryImage([ref], IMAGE_IDS, at)) {
     return { term: [code(refName(ref))], desc: [text(`${formatValue(at(ref, IMAGE_IDS[0]), ref.unit, { exact: true })} on all ${IMAGE_IDS.length} test kernels.`)] }
   }
@@ -279,6 +284,26 @@ function measuredRow(ref, evidence) {
     return `${where}: ${formatValue(r, ref.unit, { exact: true })}`
   })
   return { term: [code(refName(ref))], desc: [text(`${parts.join('; ')}.`)] }
+}
+
+/**
+ * The values a figure or the scale bar reads: the measured ones on every
+ * kernel, then the examples, each list under its own line.
+ */
+function valueBlocks(refs, evidence) {
+  const measured = refs.filter((r) => !isExample(r))
+  const examples = refs.filter(isExample)
+  return [
+    ...(measured.length ? [paragraph(text('Measured on each kernel:')), defs(measured.map((r) => measuredRow(r, evidence)))] : []),
+    ...(examples.length ? [paragraph(text('Example values, to show the idea:')), defs(examples.map((r) => measuredRow(r, evidence)))] : []),
+  ]
+}
+
+/** Where a drawing's numbers come from: each kernel's capture, example values, or both. */
+function drawnFrom(refs) {
+  const examples = refs.filter(isExample).length
+  if (!examples) return "each kernel's capture"
+  return examples === refs.length ? 'example values' : "each kernel's capture and example values"
 }
 
 /** A part's tip, inline after its name: " (what it does)". The page shows it in a tooltip. */
@@ -306,7 +331,7 @@ function figureBlocks(figure, evidence, defsByKey) {
     if (backed) blocks.push(paragraph(text(backed)))
   } else if (figure.kind === 'gauge') {
     const name = (id) => figure.marks.find((m) => m.id === id)?.label ?? id
-    blocks.push(paragraph(text(`A scale of ${figure.axis}, drawn to scale from each kernel's capture. Marks from the bottom:`)))
+    blocks.push(paragraph(text(`A scale of ${figure.axis}, drawn to scale from ${drawnFrom(figure.marks.map((m) => m.value))}. Marks from the bottom:`)))
     blocks.push(list(figure.marks.map((m) => [bold(m.label), ...tipInline(m.does)])))
     blocks.push(paragraph(text('Zones:')))
     blocks.push(list(figure.zones.map((z) => [
@@ -318,13 +343,14 @@ function figureBlocks(figure, evidence, defsByKey) {
       blocks.push(paragraph(text('Settings on the scale: '), ...joinSegments(figure.pins.map((p) => [code(defName(p.key, defsByKey)), text(` ${gaugePinPlace(figure, p)}`)]), '; '), text('.')))
     }
     if (figure.zoom) blocks.push(paragraph(text(`Beside the scale, a thin bar of ${inSentence(figure.zoom.label)}, with a bracket on the part the scale shows.`)))
+    if (figure.level) blocks.push(paragraph(text('The scale is filled to '), bold(figure.level.label), ...tipInline(figure.level.does), text('.')))
     if (figure.curve) {
       blocks.push(paragraph(text('A schematic curve over time beside it: the shape and the order are real, the times are not.')))
       const events = [...(figure.curve.events ?? [])].sort((a, b) => a.at - b.at)
       if (events.length) blocks.push(list(events.map((e) => [text(e.label), ...tipInline(e.does)]), { ordered: true }))
     }
   } else if (figure.kind === 'compare') {
-    blocks.push(paragraph(text(`Bars on a ${figure.scale === 'log' ? 'log' : 'linear'} scale of ${figure.axis}, drawn from each kernel's capture${figure.groups?.length ? ', by group' : ''}:`)))
+    blocks.push(paragraph(text(`Bars on a ${figure.scale === 'log' ? 'log' : 'linear'} scale of ${figure.axis}, drawn from ${drawnFrom(figure.bars.map((b) => b.value))}${figure.groups?.length ? ', by group' : ''}:`)))
     const groups = figure.groups?.length ? figure.groups.map((g) => ({ ...g, bars: figure.bars.filter((b) => b.group === g.id) })) : [{ label: null, bars: figure.bars }]
     blocks.push(list(groups.flatMap((g) => g.bars.map((b) => [bold(g.label ? `${g.label}, ${b.label}` : b.label), ...tipInline(b.does)]))))
     if (figure.marks?.length) blocks.push(paragraph(text('Lines across the bars: '), ...joinSegments(figure.marks.map((m) => [bold(m.label), ...tipInline(m.does)]), '; '), text('.')))
@@ -338,8 +364,12 @@ function figureBlocks(figure, evidence, defsByKey) {
       blocks.push(paragraph(text('Settings drawn: '), ...joinSegments(figure.pins.map((p) => [code(defName(p.key, defsByKey)), text(` ${treePinPlace(figure, p)}`)]), '; '), text('.')))
     }
   } else if (figure.kind === 'modes') {
-    blocks.push(paragraph(text("One row of choices per setting; the page lights the one each kernel's capture measured.")))
-    const optionText = (o) => [text(String(o.value) === o.label ? o.label : `${o.label} (${o.value})`), ...tipInline(o.does)]
+    const lights = figure.rows.every((r) => isExample(r.value)) ? 'the example value' : "the one each kernel's capture measured"
+    blocks.push(paragraph(text(`One row of choices per setting; the page lights ${lights}.`)))
+    const optionText = (o) => [
+      text(isRangeOption(o) ? `${o.label} (${rangeText(o)})` : String(o.value) === o.label ? o.label : `${o.label} (${o.value})`),
+      ...tipInline(o.does),
+    ]
     blocks.push(list(figure.rows.map((r) => {
       const group = figure.groups?.find((g) => g.id === r.group)?.label
       return [
@@ -347,13 +377,12 @@ function figureBlocks(figure, evidence, defsByKey) {
         ...tipInline(r.does),
         text(r.bits ? ': any of ' : ': one of '),
         ...joinSegments(r.options.map(optionText), ', '),
-        ...(r.pin ? [text('. Set by '), code(defName(r.pin, defsByKey))] : []),
+        ...(rowPinKey(r) ? [text('. Set by '), code(defName(rowPinKey(r), defsByKey))] : []),
         text('.'),
       ]
     })))
   }
-  const refs = figureRefs(figure, defsByKey)
-  if (refs.length) blocks.push(paragraph(text('Measured on each kernel:')), defs(refs.map((r) => measuredRow(r, evidence))))
+  blocks.push(...valueBlocks(figureRefs(figure, defsByKey), evidence))
   return blocks
 }
 
@@ -406,10 +435,9 @@ export function learnDoc({ entry, learn, evidence, defsByKey = {} }) {
   const scale = learn.parts.scale
   if (scale) {
     blocks.push(
-      paragraph(text(`${scale.label}, drawn to scale from each kernel's capture:`)),
+      paragraph(text(`${scale.label}, drawn to scale from ${drawnFrom(scaleRefs(scale))}:`)),
       list(scale.segments.map((seg) => [bold(seg.label), text(seg.value ? '' : ', the rest'), ...(seg.does ? [text(': '), ...rich(seg.does)] : [text('.')])])),
-      paragraph(text('Measured on each kernel:')),
-      defs(scaleRefs(scale).map((r) => measuredRow(r, evidence))),
+      ...valueBlocks(scaleRefs(scale), evidence),
     )
   }
 

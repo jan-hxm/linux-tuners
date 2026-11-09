@@ -12,8 +12,11 @@
  * @typedef {{ image: string, kernel: string, capturedAt: string, guestMemoryMiB: number,
  *   probes: Record<string, EvidenceEntry> }} EvidenceFile
  * @typedef {{ status: 'ok', value: EvidenceValue, kernel: string, capturedAt: string }
+ *   | { status: 'ok', value: number | string, example: true }
  *   | { status: 'absent', value: undefined, reason: string, kernel: string, capturedAt: string }
  *   | { status: 'missing' }} Measured
+ *   An example ref (`{ example, unit, label }`) reads as `ok` with `example: true`
+ *   and no kernel, on every image alike.
  */
 
 /**
@@ -79,13 +82,20 @@ export function resolvePath(value, path) {
 }
 
 /**
- * What one image measured for a figure's reference.
- * @param {{ probe: string, path?: string }} ref  a ValueRef, or `{ probe }` for a node or card
+ * What one image measured for a figure's reference. An example ref
+ * (`{ example, unit, label }`, a value the guide typed in to show the idea)
+ * is the same on every image: `ok` with `example: true` and no kernel.
+ * @param {{ probe: string, path?: string } | { example: number | string }} ref  a ValueRef, or `{ probe }` for a node or card
  * @param {string} imageId
  * @param {Record<string, EvidenceFile>} [evidence]  defaults to the committed captures
  * @returns {Measured}
  */
 export function valueFor(ref, imageId, evidence = loadEvidence()) {
+  if (ref && typeof ref === 'object' && Object.hasOwn(ref, 'example')) {
+    const v = ref.example
+    const ok = (typeof v === 'number' && Number.isFinite(v)) || (typeof v === 'string' && v.trim() !== '')
+    return ok ? { status: 'ok', value: v, example: true } : MISSING
+  }
   if (!ref || typeof ref.probe !== 'string' || !Object.hasOwn(evidence, imageId)) return MISSING
   const file = evidence[imageId]
   const probes = file?.probes

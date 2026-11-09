@@ -6,7 +6,9 @@
  * between them (`fit` tint, an `error` hatch, or plain), each named in two
  * or three words with its sentence in a tooltip (FigureTip). A `zoom` adds
  * a thin bar of the whole range beside it, a bracket on the part drawn
- * large and dashed lines from the bracket to the scale. Settings drawn on
+ * large and dashed lines from the bracket to the scale. A `level` fills the
+ * gauge from its foot to one value, a solid `fit` column inside it named
+ * beside it, like liquid in a tank (often an example). Settings drawn on
  * the scale (`pins`) are pressed-state buttons on their mark or on a bar
  * over their gap; they select the chapter's pin like the row under the
  * figure, which shows them instead below `md`. A `curve` is drawn beside
@@ -29,6 +31,8 @@ const props = defineProps({
   /** ref => valueFor(ref, imageId) */
   evidence: { type: Function, required: true },
   imageId: { type: String, default: '' },
+  /** The image's name as the reader sees it (Debian 13), for the caption; the id when unset. */
+  imageLabel: { type: String, default: '' },
   /** How many images measured every value the same (sameOnEveryImage), or 0. */
   sameOn: { type: Number, default: 0 },
   /** The selected pin's `layer`: a mark or zone id. */
@@ -45,7 +49,7 @@ const emit = defineEmits(['select'])
 const scope = useId()
 const model = computed(() => gaugeModel(props.figure, props.evidence))
 const label = computed(() => gaugeLabel(props.figure, props.evidence, { defsByKey: props.defsByKey, highlight: props.highlight }))
-const caption = computed(() => gaugeCaption(props.figure, props.evidence, props.imageId, props.sameOn))
+const caption = computed(() => gaugeCaption(props.figure, props.evidence, (props.imageLabel || props.imageId), props.sameOn))
 const axis = computed(() => gaugeAxisText(props.figure, model.value))
 const zonesTopDown = computed(() => [...model.value.zones].sort((a, b) => b.y1 - a.y1 || b.y0 - a.y0))
 
@@ -109,6 +113,24 @@ const pinLabel = (p) => `${pinName(p)}, ${gaugePinPlace(props.figure, p)}`
                 :style="{ bottom: `${z.y0 * 100}%`, height: `${(z.y1 - z.y0) * 100}%`, ...zoneFill(z) }"
                 :data-zone="z.id"
               />
+              <div
+                v-if="model.level?.y != null"
+                class="absolute bottom-0 left-1/4 right-1/4 border-x-[1.5px] border-t-[1.5px] border-ink bg-fit"
+                :style="{ height: `${model.level.y * 100}%` }"
+                data-level
+              />
+            </div>
+            <div v-if="model.level?.y != null" class="absolute -translate-y-1/2" :style="{ top: top(model.level.y), left: rem(X.labels) }">
+              <FigureTip
+                v-if="model.level.does"
+                :label="model.level.label"
+                :tip="model.level.does"
+                :value="markValue(model.level)"
+                :scope="scope"
+                class="inline-flex min-h-6 items-baseline gap-1.5 whitespace-nowrap text-left text-[15px] leading-none text-fit-text"
+                data-level-label
+              ><span class="font-semibold underline decoration-dotted underline-offset-4">{{ model.level.label }}</span><span class="font-mono text-[13px] text-ink-2">{{ model.level.num }}</span></FigureTip>
+              <span v-else aria-hidden="true" class="inline-flex min-h-6 items-baseline gap-1.5 whitespace-nowrap text-[15px] leading-none text-fit-text" data-level-label><span class="font-semibold">{{ model.level.label }}</span><span class="font-mono text-[13px] text-ink-2">{{ model.level.num }}</span></span>
             </div>
             <template v-for="m in model.marks" :key="m.id">
               <div aria-hidden="true" class="absolute -translate-y-1/2" :class="markLine(m)" :style="{ top: top(m.y), left: rem(X.gauge - 0.5), width: rem(X.width - X.gauge + 0.5) }" :data-mark="m.id" />

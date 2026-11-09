@@ -4,7 +4,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   ABSENT, NOT_MEASURED, compareAxisText, compareCaption, compareLabel, compareModel, drawnPinKeys, figureLabel, figureRefs, formatValue,
-  humanBytes, logTicks, measuredText, modeSegments, modesLabel, modesModel, pinRefs, refName, sameOnEveryImage, tickText, treeLabel, treeNodes,
+  humanBytes, logTicks, measuredText, modeSegments, modesCaption, modesLabel, modesModel, pinRefs, rangeText, refName, sameOnEveryImage, tickText,
+  treeCaption, treeLabel, treeNodes,
 } from './figureText.js'
 import { DEMO_DEFS, DEMO_IMAGES, DEMO_LEARN, valueFor } from '@/learn/__fixtures__/demoKit.js'
 
@@ -48,9 +49,9 @@ describe('readable values', () => {
 
   it('names every figure ref by the part that shows it', () => {
     const refs = figureRefs(compare)
-    expect(refs.map((r) => r.label)).toEqual(['Smallest', 'Start', 'Largest buffer', 'Extra per socket', 'Asked-for ceiling'])
+    expect(refs.map((r) => r.label)).toEqual(['Smallest', 'Start', 'Largest buffer', 'Extra per socket', 'Asked-for ceiling', 'A program asks', 'Auto tuning'])
     const gauge = chapter('reading-the-gauge').figure
-    expect(figureRefs(gauge, DEMO_DEFS).map((r) => r.label)).toEqual(['min', 'low', 'high', 'All memory', 'demo.floor_kbytes'])
+    expect(figureRefs(gauge, DEMO_DEFS).map((r) => r.label)).toEqual(['min', 'low', 'high', 'All memory', 'Free now', 'demo.floor_kbytes'])
   })
 })
 
@@ -79,7 +80,12 @@ describe('compare', () => {
     expect(m.marks[0].pins).toEqual(['buf_max'])
     expect(m.groups.map((g) => [g.id, g.bars.length])).toEqual([['per-socket', 3], ['whole-system', 1]])
     expect(compareAxisText(compare, m)).toBe('buffer size, log scale, 2 KiB to 16 MiB')
-    expect(compareCaption(compare, on('debian-13'), 'debian-13')).toBe('Receive buffer sizes. Log scale: each tick is 8 times the one before. Values measured on debian-13, kernel 0.0.0-fixture.')
+    expect(compareCaption(compare, on('debian-13'), 'Debian 13')).toBe(
+      'Receive buffer sizes. Log scale: each tick is 8 times the one before. A program asks and Auto tuning are examples, to show the idea. The rest is measured on Debian 13, kernel 0.0.0-fixture.',
+    )
+    // The example line sits at its value like a measured one.
+    expect(m.marks[1]).toMatchObject({ id: 'ask', text: '1 MiB' })
+    expect(m.marks[1].x).toBeCloseTo((20 - 11) / 13)
   })
 
   it('follows the kernel, and keeps an absent bar as a labelled gap, never a zero bar', () => {
@@ -102,12 +108,15 @@ describe('compare', () => {
   })
 
   it('draws no bars and no axis where nothing is measured, and says so', () => {
-    const m = compareModel(compare, on('arch'))
+    const measuredOnly = { ...compare, marks: compare.marks.slice(0, 1), pins: compare.pins.slice(0, 2) }
+    const m = compareModel(measuredOnly, on('arch'))
     expect(m.measured).toBe(false)
     expect(m.ticks).toEqual([])
     expect(m.bars.every((b) => b.x === null && b.text === NOT_MEASURED)).toBe(true)
-    expect(compareCaption(compare, on('arch'), 'arch')).toContain('No values measured on arch yet')
-    expect(compareLabel(compare, on('arch'))).not.toMatch(/\d{3,}/)
+    expect(compareCaption(measuredOnly, on('arch'), 'arch')).toContain('No values measured on arch yet')
+    expect(compareLabel(measuredOnly, on('arch'))).not.toMatch(/\d{3,}/)
+    // An example still draws, so the scale has something to hold.
+    expect(compareModel(compare, on('arch')).marks[1].x).toBe(1)
   })
 
   it('reads the bars, the lines and the drawn settings in its label', () => {
@@ -116,13 +125,17 @@ describe('compare', () => {
     expect(label).toContain('Each socket: Sizes the kernel gives each new socket, and lets it grow to: Smallest 4 KiB: A socket keeps at least this much')
     expect(label).toContain('Largest 6 MiB: Automatic tuning grows a busy socket up to this (selected)')
     expect(label).toContain('Lines across the bars: Asked-for ceiling at 208 KiB')
-    expect(label).toContain('Settings drawn: demo.buf_sizes on Largest; demo.buf_max on the asked-for ceiling line.')
+    expect(label).toContain('Settings drawn: demo.buf_sizes on Largest; demo.buf_max on the asked-for ceiling line; demo.buf_auto on Largest.')
   })
 
   it('gives a pin the bars of its group or the line it sits on', () => {
-    const [sizes, max] = chapter('comparing-sizes').pins
+    const [sizes, max, auto] = chapter('comparing-sizes').pins
     expect(pinRefs(compare, sizes).map((r) => r.label)).toEqual(['Largest buffer', 'Smallest', 'Start'])
     expect(pinRefs(compare, max).map((r) => r.label)).toEqual(['Asked-for ceiling'])
+    // A pin with a value of its own shows that, not the bar it sits on.
+    expect(pinRefs(compare, auto, DEMO_DEFS)).toEqual([{ example: 1, unit: '', label: 'Auto tuning' }])
+    const unnamed = { ...compare, pins: [{ key: 'buf_max', bar: 'buf-total', value: { probe: 'demo.bufMax', unit: 'bytes' } }] }
+    expect(pinRefs(unnamed, { key: 'buf_max', layer: 'buf-total' }, DEMO_DEFS)).toEqual([{ probe: 'demo.bufMax', unit: 'bytes', label: 'demo.buf_max' }])
   })
 })
 
@@ -145,8 +158,19 @@ describe('tree', () => {
     expect(treeLabel(tree, on('debian-11'))).toContain(`User sessions ${ABSENT}, in Root slice`)
   })
 
-  it('gives a pin the value of the node it sits on', () => {
-    expect(pinRefs(tree, chapter('sharing-the-cpu').pins[0])).toEqual([{ probe: 'demo.sliceWeight', unit: '', label: 'System CPU weight' }])
+  it('gives a pin the value of the node it sits on, or its own', () => {
+    const pin = chapter('sharing-the-cpu').pins[0]
+    expect(pinRefs(tree, pin)).toEqual([{ probe: 'demo.sliceWeight', unit: '', label: 'System CPU weight' }])
+    const own = { ...tree, pins: [{ ...tree.pins[0], value: { example: 200, unit: '', label: 'A heavier slice' } }] }
+    expect(pinRefs(own, pin, DEMO_DEFS)).toEqual([{ example: 200, unit: '', label: 'A heavier slice' }])
+    expect(pinRefs(own, { ...pin, layer: 'user-slice' }, DEMO_DEFS).map((r) => r.label)).toEqual(['A heavier slice', 'User sessions'])
+  })
+
+  it('reads an example node like a measured one, and says which values are examples', () => {
+    expect(treeLabel(tree, on('debian-13'))).toContain('Your login 100, in User sessions')
+    expect(treeCaption(tree, on('debian-13'), 'Debian 13')).toBe(
+      'Where a service runs. Login CPU weight is an example, to show the idea. The rest is measured on Debian 13, kernel 0.0.0-fixture.',
+    )
   })
 })
 
@@ -177,6 +201,22 @@ describe('modes', () => {
     expect(lit(modeSegments(bits, ok('x')))).toEqual(['x'])
   })
 
+  it('lights the range a number falls in, and a number no option holds as one more', () => {
+    const ranged = { options: [{ value: 0, label: 'blocked' }, { min: 1, label: 'allowed' }] }
+    expect(lit(modeSegments(ranged, ok(0)))).toEqual(['blocked'])
+    expect(lit(modeSegments(ranged, ok(15000)))).toEqual(['allowed'])
+    expect(lit(modeSegments(ranged, ok('15000')))).toEqual(['allowed'])
+    const bounded = { options: [{ min: 1, max: 9, label: 'few' }, { min: 10, max: 99, label: 'many' }] }
+    expect(lit(modeSegments(bounded, ok(9)))).toEqual(['few'])
+    expect(lit(modeSegments(bounded, ok(10)))).toEqual(['many'])
+    expect(modeSegments(bounded, ok(100)).at(-1)).toMatchObject({ label: '100', lit: true, extra: true })
+    expect(modeSegments(bounded, ok('lots')).at(-1)).toMatchObject({ label: 'lots', lit: true, extra: true })
+    expect(modeSegments(ranged, ok(1)).map((s) => s.key)).toEqual(['0', '1+'])
+    expect(modeSegments(bounded, ok(1)).map((s) => s.key)).toEqual(['1-9', '10-99'])
+    expect(rangeText({ min: 1 })).toBe('1 or more')
+    expect(rangeText({ min: 1000, max: 3999 })).toBe('1,000 to 3,999')
+  })
+
   it('lights nothing where the value is absent or not measured', () => {
     expect(lit(modeSegments(row(['a', 'b']), { status: 'absent', reason: 'no disk' }))).toEqual([])
     expect(lit(modeSegments(row(['a', 'b']), { status: 'missing' }))).toEqual([])
@@ -187,9 +227,10 @@ describe('modes', () => {
   it('follows the kernel, by group', () => {
     const m = modesModel(modes, on('ubuntu-18.04'))
     expect(m.groups.map((g) => g.rows.map((r) => [r.id, r.text]))).toEqual([
-      [['page-mode', 'when asked'], ['key-mask', '1']],
+      [['page-mode', 'when asked'], ['key-mask', '1'], ['reserve-size', 'small']],
       [['ssd-scheduler', 'none'], ['hdd-scheduler', 'bfq']],
     ])
+    expect(modesModel(modes, on('debian-13')).rows[2].text).toBe('large')
     expect(modesModel(modes, on('debian-13')).rows[1].text).toBe('console level + keyboard + sync + remount read-only + reboot + nice real-time')
   })
 
@@ -199,20 +240,30 @@ describe('modes', () => {
     expect(label).toContain('Disks (Each disk picks its own scheduler) (selected): SSD, set by demo.scheduler: none, mq-deadline (set), bfq')
     expect(modesLabel(modes, on('ubuntu-18.04'))).toContain('1 (set, not a listed value)')
     expect(modesLabel(modes, on('debian-11'))).toContain(`Hard disk: none, mq-deadline, bfq, kyber; ${ABSENT}`)
+    // A lit range says the number it holds.
+    expect(modesLabel(modes, on('debian-13'))).toContain('Reserve: none, small, large (set, 4,000) (Four thousand kB or more)')
   })
 
-  it('gives a pin its row, or every row of the group it names', () => {
+  it('gives a pin its row, or every row of the group it names, or its own value', () => {
     const pins = chapter('picking-a-mode').pins
     expect(pinRefs(modes, pins[0]).map((r) => r.label)).toEqual(['Huge pages'])
-    expect(pinRefs(modes, pins[2]).map((r) => r.label)).toEqual(['SSD', 'Hard disk'])
+    // The SSD row draws the scheduler with an example of its own, which stands in for the row's value.
+    expect(pinRefs(modes, pins[2], DEMO_DEFS).map((r) => r.label)).toEqual(['Fast disk choice', 'Hard disk'])
+  })
+
+  it('says when every lit value is an example', () => {
+    const examples = { ...modes, rows: [{ ...modes.rows[0], value: { example: 'never', unit: '', label: 'Huge pages' } }] }
+    expect(modesCaption(examples, on('debian-13'), 'Debian 13')).toBe('Modes set on this kernel. The lit segment is the example value. Example values, to show the idea.')
+    expect(lit(modesModel(examples, on('debian-13')).rows[0].segments)).toEqual(['never'])
   })
 })
 
 describe('any v3 figure', () => {
   it('names the settings each figure draws itself', () => {
-    expect(drawnPinKeys(compare)).toEqual(['buf_sizes', 'buf_max'])
+    expect(drawnPinKeys(compare)).toEqual(['buf_sizes', 'buf_max', 'buf_auto'])
     expect(drawnPinKeys(tree)).toEqual(['unit_weight'])
-    expect(drawnPinKeys(modes)).toEqual(['page_mode', 'key_mask', 'scheduler'])
+    // A modes row's setting stays in the row under the figure, out of the crowded row.
+    expect(drawnPinKeys(modes)).toEqual([])
     expect(drawnPinKeys(chapter('keeping-a-reserve').figure)).toEqual([])
   })
 
@@ -221,7 +272,7 @@ describe('any v3 figure', () => {
       expect(figureLabel(fig, on('debian-13'), { defsByKey: DEMO_DEFS }).length).toBeGreaterThan(60)
       expect(sameOnEveryImage(figureRefs(fig), IMAGE_IDS, valueFor)).toBe(false)
     }
-    const steady = { ...modes, rows: modes.rows.slice(2, 3) }
+    const steady = { ...modes, rows: modes.rows.slice(3, 4) }
     expect(sameOnEveryImage(figureRefs(steady), IMAGE_IDS, valueFor)).toBe(false)
     const same = { ...tree, root: { ...tree.root, children: [tree.root.children[0]] } }
     expect(sameOnEveryImage(figureRefs(same), IMAGE_IDS, valueFor)).toBe(true)

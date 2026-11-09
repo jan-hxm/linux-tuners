@@ -601,8 +601,10 @@ a tuner's export.
 
 One study guide per tuner at `/learn/<slug>`, written for a total beginner,
 with a figure before every explanation. A guide's text cites the official
-docs, and every number in a figure comes from a committed VM capture. Being
-built in waves; the subsections below are filled in as each part lands.
+docs, and every measured number in a figure comes from a committed VM
+capture; a figure may also show example values to explain an idea, and then
+says they are examples. Being built in waves; the subsections below are
+filled in as each part lands.
 
 #### Guide data and checks
 
@@ -638,7 +640,7 @@ and expects no issues.
   (`BUDGETS.label`): a card's `title`, an edge, a band label, a stack
   layer's label, a node's `text` and `sub`, a band's `text`, a timeline
   line or event, a side-by-side state and legend word, a gauge's `axis`,
-  mark, zone, zoom and curve event, a scale bar's label and segments, a
+  mark, zone, zoom, level and curve event, a scale bar's label and segments, a
   compare figure's `axis`, bar, mark and group, a tree node, a modes row,
   option and group, and a ValueRef's `label`. A stack layer's `values` are
   shown by name alone, so one without a `path` needs a `label`.
@@ -659,8 +661,11 @@ and expects no issues.
   band or node, a timeline line, a gauge mark or zone, a compare bar, mark
   or group, a tree node, or a modes row or group). A setting a figure draws
   itself (a gauge's, compare's or tree's `pins`, a modes row's `pin`) is a
-  def key pinned in the same chapter, drawn once per figure. The last
-  question has a `no`, since a missing `no` means "next question".
+  def key pinned in the same chapter, drawn once per figure. Such a pin may
+  carry the setting's own `value` (a ValueRef, measured or an example): a
+  gauge, compare or tree pin as `{ key, ..., value }`, a modes row as
+  `pin: { key, value }` (a plain key otherwise). The last question has a
+  `no`, since a missing `no` means "next question".
 - **Answers.** A question's `yes` and `no` are `{ key, dir: 'raise' |
   'lower' }`, `{ key, to }` or `{ leave: true, why }`. `to` names a value,
   for a setting whose values have no order: for a def with `options` it is
@@ -682,9 +687,26 @@ and expects no issues.
   display flags, `udevadm info` no `--cleanup-db`, and an `awk` program no
   `system`, `getline`, pipe or in-place flag. `commandIssues(cmd)` is the
   check on its own.
-- **Probes and evidence.** Every ValueRef, node `probe`, card `probe` and
-  `backedBy.probe` names a probe in the tuner's `probes.js`, and a ValueRef
-  has a `unit`, a dotted `path` and an optional `label`. A numeric step of
+- **Examples.** A ValueRef is measured (`{ probe, path?, unit, label? }`) or
+  an example (`{ example, unit, label }`, exactly one of `probe` and
+  `example`, `label` required): a number or short word the guide types in
+  because it explains better than the idle 3 GiB test guest would, such as a
+  busy 16 GiB machine. An example number is finite, at least 0 unless its
+  unit is in `SIGNED_UNITS` (only `''`, a plain number such as a signed
+  score), and within `EXAMPLE_LIMITS` for its unit (100 for `%`, 1 PiB for
+  `bytes` and `kB`, the largest safe integer otherwise); a string is at
+  most 40 characters (`exampleIssue`, rule `example`). Examples go
+  wherever a ValueRef does (gauge marks, level and pins, compare bars, marks
+  and pins, tree node values and pins, modes row values and row pins, the
+  scale bar's total and segments, stack values, timeline lines) and are
+  never checked against the evidence. The settings' defaults stay measured.
+- **Kernel buttons.** A figure shows the kernel buttons only when it sets
+  `kernels: true`, for values that differ between the images in a way the
+  chapter is about. `kernels` on a figure with no measured value is rule
+  `kernels`; anything but `true` is `shape`.
+- **Probes and evidence.** Every measured ValueRef, node `probe`, card
+  `probe` and `backedBy.probe` names a probe in the tuner's `probes.js`, and
+  a measured ValueRef has a `unit`, a dotted `path` and an optional `label`. A numeric step of
   the path on a string value picks one of its whitespace-separated words,
   counted from 0, as a number when it is one: `path: '2'` on
   "4096 131072 6291456" is 6291456 (`resolvePath`, which the live evidence
@@ -707,7 +729,8 @@ and expects no issues.
   a value, last (the rest). A gauge's marks share one unit and are listed
   bottom to top (a live guide's captures must agree on every image); zones
   and pins name marks, `from` below `to`; `range.from < range.to`; a zoom's
-  `full` is in the marks' unit unless `fullPerUnit` (above 0) converts it;
+  `full` is in the marks' unit unless `fullPerUnit` (above 0) converts it; a
+  `level` (`{ label, value, does? }`) is in the marks' unit;
   curve points are `[t, level]` with t 0..1 not going back and level 0 to
   marks + 1. A compare figure has `scale` `linear` or `log`, 1 to 12 bars and
   at most 3 marks in one unit, and with `groups` (at most 6) every bar names
@@ -715,9 +738,13 @@ and expects no issues.
   nodes, ids unique in the chapter, and pins on its nodes. A modes figure has
   1 to 12 rows of 2 to 8 options, each value (a number or a string) listed
   once per row; a `bits` row lists 0 or powers of two; groups as compare.
-  Where a row's `pin` names a def with `options`, every option value is one
-  the def writes (its `sysctlValue`, else its `value`, compared as text),
-  unless the row says `allValues: true` (rule `mode value`).
+  An option is `{ value, label }` or a range of numbers `{ min, max?,
+  label }` (no `max`: no top), such as user namespaces' `{ value: 0, label:
+  'blocked' }, { min: 1, label: 'allowed' }`; ranges overlap neither each
+  other nor a number option, and a `bits` row has none. Where a row's `pin`
+  names a def with `options`, every value option is one the def writes (its
+  `sysctlValue`, else its `value`, compared as text), unless the row says
+  `allValues: true` (rule `mode value`); ranges are not held to it.
 
 `src/learn/evidence.js` holds `IMAGES_ORDER` (the five image ids and the
 labels the kernel switcher shows, in `vm/lib/images.mjs` order, checked
@@ -734,11 +761,16 @@ The fixture guide `src/learn/__fixtures__/demo.learn.js` (slug `demo`, with
 its own `DEFS`, probes and five made-up evidence files of round numbers)
 uses every figure kind, template part and optional field (tips on cards,
 nodes, bands, lines and events, the scale bar, `start`/`asked`/`legend`,
-a gauge with `range`, `zoom`, `curve` and pins on a mark and a gap, a log
-compare with groups, an index path, a labelled ref, a mark, an absent bar
-and pins on a bar and a mark, a three-level tree with an absent value and a
-pin, and a grouped modes figure with a `bits` row, `allValues`, a value no
-option names and an absent row). It passes as
+a gauge with `range`, `zoom`, an example `level`, `curve` and pins on a mark
+and a gap, a log compare with groups, an index path, a labelled ref, a
+measured and an example mark, an absent bar and pins on a bar and a mark and
+one with its own example value, a three-level tree with an absent value, an
+example value and a pin, and a grouped modes figure with a `bits` row,
+`allValues`, a value no option names, a row of ranges, a row pin with its
+own example value and an absent row). The timeline's values are all
+examples. The stack, compare, tree and modes figures set `kernels: true`
+and their captures differ, so they show the buttons; the gauge's differ too
+but it does not ask, so it shows Debian 13 alone. It passes as
 `draft` without evidence and as `live` with its fixtures, and the suite
 breaks a copy of it once per rule and checks the issue's path and rule. It
 lives only under `__fixtures__` and is never routed outside tests.
@@ -812,7 +844,12 @@ stays `role="img"`.
   beside the scale from `md` and as a key below it. The scale runs over
   `range`, or from 0 to a round number at least 15 % above the top mark
   (`niceTop`), widened when a mark passes it; ticks sit only at round values
-  inside it. `zoom` adds a thin bar of the whole `full` range beside it,
+  inside it. `level` fills the gauge from its foot up to one value, a solid
+  `fit` column inside it named beside it like a mark (a tooltip button with
+  `does`), like liquid in a tank: the memory guide fills its dirty-data
+  gauge to an example 14 % between the two measured marks, which puts the
+  reader in one zone without adding a line to the curve. A schematic gauge
+  draws no level. `zoom` adds a thin bar of the whole `full` range beside it,
   with a bracket on the part drawn large and dashed lines to the scale
   (`fullPerUnit` converts, such as 4 kB per page). `curve` is a schematic
   line beside the scale on the same heights, labelled "time (schematic)",
@@ -854,21 +891,40 @@ stays `role="img"`.
   128); a value or bits no option names add one more lit segment, dashed,
   with the raw value ("438"), so a value is never dropped; an absent value
   lights nothing and says "not present on this kernel". Segments wrap on a
-  phone; groups head their rows; a row's `pin` is a FigurePin at its end
-  from `md` up. A lit option with `does` says "Set on this kernel." in its
-  description.
+  phone; groups head their rows. A range option lights when the number
+  falls in it, and its tooltip adds the number ("Set on this kernel:
+  11,557."); a value in no option is the dashed raw segment as before. A
+  row's `pin` is not drawn in the row: a long setting name there took a
+  column from the options and wrapped them at 1440 px, so the pin row under
+  the figure keeps it at every width, and the row whose setting is pressed is
+  drawn in `fit-tint` (as is the pin's `layer`). A lit option with `does`
+  says "Set on this kernel." in its description ("The example value." for
+  an example).
 
-`FigurePin.vue` is the pressed-state setting button the gauge, compare,
-tree and modes figures share (`drawnPinKeys(figure)` lists the keys each
-draws, which ChapterView shows in its row below `md` only).
+`FigurePin.vue` is the pressed-state setting button the gauge, compare and
+tree figures share (`drawnPinKeys(figure)` lists the keys each draws, which
+ChapterView shows in its row below `md` only; a modes figure draws none).
 
 **Values.** A value comes only through `evidence`, a function `ref =>
 valueFor(ref, imageId)`, and anything not `ok` reads "not measured" (or
 "not present on this kernel" for an `absent` probe), never a number, in the
-drawing, the tooltip and the label alike. A ValueRef is named by its
+drawing, the tooltip and the label alike. `valueFor` reads an example ref
+as `{ status: 'ok', value, example: true }` on every image, with no kernel,
+so a figure draws it like a measured value; the words say it is one
+(`isExample`): the tooltip's value line ends ", example", the panel lists
+"File cache: 5 GiB (example)" under "Example values" (or "Values" for a
+mix), and the caption follows `measuredOn`: "Example values, to show the
+idea." when every value is one (no kernel line), or for a mix the examples
+by name first ("RAM and Swap are examples, to show the idea. The rest is
+measured on Debian 13, kernel ..."). The scale bar under the parts map
+says the same under its legend (`examplesNote`). A ValueRef is named by its
 `label`, else by the part that shows it (a mark, bar, node, row or line;
-`figureRefs` and `pinRefs` attach it; a gauge pin's own value by its
-setting's name), else by its path, else by the probe id (`refName`). A
+`figureRefs` and `pinRefs` attach it; a pin's own value by its setting's
+name), else by its path, else by the probe id (`refName`). A pin with its
+own value on a compare bar or mark, a tree node or a modes row shows that
+value in the panel in place of the part's (so a setting drawn beside
+another's bar never shows the other's number); a gauge pin's value comes
+before the marks it sits on, which say where the setting acts. A
 number in `bytes` or `kB` (the kernel's KiB) reads in KiB, MiB or GiB with
 one decimal under 100 ("94.8 MiB", "6 MiB", "128 KiB"; `humanBytes`); the
 tooltip, the panel and the static page add the number as measured ("6 MiB
@@ -877,15 +933,21 @@ as before ("2,000 pages"), and a gauge's marks keep the plain number of
 their axis's unit.
 
 `ChapterView` renders one chapter in the template order and says each thing
-once. Above a figure that shows captures, a kernel switcher (`role="group"`,
-one `aria-pressed` button per image of `IMAGES_ORDER`) picks the capture; it
-is a viewer preference (`linux-tuners:learn-kernel`, the image id, checked
+once. The VM captures prove the claims, but the distro they came from
+rarely helps a reader understand a figure, so the kernel switcher is opt-in.
+Above a figure that sets `kernels: true` and whose measured values differ
+between the images (`sameOnEveryImage` over the measured `figureRefs`;
+examples never count), a kernel switcher (`role="group"`, one
+`aria-pressed` button per image of `IMAGES_ORDER`) picks the capture; it is
+a viewer preference (`linux-tuners:learn-kernel`, the image id, checked
 against the list before use and never rendered; `ui/learn/kernelPref.js`)
-shared by every chapter on the page. When every image measured the same
-value for everything the figure shows (`sameOnEveryImage` over
-`figureRefs`), the switcher would change nothing, so it is left out and the
-caption reads "Values measured on 5 test kernels, the same on each."; the
-static page says such a value once ("10 % on all 5 test kernels"). Under the
+shared by every chapter on the page that shows one. Every other figure, and
+its pin panel, shows the first image, Debian 13, with no buttons, and the
+caption "Measured on Debian 13, kernel 6.12.113+deb13-cloud-amd64." When
+every image measured the same value for everything the figure measures, the
+caption reads "Values measured on 5 test kernels, the same on each."
+instead; the static page says such a value once ("10 % on all 5 test
+kernels") and still lists every other value on every kernel. Under the
 figure the pins are mono buttons with a dot (`aria-pressed`, `fit-tint` and
 a `fit` dot when pressed; a second press clears it). The first is selected
 on load, and its `layer` (a layer, band, node, timeline line, gauge mark or
@@ -909,7 +971,7 @@ focus stays, a polite live line, then a `fit-tint` result with "Open it in
 the tuner" and "Start over", which focus moves to) and the static
 `DecisionFlow` list in print. `learn.a11y.test.js` runs the axe sweep over
 every fixture chapter's states in both schemes, every tooltip open and every
-pin drawn on a gauge, compare, tree or modes figure pressed included.
+pin drawn on a gauge, compare or tree figure pressed included.
 
 The static page lists every figure as text: parts with their tips inline
 ("Above high (Nothing to do)"), the scale bar's segments, a gauge's marks,
@@ -919,11 +981,17 @@ their parent ("web.service, in System services"), a modes figure's rows with
 their options ("one of" or, for bits, "any of", each with its value where
 the label differs) and setting, and then every value the figure reads on
 every kernel, by name and exact ("Start: Debian 13, kernel ...: 128 KiB
-(131,072 bytes); ...", "on all 5 test kernels" when they agree).
+(131,072 bytes); ...", "on all 5 test kernels" when they agree). Examples
+follow under "Example values, to show the idea:" once each ("Busy server:
+example: 41,000 entries."), a gauge's `level` reads "The scale is filled
+to ...", a range option reads "allowed (1 or more)", and a drawing whose
+numbers are examples says it is drawn "from example values" (or "from each
+kernel's capture and example values").
 
 #### Evidence
 
-A figure's numbers are measured, never typed in. A guide lists what to
+A figure's measured numbers are never typed in; a value typed in to
+explain is an example ref, which the page always calls one. A guide lists what to
 measure in `src/tuners/<id>/probes.js` as plain data (no imports, so the
 contract suite reads it in jsdom): `PROBES = { '<id>.<name>': { kind, ... } }`,
 every id starting with its tuner's folder name. `npm run vm:capture
@@ -1001,7 +1069,7 @@ equal the guides the contract suite finds and the registry's.
 - **The guide page.** A header block (breadcrumb Learn / title, the lead, the
   facts line from `guideFacts`: chapters, settings, minutes, "Figures measured
   on N kernels", and "Tune these settings"), "Start here" with the parts map
-  (it follows the shared kernel choice), "The chapters" with the settings each
+  (it has no kernel buttons, so it shows the first image), "The chapters" with the settings each
   pins, then every chapter through `ChapterView` (`h2`, parts `h3`), each
   followed by its previous and next chapter. Beside them from `lg` up a sticky
   chapter rail of in-page links (`aria-current="location"` from

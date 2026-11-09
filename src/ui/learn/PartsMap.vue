@@ -21,7 +21,7 @@ import RichText from '@/ui/RichText.vue'
 import FigureTip from './FigureTip.vue'
 import TipStrip from './TipStrip.vue'
 import {
-  cardGroups, edgeGeometry, edgeRows, gridSize, itemRef, partsMapLabel, shownItemValue, percent, scaleModel, tipValue,
+  cardGroups, edgeGeometry, edgeRows, examplesNote, gridSize, itemRef, partsMapLabel, shownItemValue, percent, scaleModel, scaleRefs, tipValue,
 } from './figureText.js'
 
 const props = defineProps({
@@ -67,6 +67,8 @@ const cardClass = (card) => (card.tone === 'fit' ? 'border-fit bg-fit-tint' : 'b
 const SWATCH = { ink: 'bg-ink', fit: 'bg-fit', quiet: 'bg-quiet' }
 const HATCH = 'repeating-linear-gradient(135deg, rgb(var(--t-paper)) 0 6px, rgb(var(--t-rule-strong)) 6px 7px)'
 const segValue = (seg) => (seg.ref ? tipValue(seg.ref, props.evidence) : '')
+/** Which of the scale bar's values are examples, said under it; '' when it is all measured. */
+const scaleNote = computed(() => (props.parts.scale ? examplesNote(scaleRefs(props.parts.scale)) : ''))
 </script>
 
 <template>
@@ -185,6 +187,7 @@ const segValue = (seg) => (seg.ref ? tipValue(seg.ref, props.evidence) : '')
             <span v-else :data-legend="seg.id">{{ seg.label }}</span>
           </li>
         </ul>
+        <p v-if="scaleNote" aria-hidden="true" class="m-0 mt-2 text-[13px] text-ink-2" data-scale-note>{{ scaleNote }}</p>
       </div>
       <TipStrip :scope="scope" />
     </div>

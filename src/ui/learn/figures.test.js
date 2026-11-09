@@ -85,6 +85,24 @@ describe('PartsMap', () => {
     expect(w.get('[role="figure"]').attributes('aria-label')).toContain('Memory, 2.9 GiB, drawn to scale')
   })
 
+  it('draws a scale bar of examples to scale, and says they are examples', () => {
+    const ex = (example, label) => ({ example, unit: 'kB', label })
+    const scale = { ...DEMO_LEARN.parts.scale, total: ex(16777216, 'RAM') }
+    scale.segments = [{ ...scale.segments[0], value: ex(9437184, 'Programs') }, { ...scale.segments[1], value: ex(5242880, 'Page cache') }, scale.segments[2]]
+    const w = mount(PartsMap, { props: { parts: { ...DEMO_LEARN.parts, scale }, evidence: on(UNCAPTURED), imageId: UNCAPTURED } })
+    expect(w.get('[data-scale-total]').text()).toBe('16 GiB')
+    expect(w.get('[data-segment="programs"]').attributes('style')).toContain('width: 56.25%')
+    expect(w.get('[data-scale-note]').text()).toBe('Example values, to show the idea.')
+    expect(w.get('[role="figure"]').attributes('aria-label')).toContain('Example values, to show the idea.')
+    expect(w.text()).toContain('9 GiB (9,437,184 kB), example')
+    // The fixture's own bar is measured, so it has no note.
+    expect(mountMap().find('[data-scale-note]').exists()).toBe(false)
+    // A mix names the examples.
+    const mixed = { ...DEMO_LEARN.parts.scale, segments: [{ ...DEMO_LEARN.parts.scale.segments[0], value: ex(500000, 'Programs') }, DEMO_LEARN.parts.scale.segments[2]] }
+    const m = mount(PartsMap, { props: { parts: { ...DEMO_LEARN.parts, scale: mixed }, evidence: on('debian-13'), imageId: 'debian-13' } })
+    expect(m.get('[data-scale-note]').text()).toBe('Programs is an example, to show the idea.')
+  })
+
   it('puts the picture after the figure as ordinary text', () => {
     const w = mountMap()
     const picture = w.findAll('p').at(-1)
@@ -121,7 +139,9 @@ describe('StackFigure', () => {
     expect(absent.get('[data-node="kswapd"]').text()).toContain('not present on this kernel')
     absent.unmount()
     expect(w.text()).toContain('Normal.min: 2,000 pages')
-    expect(w.text()).toContain('Values measured on debian-13, kernel 0.0.0-fixture.')
+    expect(w.text()).toContain('Measured on debian-13, kernel 0.0.0-fixture.')
+    // With the image's label, the caption names it as the reader knows it.
+    expect(mountStack({ imageLabel: 'Debian 13' }).text()).toContain('Measured on Debian 13, kernel 0.0.0-fixture.')
   })
 
   it('stacks the label over the row below md', () => {
@@ -142,7 +162,7 @@ describe('StackFigure', () => {
     const w = mountStack({ evidence: on(UNCAPTURED), imageId: UNCAPTURED })
     expect(w.text()).toContain('Normal.min: not measured')
     expect(w.get('[data-node="kswapd"]').text()).toContain('not measured')
-    expect(w.text()).toContain(`No values measured on ${UNCAPTURED} yet.`)
+    expect(w.text()).toContain(`Not measured on ${UNCAPTURED} yet.`)
     noNumbers(w.get('[data-layer="free-memory"]').text())
   })
 })
@@ -166,10 +186,22 @@ describe('Timeline', () => {
     expect(w.findAll('button').map((b) => b.text())).toEqual(['A program stalls', 'low level'])
   })
 
-  it('says "not measured" without a capture', () => {
+  it('shows example values on every image, and says they are examples', () => {
     const w = mountTimeline(UNCAPTURED)
+    expect(w.text()).toContain('low level: 4,000 pages')
+    expect(w.get('[role="figure"]').attributes('aria-label')).toContain('low level at 4,000 pages')
+    expect(w.text()).toContain('Example values, to show the idea.')
+    expect(w.text()).not.toContain('kernel')
+    // The tooltip's value line says it is an example.
+    expect(w.text()).toContain('4,000 pages, example')
+  })
+
+  it('says "not measured" without a capture', () => {
+    const measured = { ...timelineChapter.figure, lines: [{ id: 'low', label: 'low level', value: { probe: 'demo.watermarks', path: 'Normal.low', unit: 'pages' } }] }
+    const w = mount(Timeline, { props: { figure: measured, evidence: on(UNCAPTURED), imageId: UNCAPTURED } })
     expect(w.text()).toContain('low level: not measured')
     expect(w.get('[role="figure"]').attributes('aria-label')).toContain('low level at not measured')
+    expect(w.text()).toContain(`Not measured on ${UNCAPTURED} yet.`)
   })
 })
 
@@ -203,6 +235,16 @@ describe('Gauge', () => {
   const mountGauge = (image = 'debian-13', props = {}) =>
     mount(Gauge, { props: { figure: gaugeChapter.figure, evidence: on(image), imageId: image, defsByKey: DEMO_DEFS, ...props } })
   const topOf = (w, sel) => w.get(sel).attributes('style').match(/top: ([\d.]+)%/)?.[1]
+
+  it('fills the gauge to its level, named beside it, and its tooltip says it is an example', () => {
+    const w = mountGauge()
+    expect(w.get('[data-level]').attributes('style')).toContain('height: 62.5%')
+    const label = w.get('[data-level-label]')
+    expect(label.text()).toBe('free now5,000')
+    expect(w.get(`#${label.attributes('aria-describedby')}`).text()).toBe('An example of free memory between low and high. 5,000 pages, example')
+    // Not to scale, nothing to fill.
+    expect(mountGauge(UNCAPTURED).find('[data-level]').exists()).toBe(false)
+  })
 
   it('draws the marks and zones to scale from the capture, with ticks and an axis', () => {
     const w = mountGauge()

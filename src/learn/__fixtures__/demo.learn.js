@@ -7,6 +7,12 @@
  *
  * It passes validateGuide as `draft` with no evidence and as `live` with the
  * fixture evidence.
+ *
+ * Kernel buttons: the stack, compare, tree and modes figures ask for them
+ * (`kernels: true`) and their captures differ between the images, so they
+ * show; the gauge's captures differ too but it does not ask, so it shows
+ * Debian 13 alone. The timeline's values are all examples; the gauge's
+ * level, the compare's and the tree's a mix of measured and example.
  */
 
 /** The fixture tuner's defs: only what the guide and its pins read. */
@@ -27,6 +33,7 @@ export const DEFS = [
   // Figures v3: compare, tree and modes.
   { key: 'buf_sizes', sysctlName: 'demo.buf_sizes', title: 'Socket buffer sizes', shortDesc: 'The smallest, starting and largest buffer of a socket.', unit: 'bytes', kernelDefault: '4096 131072 6291456' },
   { key: 'buf_max', sysctlName: 'demo.buf_max', title: 'Buffer ceiling', shortDesc: 'The most a program may ask for.', unit: 'bytes', kernelDefault: 212992 },
+  { key: 'buf_auto', sysctlName: 'demo.buf_auto', title: 'Buffer auto tuning', shortDesc: 'Whether a busy socket grows its buffer.', unit: '', kernelDefault: 1, kernelMin: 0, kernelMax: 1 },
   { key: 'unit_weight', sysctlName: 'CPUWeight', title: 'CPU weight', shortDesc: 'A share of CPU time against siblings.', unit: '', kernelDefault: 100 },
   {
     key: 'page_mode', sysctlName: 'demo.page_mode', title: 'Huge page mode', shortDesc: 'When the kernel backs memory with huge pages.', unit: 'mode', kernelDefault: 'madvise',
@@ -97,6 +104,7 @@ export const LEARN = {
       figure: {
         kind: 'stack',
         title: 'Where the reserve sits',
+        kernels: true,
         layers: [
           {
             id: 'programs',
@@ -173,8 +181,8 @@ export const LEARN = {
         title: 'Free memory over time',
         schematic: true,
         lines: [
-          { id: 'low', label: 'low level', does: 'The worker wakes below it.', value: { probe: 'demo.watermarks', path: 'Normal.low', unit: 'pages' } },
-          { id: 'high', label: 'high level', value: { probe: 'demo.watermarks', path: 'Normal.high', unit: 'pages' } },
+          { id: 'low', label: 'low level', does: 'The worker wakes below it.', value: { example: 4000, unit: 'pages', label: 'low level' } },
+          { id: 'high', label: 'high level', value: { example: 6000, unit: 'pages', label: 'high level' } },
         ],
         curve: [[0, 0.9], [0.3, 0.5], [0.45, 0.3], [0.5, 0.25], [0.7, 0.6], [1, 0.85]],
         events: [
@@ -301,6 +309,7 @@ export const LEARN = {
         ],
         range: { from: 0, to: 8000 },
         zoom: { label: 'All memory', full: { probe: 'demo.meminfo', path: 'MemTotal', unit: 'kB' }, fullPerUnit: 4 },
+        level: { label: 'free now', value: { example: 5000, unit: 'pages', label: 'Free now' }, does: 'An example of free memory between low and high.' },
         curve: {
           points: [[0, 3.6], [0.3, 1.5], [0.45, 0.8], [0.6, 2], [0.8, 3.2], [1, 3.5]],
           events: [
@@ -347,6 +356,7 @@ export const LEARN = {
         title: 'Receive buffer sizes',
         axis: 'buffer size',
         scale: 'log',
+        kernels: true,
         groups: [
           { id: 'per-socket', label: 'Each socket', does: 'Sizes the kernel gives each new socket, and lets it grow to.' },
           { id: 'whole-system', label: 'Whole system' },
@@ -359,16 +369,19 @@ export const LEARN = {
         ],
         marks: [
           { id: 'ceiling', label: 'Asked-for ceiling', tone: 'error', value: { probe: 'demo.bufMax', unit: 'bytes' }, does: 'A program that sets its own buffer size gets at most this.' },
+          { id: 'ask', label: 'A program asks', value: { example: 1048576, unit: 'bytes', label: 'A program asks' }, does: 'An example of a size a program sets for itself.' },
         ],
         pins: [
           { key: 'buf_sizes', bar: 'buf-largest' },
           { key: 'buf_max', mark: 'ceiling' },
+          { key: 'buf_auto', bar: 'buf-largest', value: { example: 1, unit: '', label: 'Auto tuning' } },
         ],
       },
       body: ['The three sizes are one setting, written as three numbers.[^ip] The ceiling caps only a size a program asks for itself.[^ip]'],
       pins: [
         { key: 'buf_sizes', layer: 'per-socket', here: 'Sets the smallest, starting and largest buffer of each socket.' },
         { key: 'buf_max', layer: 'ceiling', here: 'Caps the buffer a program asks for by itself.' },
+        { key: 'buf_auto', here: 'Lets a busy socket grow its buffer up to the largest size.' },
       ],
       choose: [
         {
@@ -397,6 +410,7 @@ export const LEARN = {
       figure: {
         kind: 'tree',
         title: 'Where a service runs',
+        kernels: true,
         root: {
           id: 'root-slice',
           label: 'Root slice',
@@ -416,7 +430,7 @@ export const LEARN = {
               id: 'user-slice',
               label: 'User sessions',
               value: { probe: 'demo.userWeight', unit: '' },
-              children: [{ id: 'login', label: 'Your login' }],
+              children: [{ id: 'login', label: 'Your login', value: { example: 100, unit: '', label: 'Login CPU weight' } }],
             },
           ],
         },
@@ -451,6 +465,7 @@ export const LEARN = {
       figure: {
         kind: 'modes',
         title: 'Modes set on this kernel',
+        kernels: true,
         groups: [
           { id: 'kernel', label: 'Kernel' },
           { id: 'disks', label: 'Disks', does: 'Each disk picks its own scheduler.' },
@@ -488,10 +503,21 @@ export const LEARN = {
             ],
           },
           {
+            id: 'reserve-size',
+            label: 'Reserve',
+            group: 'kernel',
+            value: { probe: 'demo.reserve', unit: '' },
+            options: [
+              { value: 0, label: 'none' },
+              { min: 1, max: 3999, label: 'small' },
+              { min: 4000, label: 'large', does: 'Four thousand kB or more.' },
+            ],
+          },
+          {
             id: 'ssd-scheduler',
             label: 'SSD',
             group: 'disks',
-            pin: 'scheduler',
+            pin: { key: 'scheduler', value: { example: 'none', unit: '', label: 'Fast disk choice' } },
             value: { probe: 'demo.schedSsd', unit: '' },
             options: [
               { value: 'none', label: 'none' },

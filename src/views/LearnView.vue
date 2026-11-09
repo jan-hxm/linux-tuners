@@ -9,8 +9,9 @@
  *
  * The router loads everything first (src/router.js guideView): the guide, its
  * probes and captures, and the tuner's domain for the settings' names and the
- * "Tune it" links. The parts map and every chapter follow the one kernel
- * choice (ui/learn/kernelPref.js). Nothing here knows a tuner.
+ * "Tune it" links. The chapters whose figures show kernel buttons share one
+ * kernel choice (ui/learn/kernelPref.js); the parts map, which has none,
+ * shows the first image. Nothing here knows a tuner.
  */
 import { computed, inject, ref, useId } from 'vue'
 import { RouterLink, routerKey } from 'vue-router'
@@ -18,7 +19,6 @@ import RichText from '@/ui/RichText.vue'
 import AdSlot from '@/ui/AdSlot.vue'
 import PartsMap from '@/ui/learn/PartsMap.vue'
 import ChapterView from '@/ui/learn/ChapterView.vue'
-import { imageIn } from '@/ui/learn/kernelPref.js'
 import { defName } from '@/ui/learn/figureText.js'
 import { followInPageLink } from '@/ui/inPageLink.js'
 import { useScrollSpy } from '@/ui/useScrollSpy.js'
@@ -47,7 +47,9 @@ const chapters = computed(() => props.learn.chapters)
 const defsByKey = computed(() => props.domain.defsByKey ?? {})
 const facts = computed(() => guideFacts(props.learn, IMAGES_ORDER.length))
 const read = (vref, imageId) => valueFor(vref, imageId, props.evidence)
-const imageId = computed(() => imageIn(IMAGES_ORDER))
+// The parts map has no kernel buttons, so it shows the first image, as a
+// figure that does not ask for them does (ChapterView).
+const imageId = computed(() => IMAGES_ORDER[0].id)
 const partsEvidence = computed(() => {
   const id = imageId.value
   return (vref) => read(vref, id)

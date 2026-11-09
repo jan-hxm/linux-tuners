@@ -13,6 +13,7 @@ describe('formatValue', () => {
   it('writes numbers with their unit and a singular for one', () => {
     expect(formatValue({ status: 'ok', value: 4096 }, 'pages')).toBe('4,096 pages')
     expect(formatValue({ status: 'ok', value: 1 }, 'pages')).toBe('1 page')
+// A number too big for a double arrives as a string and still reads as one.    expect(formatValue({ status: 'ok', value: '9223372036854775807' }, 'files')).toBe('9,223,372,036,854,775,807 files')    expect(formatValue({ status: 'ok', value: '4096 131072' })).toBe('4096 131072')
     expect(formatValue({ status: 'ok', value: true })).toBe('yes')
     expect(formatValue({ status: 'ok', value: ['allocstall_normal'] })).toBe('allocstall_normal')
   })

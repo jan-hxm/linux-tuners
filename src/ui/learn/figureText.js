@@ -87,7 +87,12 @@ export function formatValue(result, unit = '', { exact = false } = {}) {
     const human = humanBytes(v, unit)
     return exact && human !== raw ? `${human} (${raw})` : human
   }
-  if (typeof v === 'string') return unit ? `${v} ${unit}` : v
+  if (typeof v === 'string') {
+    // A whole number too big for a double (fs.file-max, shmmax) stays a
+    // string in the evidence; group its digits so it reads as a number.
+    const text = /^\d{16,}$/.test(v) ? BigInt(v).toLocaleString('en-US') : v
+    return unit ? `${text} ${unit}` : text
+  }
   if (typeof v === 'boolean') return v ? 'yes' : 'no'
   if (Array.isArray(v) && v.every((x) => typeof x === 'string' || typeof x === 'number')) return v.length ? v.join(', ') : 'none'
   return NOT_MEASURED

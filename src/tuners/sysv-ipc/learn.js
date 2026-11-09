@@ -2,7 +2,8 @@
  * The System V IPC study guide at /learn/ipc: four chapters, one per kind of
  * object the sysv-ipc tuner's six settings limit. Data in the frozen Guide
  * shape (src/learn/schema.js), checked by src/learn/contract.test.js. Probe
- * ids name entries in ./probes.js; `[^id]` marks point into each chapter's
+ * ids name entries in ./probes.js; a few bars are examples of a busy machine,
+ * which the page says are examples (the settings' defaults stay measured); `[^id]` marks point into each chapter's
  * `sources`; `[[term]]` names an entry in ui/glossary.js.
  */
 
@@ -71,6 +72,7 @@ export const LEARN = {
             value: { probe: 'sysv-ipc.shmmni', unit: 'segments' },
             does: 'The most segments at once; shmmax and shmall are not offered, as both default to no limit.',
           },
+          { id: 'database', label: 'A database uses', value: { example: 300, unit: 'segments', label: 'Segments a database uses' }, does: 'An example of a busy database server, well inside the limit.' },
         ],
         pins: [{ key: 'shmmni', bar: 'segments' }],
       },
@@ -243,10 +245,11 @@ export const LEARN = {
       },
       figure: {
         kind: 'compare',
-        title: 'The two message size limits',
+        title: 'Message and queue sizes',
         axis: 'bytes',
         scale: 'linear',
         bars: [
+          { id: 'typical', label: 'A typical message', value: { example: 2048, unit: 'bytes', label: 'A typical message' }, does: 'An example of a message a program sends: far below the longest one allowed.' },
           { id: 'message', label: 'One message', value: { probe: 'sysv-ipc.msgmax', unit: 'bytes', label: 'msgmax' }, does: 'The longest text one message may carry.' },
           {
             id: 'queue',
@@ -259,7 +262,7 @@ export const LEARN = {
         pins: [
           { key: 'msgmax', bar: 'message' },
           { key: 'msgmnb', bar: 'queue' },
-          { key: 'msgmni', bar: 'queue' },
+          { key: 'msgmni', bar: 'queue', value: { probe: 'sysv-ipc.msgmni', unit: '' } },
         ],
       },
       body: [

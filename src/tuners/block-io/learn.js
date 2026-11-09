@@ -37,7 +37,7 @@ export const LEARN = {
       { id: 'block-layer', title: 'Block layer', does: 'Turns reads and writes into requests, and merges neighbouring ones.', col: 1, row: 3, probe: 'block-io.sysBlock' },
       { id: 'udev', title: 'udev', does: 'Writes your settings into each disk\'s queue when the disk appears.', col: 2, row: 3, probe: 'block-io.udevd' },
       { id: 'scheduler', title: 'I/O scheduler', does: 'Decides the order waiting requests go out in, or passes them straight on.', col: 1, row: 4 },
-      { id: 'disk', title: 'Your disk', does: 'An NVMe drive, a SATA disk or a virtual disk. It says whether it spins.', col: 1, row: 5 },
+      { id: 'disk', title: 'Your disk', does: 'An NVMe drive, SATA disk or virtual disk, which reports whether it spins.', col: 1, row: 5 },
     ],
     bands: [
       { label: 'RAM', rows: [2, 2] },
@@ -46,7 +46,7 @@ export const LEARN = {
     ],
     edges: [
       { from: 'programs', to: 'cache', label: 'read and write files' },
-      { from: 'cache', to: 'block-layer', label: 'reads what is missing, writes changes' },
+      { from: 'cache', to: 'block-layer', label: 'reads and writes' },
       { from: 'udev', to: 'block-layer', label: 'writes the queue settings' },
       { from: 'block-layer', to: 'scheduler', label: 'queues requests' },
       { from: 'scheduler', to: 'disk', label: 'sends them on' },
@@ -71,8 +71,8 @@ export const LEARN = {
             label: 'queue/rotational',
             kind: 'bands',
             bands: [
-              { id: 'spins', text: '1: rotational, a disk that spins and moves a head' },
-              { id: 'flash', text: '0: non-rotational, flash with no moving parts' },
+              { id: 'spins', text: '1: rotational', does: 'A disk that spins and moves a head.' },
+              { id: 'flash', text: '0: non-rotational', does: 'Flash with no moving parts.' },
             ],
           },
           {
@@ -80,8 +80,8 @@ export const LEARN = {
             label: 'Who writes it',
             kind: 'nodes',
             nodes: [
-              { id: 'driver', text: 'The disk itself', sub: 'when it is found' },
-              { id: 'udevd', text: 'udev', sub: 'your rule, when the disk appears', probe: 'block-io.udevd' },
+              { id: 'driver', text: 'The disk itself', sub: 'when found', does: 'The flag is set when the disk is found.' },
+              { id: 'udevd', text: 'udev', sub: 'your rule', does: 'Your rule writes the flag when the disk appears.', probe: 'block-io.udevd' },
             ],
           },
         ],
@@ -138,9 +138,9 @@ export const LEARN = {
             kind: 'nodes',
             nodes: [
               { id: 'none', text: 'none', sub: 'no reordering' },
-              { id: 'mq-deadline', text: 'mq-deadline', sub: 'sector order, with deadlines' },
-              { id: 'bfq', text: 'bfq', sub: 'fair shares, quick to respond' },
-              { id: 'kyber', text: 'kyber', sub: 'throttles to latency targets' },
+              { id: 'mq-deadline', text: 'mq-deadline', sub: 'sector order', does: 'Serves requests in sector order, with deadlines.' },
+              { id: 'bfq', text: 'bfq', sub: 'fair shares', does: 'Gives each program a fair share and keeps apps quick.' },
+              { id: 'kyber', text: 'kyber', sub: 'latency targets', does: 'Throttles requests to meet latency targets.' },
             ],
           },
           { id: 'disks', label: 'What each disk runs', kind: 'nodes', nodes: disks('Scheduler') },
@@ -200,8 +200,8 @@ export const LEARN = {
         title: 'Where requests wait',
         layers: [
           { id: 'programs', label: 'Programs', kind: 'nodes', nodes: [{ id: 'send', text: 'Programs send requests' }] },
-          { id: 'scheduler-queue', label: 'Requests the scheduler may hold', kind: 'nodes', nodes: disks('Requests') },
-          { id: 'hardware', label: 'Hardware queues', kind: 'nodes', nodes: [{ id: 'dispatch', text: 'Hardware dispatch queues', sub: 'the last step before the driver' }] },
+          { id: 'scheduler-queue', label: 'Held by scheduler', kind: 'nodes', nodes: disks('Requests') },
+          { id: 'hardware', label: 'Hardware queues', kind: 'nodes', nodes: [{ id: 'dispatch', text: 'Hardware dispatch queues', sub: 'before the driver', does: 'The last step before the driver.' }] },
         ],
       },
       body: [
@@ -317,9 +317,9 @@ export const LEARN = {
             label: 'queue/nomerges',
             kind: 'bands',
             bands: [
-              { id: 'all', text: '0: every kind of merge is tried, the default' },
-              { id: 'simple', text: '1: only the one-shot merge with the previous request' },
-              { id: 'off', text: '2: no merging' },
+              { id: 'all', text: '0: all merges', does: 'Every kind of merge is tried, the default.' },
+              { id: 'simple', text: '1: simple merge', does: 'Only the one-shot merge with the previous request is tried.' },
+              { id: 'off', text: '2: no merging', does: 'No merge is tried.' },
             ],
           },
           {
@@ -327,8 +327,8 @@ export const LEARN = {
             label: 'What the disk gets',
             kind: 'nodes',
             nodes: [
-              { id: 'merged', text: 'One request', sub: 'sectors 3 to 9, when merged' },
-              { id: 'separate', text: 'Three requests', sub: 'when merging is off' },
+              { id: 'merged', text: 'One request', sub: 'sectors 3 to 9', does: 'What the disk gets when merging is on.' },
+              { id: 'separate', text: 'Three requests', sub: 'merging off', does: 'What the disk gets when merging is off.' },
             ],
           },
           { id: 'disks', label: 'Merging on each disk', kind: 'nodes', nodes: disks('Nomerges') },

@@ -62,6 +62,9 @@ const SYS_PATH = /^\/sys(\/[A-Za-z0-9_.:-]+)+$/
 const THREAD_NAME = /^[A-Za-z0-9_.:/-]{1,15}$/
 const VMSTAT_PREFIX = /^[a-z][a-z0-9_]*$/
 const MEMINFO_KEY = /^[A-Za-z][A-Za-z0-9_()]*$/
+const SYSTEMCTL_PROPERTY = /^[A-Z][A-Za-z0-9]{1,63}$/
+/** A unit name: no leading "-" (it would read as an option), one of the unit suffixes. */
+const UNIT_NAME = /^[A-Za-z0-9_][A-Za-z0-9_.@-]{0,200}\.(slice|service|scope|socket|target|mount|swap|timer|path|automount|device)$/
 const MAX_STRING = 512
 
 const lines = (s) => s.split('\n').map((l) => l.trimEnd())
@@ -261,6 +264,29 @@ export const KINDS = {
       const out = Object.fromEntries(p.keys.filter((k) => all.has(k)).map((k) => [k, all.get(k)]))
       if (!Object.keys(out).length) throw new Absent('none of the keys in /proc/meminfo')
       return out
+    },
+  },
+
+  /**
+   * `{ kind: 'systemctl', property: 'DefaultTasksMax' }`: one property of the
+   * service manager, or with `unit: 'system.slice'` of that unit, as
+   * `systemctl show` prints it, run as the normal user. "infinity" and
+   * "yes"/"no" stay text; one whole number becomes a number. An older
+   * systemd that lacks the property prints nothing, which is absent.
+   */
+  systemctl: {
+    compare: 'present',
+    check: (p) => [
+      ...fields(p, ['kind', 'property', 'unit']),
+      ...(typeof p.property === 'string' && SYSTEMCTL_PROPERTY.test(p.property) ? [] : ['property must be a systemd property name']),
+      ...(p.unit === undefined || (typeof p.unit === 'string' && UNIT_NAME.test(p.unit)) ? [] : ['unit must be a unit name such as system.slice']),
+    ],
+    command: (p) => `systemctl show --no-pager ${quote(`--property=${p.property}`)} --value${p.unit === undefined ? '' : ` ${quote(p.unit)}`}`,
+    parse: (r, p) => {
+      const out = lines(requireOk(r)).filter((l) => l.trim())
+      if (!out.length) throw new Absent(`no ${p.property} property in this systemd`)
+      if (out.length > 1) throw new Absent('unexpected output')
+      return scalar(out[0])
     },
   },
 }

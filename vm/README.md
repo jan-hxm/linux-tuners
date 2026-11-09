@@ -107,9 +107,10 @@ boot keeps its old file and the command exits 1. Review the diff and commit
 it with the guide change that needed it.
 
 Probes are plain data in a closed set of kinds (`vm/lib/probeKinds.mjs`):
-`sysctl`, `file`, `sysfs`, `diskQueue`, `thread`, `zoneinfo`, `vmstatKeys` and
-`meminfoKeys`. Each kind runs a fixed command with the probe's one field
-quoted into it, so a probe can't run anything else; a new kind of
+`sysctl`, `file`, `sysfs`, `diskQueue`, `thread`, `zoneinfo`, `vmstatKeys`,
+`meminfoKeys` and `systemctl` (one `systemctl show` property of the manager
+or of a unit). Each kind runs a fixed command with the probe's fields
+checked against strict patterns and quoted into it, so a probe can't run anything else; a new kind of
 measurement is a new kind there, with a parser test against real output in
 `vm/lib/__fixtures__/`.
 
@@ -117,7 +118,7 @@ The suite's last block, **learn evidence is fresh**, reruns every probe at
 the end of `npm run test:vm` and fails, naming the probe and image, when the
 kernel or a probe's result no longer matches the file. Kinds whose value the
 suite's own writes change (sysctl and sysfs values, zone watermarks,
-meminfo sizes) are held only to the same status and shape; the rest
+meminfo sizes, systemctl properties) are held only to the same status and shape; the rest
 (`file`, `thread`, `vmstatKeys`) to the same value. A failure there means:
 recapture.
 

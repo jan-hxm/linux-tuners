@@ -15,7 +15,13 @@ export const DEFS = [
   { key: 'fill_ratio', sysctlName: 'demo.fill_ratio', title: 'Fill ratio', shortDesc: 'How full memory gets before the worker starts.', unit: '%', kernelDefault: 10 },
   { key: 'wake_interval', sysctlName: 'demo.wake_interval', title: 'Wake interval', shortDesc: 'How often the worker checks for work.', unit: 'cs', kernelDefault: 500 },
   { key: 'batch_order', sysctlName: 'demo.batch_order', title: 'Batch size', shortDesc: 'Pages read together, as a power of two.', unit: '', kernelDefault: 3 },
-  { key: 'mode', sysctlName: 'demo.mode', title: 'Promise mode', shortDesc: 'Whether the kernel promises more memory than it has.', unit: 'mode', kernelDefault: 0 },
+  {
+    key: 'mode', sysctlName: 'demo.mode', title: 'Promise mode', shortDesc: 'Whether the kernel promises more memory than it has.', unit: 'mode', kernelDefault: 0,
+    options: [
+      { value: 'relaxed', sysctlValue: '0', label: '0: relaxed, promise more than there is' },
+      { value: 'strict', sysctlValue: '2', label: '2: strict, never promise more' },
+    ],
+  },
 ]
 
 export const DEFS_BY_KEY = Object.fromEntries(DEFS.map((d) => [d.key, d]))
@@ -224,7 +230,7 @@ export const LEARN = {
           q: 'Do programs fail to start with out of memory errors?',
           check: 'sudo dmesg -T',
           hint: 'Look for lines about the OOM killer.',
-          yes: { key: 'mode', dir: 'raise' },
+          yes: { key: 'mode', to: 'relaxed' },
           no: { leave: true, why: 'Nothing runs out, so the default mode fits.' },
         },
       ],

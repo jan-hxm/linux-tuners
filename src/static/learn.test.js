@@ -45,6 +45,9 @@ describe('a guide page as static text', () => {
   it('writes the chooser as the static flow and the marks as [n]', () => {
     expect(md).toContain('Yes: Raise demo.reserve_kbytes. No: Go to question 2.')
     expect(md).toContain('No: Leave it as it is: The reserve is doing its job, so the default fits.')
+    // A to answer names its value as code.
+    expect(md).toContain('Yes: Set demo.mode to `0` (relaxed, promise more than there is). No: Leave it as it is')
+    expect(html).toMatch(/Set demo\.mode to <code[^>]*>0<\/code> \(relaxed/)
     expect(md).toMatch(/high\.\\\[1\\\]/)
     expect(md).not.toContain('[^')
   })

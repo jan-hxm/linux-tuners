@@ -29,7 +29,10 @@
  *       states: { label: string, cells: number, lit: number, setting: { key: string, value: number|string } }[],
  *       backedBy: { vmTest: string } | { probe: string } }} Figure
  *
- * @typedef {{ key: string, dir: 'raise'|'lower' } | { leave: true, why: string }} Answer
+ * @typedef {{ key: string, dir: 'raise'|'lower' } | { key: string, to: string|number } | { leave: true, why: string }} Answer
+ *   `to` names a value: an option's value for a def with options, else a number
+ *   in the def's kernel range on its step (answerValueIssue). Prefer it to
+ *   raise and lower for a setting whose values have no order.
  * @typedef {{ q: string, check: string, hint: string, yes: Answer, no?: Answer }} Question
  *   A missing `no` means "go to the next question", so the last one needs it.
  *
@@ -251,6 +254,33 @@ export function commandIssues(cmd) {
   return out
 }
 
+/**
+ * Why `to` is not a value the def accepts, or null when it is. A def with
+ * `options` takes one of their values (the option's id, not its
+ * sysctlValue); any other def takes a number inside its kernelMin..kernelMax
+ * on its step (1 when it sets none), so a bool takes 0 or 1 and a segmented
+ * control one of its segments. A def with neither gets no `to`.
+ * @param {Record<string, unknown>} def
+ * @param {unknown} to
+ * @returns {string | null}
+ */
+export function answerValueIssue(def, to) {
+  if (Array.isArray(def?.options)) {
+    const values = def.options.map((o) => o?.value)
+    return values.some((v) => v === to) ? null : `${JSON.stringify(to)} is not one of the setting's options (${values.join(', ')})`
+  }
+  const { kernelMin: min, kernelMax: max } = def ?? {}
+  if (typeof min !== 'number' || typeof max !== 'number' || !Number.isFinite(min) || !Number.isFinite(max) || min >= max) {
+    return 'only a setting with options or a numeric range takes "to"; use dir for this one'
+  }
+  if (typeof to !== 'number' || !Number.isFinite(to)) return `${JSON.stringify(to)} is not a number`
+  if (to < min || to > max) return `${to} is outside the setting's range ${min} to ${max}`
+  const step = typeof def.step === 'number' && def.step > 0 ? def.step : 1
+  const n = (to - min) / step
+  if (Math.abs(n - Math.round(n)) > 1e-9) return `${to} is not on the setting's step of ${step} from ${min}`
+  return null
+}
+
 // ── The validator ───────────────────────────────────────────────────────────
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
@@ -379,6 +409,11 @@ export function validateGuide(guide, ctx) {
       shape(path, a, ['leave', 'why'])
       if (a.leave !== true) fail(`${path}.leave`, 'shape', 'must be true')
       text(`${path}.why`, a.why, { rich: true })
+    } else if (Object.hasOwn(a, 'to')) {
+      shape(path, a, ['key', 'to'])
+      if (!isDef(a.key)) return fail(`${path}.key`, 'def key', `"${a.key}" is not a def key of this tuner`)
+      const why = answerValueIssue(defsByKey[a.key], a.to)
+      if (why) fail(`${path}.to`, 'answer value', why)
     } else {
       shape(path, a, ['key', 'dir'])
       if (!isDef(a.key)) fail(`${path}.key`, 'def key', `"${a.key}" is not a def key of this tuner`)

@@ -275,7 +275,13 @@ export const LEARN = {
           check: 'sysctl net.ipv4.tcp_slow_start_after_idle',
           hint: '1 means a connection that paused for about one retransmission timeout restarts at a low rate.',
           yes: { key: 'tcp_slow_start_after_idle', dir: 'lower' },
-          no: { leave: true, why: 'The default restarts carefully after a pause, which suits short and interactive connections.' },
+        },
+        {
+          q: 'Is the queue pfifo_fast, and does one big upload slow down everything else on the link?',
+          check: 'sysctl net.core.default_qdisc',
+          hint: 'pfifo_fast, the kernel default, holds every flow in one line. Devices that exist already keep their queue until the next boot.',
+          yes: { key: 'default_qdisc', to: 'fq_codel' },
+          no: { leave: true, why: 'The defaults restart carefully after a pause, which suits short and interactive connections.' },
         },
       ],
       symptoms: {

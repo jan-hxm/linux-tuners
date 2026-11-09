@@ -333,7 +333,7 @@ export const LEARN = {
           q: 'Is this a server that runs no containers, sandboxes or rootless tools?',
           check: 'sysctl user.max_user_namespaces',
           hint: 'A large number is the kernel\'s own limit. 0 stops every program from creating a user namespace, root included.',
-          yes: { key: 'user_namespaces', dir: 'lower' },
+          yes: { key: 'user_namespaces', to: 'blocked' },
         },
         {
           q: 'Do developers here need to profile kernel code without sudo?',

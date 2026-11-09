@@ -3,9 +3,10 @@
  * The interactive form of a chapter's `choose` (Design.md §5 "Learning pages
  * > Figures"): one question at a time with Yes and No buttons and how to
  * check it, then a result in `fit-tint` naming the setting and which way to
- * move it, with "Open it in the tuner" (when `tuneHref` gives a link) and
- * "Start over". A missing `no` goes on to the next question; past the last
- * one the result is to leave the settings alone. Each step is read out by a
+ * move it, or the value to set, with "Open it in the tuner" (when
+ * `tuneHref` gives a link) and "Start over". A missing `no` goes on to the
+ * next question; past the last one the result is to leave the settings
+ * alone. Each step is read out by a
  * polite live region; the Yes and No buttons stay in place between
  * questions, so focus stays on the one pressed, and on a result focus moves
  * to "Start over", which puts it back on Yes.

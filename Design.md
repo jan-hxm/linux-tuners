@@ -643,6 +643,17 @@ and expects no issues.
   keys. A pin's `layer` names an id in its chapter's figure (a stack layer,
   band or node, or a timeline line). The last question has a `no`, since a
   missing `no` means "next question".
+- **Answers.** A question's `yes` and `no` are `{ key, dir: 'raise' |
+  'lower' }`, `{ key, to }` or `{ leave: true, why }`. `to` names a value,
+  for a setting whose values have no order: for a def with `options` it is
+  one of their `value`s (the option id, not its `sysctlValue`); for any
+  other def a number in `kernelMin..kernelMax` on its `step` (1 when unset),
+  so a toggle takes 0 or 1 and a segmented control a segment; a def with
+  neither takes no `to` (`answerValueIssue`, rule `answer value`). It reads
+  "Set `<name>` to `<value>` (`<label words>`)." (`answerText`), the value
+  being what the file gets (`sysctlValue` when the option has one) as a code
+  span, and the words the control's label adds after the value. Answers are
+  RichText in the Chooser, the DecisionFlow and the static flow alike.
 - **Commands.** `look.cmd` and `choose[].check` start with `cat`, `grep`,
   `awk`, `free`, `swapon --show`, `sysctl`, `dmesg`, `sudo dmesg`,
   `systemctl show`, `ls`, `findmnt` or `udevadm info`; a pipe feeds only

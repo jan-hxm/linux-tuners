@@ -599,6 +599,13 @@ a tuner's export.
 
 ### Learning pages
 
+> **Status: built.** All nine tuners have a live guide (memory, hardening,
+> file limits, kernel limits, systemd resources, networking, disk I/O, huge
+> pages, IPC), and their tuner cards link to it instead of carrying the long
+> descriptions. Figures explain first: examples where they help, measured
+> values where the default is the point, distro buttons only where the
+> kernels differ in a way the chapter is about.
+
 One study guide per tuner at `/learn/<slug>`, written for a total beginner,
 with a figure before every explanation. A guide's text cites the official
 docs, and every measured number in a figure comes from a committed VM
@@ -646,9 +653,7 @@ and expects no issues.
   shown by name alone, so one without a `path` needs a `label`.
   What the part does goes in its `does`, a tip of one sentence of at most 25
   words (`BUDGETS.tip`), which the page shows in a tooltip and the static
-  page inline. Both are rule `figure words`. The guides still drawn in the
-  first figure style are listed in `FIGURES_V1` in the contract suite, which
-  lets only that rule pass for them; the list only shrinks. Glossary ids must exist. Inline
+  page inline. Both are rule `figure words`. Glossary ids must exist. Inline
   links follow the source host rule.
 - **Sources.** `[^id]` footnote marks are allowed in `body` only; each names
   an entry in the chapter's `sources`, each source is cited, and a chapter

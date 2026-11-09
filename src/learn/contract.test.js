@@ -51,15 +51,6 @@ const GUIDE_CASES = Object.entries(LEARN_MODULES).map(([file, mod]) => {
   }
 })
 
-/**
- * Guides still drawn in the first figure style, whose labels and tips may
- * break the figure-words budget (labels of at most four words, tips of one
- * sentence) until their package moves them to the new figures (PROGRESS.md).
- * Every other rule holds for them. The list only shrinks: take a guide out
- * when it moves.
- */
-const FIGURES_V1 = new Set([])
-
 const DEMO_CTX = { defsByKey: DEMO_DEFS, probes: DEMO_PROBES, evidence: FIXTURE_EVIDENCE, glossary: GLOSSARY, status: 'live' }
 const ALL_CASES = [{ name: 'demo (fixture, live)', guide: DEMO, ctx: DEMO_CTX }, ...GUIDE_CASES]
 
@@ -70,8 +61,7 @@ function vmTestRefs(guide) {
 
 describe.each(ALL_CASES.map((c) => [c.name, c]))('guide contract: %s', (name, { guide, ctx, entry }) => {
   it('passes every check', () => {
-    const issues = validateGuide(guide, ctx).filter((i) => !(FIGURES_V1.has(name) && i.rule === 'figure words'))
-    expect(issues).toEqual([])
+    expect(validateGuide(guide, ctx)).toEqual([])
   })
 
   it('cites only tests that exist in vm/suite.mjs', () => {
@@ -95,10 +85,6 @@ describe('guides together', () => {
 
   it('the fixture also passes as a draft without evidence', () => {
     expect(validateGuide(DEMO, { ...DEMO_CTX, status: 'draft', evidence: {} })).toEqual([])
-  })
-
-  it('lists only guides that exist under FIGURES_V1', () => {
-    for (const name of FIGURES_V1) expect(GUIDE_CASES.map((c) => c.name)).toContain(name)
   })
 
   it('the fixture uses every figure kind, every optional field and every template part', () => {

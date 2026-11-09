@@ -64,8 +64,8 @@ export const LEARN = {
             label: 'Your program',
             kind: 'nodes',
             nodes: [
-              { id: 'auto', text: 'Most programs', sub: 'leave the size to the kernel' },
-              { id: 'own', text: 'Some programs', sub: 'set a size with SO_RCVBUF or SO_SNDBUF' },
+              { id: 'auto', text: 'Most programs', does: 'They leave the buffer size to the kernel.' },
+              { id: 'own', text: 'Some programs', does: 'They set a size with `SO_RCVBUF` or `SO_SNDBUF`.' },
             ],
           },
           {
@@ -73,8 +73,8 @@ export const LEARN = {
             label: 'Sized by the kernel',
             kind: 'nodes',
             nodes: [
-              { id: 'tcp-rcv', text: 'TCP receive buffer', sub: 'min, default, max' },
-              { id: 'tcp-snd', text: 'TCP send buffer', sub: 'min, default, max' },
+              { id: 'tcp-rcv', text: 'TCP receive buffer', sub: 'min, default, max', does: 'Holds arrived data, and grows from the starting size toward the maximum.' },
+              { id: 'tcp-snd', text: 'TCP send buffer', sub: 'min, default, max', does: 'Holds data on its way out, and grows from the starting size toward the maximum.' },
             ],
             values: [
               { probe: 'network.tcpRmem', unit: 'bytes' },
@@ -83,18 +83,18 @@ export const LEARN = {
           },
           {
             id: 'fixed',
-            label: 'Sized by the program',
+            label: 'Sized by program',
             kind: 'nodes',
             nodes: [
-              { id: 'cap-rcv', text: 'Receive cap' },
-              { id: 'cap-snd', text: 'Send cap' },
+              { id: 'cap-rcv', text: 'Receive cap', does: 'The most a program may ask for as its own receive buffer.' },
+              { id: 'cap-snd', text: 'Send cap', does: 'The most a program may ask for as its own send buffer.' },
             ],
             values: [
               { probe: 'network.rmemMax', unit: 'bytes' },
               { probe: 'network.wmemMax', unit: 'bytes' },
             ],
           },
-          { id: 'network', label: 'The network', kind: 'nodes', nodes: [{ id: 'path', text: 'The path to the other machine', sub: 'data in flight' }] },
+          { id: 'network', label: 'The network', kind: 'nodes', nodes: [{ id: 'path', text: 'Path to other machine', does: 'Data in flight on the way sits here, not in either buffer.' }] },
         ],
       },
       body: [
@@ -151,19 +151,19 @@ export const LEARN = {
         kind: 'stack',
         title: 'How a new connection reaches your program',
         layers: [
-          { id: 'arrive', label: 'Packets arrive', kind: 'nodes', nodes: [{ id: 'card', text: 'Network card' }] },
+          { id: 'arrive', label: 'Packets arrive', kind: 'nodes', nodes: [{ id: 'card', text: 'Network card', does: 'Takes arriving packets off the wire.' }] },
           {
             id: 'backlog',
-            label: 'Per-CPU packet queue',
+            label: 'Per-CPU queue',
             kind: 'nodes',
-            nodes: [{ id: 'cpu-queue', text: 'Packets wait for a CPU', sub: 'dropped when full', probe: 'network.softnetStat' }],
+            nodes: [{ id: 'cpu-queue', text: 'Packets wait for CPU', does: 'Packets wait here for a CPU, and new ones are dropped when it is full.', probe: 'network.softnetStat' }],
             values: [{ probe: 'network.netdevBacklog', unit: 'packets' }],
           },
           {
             id: 'syn-queue',
             label: 'Half-open connections',
             kind: 'nodes',
-            nodes: [{ id: 'syn', text: 'Handshake started, not finished', sub: 'SYN received' }],
+            nodes: [{ id: 'syn', text: 'Handshake not finished', does: 'A SYN arrived, and the three-way handshake is not yet done.' }],
             values: [
               { probe: 'network.synBacklog', unit: 'connections' },
               { probe: 'network.syncookies', unit: '' },
@@ -173,10 +173,10 @@ export const LEARN = {
             id: 'accept-queue',
             label: 'Ready connections',
             kind: 'nodes',
-            nodes: [{ id: 'ready', text: 'Handshake done, waiting for accept()', probe: 'network.netstat' }],
+            nodes: [{ id: 'ready', text: 'Waiting for accept', does: 'The handshake is done, and the connection waits for the program to call `accept()`.', probe: 'network.netstat' }],
             values: [{ probe: 'network.somaxconn', unit: 'connections' }],
           },
-          { id: 'program', label: 'Your program', kind: 'nodes', nodes: [{ id: 'accept', text: 'Takes the next connection' }] },
+          { id: 'program', label: 'Your program', kind: 'nodes', nodes: [{ id: 'accept', text: 'Takes next connection', does: 'The program picks the next ready connection off the queue.' }] },
         ],
       },
       body: [
@@ -239,14 +239,14 @@ export const LEARN = {
         kind: 'stack',
         title: 'From a connection to the wire',
         layers: [
-          { id: 'connection', label: 'A connection with data to send', kind: 'nodes', nodes: [{ id: 'data', text: 'Data in the send buffer' }] },
+          { id: 'connection', label: 'A connection', kind: 'nodes', nodes: [{ id: 'data', text: 'Data in send buffer', does: 'A connection has data waiting to be sent.' }] },
           {
             id: 'congestion',
             label: 'Congestion control',
             kind: 'nodes',
             nodes: [
-              { id: 'algorithm', text: 'How much may be in flight', sub: 'the algorithm decides', probe: 'network.congestionControl' },
-              { id: 'idle', text: 'After an idle pause', sub: 'start slowly again, or not', probe: 'network.slowStartAfterIdle' },
+              { id: 'algorithm', text: 'Data in flight', does: 'The algorithm decides how much may be sent before replies come back.', probe: 'network.congestionControl' },
+              { id: 'idle', text: 'After an idle pause', does: 'The connection starts slowly again, or keeps its pace, as the setting says.', probe: 'network.slowStartAfterIdle' },
             ],
             values: [{ probe: 'network.availableCc', unit: '' }],
           },
@@ -254,9 +254,9 @@ export const LEARN = {
             id: 'qdisc',
             label: 'Outgoing queue',
             kind: 'nodes',
-            nodes: [{ id: 'discipline', text: 'Queueing discipline', sub: 'orders packets waiting to leave', probe: 'network.defaultQdisc' }],
+            nodes: [{ id: 'discipline', text: 'Queueing discipline', does: 'Orders the packets waiting to leave.', probe: 'network.defaultQdisc' }],
           },
-          { id: 'card', label: 'Network card', kind: 'nodes', nodes: [{ id: 'wire', text: 'Packets leave' }] },
+          { id: 'card', label: 'Network card', kind: 'nodes', nodes: [{ id: 'wire', text: 'Packets leave', does: 'The card puts the packets on the wire.' }] },
         ],
       },
       body: [
@@ -314,14 +314,14 @@ export const LEARN = {
         kind: 'stack',
         title: 'A path with a smaller link',
         layers: [
-          { id: 'sender', label: 'Your machine', kind: 'nodes', nodes: [{ id: 'big', text: 'Sends full-size packets' }] },
+          { id: 'sender', label: 'Your machine', kind: 'nodes', nodes: [{ id: 'big', text: 'Full-size packets', does: 'The machine sends packets as large as its own link allows.' }] },
           {
             id: 'path',
             label: 'The path',
             kind: 'nodes',
             nodes: [
-              { id: 'narrow', text: 'A link with a smaller MTU' },
-              { id: 'icmp', text: 'ICMP Fragmentation Needed', sub: 'can be blocked on the way' },
+              { id: 'narrow', text: 'Link with smaller MTU', does: 'This link carries only smaller packets than the sender uses.' },
+              { id: 'icmp', text: 'ICMP Fragmentation Needed', does: 'The warning that tells the sender to use smaller packets, which some networks block.' },
             ],
           },
           {
@@ -329,9 +329,9 @@ export const LEARN = {
             label: 'TCP probing',
             kind: 'nodes',
             nodes: [
-              { id: 'off', text: '0: off' },
-              { id: 'black-hole', text: '1: on once a black hole is found' },
-              { id: 'always', text: '2: always on' },
+              { id: 'off', text: '0: off', does: 'TCP does not probe, and relies on ICMP messages.' },
+              { id: 'black-hole', text: '1: after black hole', does: 'Probing starts once TCP detects an ICMP black hole.' },
+              { id: 'always', text: '2: always on', does: 'Probing is always on, and starts from `tcp_base_mss`.' },
             ],
             values: [
               { probe: 'network.mtuProbing', unit: '' },
@@ -383,14 +383,14 @@ export const LEARN = {
         kind: 'timeline',
         title: 'Local ports in use during a burst of outgoing connections',
         schematic: true,
-        lines: [{ id: 'range', label: 'Every port in the range', value: { probe: 'network.portRange', unit: '' } }],
+        lines: [{ id: 'range', label: 'Whole port range', does: 'Every port in the range is in use at this level.', value: { probe: 'network.portRange', unit: '' } }],
         // One line sits at level 0.5, so the curve flattens there when the range runs out.
         curve: [[0, 0.05], [0.15, 0.05], [0.35, 0.3], [0.5, 0.5], [0.7, 0.5], [0.85, 0.25], [1, 0.08]],
         events: [
-          { at: 0.15, label: 'A burst of short connections starts' },
-          { at: 0.35, label: 'Closed connections keep their ports in TIME-WAIT' },
-          { at: 0.5, label: 'No port is free, connect() fails', tone: 'error' },
-          { at: 0.85, label: 'TIME-WAIT ends, ports come free', tone: 'fit' },
+          { at: 0.15, label: 'A burst starts', does: 'Many short outgoing connections open and close in quick succession.' },
+          { at: 0.35, label: 'Ports held in TIME-WAIT', does: 'Closed connections keep their local ports for a while before the kernel frees them.' },
+          { at: 0.5, label: 'No port is free', does: 'The range is used up, so `connect()` fails with an error.', tone: 'error' },
+          { at: 0.85, label: 'Ports come free', does: 'TIME-WAIT ends, and the ports go back into use.', tone: 'fit' },
         ],
       },
       body: [
@@ -448,14 +448,14 @@ export const LEARN = {
         kind: 'stack',
         title: 'The connection tracking table',
         layers: [
-          { id: 'packets', label: 'Packets in and out', kind: 'nodes', nodes: [{ id: 'packet', text: 'Each packet', sub: 'matched to its connection' }] },
+          { id: 'packets', label: 'Packets in and out', kind: 'nodes', nodes: [{ id: 'packet', text: 'Each packet', does: 'It is matched to the connection it belongs to.' }] },
           {
             id: 'users',
             label: 'What uses it',
             kind: 'nodes',
             nodes: [
-              { id: 'firewall', text: 'Firewall rules', sub: 'match NEW or ESTABLISHED' },
-              { id: 'nat', text: 'Address rewriting', sub: 'NAT' },
+              { id: 'firewall', text: 'Firewall rules', does: 'Rules can match a packet by its connection state, such as NEW or ESTABLISHED.' },
+              { id: 'nat', text: 'Address rewriting', does: 'NAT rewrites addresses, and every later packet of the connection gets the same change.' },
             ],
           },
           {
@@ -463,21 +463,21 @@ export const LEARN = {
             label: 'Tracking table',
             kind: 'nodes',
             nodes: [
-              { id: 'entries', text: 'Entries in use', probe: 'network.conntrackCount' },
-              { id: 'limit', text: 'Most entries allowed', probe: 'network.conntrackMax' },
+              { id: 'entries', text: 'Entries in use', does: 'How many connections the kernel tracks right now.', probe: 'network.conntrackCount' },
+              { id: 'limit', text: 'Most entries allowed', does: 'The cap on entries, and a new connection is dropped once it is reached.', probe: 'network.conntrackMax' },
             ],
           },
           {
             id: 'hash',
             label: 'Hash table',
             kind: 'nodes',
-            nodes: [{ id: 'buckets', text: 'Buckets', sub: 'each entry is stored twice, once per direction', probe: 'network.conntrackBuckets' }],
+            nodes: [{ id: 'buckets', text: 'Buckets', does: 'Each entry is stored twice, once per direction, so a full table averages two per bucket.', probe: 'network.conntrackBuckets' }],
           },
           {
             id: 'expiry',
             label: 'When idle entries go',
             kind: 'nodes',
-            nodes: [{ id: 'established', text: 'Idle established TCP', sub: 'in seconds', probe: 'network.conntrackEstablished' }],
+            nodes: [{ id: 'established', text: 'Idle established TCP', does: 'How many seconds an idle connection keeps its entry.', probe: 'network.conntrackEstablished' }],
           },
         ],
       },

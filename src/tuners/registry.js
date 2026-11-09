@@ -105,6 +105,7 @@ export const TUNERS = [
       why: 'Kernel pointer, ptrace and BPF restrictions plus network spoofing protections. Cheap, and most distributions leave some of them open.',
       defaultsFine: 'A throwaway or isolated test machine, or one whose distribution already ships a hardened profile you have reviewed.',
     },
+    guide: { slug: 'hardening', status: 'draft' },
   },
   {
     id: 'filesystem',

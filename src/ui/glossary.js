@@ -304,4 +304,21 @@ export const GLOSSARY = Object.freeze({
     definition:
       'A numbered block of a disk. Requests name the sectors they read or write, so the kernel can tell when two requests sit next to each other and merge them.',
   },
+
+  // systemd guide
+  slice: {
+    term: 'Slice',
+    definition:
+      'A systemd unit that holds other units instead of running a program. Each slice is a cgroup that groups the cgroups below it, so a limit on a slice covers everything inside it. system.slice holds system services and user.slice holds user sessions.',
+  },
+  'cgroup-controller': {
+    term: 'cgroup controller',
+    definition:
+      'The part of the kernel that counts and shares out one kind of resource along the cgroup tree, such as cpu, memory, io or pids. A controller only acts on the groups it is turned on for.',
+  },
+  'resource-limit': {
+    term: 'Resource limit (rlimit)',
+    definition:
+      'A cap the kernel keeps for each process, such as how many files it may have open. Each has a soft value the kernel enforces and a hard value the soft one may be raised to. A new process inherits the limits of the one that started it.',
+  },
 })

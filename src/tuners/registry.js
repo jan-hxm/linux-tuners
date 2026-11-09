@@ -185,6 +185,7 @@ export const TUNERS = [
       why: 'Default task and file limits for every service, and CPU, memory and IO caps per slice. Comes after the filesystem and kernel limits it must stay under.',
       defaultsFine: 'A single-purpose machine whose services never compete for CPU, memory or IO and never hit the task or file limits.',
     },
+    guide: { slug: 'systemd-resources', status: 'draft' },
   },
   {
     id: 'network',

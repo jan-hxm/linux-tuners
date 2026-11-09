@@ -122,6 +122,20 @@ export const GUIDES = {
     learn: () => import('../tuners/block-io/learn.js').then((m) => m.LEARN),
     probes: () => import('../tuners/block-io/probes.js').then((m) => m.PROBES),
   },
+  'systemd-resources': {
+    tunerId: 'systemd',
+    route: {
+      title: 'How systemd shares out resources | linux-tuners.dev',
+      description:
+        'A beginner guide to systemd resource control: slices and cgroups, CPU and disk weights, memory limits, task caps and file limits, measured on five kernels.',
+      ogTitle: 'How systemd shares out resources',
+      priority: 0.8,
+      changefreq: 'monthly',
+      jsonLdType: 'TechArticle',
+    },
+    learn: () => import('../tuners/systemd/learn.js').then((m) => m.LEARN),
+    probes: () => import('../tuners/systemd/probes.js').then((m) => m.PROBES),
+  },
 }
 
 /** The /learn index's own route metadata; the route exists only while a guide is live. */

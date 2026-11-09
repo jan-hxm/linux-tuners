@@ -56,45 +56,29 @@ export const LEARN = {
         limit: 'A dock has a fixed size. The kernel grows each connection\'s buffer while it runs, up to a cap, and part of the buffer holds bookkeeping, not data.',
       },
       figure: {
-        kind: 'stack',
-        title: "Where a connection's data waits",
-        layers: [
-          {
-            id: 'program',
-            label: 'Your program',
-            kind: 'nodes',
-            nodes: [
-              { id: 'auto', text: 'Most programs', does: 'They leave the buffer size to the kernel.' },
-              { id: 'own', text: 'Some programs', does: 'They set a size with `SO_RCVBUF` or `SO_SNDBUF`.' },
-            ],
-          },
-          {
-            id: 'autotuned',
-            label: 'Sized by the kernel',
-            kind: 'nodes',
-            nodes: [
-              { id: 'tcp-rcv', text: 'TCP receive buffer', sub: 'min, default, max', does: 'Holds arrived data, and grows from the starting size toward the maximum.' },
-              { id: 'tcp-snd', text: 'TCP send buffer', sub: 'min, default, max', does: 'Holds data on its way out, and grows from the starting size toward the maximum.' },
-            ],
-            values: [
-              { probe: 'network.tcpRmem', unit: 'bytes' },
-              { probe: 'network.tcpWmem', unit: 'bytes' },
-            ],
-          },
-          {
-            id: 'fixed',
-            label: 'Sized by program',
-            kind: 'nodes',
-            nodes: [
-              { id: 'cap-rcv', text: 'Receive cap', does: 'The most a program may ask for as its own receive buffer.' },
-              { id: 'cap-snd', text: 'Send cap', does: 'The most a program may ask for as its own send buffer.' },
-            ],
-            values: [
-              { probe: 'network.rmemMax', unit: 'bytes' },
-              { probe: 'network.wmemMax', unit: 'bytes' },
-            ],
-          },
-          { id: 'network', label: 'The network', kind: 'nodes', nodes: [{ id: 'path', text: 'Path to other machine', does: 'Data in flight on the way sits here, not in either buffer.' }] },
+        kind: 'compare',
+        title: 'Socket buffer sizes, receive and send',
+        axis: 'buffer size',
+        scale: 'log',
+        groups: [
+          { id: 'receive', label: 'Receive', does: 'Buffers for data that has arrived and waits for the program.' },
+          { id: 'send', label: 'Send', does: 'Buffers for data on its way out, until the other side confirms it.' },
+        ],
+        bars: [
+          { id: 'r-min', label: 'Smallest', group: 'receive', value: { probe: 'network.tcpRmem', path: '0', unit: 'bytes' }, does: 'The least a TCP receive buffer may shrink to.' },
+          { id: 'r-start', label: 'Start', group: 'receive', tone: 'fit', value: { probe: 'network.tcpRmem', path: '1', unit: 'bytes' }, does: 'The size a new connection starts with, before the kernel grows it.' },
+          { id: 'r-max', label: 'Largest', group: 'receive', value: { probe: 'network.tcpRmem', path: '2', unit: 'bytes' }, does: 'The most the kernel grows a TCP receive buffer to.' },
+          { id: 'r-cap', label: 'Program cap', group: 'receive', tone: 'error', value: { probe: 'network.rmemMax', unit: 'bytes' }, does: 'The most a program may ask for with `SO_RCVBUF`.' },
+          { id: 'w-min', label: 'Smallest', group: 'send', value: { probe: 'network.tcpWmem', path: '0', unit: 'bytes' }, does: 'The least a TCP send buffer may shrink to.' },
+          { id: 'w-start', label: 'Start', group: 'send', tone: 'fit', value: { probe: 'network.tcpWmem', path: '1', unit: 'bytes' }, does: 'The size a new connection starts with, before the kernel grows it.' },
+          { id: 'w-max', label: 'Largest', group: 'send', value: { probe: 'network.tcpWmem', path: '2', unit: 'bytes' }, does: 'The most the kernel grows a TCP send buffer to.' },
+          { id: 'w-cap', label: 'Program cap', group: 'send', tone: 'error', value: { probe: 'network.wmemMax', unit: 'bytes' }, does: 'The most a program may ask for with `SO_SNDBUF`.' },
+        ],
+        pins: [
+          { key: 'tcp_rmem', bar: 'r-max' },
+          { key: 'tcp_wmem', bar: 'w-max' },
+          { key: 'rmem_max', bar: 'r-cap' },
+          { key: 'wmem_max', bar: 'w-cap' },
         ],
       },
       body: [
@@ -103,10 +87,10 @@ export const LEARN = {
         'A program can instead pick its own size with SO_RCVBUF or SO_SNDBUF, which turns automatic sizing off for that socket[^rmem]. net.core.rmem_max and net.core.wmem_max cap what it may ask for[^socket7]. The kernel doubles the request to leave room for bookkeeping[^socket7].',
       ],
       pins: [
-        { key: 'tcp_rmem', layer: 'autotuned', here: 'The receive buffer TCP grows on its own. The max limits how much data a sender may have in flight, so long, fast paths need a larger one. Leave min and default alone.' },
-        { key: 'tcp_wmem', layer: 'autotuned', here: 'The send buffer TCP grows on its own. Raise the max on machines that send bulk data over long paths, together with tcp_rmem on the receiving side.' },
-        { key: 'rmem_max', layer: 'fixed', here: 'The cap for programs that set their own receive buffer, such as some UDP servers. Most TCP sockets follow tcp_rmem instead.' },
-        { key: 'wmem_max', layer: 'fixed', here: 'The cap for programs that set their own send buffer. Most TCP sockets follow tcp_wmem instead. Most machines don\'t need to change this.' },
+        { key: 'tcp_rmem', layer: 'r-max', here: 'The receive buffer TCP grows on its own. The max limits how much data a sender may have in flight, so long, fast paths need a larger one. Leave min and default alone.' },
+        { key: 'tcp_wmem', layer: 'w-max', here: 'The send buffer TCP grows on its own. Raise the max on machines that send bulk data over long paths, together with tcp_rmem on the receiving side.' },
+        { key: 'rmem_max', layer: 'r-cap', here: 'The cap for programs that set their own receive buffer, such as some UDP servers. Most TCP sockets follow tcp_rmem instead.' },
+        { key: 'wmem_max', layer: 'w-cap', here: 'The cap for programs that set their own send buffer. Most TCP sockets follow tcp_wmem instead. Most machines don\'t need to change this.' },
       ],
       choose: [
         {
@@ -148,35 +132,36 @@ export const LEARN = {
         limit: 'Guests can see the line. A client cannot: its request is refused or ignored, and a retry may get through later, which looks like a slow server.',
       },
       figure: {
-        kind: 'stack',
-        title: 'How a new connection reaches your program',
-        layers: [
-          { id: 'arrive', label: 'Packets arrive', kind: 'nodes', nodes: [{ id: 'card', text: 'Network card', does: 'Takes arriving packets off the wire.' }] },
-          {
-            id: 'backlog',
-            label: 'Per-CPU queue',
-            kind: 'nodes',
-            nodes: [{ id: 'cpu-queue', text: 'Packets wait for CPU', does: 'Packets wait here for a CPU, and new ones are dropped when it is full.', probe: 'network.softnetStat' }],
-            values: [{ probe: 'network.netdevBacklog', unit: 'packets' }],
-          },
-          {
-            id: 'syn-queue',
-            label: 'Half-open connections',
-            kind: 'nodes',
-            nodes: [{ id: 'syn', text: 'Handshake not finished', does: 'A SYN arrived, and the three-way handshake is not yet done.' }],
-            values: [
-              { probe: 'network.synBacklog', unit: 'connections' },
-              { probe: 'network.syncookies', unit: '' },
-            ],
-          },
-          {
-            id: 'accept-queue',
-            label: 'Ready connections',
-            kind: 'nodes',
-            nodes: [{ id: 'ready', text: 'Waiting for accept', does: 'The handshake is done, and the connection waits for the program to call `accept()`.', probe: 'network.netstat' }],
-            values: [{ probe: 'network.somaxconn', unit: 'connections' }],
-          },
-          { id: 'program', label: 'Your program', kind: 'nodes', nodes: [{ id: 'accept', text: 'Takes next connection', does: 'The program picks the next ready connection off the queue.' }] },
+        kind: 'tree',
+        title: 'Where arriving traffic waits before your program',
+        root: {
+          id: 'arrivals',
+          label: 'Incoming traffic',
+          does: 'Packets from the network card, and the new connections they open.',
+          children: [
+            {
+              id: 'packets',
+              label: 'Arriving packets',
+              does: 'Every packet waits for a CPU before the kernel handles it.',
+              children: [
+                { id: 'cpu-queue', label: 'CPU backlog', value: { probe: 'network.netdevBacklog', unit: 'packets' }, does: 'Packets wait here for a CPU, and new ones are dropped when it is full.' },
+              ],
+            },
+            {
+              id: 'listener',
+              label: 'Listening socket',
+              does: 'One per listening port, with two queues for new connections.',
+              children: [
+                { id: 'syn', label: 'SYN queue', value: { probe: 'network.synBacklog', unit: 'connections' }, does: 'Half-open connections wait here, after a SYN arrived and before the handshake is done.' },
+                { id: 'ready', label: 'Accept queue', value: { probe: 'network.somaxconn', unit: 'connections' }, does: 'Finished handshakes wait here until the program calls `accept()`.' },
+              ],
+            },
+          ],
+        },
+        pins: [
+          { key: 'netdev_max_backlog', node: 'cpu-queue' },
+          { key: 'tcp_max_syn_backlog', node: 'syn' },
+          { key: 'somaxconn', node: 'ready' },
         ],
       },
       body: [
@@ -185,9 +170,9 @@ export const LEARN = {
         'Once the handshake is done, the connection waits for the program to accept it. The program asks for a queue length with listen(), and net.core.somaxconn silently caps it[^listen]. If that queue is full, the client may get an error, or its request is ignored and a later retry succeeds[^listen].',
       ],
       pins: [
-        { key: 'netdev_max_backlog', layer: 'backlog', here: 'How many arriving packets each CPU may hold before it drops more. Raise it when the drop count in /proc/net/softnet_stat keeps growing. Most machines don\'t need to change this.' },
-        { key: 'tcp_max_syn_backlog', layer: 'syn-queue', here: 'How many half-open connections each listening port remembers. Raise it, together with somaxconn, on servers that take bursts of new clients.' },
-        { key: 'somaxconn', layer: 'accept-queue', here: "The cap on each listening port's queue of ready connections. It helps only when the program asks for a longer queue too, in its own settings." },
+        { key: 'netdev_max_backlog', layer: 'cpu-queue', here: 'How many arriving packets each CPU may hold before it drops more. Raise it when the drop count in /proc/net/softnet_stat keeps growing. Most machines don\'t need to change this.' },
+        { key: 'tcp_max_syn_backlog', layer: 'syn', here: 'How many half-open connections each listening port remembers. Raise it, together with somaxconn, on servers that take bursts of new clients.' },
+        { key: 'somaxconn', layer: 'ready', here: "The cap on each listening port's queue of ready connections. It helps only when the program asks for a longer queue too, in its own settings." },
       ],
       choose: [
         {
@@ -236,27 +221,45 @@ export const LEARN = {
         limit: "A driver sees the road. TCP can't see the path, so it judges it from the replies that come back.",
       },
       figure: {
-        kind: 'stack',
-        title: 'From a connection to the wire',
-        layers: [
-          { id: 'connection', label: 'A connection', kind: 'nodes', nodes: [{ id: 'data', text: 'Data in send buffer', does: 'A connection has data waiting to be sent.' }] },
+        kind: 'modes',
+        title: 'What decides how a connection sends',
+        rows: [
           {
-            id: 'congestion',
+            id: 'algorithm',
             label: 'Congestion control',
-            kind: 'nodes',
-            nodes: [
-              { id: 'algorithm', text: 'Data in flight', does: 'The algorithm decides how much may be sent before replies come back.', probe: 'network.congestionControl' },
-              { id: 'idle', text: 'After an idle pause', does: 'The connection starts slowly again, or keeps its pace, as the setting says.', probe: 'network.slowStartAfterIdle' },
+            pin: 'tcp_congestion_control',
+            value: { probe: 'network.congestionControl', unit: '' },
+            does: 'How much data a connection may send before replies come back, from the algorithms the kernel has loaded.',
+            options: [
+              { value: 'cubic', label: 'cubic', does: 'Backs off when packets are lost.' },
+              { value: 'bbr', label: 'bbr', does: 'Models the path, and needs the `tcp_bbr` module.' },
+              { value: 'reno', label: 'reno', does: 'The classic algorithm, always built in.' },
             ],
-            values: [{ probe: 'network.availableCc', unit: '' }],
           },
           {
             id: 'qdisc',
             label: 'Outgoing queue',
-            kind: 'nodes',
-            nodes: [{ id: 'discipline', text: 'Queueing discipline', does: 'Orders the packets waiting to leave.', probe: 'network.defaultQdisc' }],
+            pin: 'default_qdisc',
+            value: { probe: 'network.defaultQdisc', unit: '' },
+            does: 'Which queueing discipline new network devices get to order the packets waiting to leave.',
+            options: [
+              { value: 'fq_codel', label: 'fq_codel', does: 'Gives every flow a fair share.' },
+              { value: 'fq', label: 'fq', does: 'Paces each flow.' },
+              { value: 'cake', label: 'cake', does: 'Aimed at home routers, and needs the `sch_cake` module.' },
+              { value: 'pfifo_fast', label: 'pfifo_fast', does: 'The kernel default: one plain line for every flow.' },
+            ],
           },
-          { id: 'card', label: 'Network card', kind: 'nodes', nodes: [{ id: 'wire', text: 'Packets leave', does: 'The card puts the packets on the wire.' }] },
+          {
+            id: 'idle',
+            label: 'After an idle pause',
+            pin: 'tcp_slow_start_after_idle',
+            value: { probe: 'network.slowStartAfterIdle', unit: '' },
+            does: 'Whether a connection that sat idle starts slowly again or keeps the pace it had reached.',
+            options: [
+              { value: 0, label: 'keeps pace', does: 'The window is kept, so a burst leaves at full pace.' },
+              { value: 1, label: 'restarts slowly', does: 'The window is timed out, so the next burst starts slowly.' },
+            ],
+          },
         ],
       },
       body: [
@@ -265,9 +268,9 @@ export const LEARN = {
         'Packets to send then wait in the interface\'s [[queueing discipline|qdisc]], which hands them to the network card[^tc]. net.core.default_qdisc picks it for network devices, and the kernel\'s own default is pfifo_fast[^qdisc]. fq_codel gives every flow a fair share[^codel], and fq paces each flow[^fq]. Virtual devices such as lo ignore the setting[^qdisc].',
       ],
       pins: [
-        { key: 'tcp_congestion_control', layer: 'congestion', here: 'The algorithm new connections use. Other algorithms, such as bbr, may come as modules; check tcp_available_congestion_control. Keep the default unless you have measured a gain.' },
+        { key: 'tcp_congestion_control', layer: 'algorithm', here: 'The algorithm new connections use. Other algorithms, such as bbr, may come as modules; check tcp_available_congestion_control. Keep the default unless you have measured a gain.' },
         { key: 'default_qdisc', layer: 'qdisc', here: 'The queue network devices get. fq_codel shares the link fairly between flows, and fq adds pacing, which suits servers sending many flows. pfifo_fast is the kernel default.' },
-        { key: 'tcp_slow_start_after_idle', layer: 'congestion', here: 'On, a connection that paused starts slowly again. Off, it resumes at the pace it had. Off suits long-lived connections that send in bursts.' },
+        { key: 'tcp_slow_start_after_idle', layer: 'idle', here: 'On, a connection that paused starts slowly again. Off, it resumes at the pace it had. Off suits long-lived connections that send in bursts.' },
       ],
       choose: [
         {
@@ -311,31 +314,19 @@ export const LEARN = {
         limit: 'Parcels you post are lost for good. TCP resends lost data, so with probing on it can try smaller packets until they get through.',
       },
       figure: {
-        kind: 'stack',
-        title: 'A path with a smaller link',
-        layers: [
-          { id: 'sender', label: 'Your machine', kind: 'nodes', nodes: [{ id: 'big', text: 'Full-size packets', does: 'The machine sends packets as large as its own link allows.' }] },
-          {
-            id: 'path',
-            label: 'The path',
-            kind: 'nodes',
-            nodes: [
-              { id: 'narrow', text: 'Link with smaller MTU', does: 'This link carries only smaller packets than the sender uses.' },
-              { id: 'icmp', text: 'ICMP Fragmentation Needed', does: 'The warning that tells the sender to use smaller packets, which some networks block.' },
-            ],
-          },
+        kind: 'modes',
+        title: 'How TCP probes for a size that gets through',
+        rows: [
           {
             id: 'probing',
-            label: 'TCP probing',
-            kind: 'nodes',
-            nodes: [
-              { id: 'off', text: '0: off', does: 'TCP does not probe, and relies on ICMP messages.' },
-              { id: 'black-hole', text: '1: after black hole', does: 'Probing starts once TCP detects an ICMP black hole.' },
-              { id: 'always', text: '2: always on', does: 'Probing is always on, and starts from `tcp_base_mss`.' },
-            ],
-            values: [
-              { probe: 'network.mtuProbing', unit: '' },
-              { probe: 'network.baseMss', unit: 'bytes' },
+            label: 'Path MTU probing',
+            pin: 'tcp_mtu_probing',
+            value: { probe: 'network.mtuProbing', unit: '' },
+            does: 'Whether TCP tries smaller packets itself when ICMP warnings never arrive.',
+            options: [
+              { value: 0, label: 'off', does: 'TCP relies on ICMP messages and never probes.' },
+              { value: 1, label: 'after a black hole', does: 'Probing starts once TCP detects an ICMP black hole.' },
+              { value: 2, label: 'always', does: 'TCP always probes, starting from `tcp_base_mss`.' },
             ],
           },
         ],
@@ -380,17 +371,18 @@ export const LEARN = {
         limit: 'Guests at a cloakroom wait in line. A program does not wait: when no port is free, its connect() fails with an error.',
       },
       figure: {
-        kind: 'timeline',
-        title: 'Local ports in use during a burst of outgoing connections',
-        schematic: true,
-        lines: [{ id: 'range', label: 'Whole port range', does: 'Every port in the range is in use at this level.', value: { probe: 'network.portRange', unit: '' } }],
-        // One line sits at level 0.5, so the curve flattens there when the range runs out.
-        curve: [[0, 0.05], [0.15, 0.05], [0.35, 0.3], [0.5, 0.5], [0.7, 0.5], [0.85, 0.25], [1, 0.08]],
-        events: [
-          { at: 0.15, label: 'A burst starts', does: 'Many short outgoing connections open and close in quick succession.' },
-          { at: 0.35, label: 'Ports held in TIME-WAIT', does: 'Closed connections keep their local ports for a while before the kernel frees them.' },
-          { at: 0.5, label: 'No port is free', does: 'The range is used up, so `connect()` fails with an error.', tone: 'error' },
-          { at: 0.85, label: 'Ports come free', does: 'TIME-WAIT ends, and the ports go back into use.', tone: 'fit' },
+        kind: 'gauge',
+        title: 'Port numbers, and the range outgoing connections draw from',
+        axis: 'port number',
+        range: { from: 0, to: 65535 },
+        marks: [
+          { id: 'first', label: 'First port', value: { probe: 'network.portRange', path: '0', unit: '' }, does: 'The lowest port an outgoing connection may get.' },
+          { id: 'last', label: 'Last port', value: { probe: 'network.portRange', path: '1', unit: '' }, does: 'The highest port an outgoing connection may get.' },
+        ],
+        zones: [
+          { id: 'below', label: 'below the range', to: 'first', does: 'Ports for services that listen, such as those under 1024, which outgoing connections never borrow.' },
+          { id: 'ephemeral', label: 'outgoing ports', from: 'first', to: 'last', tone: 'fit', does: 'Each outgoing connection borrows one, and `connect()` fails when all are busy or in TIME-WAIT.' },
+          { id: 'above', label: 'above the range', from: 'last', does: 'Never handed out to outgoing connections, up to the top port, 65535.' },
         ],
       },
       body: [
@@ -399,9 +391,9 @@ export const LEARN = {
         'Closed connections linger as [[TIME-WAIT|time-wait]] sockets, which the kernel holds for a time[^tw-buckets]. net.ipv4.tcp_tw_reuse lets new connections reuse them when that is safe, and its default 2 does so for loopback only[^reuse]. net.ipv4.tcp_fin_timeout limits how long an abandoned connection waits in FIN_WAIT_2 for the other side to close[^fin].',
       ],
       pins: [
-        { key: 'ip_local_port_range', layer: 'range', here: 'The ports outgoing connections borrow. Widen it on proxies and clients that open many short connections, and keep it clear of ports your services listen on.' },
-        { key: 'tcp_tw_reuse', here: 'Whether new connections may reuse ports still in TIME-WAIT when that is safe. 2, the default, does it for loopback only. The docs advise changing it only on expert advice.' },
-        { key: 'tcp_fin_timeout', here: 'How long, in seconds, a connection no program holds any more waits for the other side to finish closing. Lower frees such leftovers sooner on busy servers. It is not the TIME-WAIT time.' },
+        { key: 'ip_local_port_range', layer: 'ephemeral', here: 'The ports outgoing connections borrow. Widen it on proxies and clients that open many short connections, and keep it clear of ports your services listen on.' },
+        { key: 'tcp_tw_reuse', layer: 'ephemeral', here: 'Whether new connections may reuse ports still in TIME-WAIT when that is safe. 2, the default, does it for loopback only. The docs advise changing it only on expert advice.' },
+        { key: 'tcp_fin_timeout', layer: 'ephemeral', here: 'How long, in seconds, a connection no program holds any more waits for the other side to finish closing. Lower frees such leftovers sooner on busy servers. It is not the TIME-WAIT time.' },
       ],
       choose: [
         {
@@ -445,41 +437,29 @@ export const LEARN = {
         limit: 'A doorman can squeeze in one more name. The kernel cannot: once the table is full and nothing can be dropped, the new connection\'s packet is dropped instead.',
       },
       figure: {
-        kind: 'stack',
-        title: 'The connection tracking table',
-        layers: [
-          { id: 'packets', label: 'Packets in and out', kind: 'nodes', nodes: [{ id: 'packet', text: 'Each packet', does: 'It is matched to the connection it belongs to.' }] },
+        kind: 'gauge',
+        title: 'Connections the kernel tracks, against its limit',
+        axis: 'tracked connections',
+        marks: [
           {
-            id: 'users',
-            label: 'What uses it',
-            kind: 'nodes',
-            nodes: [
-              { id: 'firewall', text: 'Firewall rules', does: 'Rules can match a packet by its connection state, such as NEW or ESTABLISHED.' },
-              { id: 'nat', text: 'Address rewriting', does: 'NAT rewrites addresses, and every later packet of the connection gets the same change.' },
-            ],
+            id: 'entries',
+            label: 'In use now',
+            value: { probe: 'network.conntrackCount', unit: 'connections' },
+            does: 'Connections tracked right now, which is 0 on a test machine with no traffic.',
           },
           {
-            id: 'table',
-            label: 'Tracking table',
-            kind: 'nodes',
-            nodes: [
-              { id: 'entries', text: 'Entries in use', does: 'How many connections the kernel tracks right now.', probe: 'network.conntrackCount' },
-              { id: 'limit', text: 'Most entries allowed', does: 'The cap on entries, and a new connection is dropped once it is reached.', probe: 'network.conntrackMax' },
-            ],
-          },
-          {
-            id: 'hash',
-            label: 'Hash table',
-            kind: 'nodes',
-            nodes: [{ id: 'buckets', text: 'Buckets', does: 'Each entry is stored twice, once per direction, so a full table averages two per bucket.', probe: 'network.conntrackBuckets' }],
-          },
-          {
-            id: 'expiry',
-            label: 'When idle entries go',
-            kind: 'nodes',
-            nodes: [{ id: 'established', text: 'Idle established TCP', does: 'How many seconds an idle connection keeps its entry.', probe: 'network.conntrackEstablished' }],
+            id: 'limit',
+            label: 'Table limit',
+            value: { probe: 'network.conntrackMax', unit: 'connections' },
+            tone: 'error',
+            does: 'The most entries allowed, and a new connection is dropped past it.',
           },
         ],
+        zones: [
+          { id: 'free', label: 'free entries', from: 'entries', to: 'limit', tone: 'fit', does: 'Room for new connections, one entry each, while idle entries leave after their timeout.' },
+          { id: 'full', label: 'table full', from: 'limit', tone: 'error', does: 'No room is left, so packets that would start a new connection are dropped.' },
+        ],
+        pins: [{ key: 'nf_conntrack_max', mark: 'limit' }],
       },
       body: [
         '[[Connection tracking|conntrack]] keeps an entry for each connection the kernel sees[^ct]. Firewall rules can then match a packet by its connection\'s state, such as NEW or ESTABLISHED[^match]. [[NAT]] rules act on the packet that starts a connection, and every later packet of it gets the same change[^nat-table][^snat].',
@@ -487,9 +467,9 @@ export const LEARN = {
         'An idle established TCP connection keeps its entry for net.netfilter.nf_conntrack_tcp_timeout_established, 432000 seconds (5 days) by default[^ct]. On busy NAT hosts, clients that vanish without closing leave entries behind that wait out this timer.',
       ],
       pins: [
-        { key: 'nf_conntrack_max', layer: 'table', here: 'How many connections the kernel tracks at once. Raise it on NAT gateways and container hosts until the peak count stays well below it. Each entry costs memory.' },
-        { key: 'nf_conntrack_buckets', layer: 'hash', here: 'The size of the hash table entries are looked up in. Keep it near nf_conntrack_max, so lookups stay short when the table fills.' },
-        { key: 'nf_conntrack_tcp_timeout_established', layer: 'expiry', here: 'How long an idle TCP connection keeps its entry. Lower clears out connections clients abandoned. Keep it above the longest quiet spell your connections have, or they break behind NAT.' },
+        { key: 'nf_conntrack_max', layer: 'limit', here: 'How many connections the kernel tracks at once. Raise it on NAT gateways and container hosts until the peak count stays well below it. Each entry costs memory.' },
+        { key: 'nf_conntrack_buckets', layer: 'free', here: 'The size of the hash table entries are looked up in. Keep it near nf_conntrack_max, so lookups stay short when the table fills.' },
+        { key: 'nf_conntrack_tcp_timeout_established', layer: 'free', here: 'How long an idle TCP connection keeps its entry. Lower clears out connections clients abandoned. Keep it above the longest quiet spell your connections have, or they break behind NAT.' },
       ],
       choose: [
         {

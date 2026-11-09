@@ -12,38 +12,38 @@
  * the rotational probes tell the SSD from the hard disk on every capture.
  */
 
-const queue = (dev, attr) => ({ kind: 'sysfs', path: `/sys/block/${dev}/queue/${attr}` })
+const queue = (disk, attr) => ({ kind: 'diskQueue', disk, attr })
 
 export const PROBES = {
   // queue/rotational
-  'block-io.nvmeRotational': queue('nvme0n1', 'rotational'),
-  'block-io.ssdRotational': queue('sda', 'rotational'),
-  'block-io.hddRotational': queue('sdb', 'rotational'),
-  'block-io.virtioRotational': queue('vda', 'rotational'),
+  'block-io.nvmeRotational': queue('nvme', 'rotational'),
+  'block-io.ssdRotational': queue('ssd', 'rotational'),
+  'block-io.hddRotational': queue('hdd', 'rotational'),
+  'block-io.virtioRotational': queue('virtio', 'rotational'),
 
   // queue/scheduler (the bracketed, active one)
-  'block-io.nvmeScheduler': queue('nvme0n1', 'scheduler'),
-  'block-io.ssdScheduler': queue('sda', 'scheduler'),
-  'block-io.hddScheduler': queue('sdb', 'scheduler'),
-  'block-io.virtioScheduler': queue('vda', 'scheduler'),
+  'block-io.nvmeScheduler': queue('nvme', 'scheduler'),
+  'block-io.ssdScheduler': queue('ssd', 'scheduler'),
+  'block-io.hddScheduler': queue('hdd', 'scheduler'),
+  'block-io.virtioScheduler': queue('virtio', 'scheduler'),
 
   // queue/nr_requests
-  'block-io.nvmeRequests': queue('nvme0n1', 'nr_requests'),
-  'block-io.ssdRequests': queue('sda', 'nr_requests'),
-  'block-io.hddRequests': queue('sdb', 'nr_requests'),
-  'block-io.virtioRequests': queue('vda', 'nr_requests'),
+  'block-io.nvmeRequests': queue('nvme', 'nr_requests'),
+  'block-io.ssdRequests': queue('ssd', 'nr_requests'),
+  'block-io.hddRequests': queue('hdd', 'nr_requests'),
+  'block-io.virtioRequests': queue('virtio', 'nr_requests'),
 
   // queue/read_ahead_kb
-  'block-io.nvmeReadAhead': queue('nvme0n1', 'read_ahead_kb'),
-  'block-io.ssdReadAhead': queue('sda', 'read_ahead_kb'),
-  'block-io.hddReadAhead': queue('sdb', 'read_ahead_kb'),
-  'block-io.virtioReadAhead': queue('vda', 'read_ahead_kb'),
+  'block-io.nvmeReadAhead': queue('nvme', 'read_ahead_kb'),
+  'block-io.ssdReadAhead': queue('ssd', 'read_ahead_kb'),
+  'block-io.hddReadAhead': queue('hdd', 'read_ahead_kb'),
+  'block-io.virtioReadAhead': queue('virtio', 'read_ahead_kb'),
 
   // queue/nomerges
-  'block-io.nvmeNomerges': queue('nvme0n1', 'nomerges'),
-  'block-io.ssdNomerges': queue('sda', 'nomerges'),
-  'block-io.hddNomerges': queue('sdb', 'nomerges'),
-  'block-io.virtioNomerges': queue('vda', 'nomerges'),
+  'block-io.nvmeNomerges': queue('nvme', 'nomerges'),
+  'block-io.ssdNomerges': queue('ssd', 'nomerges'),
+  'block-io.hddNomerges': queue('hdd', 'nomerges'),
+  'block-io.virtioNomerges': queue('virtio', 'nomerges'),
 
   // The parts the figures name.
   'block-io.sysBlock': { kind: 'file', path: '/sys/block', exists: true },

@@ -31,7 +31,7 @@ describe('command templates', () => {
   })
 
   it('is the closed set from the plan, each with a compare mode', () => {
-    expect(Object.keys(KINDS).sort()).toEqual(['file', 'meminfoKeys', 'sysctl', 'sysfs', 'thread', 'vmstatKeys', 'zoneinfo'])
+    expect(Object.keys(KINDS).sort()).toEqual(['diskQueue', 'file', 'meminfoKeys', 'sysctl', 'sysfs', 'thread', 'vmstatKeys', 'zoneinfo'])
     for (const k of Object.values(KINDS)) expect(['exact', 'present']).toContain(k.compare)
   })
 
@@ -94,6 +94,32 @@ describe('file and sysfs', () => {
     expect(entry(p, ok('128\n'))).toEqual({ status: 'ok', value: 128 })
     expect(entry(p, { code: 1, stdout: '', stderr: 'cat: /sys/kernel/mm/ksm/max_page_sharing: No such file or directory\n' }))
       .toEqual({ status: 'absent', reason: 'cat: /sys/kernel/mm/ksm/max_page_sharing: No such file or directory' })
+  })
+})
+
+describe('diskQueue', () => {
+  it('reads a named disk directly and a SATA disk by its AHCI port', () => {
+    expect(KINDS.diskQueue.command({ kind: 'diskQueue', disk: 'nvme', attr: 'scheduler' })).toBe("sudo cat '/sys/block/nvme0n1/queue/scheduler'")
+    const ssd = KINDS.diskQueue.command({ kind: 'diskQueue', disk: 'ssd', attr: 'rotational' })
+    expect(ssd).toContain('*/ata2/*')
+    expect(ssd).toContain('"$d/queue/rotational"')
+    expect(KINDS.diskQueue.command({ kind: 'diskQueue', disk: 'hdd', attr: 'rotational' })).toContain('*/ata3/*')
+  })
+  it('matches the ports to the suite disks: ide.1 is ata2, ide.2 is ata3', () => {
+    // q35's AHCI port n is ata(n+1); the SSD and hard disk sit on ide.1 and ide.2.
+    expect(GUEST.disks.find((d) => d.includes('rotation_rate=1,') || d.endsWith('rotation_rate=1'))).toContain('bus=ide.1')
+    expect(GUEST.disks.find((d) => d.includes('rotation_rate=7200'))).toContain('bus=ide.2')
+  })
+  it('parses like sysfs and is absent without the disk', () => {
+    const p = { kind: 'diskQueue', disk: 'ssd', attr: 'scheduler' }
+    expect(entry(p, ok('none [mq-deadline] bfq\n'))).toEqual({ status: 'ok', value: 'mq-deadline' })
+    expect(entry(p, { code: 1, stdout: '', stderr: 'no disk on ata2\n' })).toEqual({ status: 'absent', reason: 'no disk on ata2' })
+  })
+  it('accepts only known disks and plain attribute names', () => {
+    expect(checkProbe('demo.a', { kind: 'diskQueue', disk: 'ssd', attr: 'rotational' }, 'demo')).toEqual([])
+    expect(checkProbe('demo.b', { kind: 'diskQueue', disk: 'sdc', attr: 'rotational' }, 'demo')).not.toEqual([])
+    expect(checkProbe('demo.c', { kind: 'diskQueue', disk: 'ssd', attr: '../../x' }, 'demo')).not.toEqual([])
+    expect(checkProbe('demo.d', { kind: 'diskQueue', disk: 'toString', attr: 'rotational' }, 'demo')).not.toEqual([])
   })
 })
 
@@ -258,7 +284,7 @@ describe('freshness', () => {
 describe('loading probes', () => {
   it('finds every probes.js under a tuners folder', async () => {
     const probes = await loadProbes(join(FIXTURES, 'tuners'))
-    expect(Object.keys(probes).sort()).toEqual(['demo.allocstall', 'demo.kswapd', 'demo.meminfo', 'demo.minFree', 'demo.swaps', 'demo.thp', 'demo.zoneWatermarks'])
+    expect(Object.keys(probes).sort()).toEqual(['demo.allocstall', 'demo.kswapd', 'demo.meminfo', 'demo.minFree', 'demo.ssdRotational', 'demo.swaps', 'demo.thp', 'demo.zoneWatermarks'])
     expect(new Set(Object.values(probes).map((p) => p.kind))).toEqual(new Set(Object.keys(KINDS)))
   })
   it('refuses a folder with any bad probe, naming each', async () => {

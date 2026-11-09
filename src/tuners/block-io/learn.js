@@ -18,8 +18,8 @@ const bfq = (anchor, name) => ({ url: `${BFQ}#${anchor}`, label: `BFQ: ${name}` 
 /** The four disks of the capture guest, as figure nodes reading one attribute each. */
 const disks = (probe) => [
   { id: 'nvme', text: 'NVMe drive', sub: 'nvme0n1', probe: `block-io.nvme${probe}` },
-  { id: 'ssd', text: 'SATA SSD', sub: 'sda', probe: `block-io.ssd${probe}` },
-  { id: 'hdd', text: 'SATA hard disk', sub: 'sdb', probe: `block-io.hdd${probe}` },
+  { id: 'ssd', text: 'SATA SSD', sub: 'sda, sdb, …', probe: `block-io.ssd${probe}` },
+  { id: 'hdd', text: 'SATA hard disk', sub: 'sda, sdb, …', probe: `block-io.hdd${probe}` },
   { id: 'virtio', text: 'Virtual disk', sub: 'vda', probe: `block-io.virtio${probe}` },
 ]
 

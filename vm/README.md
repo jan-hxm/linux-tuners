@@ -105,7 +105,7 @@ boot keeps its old file and the command exits 1. Review the diff and commit
 it with the guide change that needed it.
 
 Probes are plain data in a closed set of kinds (`vm/lib/probeKinds.mjs`):
-`sysctl`, `file`, `sysfs`, `thread`, `zoneinfo`, `vmstatKeys` and
+`sysctl`, `file`, `sysfs`, `diskQueue`, `thread`, `zoneinfo`, `vmstatKeys` and
 `meminfoKeys`. Each kind runs a fixed command with the probe's one field
 quoted into it, so a probe can't run anything else; a new kind of
 measurement is a new kind there, with a parser test against real output in

@@ -762,6 +762,7 @@ freshness check compares:
 | `sysctl` | `name: 'vm.min_free_kbytes'` | `sudo sysctl -n <name>` | a number when it is one whole number, else text | present |
 | `file` | `path` under `/proc` or `/sys`, `exists: true` | `sudo test -e <path>` | `true`; a missing file is absent | exact |
 | `sysfs` | `path` under `/sys` | `sudo cat <path>` | the bracketed choice ("always [madvise] never" is `madvise`), else as `sysctl` | present |
+| `diskQueue` | `disk: 'ssd'` (`nvme`, `ssd`, `hdd`, `virtio`), `attr: 'rotational'` | `sudo cat /sys/block/<dev>/queue/<attr>`, the SATA disks found by AHCI port (ata2, ata3) since sda and sdb swap between images | as `sysfs`; an image without that disk is absent | present |
 | `thread` | `name: 'kswapd0'` | `ps -e -o comm=` | whether a process of that exact name runs | exact |
 | `zoneinfo` | none | `cat /proc/zoneinfo` | `{ <zone>: { min, low, high } }` in pages; node 0's zones by name, others `node1-Normal` | present |
 | `vmstatKeys` | `prefix: 'allocstall'` | `cat /proc/vmstat` | the keys `<prefix>` or `<prefix>_*`, sorted (one `allocstall` before 4.8, per zone after) | exact |

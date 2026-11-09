@@ -38,6 +38,21 @@ export const GUEST = {
   disks: ['nvme,serial=lt0001', 'ide-hd,bus=ide.1,rotation_rate=1', 'ide-hd,bus=ide.2,rotation_rate=7200'],
 }
 
+/**
+ * Where each test disk class shows up in the guest. The SATA SSD and hard
+ * disk are found by their AHCI port, not by name: q35's `ide.1` and `ide.2`
+ * are ports ata2 and ata3, but sda and sdb go to whichever disk finishes
+ * probing first, which differs between images (Debian 13 names them the
+ * other way round from Ubuntu and Fedora).
+ */
+export const DISKS = {
+  nvme: { name: 'nvme0n1' },
+  virtio: { name: 'vda' },
+  ssd: { ataPort: 'ata2' },
+  hdd: { ataPort: 'ata3' },
+}
+const QUEUE_ATTR = /^[a-z_]+$/
+
 /** Thrown by a parser: the thing measured is not there. */
 export class Absent extends Error {}
 
@@ -169,6 +184,27 @@ export const KINDS = {
       if (!out) throw new Absent('empty file')
       return scalar(out.match(/\[([^\]]+)\]/)?.[1] ?? out)
     },
+  },
+
+  /**
+   * `{ kind: 'diskQueue', disk: 'ssd', attr: 'rotational' }`: one
+   * /sys/block/<dev>/queue/<attr> value of a test disk (DISKS), read like
+   * `sysfs`. Absent when the image has no such disk.
+   */
+  diskQueue: {
+    compare: 'present',
+    check: (p) => [
+      ...fields(p, ['kind', 'disk', 'attr']),
+      ...(Object.hasOwn(DISKS, p.disk ?? '') ? [] : [`disk must be one of ${Object.keys(DISKS).join(', ')}`]),
+      ...(QUEUE_ATTR.test(p.attr ?? '') ? [] : ['attr must be a queue attribute name']),
+    ],
+    command: (p) => {
+      const { name, ataPort } = DISKS[p.disk]
+      const file = (dev) => `${dev}/queue/${p.attr}`
+      if (name) return `sudo cat ${quote(file(`/sys/block/${name}`))}`
+      return `for d in /sys/block/sd*; do case "$(readlink -f "$d")" in */${ataPort}/*) sudo cat "${file('$d')}"; exit;; esac; done; echo "no disk on ${ataPort}" >&2; exit 1`
+    },
+    parse: (r, p) => KINDS.sysfs.parse(r, p),
   },
 
   /** `{ kind: 'thread', name: 'kswapd0' }`: whether a process or kernel thread of that name runs. */

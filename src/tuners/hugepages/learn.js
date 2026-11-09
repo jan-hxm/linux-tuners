@@ -6,7 +6,8 @@
  * `[[term]]` names an entry in ui/glossary.js.
  *
  * Sources are docs.kernel.org: admin-guide/mm/hugetlbpage, transhuge and ksm,
- * plus admin-guide/sysctl/vm for the vm.* keys.
+ * plus admin-guide/sysctl/vm for the vm.* keys, and the man7.org pages of
+ * madvise(2), mmap(2) and mprotect(2).
  */
 
 const MM = 'https://docs.kernel.org/admin-guide/mm'
@@ -15,6 +16,7 @@ const hugetlb = (anchor, name) => ({ url: `${MM}/hugetlbpage.html#${anchor}`, la
 const thp = (anchor, name) => ({ url: `${MM}/transhuge.html#${anchor}`, label: `Transparent hugepage support: ${name}` })
 const ksm = (anchor, name) => ({ url: `${MM}/ksm.html#${anchor}`, label: `Kernel samepage merging: ${name}` })
 const vm = (anchor, name) => ({ url: `${VM}#${anchor}`, label: `sysctl/vm: ${name}` })
+const man2 = (page, anchor) => ({ url: `https://man7.org/linux/man-pages/man2/${page}.2.html#${anchor}`, label: `${page}(2): ${anchor}` })
 
 export const LEARN = {
   slug: 'huge-pages',
@@ -170,7 +172,7 @@ export const LEARN = {
             bands: [
               { id: 'always', text: 'always: enabled system wide' },
               { id: 'madvise', text: 'madvise: only the marked regions' },
-              { id: 'never', text: 'never: off, except for an explicit collapse request' },
+              { id: 'never', text: 'never: off, though kernels from 6.1 still act on a collapse request' },
             ],
             values: [{ probe: 'hugepages.thpEnabled', unit: '' }],
           },
@@ -188,23 +190,23 @@ export const LEARN = {
       },
       body: [
         '[[Transparent huge pages|thp]] give a program huge pages without any change to it and without a reserved pool[^objective]. They work for [[anonymous memory|anonymous-memory]] and for tmpfs and shmem[^objective]. One huge page takes a single [[TLB]] entry where many small pages would need one each, which means fewer TLB misses[^objective].',
-        '`transparent_hugepage/enabled` takes three values. With `always`, huge pages are enabled system wide. With `madvise`, only regions the program marked with [[madvise]] and MADV_HUGEPAGE qualify. With `never` they are off, although an explicit collapse request can still produce one[^sysfs]. The [[khugepaged]] thread collapses small pages into huge ones while any size is enabled[^sysfs].',
-        'With `always`, a program can use more memory than it needs: it may map a large region, touch one byte, and be given a 2M page[^objective]. That is why the docs let you limit huge pages to madvise regions[^objective]. The kernel may also raise `vm.min_free_kbytes` when THP is on, as the figure shows on our test kernels[^minfree].',
+        '`transparent_hugepage/enabled` sets this for anonymous memory and takes three values. With `always`, huge pages are enabled system wide. With `madvise`, only regions the program marked with [[madvise]] and MADV_HUGEPAGE qualify. With `never` they are off, although on kernels from 6.1 an explicit collapse request can still produce one[^sysfs][^collapse]. The [[khugepaged]] thread collapses small pages into huge ones while the setting is `always` or `madvise`[^sysfs].',
+        'With `always`, a program can use more memory than it needs: it may map a large region, touch one byte, and be given a 2M page[^objective]. That is why the docs let you limit huge pages to madvise regions[^objective]. When khugepaged starts, the kernel may also raise `vm.min_free_kbytes` to help huge page allocations, as the figure shows on our test kernels.',
       ],
       pins: [
         { key: 'thp_enabled', layer: 'setting', here: 'Which memory may get huge pages on its own. madvise gives them only to programs that ask. always gives them to everything that qualifies and can waste RAM. never turns it off.' },
       ],
       choose: [
         {
-          q: 'Does a program you run advise against transparent huge pages?',
+          q: 'Is the setting always, while a program you run advises against transparent huge pages?',
           check: 'cat /sys/kernel/mm/transparent_hugepage/enabled',
-          hint: 'The word in brackets is the active choice. Programs that advise against THP are happiest with madvise or never.',
+          hint: 'The word in brackets is the active choice. Lowering it means picking madvise, or never if the program asks for that.',
           yes: { key: 'thp_enabled', dir: 'lower' },
         },
         {
-          q: 'Do you run programs that mark their memory for huge pages, such as a virtual machine host?',
+          q: 'Is the setting never, while you run programs that mark their memory for huge pages, such as a virtual machine host?',
           check: 'grep AnonHugePages /proc/meminfo',
-          hint: 'AnonHugePages at 0 while such a program runs means it gets no huge pages. madvise is enough for programs that mark their memory.',
+          hint: 'AnonHugePages at 0 while such a program runs means it gets no huge pages. Raising it means picking madvise, which is enough for them.',
           yes: { key: 'thp_enabled', dir: 'raise' },
           no: { leave: true, why: 'madvise gives huge pages to the programs that ask and leaves the rest on small pages.' },
         },
@@ -220,7 +222,7 @@ export const LEARN = {
       sources: {
         objective: thp('objective', 'objective'),
         sysfs: thp('global-thp-controls', 'global THP controls'),
-        minfree: vm('min-free-kbytes', 'min_free_kbytes'),
+        collapse: man2('madvise', 'DESCRIPTION'),
       },
     },
     {
@@ -275,15 +277,15 @@ export const LEARN = {
       ],
       choose: [
         {
-          q: 'Do programs stall for a moment when they first touch new memory?',
+          q: 'Is defrag set to always, and do programs stall for a moment when they first touch new memory?',
           check: 'grep -e compact_stall -e thp_fault_fallback /proc/vmstat',
-          hint: 'Run it twice, a minute apart. A compact_stall that keeps growing means programs waited for compaction.',
+          hint: 'Run it twice, a minute apart. A growing compact_stall means programs waited. Lowering it means picking madvise, the default, or defer, which never waits.',
           yes: { key: 'thp_defrag', dir: 'lower' },
         },
         {
-          q: 'Do programs that ask for huge pages often get small pages instead?',
+          q: 'Is defrag set to never or defer, while programs that ask for huge pages often get small pages instead?',
           check: 'grep -e compact_stall -e thp_fault_fallback /proc/vmstat',
-          hint: 'A thp_fault_fallback that keeps growing means page faults could not get a huge page.',
+          hint: 'A growing thp_fault_fallback means page faults got small pages. Raising it means picking madvise or defer+madvise, so memory that asked may wait.',
           yes: { key: 'thp_defrag', dir: 'raise' },
           no: { leave: true, why: 'The default waits only for memory that asked for huge pages, which suits most machines.' },
         },
@@ -348,7 +350,7 @@ export const LEARN = {
       },
       body: [
         '[[KSM|ksm]] is a memory-saving feature. Its daemon, ksmd, scans areas of memory that programs registered with MADV_MERGEABLE. It looks for identical pages and replaces them with one write-protected page, which is copied if a process later changes it[^overview]. It merges only private anonymous pages, never file cache[^overview].',
-        '`ksm/run` is the switch: 0 stops ksmd, 1 runs it, and 2 stops it and unmerges everything. The default is 0, so KSM does nothing until it is set to 1[^sysfs]. ksmd scans `pages_to_scan` pages (default 100) and then sleeps `sleep_millisecs` milliseconds (default 20)[^sysfs].',
+        '`ksm/run` is the switch: 0 stops ksmd but keeps merged pages, 1 runs it, and 2 stops it and unmerges everything. The default is 0, so KSM does nothing until it is set to 1[^sysfs]. ksmd scans `pages_to_scan` pages (default 100) and then sleeps `sleep_millisecs` milliseconds (default 20)[^sysfs].',
         'KSM scans can use a lot of processing power, and some installations disable KSM for that reason[^madvise]. It can also use memory: each scanned page needs a small record, so pages that never merge are a loss[^profit]. The file `pages_sharing` shows how much is saved[^sysfs].',
       ],
       pins: [
@@ -360,13 +362,13 @@ export const LEARN = {
         {
           q: 'Is this a host for several similar virtual machines, and is memory short?',
           check: 'cat /sys/kernel/mm/ksm/run',
-          hint: 'A 0 means KSM is off. A 1 means ksmd is running.',
+          hint: 'A 0 means KSM is off and a 1 means ksmd is running. Raising it means setting 1.',
           yes: { key: 'ksm_run', dir: 'raise' },
         },
         {
           q: 'Is ksmd running, yet pages_sharing stays near zero?',
           check: 'grep . /sys/kernel/mm/ksm/pages_shared /sys/kernel/mm/ksm/pages_sharing',
-          hint: 'pages_sharing is how many extra mappings share a page, which is the memory saved. Near zero means the scanning buys nothing.',
+          hint: 'pages_sharing is how many extra mappings share a page, which is the memory saved. Near zero means the scanning buys nothing, so lower it to 0.',
           yes: { key: 'ksm_run', dir: 'lower' },
         },
         {
@@ -425,7 +427,7 @@ export const LEARN = {
       },
       body: [
         'A memory map area is one region of a process\'s address space. Map areas are created as a side effect of malloc, directly by mmap, mprotect and madvise, and when shared libraries load[^maxmap]. `vm.max_map_count` is the most a process may have, and the kernel default is 65530[^maxmap]. The figure shows the value each of our test kernels starts with.',
-        'Most applications need fewer than a thousand maps. Some programs, malloc debuggers in particular, use one or two per allocation[^maxmap]. A call that must split a region can fail with ENOMEM once the process would pass the limit, as madvise does when it registers memory for KSM[^ksmmadvise].',
+        'Most applications need fewer than a thousand maps. Some programs, malloc debuggers in particular, use one or two per allocation[^maxmap]. Once a process would pass the limit, mmap fails with ENOMEM[^mmap]. So does a call that splits a mapping in two, such as mprotect on part of it or munmap in its middle[^mmap][^mprotect].',
       ],
       pins: [
         { key: 'max_map_count', layer: 'cap', here: 'The most memory mappings one process may hold. A program that maps many regions fails with a "cannot allocate memory" error when it reaches the limit. Raise it only for a program whose documentation asks.' },
@@ -455,7 +457,8 @@ export const LEARN = {
       },
       sources: {
         maxmap: vm('max-map-count', 'max_map_count'),
-        ksmmadvise: ksm('controlling-ksm-with-madvise', 'controlling KSM with madvise'),
+        mmap: man2('mmap', 'ERRORS'),
+        mprotect: man2('mprotect', 'ERRORS'),
       },
     },
     {
@@ -490,7 +493,7 @@ export const LEARN = {
             id: 'nodes',
             label: 'Memory nodes',
             kind: 'nodes',
-            nodes: [{ id: 'node0', text: 'Node 0', sub: 'every machine has at least this one', probe: 'hugepages.numaNode0' }],
+            nodes: [{ id: 'node0', text: 'Node 0', sub: 'present even on a machine with one node', probe: 'hugepages.numaNode0' }],
           },
         ],
       },
@@ -505,13 +508,13 @@ export const LEARN = {
         {
           q: 'Does this machine serve files or run a database that relies on cached data?',
           check: 'grep -e Cached -e Dirty /proc/meminfo',
-          hint: 'A large Cached value is file data kept in RAM for the next read.',
+          hint: 'A large Cached value is file data kept in RAM for the next read. Lowering it means setting 0, the default.',
           yes: { key: 'zone_reclaim_mode', dir: 'lower' },
         },
         {
           q: 'Is each workload split so that it fits in one node, and does remote memory measurably slow it?',
           check: 'ls /sys/devices/system/node',
-          hint: 'Entries named node0, node1 and so on are the memory nodes. A single entry means there is no remote memory.',
+          hint: 'Entries named node0, node1 and so on are the memory nodes. With only node0 there is no remote memory. Raising it means setting 1.',
           yes: { key: 'zone_reclaim_mode', dir: 'raise' },
           no: { leave: true, why: 'Zone reclaim is off by default, and it only helps workloads that stay inside one node.' },
         },
@@ -522,7 +525,7 @@ export const LEARN = {
       },
       look: {
         cmd: 'ls /sys/devices/system/node',
-        for: 'Entries named node0, node1 and so on are the memory nodes. A machine with one node has no remote memory to avoid.',
+        for: 'Entries named node0, node1 and so on are the memory nodes; the other entries are not. A machine with only node0 has no remote memory to avoid.',
       },
       sources: {
         zrm: vm('zone-reclaim-mode', 'zone_reclaim_mode'),

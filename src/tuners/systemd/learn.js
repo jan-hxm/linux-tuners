@@ -62,68 +62,42 @@ export const LEARN = {
         limit: 'A bookkeeper can count one team on its own. The kernel switches a counter on for a whole branch at once, so siblings and parents are counted as well.',
       },
       figure: {
-        kind: 'stack',
+        kind: 'tree',
         title: 'How systemd sorts the machine into a tree',
-        layers: [
-          { id: 'manager', label: 'The manager', kind: 'nodes', nodes: [{ id: 'pid1', text: 'systemd', sub: 'process 1', does: 'Process 1, which builds the tree.', probe: 'systemd.pid1' }] },
-          {
-            id: 'root',
-            label: 'The root',
-            kind: 'nodes',
-            nodes: [{ id: 'root-slice', text: '-.slice', sub: 'the cgroup folder', does: 'It is the folder `/sys/fs/cgroup` itself.' }],
-            values: [
-              { probe: 'systemd.controllers', unit: '' },
-              { probe: 'systemd.subtreeControl', unit: '' },
-            ],
-          },
-          {
-            id: 'slices',
-            label: 'Under the root',
-            kind: 'nodes',
-            nodes: [
-              { id: 'system-slice', text: 'system.slice', sub: 'system services', probe: 'systemd.systemSlice' },
-              { id: 'user-slice', text: 'user.slice', sub: 'logged-in users', probe: 'systemd.userSlice' },
-              { id: 'init-scope', text: 'init.scope', sub: 'systemd itself', does: 'The group systemd itself runs in.', probe: 'systemd.initScope' },
-            ],
-          },
-          {
-            id: 'counters',
-            label: 'What system.slice counts',
-            kind: 'nodes',
-            nodes: [
-              { id: 'cpu', text: 'CPU time', sub: 'cpu.stat', probe: 'systemd.cpuStat' },
-              { id: 'memory', text: 'Memory', sub: 'memory.current' },
-              { id: 'io', text: 'Disk use', sub: 'io.stat', does: 'Counted in `io.stat` once IOWeight is set.' },
-              { id: 'tasks', text: 'Tasks', sub: 'pids.current', does: 'Counted in `pids.current`.' },
-              { id: 'network', text: 'Network traffic', sub: 'IPAccounting=', does: 'Counted once `IPAccounting=` is on.' },
-            ],
-            values: [
-              { probe: 'systemd.memoryCurrent', unit: 'bytes' },
-              { probe: 'systemd.pidsCurrent', unit: 'tasks' },
-            ],
-          },
-          {
-            id: 'layout',
-            label: 'Which layout',
-            kind: 'nodes',
-            nodes: [
-              { id: 'unified', text: 'cgroup v2', sub: 'one tree', does: 'One tree for every controller.' },
-              { id: 'legacy', text: 'cgroup v1', sub: 'a tree each', does: 'Older systems, with a tree per controller.', probe: 'systemd.v1Layout' },
-            ],
-          },
+        root: {
+          id: 'root-slice',
+          label: '-.slice',
+          does: 'The root, the folder `/sys/fs/cgroup` itself, which systemd (process 1) fills with groups.',
+          children: [
+            {
+              id: 'system-slice',
+              label: 'system.slice',
+              value: { probe: 'systemd.memoryCurrent', unit: 'bytes', label: 'Memory used now' },
+              does: 'Holds system services, and counts their CPU time, memory and tasks, plus disk and network use once switched on.',
+            },
+            { id: 'user-slice', label: 'user.slice', does: 'Holds logged-in users and their programs.' },
+            { id: 'init-scope', label: 'init.scope', does: 'The group systemd itself runs in.' },
+          ],
+        },
+        pins: [
+          { key: 'default_memory_accounting', node: 'root-slice' },
+          { key: 'default_tasks_accounting', node: 'root-slice' },
+          { key: 'default_io_accounting', node: 'root-slice' },
+          { key: 'default_ip_accounting', node: 'root-slice' },
+          { key: 'default_cpu_accounting', node: 'root-slice' },
         ],
       },
       body: [
         'A [[cgroup]] is a group of processes. The kernel keeps these groups in a tree and shares resources out along it[^cgroup]. Every process belongs to exactly one, and a new process starts in its parent\'s group[^cgroup]. systemd gives every service a group of its own, inside a [[slice]], a group that holds other groups[^units].',
         'By default, system services go in system.slice and logged-in users in user.slice[^special]. Both sit under the root, -.slice, which is the folder `/sys/fs/cgroup` itself[^units]. What the kernel tracks is split into [[controllers|cgroup-controller]], such as cpu, memory, io and pids[^units-ctl].',
-        'systemd turns a controller on for a unit that has a setting for it, and the accounting defaults turn one on for every unit[^enable]. Memory and task counting are on by default; disk and network counting are off[^defaults]. CPU time is counted on cgroup v2 whatever the setting, so systemd 258 deprecated DefaultCPUAccounting[^history].',
+        'systemd turns a controller on for a unit that has a setting for it, and the accounting defaults turn one on for every unit[^enable]. Memory and task counting are on by default; disk and network counting are off[^defaults]. CPU time is counted on cgroup v2 whatever the setting, so systemd 258 deprecated DefaultCPUAccounting[^history]. On the older cgroup v1 layout, each controller has a tree of its own[^units-ctl].',
       ],
       pins: [
-        { key: 'default_memory_accounting', layer: 'counters', here: 'Counts the memory each service uses. It is on by default. A memory limit on a unit turns the count on for it anyway. Most machines don\'t need to change this.' },
-        { key: 'default_tasks_accounting', layer: 'counters', here: 'Counts the processes and threads in each service. It is on by default. Most machines don\'t need to change this.' },
-        { key: 'default_io_accounting', layer: 'counters', here: 'Counts what each service reads and writes on disk. It is off by default. Turn it on to find out which service keeps the disk busy.' },
-        { key: 'default_ip_accounting', layer: 'counters', here: 'Counts the network bytes and packets of each system service. It is off by default, and does not cover services a user runs.' },
-        { key: 'default_cpu_accounting', layer: 'layout', here: 'Only matters on the older cgroup v1 layout. On cgroup v2, CPU time is always counted, and systemd 258 deprecated the setting.' },
+        { key: 'default_memory_accounting', layer: 'root-slice', here: 'Counts the memory each service uses. It is on by default. A memory limit on a unit turns the count on for it anyway. Most machines don\'t need to change this.' },
+        { key: 'default_tasks_accounting', layer: 'root-slice', here: 'Counts the processes and threads in each service. It is on by default. Most machines don\'t need to change this.' },
+        { key: 'default_io_accounting', layer: 'root-slice', here: 'Counts what each service reads and writes on disk. It is off by default. Turn it on to find out which service keeps the disk busy.' },
+        { key: 'default_ip_accounting', layer: 'root-slice', here: 'Counts the network bytes and packets of each system service. It is off by default, and does not cover services a user runs.' },
+        { key: 'default_cpu_accounting', layer: 'root-slice', here: 'Only matters on the older cgroup v1 layout. On cgroup v2, CPU time is always counted, and systemd 258 deprecated the setting.' },
       ],
       choose: [
         {
@@ -304,35 +278,29 @@ export const LEARN = {
         limit: 'A shop can always see its queue. The kernel splits disk time by weight only where a cost model or the BFQ scheduler runs for that disk.',
       },
       figure: {
-        kind: 'stack',
+        kind: 'tree',
         title: 'Who splits disk time between slices',
-        layers: [
-          {
-            id: 'slices',
-            label: 'Slices',
-            kind: 'nodes',
-            nodes: [
-              { id: 'system-slice', text: 'system.slice', sub: 'io.weight' },
-              { id: 'user-slice', text: 'user.slice', sub: 'io.weight' },
-            ],
-          },
-          {
-            id: 'splitter',
-            label: 'What splits by weight',
-            kind: 'nodes',
-            nodes: [
-              { id: 'iocost', text: 'The io cost model', sub: 'off by default', does: 'Off until it is turned on in `io.cost.qos`.', probe: 'systemd.ioCostQos' },
-              { id: 'bfq', text: 'The BFQ scheduler', sub: 'per disk', does: 'Splits by weight for a disk that uses BFQ.' },
-            ],
-          },
-          {
-            id: 'disk',
-            label: 'The disk',
-            kind: 'nodes',
-            nodes: [{ id: 'boot-disk', text: 'The boot disk', sub: 'vda in our tests', does: 'The disk named vda on our test machines.' }],
-            values: [{ probe: 'systemd.bootDiskScheduler', unit: '' }],
-          },
-        ],
+        root: {
+          id: 'root-slice',
+          label: '-.slice',
+          value: { probe: 'systemd.bootDiskScheduler', unit: '', label: 'Boot disk scheduler' },
+          does: 'Weights split disk time only where the io cost model (off until turned on in `io.cost.qos`) or the BFQ scheduler runs.',
+          children: [
+            {
+              id: 'system-slice',
+              label: 'system.slice',
+              does: 'Its `io.weight` is its share of a busy disk against user.slice.',
+              children: [{ id: 'system-service', label: 'A service', does: 'Shares the disk time of the slice with its siblings, by their own weights.' }],
+            },
+            {
+              id: 'user-slice',
+              label: 'user.slice',
+              does: 'Its `io.weight` is its share of a busy disk against system.slice.',
+              children: [{ id: 'user-session', label: 'A user session', does: 'Shares the disk time of the slice with the other sessions.' }],
+            },
+          ],
+        },
+        pins: [{ key: 'io_weight', node: 'system-slice' }],
       },
       body: [
         'IOWeight sets the cgroup file `io.weight`, from 1 to 10000, and its default is 100[^io-weight]. The disk bandwidth a slice gets is split among its units by their weights[^io-weight]. As with CPU, only groups using the disk at that moment share it[^weights].',
@@ -340,7 +308,7 @@ export const LEARN = {
         'Setting IOWeight turns the io controller on for the slice, its parents and its siblings[^enable]. Their `io.stat` files then list the bytes each group read and wrote on each disk[^io-stat].',
       ],
       pins: [
-        { key: 'io_weight', layer: 'slices', here: 'The slice\'s share of a busy disk against its siblings. Higher gets more disk time when the disk is busy. It changes nothing on an idle disk, or where nothing splits by weight.' },
+        { key: 'io_weight', layer: 'system-slice', here: 'The slice\'s share of a busy disk against its siblings. Higher gets more disk time when the disk is busy. It changes nothing on an idle disk, or where nothing splits by weight.' },
       ],
       choose: [
         {
@@ -382,38 +350,22 @@ export const LEARN = {
         limit: 'Cars leave again on their own. A runaway program that keeps starting copies of itself never stops, and the cap is what keeps it from filling the rest.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Task limits, from the whole machine down to one service',
-        layers: [
-          {
-            id: 'kernel',
-            label: 'Machine limits',
-            kind: 'nodes',
-            nodes: [
-              { id: 'pid-max', text: 'Process numbers', sub: 'kernel.pid_max', does: 'The kernel hands out process numbers only below it.' },
-              { id: 'threads-max', text: 'Threads', sub: 'kernel.threads-max', does: 'Caps threads on the machine, sized from RAM at boot.' },
-            ],
-            values: [
-              { probe: 'systemd.pidMax', unit: '' },
-              { probe: 'systemd.threadsMax', unit: 'threads' },
-            ],
-          },
-          {
-            id: 'slice',
-            label: 'One slice',
-            kind: 'nodes',
-            nodes: [{ id: 'system-slice', text: 'system.slice', sub: 'TasksMax', does: 'TasksMax sets `pids.max`, which caps everything in the slice.' }],
-            values: [
-              { probe: 'systemd.pidsMax', unit: '' },
-              { probe: 'systemd.pidsCurrent', unit: 'tasks' },
-            ],
-          },
-          {
-            id: 'unit',
-            label: 'Each service',
-            kind: 'nodes',
-            nodes: [{ id: 'service', text: 'A service', sub: 'DefaultTasksMax', does: 'Gets 15% of the smallest machine limit, unless it sets its own.' }],
-          },
+        kind: 'compare',
+        title: 'Task limits on the machine, and the tasks in one slice now',
+        axis: 'tasks',
+        scale: 'log',
+        groups: [
+          { id: 'machine', label: 'Machine limits', does: 'Caps for the whole machine, set by the kernel.' },
+          { id: 'slice', label: 'One slice', does: 'What system.slice holds right now, against its caps.' },
+        ],
+        bars: [
+          { id: 'pid-max', label: 'Process numbers', group: 'machine', value: { probe: 'systemd.pidMax', unit: '' }, does: 'The kernel hands out process numbers only below `kernel.pid_max`.' },
+          { id: 'threads-max', label: 'Threads', group: 'machine', value: { probe: 'systemd.threadsMax', unit: '' }, does: 'Caps threads on the machine, sized from RAM at boot.' },
+          { id: 'tasks', label: 'Tasks now', group: 'slice', tone: 'fit', value: { probe: 'systemd.pidsCurrent', unit: '' }, does: 'Counted in `pids.current`, capped by TasksMax, while each service gets DefaultTasksMax, 15% of the smallest machine limit.' },
+        ],
+        pins: [
+          { key: 'default_tasks_max', bar: 'tasks' },
+          { key: 'tasks_max', bar: 'tasks' },
         ],
       },
       body: [
@@ -422,8 +374,8 @@ export const LEARN = {
         'DefaultTasksMax sets TasksMax for every unit except slices[^default-tasks]. It defaults to 15% of the smallest of pid_max, threads-max and the root cgroup\'s pids.max[^default-tasks]. TasksMax on a slice caps every process of every unit in it[^slice].',
       ],
       pins: [
-        { key: 'default_tasks_max', layer: 'unit', here: 'The task cap each service gets unless it sets its own. Raise it for services with many threads, such as databases and Java programs. Lower it to hold runaway services tighter.' },
-        { key: 'tasks_max', layer: 'slice', here: 'A cap on tasks for the whole slice. Use it so logged-in users, or one runaway workload, cannot use up the machine\'s tasks and stop system services from starting new ones.' },
+        { key: 'default_tasks_max', layer: 'tasks', here: 'The task cap each service gets unless it sets its own. Raise it for services with many threads, such as databases and Java programs. Lower it to hold runaway services tighter.' },
+        { key: 'tasks_max', layer: 'tasks', here: 'A cap on tasks for the whole slice. Use it so logged-in users, or one runaway workload, cannot use up the machine\'s tasks and stop system services from starting new ones.' },
       ],
       choose: [
         {
@@ -466,19 +418,23 @@ export const LEARN = {
         limit: 'A library card covers one person. A process hands its limits on to every process it starts, so a service with many processes gets the limit many times over.',
       },
       figure: {
-        kind: 'stack',
-        title: 'The limits on one process',
-        layers: [
+        kind: 'compare',
+        title: 'The kernel ceiling on open files for one process',
+        axis: 'open files',
+        scale: 'linear',
+        bars: [
           {
-            id: 'kernel',
-            label: 'Kernel ceiling',
-            kind: 'nodes',
-            nodes: [{ id: 'nr-open', text: 'fs.nr_open', sub: 'open files', does: 'No process may have more open files than this.' }],
-            values: [{ probe: 'systemd.nrOpen', unit: 'files' }],
+            id: 'nr-open',
+            label: 'fs.nr_open',
+            tone: 'error',
+            value: { probe: 'systemd.nrOpen', unit: 'files' },
+            does: 'The most open files any process may have; the NOFILE and MEMLOCK defaults of systemd are not measured here.',
           },
-          { id: 'hard', label: 'Hard limit', kind: 'nodes', nodes: [{ id: 'hard-nofile', text: 'NOFILE, hard part', sub: '524288 by default', does: 'The ceiling a process may raise its soft limit to.' }] },
-          { id: 'soft', label: 'Soft limit', kind: 'nodes', nodes: [{ id: 'soft-nofile', text: 'NOFILE, soft part', sub: '1024 by default', does: 'The limit each process starts with and the kernel enforces.' }] },
-          { id: 'memlock', label: 'Locked memory', kind: 'nodes', nodes: [{ id: 'memlock-limit', text: 'DefaultLimitMEMLOCK', sub: '8M by default', does: 'Bytes a process may lock into RAM.' }] },
+        ],
+        pins: [
+          { key: 'default_limit_nofile_soft', bar: 'nr-open' },
+          { key: 'default_limit_nofile_hard', bar: 'nr-open' },
+          { key: 'default_limit_memlock', bar: 'nr-open' },
         ],
       },
       body: [
@@ -487,9 +443,9 @@ export const LEARN = {
         'The kernel adds its own cap, fs.nr_open, on the open files any one process can have[^nr-open]. DefaultLimitMEMLOCK caps the bytes a process may lock into RAM with calls such as `mlock()`[^memlock]. It defaults to 8M[^defaults].',
       ],
       pins: [
-        { key: 'default_limit_nofile_soft', layer: 'soft', here: 'Where each process starts. Keep it at 1024 so older programs that use select() keep working. Programs that need more raise their own soft limit, up to the hard one.' },
-        { key: 'default_limit_nofile_hard', layer: 'hard', here: 'How far a process may raise its own soft limit. Raise it for servers with many connections, such as proxies and databases. Keep it at or above the soft limit.' },
-        { key: 'default_limit_memlock', layer: 'memlock', here: 'How much memory one process may lock into RAM. Raise it for a program whose mlock() calls fail, such as some databases. Most machines don\'t need to change this.' },
+        { key: 'default_limit_nofile_soft', layer: 'nr-open', here: 'Where each process starts. Keep it at 1024 so older programs that use select() keep working. Programs that need more raise their own soft limit, up to the hard one.' },
+        { key: 'default_limit_nofile_hard', layer: 'nr-open', here: 'How far a process may raise its own soft limit. Raise it for servers with many connections, such as proxies and databases. Keep it at or above the soft limit.' },
+        { key: 'default_limit_memlock', layer: 'nr-open', here: 'How much memory one process may lock into RAM. Raise it for a program whose mlock() calls fail, such as some databases. Most machines don\'t need to change this.' },
       ],
       choose: [
         {

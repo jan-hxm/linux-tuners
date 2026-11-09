@@ -240,7 +240,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Default hard open-file-descriptor ceiling (RLIMIT_NOFILE).',
     longDesc: {
       what: [
-        'The hard half of the default RLIMIT_NOFILE: the absolute ceiling a unit may raise its soft limit to without privilege. systemd defaults it to 524288.',
+        'The hard half of the default RLIMIT_NOFILE: the absolute ceiling a unit may raise its soft limit to without privilege. systemd 240 and later default it to 524288; older releases used 4096.',
       ],
       when: [
         'This is the value connection-heavy daemons (web servers, proxies, databases) actually care about, because they raise their soft limit up to it at startup. Raise it on hosts that run such services; there is little downside since [[file descriptors|file-descriptor]] are cheap.',
@@ -268,7 +268,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Default locked-in-memory ceiling (RLIMIT_MEMLOCK) per unit.',
     longDesc: {
       what: [
-        'The default RLIMIT_MEMLOCK every unit inherits: how much memory a process may lock into RAM with mlock()/mlockall() so it can never be swapped out. systemd defaults it to 8M.',
+        'The default RLIMIT_MEMLOCK every unit inherits: how much memory a process may lock into RAM with mlock()/mlockall() so it can never be swapped out. systemd 253 and later default it to 8M; older releases used 64K, and Ubuntu 18.04 ships 64M.',
       ],
       when: [
         'Databases (to pin buffers/WAL), crypto daemons (to keep keys out of swap), and increasingly [[eBPF|bpf]] and RDMA workloads need this raised, otherwise their mlock() calls fail. Raise it for those; leave the small default in place elsewhere so a buggy process cannot lock arbitrary amounts of unswappable RAM.',
@@ -276,7 +276,7 @@ export const SYSTEMD_DEFS = [
     },
     tuningTip: 'Raise it for databases, crypto, eBPF and RDMA workloads; keep it small otherwise.',
     kernelDocsUrl: `${SYSTEM_CONF}#DefaultLimitCPU=`,
-    contextNote: 'Container hosts running databases or eBPF-heavy CNIs raise this well above the 8M default.',
+    contextNote: 'Container hosts running databases or eBPF-heavy CNIs raise this well above the default (8M on systemd 253 and later).',
     kernelDefault: 8388608,
     kernelMin: 0,
     kernelMax: 1073741824,

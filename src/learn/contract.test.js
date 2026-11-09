@@ -51,6 +51,15 @@ const GUIDE_CASES = Object.entries(LEARN_MODULES).map(([file, mod]) => {
   }
 })
 
+/**
+ * Guides still drawn in the first figure style, whose labels and tips may
+ * break the figure-words budget (labels of at most four words, tips of one
+ * sentence) until their package moves them to the new figures (PROGRESS.md).
+ * Every other rule holds for them. The list only shrinks: take a guide out
+ * when it moves.
+ */
+const FIGURES_V1 = new Set(['block-io', 'filesystem', 'hugepages', 'kernel', 'network', 'security', 'systemd', 'sysv-ipc'])
+
 const DEMO_CTX = { defsByKey: DEMO_DEFS, probes: DEMO_PROBES, evidence: FIXTURE_EVIDENCE, glossary: GLOSSARY, status: 'live' }
 const ALL_CASES = [{ name: 'demo (fixture, live)', guide: DEMO, ctx: DEMO_CTX }, ...GUIDE_CASES]
 
@@ -59,9 +68,10 @@ function vmTestRefs(guide) {
   return (guide.chapters ?? []).flatMap((ch, i) => (ch.figure?.backedBy?.vmTest ? [{ path: `chapters[${i}].figure.backedBy.vmTest`, name: ch.figure.backedBy.vmTest }] : []))
 }
 
-describe.each(ALL_CASES.map((c) => [c.name, c]))('guide contract: %s', (_name, { guide, ctx, entry }) => {
+describe.each(ALL_CASES.map((c) => [c.name, c]))('guide contract: %s', (name, { guide, ctx, entry }) => {
   it('passes every check', () => {
-    expect(validateGuide(guide, ctx)).toEqual([])
+    const issues = validateGuide(guide, ctx).filter((i) => !(FIGURES_V1.has(name) && i.rule === 'figure words'))
+    expect(issues).toEqual([])
   })
 
   it('cites only tests that exist in vm/suite.mjs', () => {
@@ -87,14 +97,25 @@ describe('guides together', () => {
     expect(validateGuide(DEMO, { ...DEMO_CTX, status: 'draft', evidence: {} })).toEqual([])
   })
 
+  it('lists only guides that exist under FIGURES_V1', () => {
+    for (const name of FIGURES_V1) expect(GUIDE_CASES.map((c) => c.name)).toContain(name)
+  })
+
   it('the fixture uses every figure kind, every optional field and every template part', () => {
     const kinds = DEMO.chapters.map((c) => c.figure.kind)
-    expect(new Set(kinds)).toEqual(new Set(['stack', 'timeline', 'sideBySide']))
+    expect(new Set(kinds)).toEqual(new Set(['stack', 'timeline', 'sideBySide', 'gauge']))
     for (const ch of DEMO.chapters) expect(Object.keys(ch)).toEqual(['id', 'title', ...TEMPLATE_PARTS])
     const json = JSON.stringify(DEMO)
-    for (const needle of ['"tone":"fit"', '"tone":"error"', '"bands":[', '"sub":', '"layer":', '"vmTest":', '"backedBy":{"probe"', '"leave":true', '"dir":"raise"', '"dir":"lower"', '"to":', '[^', '[[', '**', '`']) {
+    for (const needle of [
+      '"tone":"fit"', '"tone":"error"', '"bands":[', '"sub":', '"layer":', '"vmTest":', '"backedBy":{"probe"', '"leave":true', '"dir":"raise"', '"dir":"lower"', '"to":', '[^', '[[', '**', '`',
+      // Figures v2: tips, the scale bar, side-by-side cells, the gauge and its parts.
+      '"does":', '"scale":{', '"start":', '"asked":', '"legend":{', '"kind":"gauge"', '"axis":', '"range":{', '"zoom":{', '"fullPerUnit":', '"curve":{"points"', '"events":[', '"mark":', '"from":', '"value":{"probe"',
+    ]) {
       expect(json, needle).toContain(needle)
     }
+    const gauge = DEMO.chapters.find((c) => c.figure.kind === 'gauge').figure
+    expect(gauge.pins.some((p) => p.mark) && gauge.pins.some((p) => p.from && p.to)).toBe(true)
+    expect(DEMO.parts.scale.segments.at(-1).value).toBeUndefined()
     expect(DEMO.chapters[0].choose.some((q) => q.no === undefined)).toBe(true)
   })
 })
@@ -334,6 +355,22 @@ const RULE_CASES = [
   ['a three-sentence lead', (g) => (g.lead = 'One. Two. Three.'), 'lead', 'word budget'],
   ['a long sentence', (g) => (ch0(g).symptoms.high = `${words(31)}.`), 'chapters[0].symptoms.high', 'sentence length'],
   ['a long sentence in a figure label', (g) => (ch0(g).figure.title = words(31)), 'chapters[0].figure.title', 'sentence length'],
+  // figure words: labels name a part, tips say what it does in one sentence
+  ['a long card title', (g) => (g.parts.cards[0].title = words(5)), 'parts.cards[0].title', 'figure words'],
+  ['a long edge label', (g) => (g.parts.edges[0].label = words(5)), 'parts.edges[0].label', 'figure words'],
+  ['a long band label', (g) => (g.parts.bands[0].label = words(5)), 'parts.bands[0].label', 'figure words'],
+  ['a long node', (g) => (ch0(g).figure.layers[0].nodes[0].text = words(5)), 'chapters[0].figure.layers[0].nodes[0].text', 'figure words'],
+  ['a long node sub line', (g) => (ch0(g).figure.layers[0].nodes[0].sub = words(5)), 'chapters[0].figure.layers[0].nodes[0].sub', 'figure words'],
+  ['a long band', (g) => (ch0(g).figure.layers[1].bands[0].text = words(5)), 'chapters[0].figure.layers[1].bands[0].text', 'figure words'],
+  ['a long layer label', (g) => (ch0(g).figure.layers[0].label = words(5)), 'chapters[0].figure.layers[0].label', 'figure words'],
+  ['a long timeline event', (g) => (g.chapters[1].figure.events[0].label = words(5)), 'chapters[1].figure.events[0].label', 'figure words'],
+  ['a long side-by-side label', (g) => (g.chapters[2].figure.states[0].label = words(5)), 'chapters[2].figure.states[0].label', 'figure words'],
+  ['a long mark label', (g) => (g.chapters[4].figure.marks[0].label = words(5)), 'chapters[4].figure.marks[0].label', 'figure words'],
+  ['a long zone label', (g) => (g.chapters[4].figure.zones[0].label = words(5)), 'chapters[4].figure.zones[0].label', 'figure words'],
+  ['a long scale segment', (g) => (g.parts.scale.segments[0].label = words(5)), 'parts.scale.segments[0].label', 'figure words'],
+  ['a two-sentence tip', (g) => (g.parts.cards[0].does = 'One. Two.'), 'parts.cards[0].does', 'figure words'],
+  ['a long tip', (g) => (ch0(g).figure.layers[1].bands[0].does = `${shortSentences(26).replace(/\./g, ',')}.`), 'chapters[0].figure.layers[1].bands[0].does', 'figure words'],
+  ['a two-sentence zone tip', (g) => (g.chapters[4].figure.zones[0].does = 'One. Two.'), 'chapters[4].figure.zones[0].does', 'figure words'],
   // words and dashes
   ...BANNED_WORDS.map((w) => [`the banned word "${w}"`, (g) => (g.chapters[1].look.for = `Look at it, ${w}, here.`), 'chapters[1].look.for', 'banned word']),
   ['an em dash in a title', (g) => (g.title = 'How it works — a demo'), 'title', 'em dash'],
@@ -345,7 +382,10 @@ const RULE_CASES = [
   ['an unclosed code span', (g) => (ch0(g).oneLine = 'Run `free -m to see.'), 'chapters[0].oneLine', 'rich text'],
   ['a broken glossary mark', (g) => (ch0(g).picture.text = 'A [[reclaim] mark.'), 'chapters[0].picture.text', 'rich text'],
   ['markup in a plain-text title', (g) => (ch0(g).title = 'Keeping a **reserve**'), 'chapters[0].title', 'rich text'],
-  ['markup in a card', (g) => (g.parts.cards[0].does = 'Ask for `memory`.'), 'parts.cards[0].does', 'rich text'],
+  ['markup in a card title', (g) => (g.parts.cards[0].title = 'Ask for `memory`'), 'parts.cards[0].title', 'rich text'],
+  ['a link in a tip', (g) => (g.parts.cards[0].does = 'See [the docs](https://docs.kernel.org/mm/index.html).'), 'parts.cards[0].does', 'tooltip'],
+  ['a glossary term in a tip', (g) => (g.parts.cards[0].does = 'Ask for [[reclaim]].'), 'parts.cards[0].does', 'tooltip'],
+  ['italic markup in a tip', (g) => (g.parts.cards[0].does = 'Ask for *memory*.'), 'parts.cards[0].does', 'rich text'],
   ['a broken footnote mark', (g) => (ch0(g).body[0] = 'Each zone.[^Vm Docs]'), 'chapters[0].body[0]', 'rich text'],
   // glossary and sources
   ['an unknown glossary id', (g) => (ch0(g).oneLine = 'The [[swap storm]] hits.'), 'chapters[0].oneLine', 'glossary'],
@@ -393,7 +433,7 @@ const RULE_CASES = [
   ['an event before the start', (g) => (g.chapters[1].figure.events[0].at = -0.1), 'chapters[1].figure.events[0].at', 'figure range'],
   ['an event tone that does not exist', (g) => (g.chapters[1].figure.events[0].tone = 'warn'), 'chapters[1].figure.events[0].tone', 'shape'],
   ['a timeline that is not schematic', (g) => (g.chapters[1].figure.schematic = false), 'chapters[1].figure.schematic', 'shape'],
-  ['more lit cells than cells', (g) => (g.chapters[2].figure.states[1].lit = 9), 'chapters[2].figure.states[1].lit', 'figure range'],
+  ['more lit cells than cells', (g) => (g.chapters[2].figure.states[1].lit = 13), 'chapters[2].figure.states[1].lit', 'figure range'],
   ['one state', (g) => g.chapters[2].figure.states.pop(), 'chapters[2].figure.states', 'shape'],
   ['a side by side backed by nothing', (g) => (g.chapters[2].figure.backedBy = {}), 'chapters[2].figure.backedBy', 'shape'],
   ['an unknown figure kind', (g) => (ch0(g).figure.kind = 'pie'), 'chapters[0].figure.kind', 'shape'],
@@ -405,6 +445,39 @@ const RULE_CASES = [
   ['a band past the last row', (g) => (g.parts.bands[1].rows = [2, 3]), 'parts.bands[1].rows', 'figure range'],
   ['a band upside down', (g) => (g.parts.bands[1].rows = [2, 1]), 'parts.bands[1].rows', 'figure range'],
   ['a card tone that does not exist', (g) => (g.parts.cards[0].tone = 'error'), 'parts.cards[0].tone', 'shape'],
+  // scale bar
+  ['a scale segment in another unit', (g) => (g.parts.scale.segments[0].value.unit = 'pages'), 'parts.scale.segments[0].value.unit', 'figure range'],
+  ['a scale rest that is not last', (g) => g.parts.scale.segments.reverse(), 'parts.scale.segments[0]', 'figure range'],
+  ['a scale without a total', (g) => delete g.parts.scale.total, 'parts.scale', 'shape'],
+  ['a scale total from an unknown probe', (g) => (g.parts.scale.total.probe = 'demo.nope'), 'parts.scale.total.probe', 'probe'],
+  ['five scale segments', (g) => g.parts.scale.segments.unshift(...structuredClone(g.parts.scale.segments.slice(0, 2)).map((s, i) => ({ ...s, id: `x${i}` }))), 'parts.scale.segments', 'word budget'],
+  ['an unknown scale field', (g) => (g.parts.scale.color = 'red'), 'parts.scale.color', 'shape'],
+  // side by side cells
+  ['lit cells past the end from start', (g) => (g.chapters[2].figure.states[0].start = 12), 'chapters[2].figure.states[0].lit', 'figure range'],
+  ['an asked cell that is not lit', (g) => (g.chapters[2].figure.states[1].asked = 9), 'chapters[2].figure.states[1].asked', 'figure range'],
+  ['an asked cell with no legend word', (g) => delete g.chapters[2].figure.legend.asked, 'chapters[2].figure.legend', 'shape'],
+  // gauge
+  ['a gauge without an axis', (g) => delete g.chapters[4].figure.axis, 'chapters[4].figure', 'shape'],
+  ['a gauge mark in another unit', (g) => (g.chapters[4].figure.marks[1].value.unit = 'kB'), 'chapters[4].figure.marks[1].value.unit', 'figure range'],
+  ['a gauge mark from an unknown probe', (g) => (g.chapters[4].figure.marks[0].value.probe = 'demo.nope'), 'chapters[4].figure.marks[0].value.probe', 'probe'],
+  ['a gauge mark path into nothing', (g) => (g.chapters[4].figure.marks[0].value.path = 'Normal.max'), 'chapters[4].figure.marks[0].value.probe', 'evidence'],
+  ['gauge marks out of order on the captures', (g) => g.chapters[4].figure.marks.reverse(), 'chapters[4].figure.marks', 'figure range'],
+  ['a zone from a mark that does not exist', (g) => (g.chapters[4].figure.zones[1].from = 'nowhere'), 'chapters[4].figure.zones[1].from', 'figure range'],
+  ['a zone upside down', (g) => Object.assign(g.chapters[4].figure.zones[1], { from: 'high', to: 'min' }), 'chapters[4].figure.zones[1]', 'figure range'],
+  ['a gauge range upside down', (g) => (g.chapters[4].figure.range = { from: 10, to: 0 }), 'chapters[4].figure.range', 'figure range'],
+  ['a zoom in another unit without a conversion', (g) => delete g.chapters[4].figure.zoom.fullPerUnit, 'chapters[4].figure.zoom.full.unit', 'figure range'],
+  ['a zoom conversion of 0', (g) => (g.chapters[4].figure.zoom.fullPerUnit = 0), 'chapters[4].figure.zoom.fullPerUnit', 'figure range'],
+  ['a gauge curve level past the top', (g) => (g.chapters[4].figure.curve.points[0] = [0, 5]), 'chapters[4].figure.curve.points[0]', 'figure range'],
+  ['a gauge curve that goes back in time', (g) => (g.chapters[4].figure.curve.points[2] = [0.1, 1]), 'chapters[4].figure.curve.points[2]', 'figure range'],
+  ['a gauge curve event after the end', (g) => (g.chapters[4].figure.curve.events[0].at = 1.5), 'chapters[4].figure.curve.events[0].at', 'figure range'],
+  ['a gauge pin on a mark that does not exist', (g) => (g.chapters[4].figure.pins[0].mark = 'nowhere'), 'chapters[4].figure.pins[0].mark', 'figure range'],
+  ['a gauge gap pin upside down', (g) => Object.assign(g.chapters[4].figure.pins[1], { from: 'high', to: 'low' }), 'chapters[4].figure.pins[1]', 'figure range'],
+  ['a gauge pin on an unknown key', (g) => (g.chapters[4].figure.pins[0].key = 'nope'), 'chapters[4].figure.pins[0].key', 'def key'],
+  ['a gauge pin the chapter does not pin', (g) => (g.chapters[4].figure.pins[0].key = 'reserve_kbytes'), 'chapters[4].figure.pins[0].key', 'pins'],
+  ['a key drawn twice on a gauge', (g) => (g.chapters[4].figure.pins[1].key = 'floor_kbytes'), 'chapters[4].figure.pins[1].key', 'pins'],
+  ['a gauge pin with both a mark and a gap', (g) => (g.chapters[4].figure.pins[0].from = 'low'), 'chapters[4].figure.pins[0].from', 'shape'],
+  ['a gauge pin value from an unknown probe', (g) => (g.chapters[4].figure.pins[0].value.probe = 'demo.nope'), 'chapters[4].figure.pins[0].value.probe', 'probe'],
+  ['a pin layer naming a gauge part that does not exist', (g) => (g.chapters[4].pins[0].layer = 'max'), 'chapters[4].pins[0].layer', 'pins'],
 ]
 
 describe('each rule fails a broken fixture', () => {

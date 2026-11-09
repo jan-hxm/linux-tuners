@@ -95,13 +95,15 @@ describe('chapter index and facts', () => {
       wake_interval: 'waking-the-worker',
       batch_order: 'reading-in-batches',
       mode: 'promising-memory',
+      floor_kbytes: 'reading-the-gauge',
+      gap_factor: 'reading-the-gauge',
     })
     // Own keys only: a lookup of an inherited name finds nothing.
     expect(Object.hasOwn(chapterIndex(DEMO_LEARN), 'toString')).toBe(false)
   })
 
   it('says chapters, settings, minutes and kernels', () => {
-    expect(guideFacts(DEMO_LEARN, 5)).toEqual(['4 chapters', '5 settings', '5 min read', 'Figures measured on 5 kernels'])
+    expect(guideFacts(DEMO_LEARN, 5)).toEqual(['5 chapters', '7 settings', '5 min read', 'Figures measured on 5 kernels'])
     expect(guideFacts({ ...DEMO_LEARN, chapters: DEMO_LEARN.chapters.slice(0, 1) }, 1)).toEqual(['1 chapter', '2 settings', '5 min read', 'Figures measured on 1 kernel'])
   })
 

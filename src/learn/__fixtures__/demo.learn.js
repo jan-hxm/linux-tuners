@@ -15,6 +15,8 @@ export const DEFS = [
   { key: 'fill_ratio', sysctlName: 'demo.fill_ratio', title: 'Fill ratio', shortDesc: 'How full memory gets before the worker starts.', unit: '%', kernelDefault: 10 },
   { key: 'wake_interval', sysctlName: 'demo.wake_interval', title: 'Wake interval', shortDesc: 'How often the worker checks for work.', unit: 'cs', kernelDefault: 500 },
   { key: 'batch_order', sysctlName: 'demo.batch_order', title: 'Batch size', shortDesc: 'Pages read together, as a power of two.', unit: '', kernelDefault: 3 },
+  { key: 'floor_kbytes', sysctlName: 'demo.floor_kbytes', title: 'Floor', shortDesc: 'The lowest mark on the gauge.', unit: 'kB', kernelDefault: 8000 },
+  { key: 'gap_factor', sysctlName: 'demo.gap_factor', title: 'Gap factor', shortDesc: 'How far apart the marks sit.', unit: '', kernelDefault: 10 },
   {
     key: 'mode', sysctlName: 'demo.mode', title: 'Promise mode', shortDesc: 'Whether the kernel promises more memory than it has.', unit: 'mode', kernelDefault: 0,
     options: [
@@ -40,7 +42,7 @@ export const LEARN = {
       { id: 'cache', title: 'Page cache', does: 'Keeps file data in spare memory.', col: 2, row: 1, probe: 'demo.meminfo', path: 'Cached', unit: 'kB' },
       { id: 'reserve', title: 'Reserve', does: 'Memory kept free for urgent requests.', col: 3, row: 1, probe: 'demo.reserve' },
       { id: 'worker', title: 'Worker', does: 'Frees memory in the background.', col: 2, row: 2, tone: 'fit', probe: 'demo.worker' },
-      { id: 'disk', title: 'Disk', does: 'Holds swapped out memory.', col: 3, row: 2, probe: 'demo.swaps' },
+      { id: 'disk', title: 'Disk', does: 'Holds `swapped out` memory.', col: 3, row: 2, probe: 'demo.swaps' },
     ],
     bands: [
       { label: 'Memory', rows: [1, 1] },
@@ -52,6 +54,15 @@ export const LEARN = {
       { from: 'worker', to: 'cache', label: 'frees' },
       { from: 'worker', to: 'disk', label: 'writes to' },
     ],
+    scale: {
+      label: 'Memory',
+      total: { probe: 'demo.meminfo', path: 'MemTotal', unit: 'kB' },
+      segments: [
+        { id: 'programs', label: 'Programs', value: { probe: 'demo.meminfo', path: 'AnonPages', unit: 'kB' }, does: 'Memory the programs wrote to.' },
+        { id: 'cache', label: 'Page cache', value: { probe: 'demo.meminfo', path: 'Cached', unit: 'kB' } },
+        { id: 'rest', label: 'Free or kernel', does: 'Everything else, **free** or kept by the kernel.' },
+      ],
+    },
   },
   chapters: [
     {
@@ -72,7 +83,7 @@ export const LEARN = {
             kind: 'nodes',
             nodes: [
               { id: 'app', text: 'Your program', sub: 'asks for memory' },
-              { id: 'kswapd', text: 'kswapd0', sub: 'frees memory in the background', probe: 'demo.worker' },
+              { id: 'kswapd', text: 'kswapd0', sub: 'the worker', does: 'Frees memory in the background.', probe: 'demo.worker' },
             ],
           },
           {
@@ -80,9 +91,9 @@ export const LEARN = {
             label: 'Free memory',
             kind: 'bands',
             bands: [
-              { id: 'above-high', text: 'Above high: nothing to do' },
-              { id: 'low-to-high', text: 'Between low and high: the worker frees memory' },
-              { id: 'below-min', text: 'Below min: the program waits' },
+              { id: 'above-high', text: 'Above high', does: 'Nothing to do.' },
+              { id: 'low-to-high', text: 'Low to high', does: 'The worker frees memory.' },
+              { id: 'below-min', text: 'Below min', does: 'The program waits.' },
             ],
             values: [
               { probe: 'demo.watermarks', path: 'Normal.min', unit: 'pages' },
@@ -141,12 +152,12 @@ export const LEARN = {
         title: 'Free memory over time',
         schematic: true,
         lines: [
-          { id: 'low', label: 'low level', value: { probe: 'demo.watermarks', path: 'Normal.low', unit: 'pages' } },
+          { id: 'low', label: 'low level', does: 'The worker wakes below it.', value: { probe: 'demo.watermarks', path: 'Normal.low', unit: 'pages' } },
           { id: 'high', label: 'high level', value: { probe: 'demo.watermarks', path: 'Normal.high', unit: 'pages' } },
         ],
         curve: [[0, 0.9], [0.3, 0.5], [0.45, 0.3], [0.5, 0.25], [0.7, 0.6], [1, 0.85]],
         events: [
-          { at: 0.4, label: 'A program stalls', tone: 'error' },
+          { at: 0.4, label: 'A program stalls', does: 'It frees memory itself, and waits.', tone: 'error' },
           { at: 0.5, label: 'Worker wakes', tone: 'fit' },
           { at: 0.8, label: 'Worker sleeps' },
         ],
@@ -181,9 +192,10 @@ export const LEARN = {
         kind: 'sideBySide',
         title: 'Pages read per swap-in',
         states: [
-          { label: 'Batch off', cells: 8, lit: 1, setting: { key: 'batch_order', value: 0 } },
-          { label: 'Batch of eight', cells: 8, lit: 8, setting: { key: 'batch_order', value: 3 } },
+          { label: 'Batch off', cells: 12, lit: 1, start: 2, asked: 2, setting: { key: 'batch_order', value: 0 } },
+          { label: 'Batch of eight', cells: 12, lit: 8, asked: 2, setting: { key: 'batch_order', value: 3 } },
         ],
+        legend: { asked: 'asked for', lit: 'read along', off: 'stays on disk' },
         backedBy: { vmTest: 'on a swap file it reads ahead at the default and not at 0' },
       },
       body: ['The setting is a power of two: 3 reads up to eight pages at once, 0 reads one.[^vm]'],
@@ -243,6 +255,63 @@ export const LEARN = {
         vm: VM_DOCS,
         proc: { url: 'https://man7.org/linux/man-pages/man5/proc_sys_vm.5.html', label: 'proc_sys_vm(5)' },
       },
+    },
+    {
+      id: 'reading-the-gauge',
+      title: 'Reading the gauge',
+      oneLine: 'Free memory sits on a scale with three marks, drawn to scale from the capture.',
+      picture: {
+        text: 'Think of a fuel gauge with three marks, and a helper who refills the tank between them.',
+        limit: 'Fuel only goes down while you drive; free memory moves both ways.',
+      },
+      figure: {
+        kind: 'gauge',
+        title: 'Free memory in the Normal zone',
+        axis: 'free pages',
+        marks: [
+          { id: 'min', label: 'min', value: { probe: 'demo.watermarks', path: 'Normal.min', unit: 'pages' }, does: 'Below it a program frees memory **itself**.', tone: 'error' },
+          { id: 'low', label: 'low', value: { probe: 'demo.watermarks', path: 'Normal.low', unit: 'pages' } },
+          { id: 'high', label: 'high', value: { probe: 'demo.watermarks', path: 'Normal.high', unit: 'pages' }, tone: 'fit' },
+        ],
+        zones: [
+          { id: 'below-min', label: 'programs wait', to: 'min', tone: 'error', does: 'A program asking for memory frees some itself.' },
+          { id: 'min-high', label: 'worker frees', from: 'min', to: 'high', tone: 'fit', does: 'The worker frees memory in the background.' },
+          { id: 'above-high', label: 'worker sleeps', from: 'high' },
+        ],
+        range: { from: 0, to: 8000 },
+        zoom: { label: 'All memory', full: { probe: 'demo.meminfo', path: 'MemTotal', unit: 'kB' }, fullPerUnit: 4 },
+        curve: {
+          points: [[0, 3.6], [0.3, 1.5], [0.45, 0.8], [0.6, 2], [0.8, 3.2], [1, 3.5]],
+          events: [
+            { at: 0.45, label: 'a program waits', tone: 'error', does: 'Free memory fell below min.' },
+            { at: 0.8, label: 'worker sleeps' },
+          ],
+        },
+        pins: [
+          { key: 'floor_kbytes', mark: 'min', value: { probe: 'demo.reserve', unit: 'kB' } },
+          { key: 'gap_factor', from: 'low', to: 'high' },
+        ],
+      },
+      body: ['The floor sets the min mark, and the gap factor how far apart the marks sit.[^vm]'],
+      pins: [
+        { key: 'floor_kbytes', layer: 'min', here: 'Sets the min mark.' },
+        { key: 'gap_factor', layer: 'min-high', here: 'Sets the gap between the marks.' },
+      ],
+      choose: [
+        {
+          q: 'Do programs stall when memory is nearly full?',
+          check: "grep -E '^allocstall' /proc/vmstat",
+          hint: 'Counters that grow mean a program waited.',
+          yes: { key: 'gap_factor', dir: 'raise' },
+          no: { leave: true, why: 'The marks sit where they should.' },
+        },
+      ],
+      symptoms: {
+        low: 'Programs pause when memory fills up.',
+        high: 'More memory stays free than needed.',
+      },
+      look: { cmd: "grep -A 4 'zone *Normal' /proc/zoneinfo", for: 'The min, low and high lines of the Normal zone, in pages.' },
+      sources: { vm: VM_DOCS },
     },
   ],
 }

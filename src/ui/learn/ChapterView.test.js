@@ -5,13 +5,15 @@ import ChapterView from './ChapterView.vue'
 import { KERNEL_STORAGE_KEY, storedKernel } from './kernelPref.js'
 import { DEMO_DEFS, DEMO_DOCS, DEMO_IMAGES, DEMO_LEARN, valueFor } from '@/learn/__fixtures__/demoKit.js'
 
-const [stackChapter, timelineChapter, sideChapter] = DEMO_LEARN.chapters
+const [stackChapter, timelineChapter, sideChapter, , gaugeChapter] = DEMO_LEARN.chapters
 
 const mountChapter = (chapter = stackChapter, props = {}) =>
   mount(ChapterView, {
     attachTo: document.body,
     props: { chapter, images: DEMO_IMAGES, valueFor, defsByKey: DEMO_DEFS, tuneHref: (key) => `/demo?key=${key}`, ...props },
   })
+
+const chapterLook = () => stackChapter.look.cmd
 
 let wrapper
 beforeEach(() => {
@@ -27,10 +29,12 @@ describe('ChapterView', () => {
   it('renders the nine parts in the template order', () => {
     wrapper = mountChapter()
     const order = wrapper.findAll('[data-part]').map((el) => el.attributes('data-part'))
-    expect(order).toEqual(['oneLine', 'picture', 'figure', 'body', 'settings', 'chooser', 'flow', 'symptoms', 'look', 'sources'])
+    // Each thing once: no "Settings here" (the pin panel explains a setting) and the look command in its own part only.
+    expect(order).toEqual(['oneLine', 'picture', 'figure', 'body', 'chooser', 'flow', 'symptoms', 'look', 'sources'])
     expect(wrapper.get('section').attributes('id')).toBe('keeping-a-reserve')
     expect(wrapper.get('h2').text()).toBe('Keeping a reserve')
-    expect(wrapper.findAll('h3').map((h) => h.text())).toEqual(['Settings here', 'Should you change it?', "What you notice if it's wrong", 'Look on your machine', 'Sources'])
+    expect(wrapper.findAll('h3').map((h) => h.text())).toEqual(['Should you change it?', "What you notice if it's wrong", 'Look on your machine', 'Sources'])
+    expect(wrapper.text().split(chapterLook()).length - 1).toBe(1)
     expect(wrapper.get('[data-part="picture"]').text()).toContain('Where the picture stops: The picture stops at the drawer')
     expect(wrapper.get('[data-part="symptoms"]').text()).toContain('Too low')
   })
@@ -39,7 +43,7 @@ describe('ChapterView', () => {
     for (const chapter of DEMO_LEARN.chapters) {
       wrapper = mountChapter(chapter)
       // Open the first pin so its `here` text is on the page too.
-      const pin = wrapper.find('[data-part="settings"] button')
+      const pin = wrapper.find('[data-pins] button')
       if (pin.exists()) await pin.trigger('click')
       const text = wrapper.text()
       expect(text, chapter.id).not.toMatch(/\[\[|\]\]|\*\*|`/)
@@ -93,7 +97,7 @@ describe('ChapterView', () => {
     expect(panel.text()).toContain('Sets the size of the reserve, which moves all three levels.')
     expect(panel.text()).toContain('Normal.min: 2,000 pages')
     expect(panel.text()).toContain('Debian 13, kernel 0.0.0-fixture')
-    expect(panel.text()).toContain('/proc/zoneinfo')
+    expect(panel.text()).not.toContain('/proc/zoneinfo')
     expect(panel.get('a[target="_blank"]').attributes('href')).toBe(DEMO_DOCS)
     expect(panel.findAll('a').at(-1).attributes('href')).toBe('/demo?key=reserve_kbytes')
     expect(wrapper.get('[data-layer="free-memory"]').classes()).toContain('bg-fit-tint')
@@ -141,7 +145,7 @@ describe('ChapterView', () => {
     const panel = wrapper.get('[data-pin-panel]')
     expect(panel.text()).toContain('Normal.min: not measured')
     expect(panel.text()).toContain('Not measured on Ubuntu 24.04 yet')
-    expect(wrapper.get('[data-part="figure"] [role="img"]').attributes('aria-label')).not.toMatch(/\d,\d{3}/)
+    expect(wrapper.get('[data-part="figure"] [role="figure"]').attributes('aria-label')).not.toMatch(/\d,\d{3}/)
   })
 
   it('ignores a stored image that is not in the list', () => {
@@ -165,6 +169,37 @@ describe('ChapterView', () => {
     expect(wrapper.html()).not.toContain('javascript:')
     expect(wrapper.html()).not.toContain('http://x')
     expect(wrapper.text()).not.toContain('Tune it')
+  })
+
+  it('reaches every pin\'s here text through the pin buttons and the panel', async () => {
+    for (const chapter of DEMO_LEARN.chapters) {
+      wrapper = mountChapter(chapter)
+      const panel = wrapper.get('[data-pin-panel]')
+      for (const pin of chapter.pins) {
+        const button = wrapper.findAll('[data-pins] button').find((b) => b.text().includes(DEMO_DEFS[pin.key].sysctlName))
+        if (button.attributes('aria-pressed') !== 'true') await button.trigger('click')
+        expect(panel.text(), pin.key).toContain(pin.here)
+      }
+      wrapper.unmount()
+      wrapper = null
+    }
+  })
+
+  it('draws a gauge\'s pins on the scale and selects them like the row', async () => {
+    wrapper = mountChapter(gaugeChapter)
+    const drawn = wrapper.findAll('[data-gauge-pin]')
+    expect(drawn.map((b) => b.attributes('data-gauge-pin'))).toEqual(['floor_kbytes', 'gap_factor'])
+    expect(drawn[0].attributes('aria-pressed')).toBe('true')
+    expect(drawn[0].attributes('aria-controls')).toBe(wrapper.get('[data-pin-panel]').attributes('id'))
+    expect(drawn[1].attributes('aria-label')).toBe('demo.gap_factor, from low to high')
+    // The row keeps them for phones only.
+    for (const b of wrapper.findAll('[data-pins] button')) expect(b.classes()).toContain('md:hidden')
+    await drawn[1].trigger('click')
+    const panel = wrapper.get('[data-pin-panel]')
+    expect(panel.text()).toContain('Sets the gap between the marks.')
+    expect(panel.text()).toContain('Normal.high: 6,000 pages')
+    expect(wrapper.findAll('[data-gauge-pin]')[1].attributes('aria-pressed')).toBe('true')
+    expect(wrapper.findAll('[data-pins] button')[1].attributes('aria-pressed')).toBe('true')
   })
 
   it('renders every fixture chapter without a stray em dash', () => {

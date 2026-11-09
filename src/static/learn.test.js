@@ -26,7 +26,7 @@ describe('a guide page as static text', () => {
   it('has the header block, Start here, the chapter map and every chapter in order', () => {
     const h2 = doc.blocks.filter((b) => b.kind === 'heading' && b.level === 2).map((b) => b.text)
     expect(h2.slice(0, 2 + DEMO_LEARN.chapters.length)).toEqual(['Start here', 'The chapters', ...DEMO_LEARN.chapters.map((c) => c.title)])
-    expect(md).toContain('4 chapters · 5 settings · 5 min read · Figures measured on 5 kernels')
+    expect(md).toContain('5 chapters · 7 settings · 5 min read · Figures measured on 5 kernels')
     expect(md).toContain('[Tune these settings in the Swap & memory tuner](https://linux-tuners.dev/swap)')
     const parts = doc.blocks.filter((b) => b.kind === 'heading' && b.level === 3).map((b) => b.text)
     for (const part of ['Picture it', 'Settings here', 'Should you change it?', "What you notice if it's wrong", 'Look on your machine', 'Sources']) {
@@ -43,7 +43,15 @@ describe('a guide page as static text', () => {
     expect(md).toMatch(/\*\*Memory, Page cache:\*\* Keeps file data in spare memory\. Measured: [\d,]+ kB on all 5 test kernels\./)
     expect(md).toContain('Layers from the top:')
     expect(md).toContain('A schematic timeline: the order is real, the distances are not.')
-    expect(md).toContain('**Batch off:** demo.batch_order = 0, 1 of 8 lit.')
+    expect(md).toContain('**Batch off:** demo.batch_order = 0: 1 asked for, 0 read along, 11 stays on disk, of 12.')
+    // Tips inline, the scale bar and the gauge as lists with every value per kernel.
+    expect(md).toContain('Above high (Nothing to do)')
+    expect(md).toContain('Memory, drawn to scale from each kernel\'s capture:')
+    expect(md).toContain('**Free or kernel**, the rest: Everything else, **free** or kept by the kernel.')
+    expect(md).toContain('A scale of free pages, drawn to scale from each kernel\'s capture. Marks from the bottom:')
+    expect(md).toContain('**programs wait** (below min): A program asking for memory frees some itself.')
+    expect(md).toContain('Settings on the scale: `demo.floor_kbytes` on min; `demo.gap_factor` from low to high.')
+    expect(md).toContain('a program waits (Free memory fell below min)')
     expect(md).toContain('Checked on real kernels by the VM test')
   })
 

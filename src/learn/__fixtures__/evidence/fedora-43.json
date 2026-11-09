@@ -7,7 +7,9 @@
     "demo.meminfo": {
       "status": "ok",
       "value": {
+        "AnonPages": 500000,
         "Cached": 1000000,
+        "MemTotal": 3000000,
         "SwapTotal": 2000000
       }
     },

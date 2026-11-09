@@ -22,8 +22,8 @@ import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
 import { LIVE_GUIDES, LEARN_INDEX_ROUTE, guideFacts, loadGuide } from '@/learn/guides.js'
 import { IMAGES_ORDER, valueFor } from '@/learn/evidence.js'
 import {
-  answerText, backedByText, cardGroups, defName, defTitle, edgeRows, formatValue, itemRef, noText, numberedSources,
-  refName, sameOnEveryImage, settingText, splitFootnotes, stackRefs,
+  answerText, backedByText, cardGroups, cellCounts, defName, defTitle, edgeRows, figureRefs, formatValue, gaugePinPlace, inSentence, itemRef, noText,
+  numberedSources, refName, sameOnEveryImage, scaleRefs, settingText, sideBySideLegend, splitFootnotes,
 } from '@/ui/learn/figureText.js'
 import { settingHref } from '@/ui/focusSetting.js'
 import { text, code, bold, link, rich, heading, paragraph, list, defs, codeBlock, joinSegments } from './nodes.js'
@@ -281,29 +281,50 @@ function measuredRow(ref, evidence) {
   return { term: [code(refName(ref))], desc: [text(`${parts.join('; ')}.`)] }
 }
 
-/** A figure as lists: its parts, then each value it shows on every kernel. */
+/** A part's tip, inline after its name: " (what it does)". The page shows it in a tooltip. */
+const tipInline = (does) => (does ? [text(' ('), ...rich(does.replace(/\.$/, '')), text(')')] : [])
+
+/** A figure as lists: its parts with their tips inline, then each value it shows on every kernel. */
 function figureBlocks(figure, evidence, defsByKey) {
   const blocks = [heading(3, figure.title)]
-  let refs = []
   if (figure.kind === 'stack') {
     blocks.push(paragraph(text('Layers from the top:')))
     blocks.push(list(figure.layers.map((layer) => {
       const items = layer.kind === 'bands'
-        ? (layer.bands ?? []).map((b) => b.text)
-        : (layer.nodes ?? []).map((n) => [n.text, n.sub].filter(Boolean).join(', '))
-      return [bold(`${layer.label}:`), text(` ${items.join('; ')}.`)]
+        ? (layer.bands ?? []).map((b) => [text(b.text), ...tipInline(b.does)])
+        : (layer.nodes ?? []).map((n) => [text([n.text, n.sub].filter(Boolean).join(', ')), ...tipInline(n.does)])
+      return [bold(`${layer.label}:`), text(' '), ...joinSegments(items, '; '), text('.')]
     })))
-    refs = stackRefs(figure)
   } else if (figure.kind === 'timeline') {
     blocks.push(paragraph(text('A schematic timeline: the order is real, the distances are not.')))
-    blocks.push(paragraph(text(`Lines from the top: ${figure.lines.map((l) => l.label).join(', ')}.`)))
-    blocks.push(list([...figure.events].sort((a, b) => a.at - b.at).map((e) => [text(e.label)]), { ordered: true }))
-    refs = figure.lines.map((l) => l.value)
+    blocks.push(paragraph(text('Lines from the top: '), ...joinSegments(figure.lines.map((l) => [text(l.label), ...tipInline(l.does)]), ', '), text('.')))
+    blocks.push(list([...figure.events].sort((a, b) => a.at - b.at).map((e) => [text(e.label), ...tipInline(e.does)]), { ordered: true }))
   } else if (figure.kind === 'sideBySide') {
-    blocks.push(list(figure.states.map((st) => [bold(`${st.label}:`), text(` ${settingText(st.setting, defsByKey)}, ${st.lit} of ${st.cells} lit.`)])))
+    const legend = sideBySideLegend(figure)
+    blocks.push(list(figure.states.map((st) => [bold(`${st.label}:`), text(` ${settingText(st.setting, defsByKey)}: ${cellCounts(st, legend)}, of ${st.cells}.`)])))
     const backed = backedByText(figure.backedBy)
     if (backed) blocks.push(paragraph(text(backed)))
+  } else if (figure.kind === 'gauge') {
+    const name = (id) => figure.marks.find((m) => m.id === id)?.label ?? id
+    blocks.push(paragraph(text(`A scale of ${figure.axis}, drawn to scale from each kernel's capture. Marks from the bottom:`)))
+    blocks.push(list(figure.marks.map((m) => [bold(m.label), ...tipInline(m.does)])))
+    blocks.push(paragraph(text('Zones:')))
+    blocks.push(list(figure.zones.map((z) => [
+      bold(z.label),
+      text(` (${z.from ? (z.to ? `${name(z.from)} to ${name(z.to)}` : `above ${name(z.from)}`) : z.to ? `below ${name(z.to)}` : 'the whole scale'})`),
+      ...(z.does ? [text(': '), ...rich(z.does)] : [text('.')]),
+    ])))
+    if (figure.pins?.length) {
+      blocks.push(paragraph(text('Settings on the scale: '), ...joinSegments(figure.pins.map((p) => [code(defName(p.key, defsByKey)), text(` ${gaugePinPlace(figure, p)}`)]), '; '), text('.')))
+    }
+    if (figure.zoom) blocks.push(paragraph(text(`Beside the scale, a thin bar of ${inSentence(figure.zoom.label)}, with a bracket on the part the scale shows.`)))
+    if (figure.curve) {
+      blocks.push(paragraph(text('A schematic curve over time beside it: the shape and the order are real, the times are not.')))
+      const events = [...(figure.curve.events ?? [])].sort((a, b) => a.at - b.at)
+      if (events.length) blocks.push(list(events.map((e) => [text(e.label), ...tipInline(e.does)]), { ordered: true }))
+    }
   }
+  const refs = figureRefs(figure)
   if (refs.length) blocks.push(paragraph(text('Measured on each kernel:')), defs(refs.map((r) => measuredRow(r, evidence))))
   return blocks
 }
@@ -347,11 +368,22 @@ export function learnDoc({ entry, learn, evidence, defsByKey = {} }) {
     paragraph(rich(learn.parts.picture)),
     list(cardGroups(learn.parts).flatMap((g) => g.cards.map((c) => [
       bold(`${g.label ? `${g.label}, ` : ''}${c.title}:`),
-      text(` ${c.does}${cardMeasured(c, evidence)}`),
+      text(' '),
+      ...rich(c.does),
+      text(cardMeasured(c, evidence)),
     ]))),
   ]
   const edges = edgeRows(learn.parts)
   if (edges.length) blocks.push(paragraph(text('How the parts connect:')), list(edges.map((e) => [text(e.text)])))
+  const scale = learn.parts.scale
+  if (scale) {
+    blocks.push(
+      paragraph(text(`${scale.label}, drawn to scale from each kernel's capture:`)),
+      list(scale.segments.map((seg) => [bold(seg.label), text(seg.value ? '' : ', the rest'), ...(seg.does ? [text(': '), ...rich(seg.does)] : [text('.')])])),
+      paragraph(text('Measured on each kernel:')),
+      defs(scaleRefs(scale).map((r) => measuredRow(r, evidence))),
+    )
+  }
 
   blocks.push(heading(2, 'The chapters'), list(learn.chapters.map((ch) => [
     link(ch.title, `${url}#${ch.id}`),

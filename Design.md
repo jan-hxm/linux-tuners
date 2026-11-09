@@ -630,8 +630,20 @@ and expects no issues.
 - **RichText.** `lead`, `oneLine`, `picture`, `body`, a pin's `here`,
   `hint`, `why`, `symptoms` and `look.for` are RichText (`ui/richText.js`)
   and must parse with nothing left over; titles, labels, figure text, card
-  text and source labels are plain text with no markup at all, since they
-  also build the figures' `aria-label`s. Glossary ids must exist. Inline
+  titles and source labels are plain text with no markup at all, since they
+  also build the figures' `aria-label`s. A tip (`does`) is RichText with
+  code spans and bold only: a link or glossary term in one is a `tooltip`
+  issue, since a tooltip never holds a control.
+- **Figure words.** A label names a part in at most four words
+  (`BUDGETS.label`): a card's `title`, an edge, a band label, a stack
+  layer's label, a node's `text` and `sub`, a band's `text`, a timeline
+  line or event, a side-by-side state and legend word, a gauge's `axis`,
+  mark, zone, zoom and curve event, and a scale bar's label and segments.
+  What the part does goes in its `does`, a tip of one sentence of at most 25
+  words (`BUDGETS.tip`), which the page shows in a tooltip and the static
+  page inline. Both are rule `figure words`. The guides still drawn in the
+  first figure style are listed in `FIGURES_V1` in the contract suite, which
+  lets only that rule pass for them; the list only shrinks. Glossary ids must exist. Inline
   links follow the source host rule.
 - **Sources.** `[^id]` footnote marks are allowed in `body` only; each names
   an entry in the chapter's `sources`, each source is cited, and a chapter
@@ -641,7 +653,7 @@ and expects no issues.
 - **Settings.** Every def key of the tuner is pinned in exactly one chapter,
   once; pins, `Answer.key` and a side-by-side `setting.key` are real def
   keys. A pin's `layer` names an id in its chapter's figure (a stack layer,
-  band or node, or a timeline line). The last question has a `no`, since a
+  band or node, a timeline line, or a gauge mark or zone). The last question has a `no`, since a
   missing `no` means "next question".
 - **Answers.** A question's `yes` and `no` are `{ key, dir: 'raise' |
   'lower' }`, `{ key, to }` or `{ leave: true, why }`. `to` names a value,
@@ -677,9 +689,17 @@ and expects no issues.
   validator).
 - **Figure ranges.** Timeline points and events are 0..1 and time never
   goes back, `schematic` is `true`, a curve has two points or more; a
-  side-by-side has two states or more with `0 <= lit <= cells`; parts-map
+  side-by-side has two states or more with `start + lit <= cells` and
+  `asked` one of the lit cells (and then a legend word for it); parts-map
   cards sit on distinct cells from column and row 1, edges join two cards
-  sharing a row or a column, and bands cover rows that have cards.
+  sharing a row or a column, and bands cover rows that have cards. A scale
+  bar has one to four segments in its total's unit, and at most one without
+  a value, last (the rest). A gauge's marks share one unit and are listed
+  bottom to top (a live guide's captures must agree on every image); zones
+  and pins name marks, `from` below `to`; `range.from < range.to`; a zoom's
+  `full` is in the marks' unit unless `fullPerUnit` (above 0) converts it;
+  curve points are `[t, level]` with t 0..1 not going back and level 0 to
+  marks + 1. A gauge pin's key is pinned in its chapter, once per gauge.
 
 `src/learn/evidence.js` holds `IMAGES_ORDER` (the five image ids and the
 labels the kernel switcher shows, in `vm/lib/images.mjs` order, checked
@@ -694,7 +714,9 @@ fixture captures.
 
 The fixture guide `src/learn/__fixtures__/demo.learn.js` (slug `demo`, with
 its own `DEFS`, probes and five made-up evidence files of round numbers)
-uses every figure kind, template part and optional field. It passes as
+uses every figure kind, template part and optional field (tips on cards,
+nodes, bands, lines and events, the scale bar, `start`/`asked`/`legend`,
+and a gauge with `range`, `zoom`, `curve` and pins on a mark and a gap). It passes as
 `draft` without evidence and as `live` with its fixtures, and the suite
 breaks a copy of it once per rule and checks the issue's path and rule. It
 lives only under `__fixtures__` and is never routed outside tests.
@@ -705,56 +727,124 @@ The figures are HTML in the site tokens, drawn from the guide's data
 (`src/ui/learn/`), so they follow the scheme, print, keep their text
 selectable and take their `aria-label` from the same data. The words and the
 geometry live in plain JS (`figureText.js`), which the prerendered page can
-share; the components only lay them out. `PartsMap` is the guide's "Start
-here": cards on a grid from `col`/`row` (a `fit` card in `fit-tint`), light
-`paper-hover` bands behind rows with a label column, and connectors whose
-places are CSS `calc()` lengths built from the grid's equal tracks and its
-gaps, so nothing is measured and no guide sets a pixel; below `md` it is a
-list of cards by band and "A to B: label" rows. `StackFigure` draws layers as
-rows with a 7.5rem label column (the label sits over the row below `md`),
-bands side by side (stacked on a phone) and node boxes. `Timeline` is
-schematic: the curve is an SVG path from `curve`, the lines are dashed and
-spaced evenly in the order listed (line i of n at level (n - i)/(n + 1)), so a
-guide writes its curve against those levels and the measured values are the
-lines' labels, never their positions; events are numbered ticks (`fit`,
-`error` or `quiet`) with their words listed under the plot, and the caption
-says the distances aren't real. `SideBySide` is one row of squares per state,
-the first lit one `fit`, the rest `fit-tint`, with the setting that gives it
-and the VM test or probe behind it.
+share; the components only lay them out. Figures are drawn to scale from the
+evidence where there is a number, and read as pictures: **a label names a
+part in two or three words, and what it does moves into a tooltip** (the
+part's `does`). With every tooltip closed the figure still reads, and the
+static page keeps every word.
 
-Each figure root is `role="img"` with a label read from the data (cards,
-bands, connections, layers, line values, events in time order, lit counts),
-its drawing `aria-hidden`; nothing interactive sits inside it. A value comes
-only through `evidence`, a function `ref => valueFor(ref, imageId)`, and
-anything not `ok` reads "not measured" (or "not present on this kernel" for
-an `absent` probe), never a number, in the drawing and the label alike.
+**Tooltips** (`FigureTip.vue`, `TipStrip.vue`, `tipState.js`). The trigger
+is the part itself, a real `<button>` (a card's frame, or a dotted underline
+on a label). It opens after the mouse rests 150 ms, on keyboard focus and on
+a tap or click (a second click closes it); Escape, a tap outside, the mouse
+leaving and focus moving away close it, and one is open at a time on the
+page. It holds the part's name, one sentence (`TipWords.vue`: code and bold
+only) and, for a measured part, a value line with its kernel ("97,076 kB,
+kernel 6.12...", or "on all 5 test kernels"), never a link or a control.
+The sentence and value are always in the page as the button's
+`aria-describedby` (a `hidden` span), so the floating box and the strip are
+`aria-hidden`. From `md` up it floats under the part (`ink` box, `paper`
+text, teleported to `body` and placed in the viewport, so it never makes the
+page scroll sideways; it fades in only without reduced motion); below `md`
+it is a strip under its figure (`TipStrip`, matched by the figure's scope).
+Nothing needed to choose a setting lives only in a tooltip: the pins, the
+panel and the body say it too.
 
-`ChapterView` renders one chapter in the template order. Above a figure that
-shows captures, a kernel switcher (`role="group"`, one `aria-pressed` button
-per image of `IMAGES_ORDER`) picks the capture; it is a viewer preference
-(`linux-tuners:learn-kernel`, the image id, checked against the list before
-use and never rendered; `ui/learn/kernelPref.js`) shared by every chapter on
-the page. When every image measured the same value for everything the
-figure shows (`sameOnEveryImage` in `figureText.js`), the switcher would
-change nothing, so it is left out and the caption reads "Values measured on
-5 test kernels, the same on each."; the static page says such a value once
-("10 % on all 5 test kernels"). Under the figure the pins are mono buttons with a dot
-(`aria-pressed`, `fit-tint` and a `fit` dot when pressed; a second press
-clears it). The first is selected on load, and its `layer` (a layer, band,
-node or timeline line id) is drawn in `fit-tint`. The margin panel beside the
-figure (under it on a phone) is `aria-live="polite"`: the setting's name and
-title, what it changes here, the values its `layer` points at with the
-kernel they were measured on, the chapter's look command, the def's docs
-link and "Tune it". Footnote marks `[^id]` aren't RichText markup, so the
-chapter splits them out first; each becomes a mono `[n]` link to the
-chapter's sources (numbered by first citation), followed in place like the
-tuner pages' in-page links, and each paragraph's sources sit in the margin
-beside it. Links render only when they are https or a same-site path. The
-`choose` questions are the `Chooser` on screen (one question at a time, Yes
-and No staying in place so focus stays, a polite live line, then a
-`fit-tint` result with "Open it in the tuner" and "Start over", which focus
-moves to) and the static `DecisionFlow` list in print. `learn.a11y.test.js`
-runs the axe sweep over every fixture chapter's states in both schemes.
+The figure roots are `role="figure"` with the label from the data, since
+their parts are buttons; everything else in them is `aria-hidden`, and no
+button sits inside a hidden box. The side by side, which has no tooltips,
+stays `role="img"`.
+
+- **`PartsMap`** is the guide's "Start here": compact cards (title, and the
+  value where measured; `does` is the tooltip) on a grid from `col`/`row`
+  (a `fit` card in `fit-tint`), light `paper-hover` bands behind rows with a
+  label column, and connectors whose places are CSS `calc()` lengths built
+  from the grid's equal tracks and its gaps, so nothing is measured and no
+  guide sets a pixel; a row edge's label wraps inside the gap. Below `md` it
+  is a list of card buttons by group, top down, and "A to B: label" rows. An
+  optional **scale bar** (`parts.scale`: `{ label, total: ValueRef,
+  segments: [{ id, label, value?, does? }] }`) follows it: each measured
+  segment its share of the total on the chosen image (`ink`, `fit`, `quiet`
+  in order), the rest hatched, the legend entries tooltip buttons with value
+  and share. A total not measured draws no share.
+- **`StackFigure`** draws layers as rows with a 7.5rem label column (the
+  label sits over the row below `md`), bands side by side (stacked on a
+  phone) and node boxes; a band or node with `does` is a tooltip button.
+- **`Timeline`** is schematic: the curve is an SVG path from `curve`, the
+  lines are dashed and spaced evenly in the order listed (line i of n at
+  level (n - i)/(n + 1)), so a guide writes its curve against those levels
+  and the measured values are the lines' labels, never their positions;
+  events are numbered ticks (`fit`, `error` or `quiet`) with their words
+  listed under the plot (a tooltip button where they have `does`), and the
+  caption says the distances aren't real.
+- **`SideBySide`** is one row of squares per state: the lit run from
+  `start`, the one asked for (`asked`) filled `ink`, the others lit filled
+  `fit`, the rest empty `rule-strong` outlines, so lit and unlit differ in
+  fill and lightness; a small legend names them in the figure's `legend`
+  words (default "lit" and "not lit"). Under it, the setting that gives each
+  state and the VM test or probe behind it.
+- **`Gauge`** (`kind: 'gauge'`) is a vertical scale drawn to scale on the
+  chosen image (`gaugeModel`): `marks` (ValueRefs in one unit, bottom to
+  top) are lines with a short label and their value, `zones` the fills
+  between two marks (`fit` tint, an `error` hatch or plain) with their names
+  beside the scale from `md` and as a key below it. The scale runs over
+  `range`, or from 0 to a round number at least 15 % above the top mark
+  (`niceTop`), widened when a mark passes it; ticks sit only at round values
+  inside it. `zoom` adds a thin bar of the whole `full` range beside it,
+  with a bracket on the part drawn large and dashed lines to the scale
+  (`fullPerUnit` converts, such as 4 kB per page). `curve` is a schematic
+  line beside the scale on the same heights, labelled "time (schematic)",
+  its levels written against the marks (0 the foot, k the k-th mark, marks
+  + 1 the top), so it follows the marks as measured; its events are numbered
+  dots listed under it. `pins` draw settings on the scale, on a mark or on
+  the bar over a gap, as pressed-state buttons that select the chapter's pin
+  (the row under the figure shows them instead below `md`). A mark that is
+  not measured, or marks out of order, turn the gauge into a labelled
+  schematic: marks evenly spaced, no ticks, no bracket, "not measured" in
+  place of every number, and a caption that says so.
+
+A value comes only through `evidence`, a function `ref => valueFor(ref,
+imageId)`, and anything not `ok` reads "not measured" (or "not present on
+this kernel" for an `absent` probe), never a number, in the drawing, the
+tooltip and the label alike.
+
+`ChapterView` renders one chapter in the template order and says each thing
+once. Above a figure that shows captures, a kernel switcher (`role="group"`,
+one `aria-pressed` button per image of `IMAGES_ORDER`) picks the capture; it
+is a viewer preference (`linux-tuners:learn-kernel`, the image id, checked
+against the list before use and never rendered; `ui/learn/kernelPref.js`)
+shared by every chapter on the page. When every image measured the same
+value for everything the figure shows (`sameOnEveryImage` over
+`figureRefs`), the switcher would change nothing, so it is left out and the
+caption reads "Values measured on 5 test kernels, the same on each."; the
+static page says such a value once ("10 % on all 5 test kernels"). Under the
+figure the pins are mono buttons with a dot (`aria-pressed`, `fit-tint` and
+a `fit` dot when pressed; a second press clears it). The first is selected
+on load, and its `layer` (a layer, band, node, timeline line, gauge mark or
+zone id) is drawn in `fit-tint`. The margin panel beside the figure (under
+it on a phone) is `aria-live="polite"` and the one place a setting is
+explained on screen: the setting's name and title, what it changes here,
+the values its `layer` (and, on a gauge, its drawn pin and marks) points at
+with the kernel they were measured on, the def's docs link and "Tune it".
+There is no "Settings here" section and the look command is not repeated in
+the panel; "Look on your machine" has it once, and the static page keeps a
+"Settings here" list with every pin's `here` as the full-text fallback.
+Footnote marks `[^id]` aren't RichText markup, so the chapter splits them
+out first; each becomes a mono `[n]` link to the chapter's sources (numbered
+by first citation), followed in place like the tuner pages' in-page links,
+and each paragraph's sources sit in the margin beside it. Links render only
+when they are https or a same-site path. The `choose` questions are the
+`Chooser` on screen (one question at a time, Yes and No staying in place so
+focus stays, a polite live line, then a `fit-tint` result with "Open it in
+the tuner" and "Start over", which focus moves to) and the static
+`DecisionFlow` list in print. `learn.a11y.test.js` runs the axe sweep over
+every fixture chapter's states in both schemes, every tooltip open and every
+gauge pin pressed included.
+
+The static page lists every figure as text: parts with their tips inline
+("Above high (Nothing to do)"), the scale bar's segments, a gauge's marks,
+zones, settings on the scale, zoom and curve events, and then every value
+the figure reads on every kernel ("on all 5 test kernels" when they agree).
 
 #### Evidence
 

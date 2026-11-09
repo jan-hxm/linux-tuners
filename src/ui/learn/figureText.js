@@ -10,6 +10,8 @@
  * is never shown as a number.
  */
 
+import { parseRichText } from '../richText.js'
+
 export const NOT_MEASURED = 'not measured'
 export const ABSENT = 'not present on this kernel'
 
@@ -86,6 +88,20 @@ export function sameOnEveryImage(refs, imageIds, valueAt) {
   })
 }
 
+/** A tip (`does`) as plain words, for labels and descriptions: its markup gone. */
+export const plainTip = (tip) => (typeof tip === 'string' ? parseRichText(tip).map((seg) => seg.text).join('') : '')
+
+/**
+ * The value line of a part's tooltip: its value with the kernel it was
+ * measured on, or "on all N test kernels" when every image agrees.
+ */
+export function tipValue(ref, evidence, sameOn = 0) {
+  const r = evidence(ref)
+  const text = formatValue(r, ref.unit)
+  if (sameOn && r?.status === 'ok') return `${text} on all ${sameOn} test kernels`
+  return r?.kernel && (r.status === 'ok' || r.status === 'absent') ? `${text}, kernel ${r.kernel}` : text
+}
+
 /** The caption of a figure whose values are the same on every image. */
 export const sameOnText = (count) => `Values measured on ${count} test kernels, the same on each.`
 
@@ -115,8 +131,16 @@ export function cardGroups(parts) {
     cards: order.filter((c) => c.row >= band.rows[0] && c.row <= band.rows[1]),
   }))
   const banded = new Set(groups.flatMap((g) => g.cards.map((c) => c.id)))
-  const rest = order.filter((c) => !banded.has(c.id))
-  return rest.length ? [...groups, { label: null, cards: rest }] : groups
+  // Cards outside every band, grouped by run of rows, so the list reads top down.
+  const rest = []
+  for (const card of order.filter((c) => !banded.has(c.id))) {
+    const last = rest.at(-1)
+    const inBand = (row) => bands.some((b) => row >= b.rows[0] && row <= b.rows[1])
+    if (last && !Array.from({ length: card.row - last.cards.at(-1).row }, (_, i) => last.cards.at(-1).row + i + 1).some(inBand)) last.cards.push(card)
+    else rest.push({ label: null, cards: [card] })
+  }
+  const first = (g) => Math.min(...g.cards.map((c) => c.row))
+  return [...groups, ...rest].filter((g) => g.cards.length).sort((a, b) => first(a) - first(b))
 }
 
 /** "A to B: label" for each edge, by the cards' titles. */
@@ -127,7 +151,7 @@ export function edgeRows(parts) {
 
 function cardText(card, evidence) {
   const value = card.probe ? `, measured ${itemValue(card, evidence)}` : ''
-  return `${card.title}, ${card.does}${value}`
+  return `${card.title}, ${plainTip(card.does)}${value}`
 }
 
 export function partsMapLabel(parts, evidence) {
@@ -136,7 +160,55 @@ export function partsMapLabel(parts, evidence) {
     return g.label ? `${g.label}: ${cards}.` : `${cards}.`
   })
   const edges = edgeRows(parts).map((e) => e.text)
-  return [`Parts map. ${groups.join(' ')}`, edges.length ? `Connections: ${edges.join('. ')}.` : ''].filter(Boolean).join(' ')
+  return [
+    `Parts map. ${groups.join(' ')}`,
+    edges.length ? `Connections: ${edges.join('. ')}.` : '',
+    parts.scale ? scaleLabel(parts.scale, evidence) : '',
+  ].filter(Boolean).join(' ')
+}
+
+// Scale bar --------------------------------------------------------------------
+
+/** The fills of a scale bar's measured segments, in order; the rest is hatched. */
+export const SCALE_TONES = Object.freeze(['ink', 'fit', 'quiet'])
+
+const isNum = (v) => typeof v === 'number' && Number.isFinite(v)
+
+/** A share of a whole as a percentage, one decimal under 10 %. */
+export const percent = (share) => `${(share * 100).toFixed(share < 0.1 ? 1 : 0)} %`
+
+/**
+ * A scale bar (`parts.scale`) on one image: each measured segment's share of
+ * the total, drawn to scale. A total or segment that isn't measured has no
+ * share (null), so nothing is drawn for it and its text says "not measured";
+ * shares that add up past the total are scaled down to fit.
+ */
+export function scaleModel(scale, evidence) {
+  const totalResult = evidence(scale.total)
+  const total = totalResult?.status === 'ok' && isNum(totalResult.value) && totalResult.value > 0 ? totalResult.value : null
+  let measured = 0
+  const segments = scale.segments.map((seg) => {
+    if (!seg.value) return { ...seg, rest: true, tone: null, share: null, text: '', ref: null }
+    const r = evidence(seg.value)
+    const v = r?.status === 'ok' && isNum(r.value) && r.value >= 0 ? r.value : null
+    return { ...seg, rest: false, tone: SCALE_TONES[measured++] ?? 'quiet', share: total !== null && v !== null ? v / total : null, text: formatValue(r, seg.value.unit), ref: seg.value }
+  })
+  const sum = segments.reduce((a, seg) => a + (seg.share ?? 0), 0)
+  if (sum > 1) for (const seg of segments) if (seg.share !== null) seg.share /= sum
+  return { label: scale.label, total, totalText: formatValue(totalResult, scale.total.unit), segments }
+}
+
+/** Every ValueRef a scale bar reads. */
+export const scaleRefs = (scale) => [scale.total, ...scale.segments.filter((seg) => seg.value).map((seg) => seg.value)]
+
+export function scaleLabel(scale, evidence) {
+  const m = scaleModel(scale, evidence)
+  const parts = m.segments.map((seg) => {
+    const tip = seg.does ? `: ${plainTip(seg.does).replace(/\.$/, '')}` : ''
+    if (seg.rest) return `${seg.label}, the rest${tip}`
+    return `${seg.label}, ${seg.text}${seg.share !== null ? `, ${percent(seg.share)}` : ''}${tip}`
+  })
+  return `${scale.label}, ${m.totalText}, drawn to scale: ${parts.join('; ')}.`
 }
 
 /**
@@ -192,13 +264,16 @@ export function stackRefs(figure) {
 
 function nodeText(node, evidence) {
   const parts = [node.text, node.sub, node.probe ? `measured ${itemValue(node, evidence)}` : null]
-  return parts.filter(Boolean).join(', ')
+  const does = node.does ? `: ${plainTip(node.does).replace(/\.$/, '')}` : ''
+  return `${parts.filter(Boolean).join(', ')}${does}`
 }
+
+const bandText = (band) => (band.does ? `${band.text}: ${plainTip(band.does).replace(/\.$/, '')}` : band.text)
 
 export function stackLabel(figure, evidence, highlight = null) {
   const layers = figure.layers.map((layer) => {
     const items = layer.kind === 'bands'
-      ? (layer.bands ?? []).map((b) => (b.id === highlight ? `${b.text} (selected)` : b.text))
+      ? (layer.bands ?? []).map((b) => (b.id === highlight ? `${bandText(b)} (selected)` : bandText(b)))
       : (layer.nodes ?? []).map((n) => (n.id === highlight ? `${nodeText(n, evidence)} (selected)` : nodeText(n, evidence)))
     const values = (layer.values ?? []).map((r) => measuredText(r, evidence))
     const name = layer.id === highlight ? `${layer.label} (selected)` : layer.label
@@ -225,8 +300,8 @@ export function curvePath(curve) {
 }
 
 export function timelineLabel(figure, evidence) {
-  const lines = figure.lines.map((l) => `${l.label} at ${formatValue(evidence(l.value), l.value.unit)}`)
-  const events = [...figure.events].sort((a, b) => a.at - b.at).map((e) => e.label)
+  const lines = figure.lines.map((l) => `${l.label} at ${formatValue(evidence(l.value), l.value.unit)}${l.does ? ` (${plainTip(l.does).replace(/\.$/, '')})` : ''}`)
+  const events = [...figure.events].sort((a, b) => a.at - b.at).map((e) => (e.does ? `${e.label} (${plainTip(e.does).replace(/\.$/, '')})` : e.label))
   return [
     `${figure.title}. Schematic timeline, not to scale.`,
     lines.length ? `Lines from the top: ${lines.join('; ')}.` : '',
@@ -238,8 +313,33 @@ export function timelineLabel(figure, evidence) {
 
 export const settingText = (setting, defsByKey = {}) => `${defName(setting.key, defsByKey)} = ${setting.value}`
 
+/** The words for a side-by-side's cells: the figure's legend, or plain lit and not lit. */
+export function sideBySideLegend(figure) {
+  return { asked: 'asked for', lit: 'lit', off: 'not lit', ...(figure.legend ?? {}) }
+}
+
+/**
+ * Each cell of a state: 'asked' (the one the request was for), 'lit' or
+ * 'off'. Lit cells run from `start` (0 when unset).
+ */
+export function cellKinds(state) {
+  const start = state.start ?? 0
+  return Array.from({ length: state.cells }, (_, i) => {
+    if (i < start || i >= start + state.lit) return 'off'
+    return i === state.asked ? 'asked' : 'lit'
+  })
+}
+
+/** "1 asked for, 7 read along, 4 stays on disk" for one state. */
+export function cellCounts(state, legend) {
+  const kinds = cellKinds(state)
+  const n = (k) => kinds.filter((x) => x === k).length
+  return [n('asked') ? `${n('asked')} ${legend.asked}` : null, `${n('lit')} ${legend.lit}`, `${n('off')} ${legend.off}`].filter(Boolean).join(', ')
+}
+
 export function sideBySideLabel(figure, defsByKey = {}) {
-  const states = figure.states.map((s) => `${s.label}, ${settingText(s.setting, defsByKey)}: ${s.lit} of ${s.cells} lit`)
+  const legend = sideBySideLegend(figure)
+  const states = figure.states.map((s) => `${s.label}, ${settingText(s.setting, defsByKey)}: ${cellCounts(s, legend)}, of ${s.cells}`)
   return `${figure.title}. Side by side. ${states.join('. ')}.`
 }
 
@@ -250,13 +350,184 @@ export function backedByText(backedBy) {
   return ''
 }
 
+// Gauge ----------------------------------------------------------------------
+
+/** A round number at least 15 % above v, for the top of a scale: 8,492 gives 10,000. */
+export function niceTop(v) {
+  if (!(v > 0)) return 1
+  const raw = v * 1.15
+  const p = 10 ** Math.floor(Math.log10(raw))
+  for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= raw - 1e-9) return m * p
+  return 10 * p
+}
+
+/** Tick values from `from` to `to` at a round step, at most five steps. */
+export function scaleTicks(from, to) {
+  const span = to - from
+  if (!(span > 0)) return []
+  const raw = span / 4
+  const p = 10 ** Math.floor(Math.log10(raw))
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * p).find((x) => x >= raw - 1e-9)
+  const out = []
+  for (let v = Math.ceil(from / step - 1e-9) * step; v <= to + 1e-9; v += step) out.push(Number(v.toPrecision(12)))
+  return out
+}
+
+const clamp01 = (x) => Math.min(1, Math.max(0, x))
+const fmt = (v) => v.toLocaleString('en-US')
+
+/**
+ * A gauge on one image, everything as a height 0 (foot) to 1 (top) on one
+ * scale. When every mark is measured and in order, the scale runs over
+ * `range` (or 0 to niceTop of the top mark, widened to hold every mark) and
+ * the marks sit at their values; otherwise it is a schematic with the marks
+ * evenly spaced, no ticks and no zoom bracket, and nothing reads as a number.
+ */
+export function gaugeModel(figure, evidence) {
+  const unit = figure.marks[0]?.value?.unit ?? ''
+  const marks = figure.marks.map((m) => {
+    const r = evidence(m.value)
+    return { ...m, v: r?.status === 'ok' && isNum(r.value) ? r.value : null, text: formatValue(r, m.value.unit), result: r }
+  })
+  const values = marks.map((m) => m.v)
+  const measured = values.length > 0 && values.every((v) => v !== null) && values.every((v, i) => i === 0 || v >= values[i - 1])
+  let from = 0
+  let to = 1
+  if (measured) {
+    const lo = Math.min(...values)
+    const hi = Math.max(...values)
+    from = Math.min(figure.range?.from ?? 0, lo)
+    to = figure.range?.to ?? niceTop(hi)
+    if (hi > to) to = niceTop(hi)
+    if (to <= from) to = from + niceTop(Math.abs(from) || 1)
+  }
+  const at = (v) => clamp01((v - from) / (to - from))
+  marks.forEach((m, i) => (m.y = measured ? at(m.v) : (i + 1) / (marks.length + 1)))
+  const yOf = (id) => marks.find((m) => m.id === id)?.y
+  const zones = figure.zones.map((z) => ({ ...z, y0: z.from ? yOf(z.from) ?? 0 : 0, y1: z.to ? yOf(z.to) ?? 1 : 1 }))
+  const ticks = measured ? scaleTicks(from, to).map((v) => ({ value: v, y: at(v), text: fmt(v) })) : []
+
+  let zoom = null
+  if (figure.zoom) {
+    const r = evidence(figure.zoom.full)
+    const full = r?.status === 'ok' && isNum(r.value) && r.value > 0 ? r.value / (figure.zoom.fullPerUnit ?? 1) : null
+    const bracket = measured && full !== null ? { y0: clamp01(from / full), y1: clamp01(to / full) } : null
+    zoom = { label: figure.zoom.label, text: formatValue(r, figure.zoom.full.unit), bracket }
+  }
+
+  let curve = null
+  if (figure.curve) {
+    // Level 0 is the foot, k the k-th mark, marks + 1 the top.
+    const knots = [0, ...marks.map((m) => m.y), 1]
+    const levelY = (level) => {
+      const i = Math.min(Math.floor(level), knots.length - 2)
+      return knots[i] + (knots[i + 1] - knots[i]) * (level - i)
+    }
+    const pts = figure.curve.points.map(([t, level]) => [t, levelY(level)])
+    const yAt = (t) => {
+      if (t <= pts[0][0]) return pts[0][1]
+      for (let i = 1; i < pts.length; i++) {
+        const [t1, y1] = pts[i]
+        const [t0, y0] = pts[i - 1]
+        if (t <= t1) return t1 === t0 ? y1 : y0 + ((y1 - y0) * (t - t0)) / (t1 - t0)
+      }
+      return pts.at(-1)[1]
+    }
+    curve = {
+      path: pts.map(([t, y], i) => `${i ? 'L' : 'M'}${(t * 100).toFixed(2)} ${((1 - y) * 100).toFixed(2)}`).join(' '),
+      events: [...(figure.curve.events ?? [])].sort((a, b) => a.at - b.at).map((e, i) => ({ ...e, n: i + 1, x: e.at, y: yAt(e.at) })),
+    }
+  }
+
+  const pins = (figure.pins ?? []).map((p) => (p.mark ? { ...p, y: yOf(p.mark) } : { ...p, y0: yOf(p.from), y1: yOf(p.to) }))
+  return { measured, unit, from, to, marks, zones, ticks, zoom, curve, pins }
+}
+
+/** Every ValueRef a gauge shows: its marks, the zoom's whole range and the pins' own values. */
+export function gaugeRefs(figure) {
+  return [
+    ...figure.marks.map((m) => m.value),
+    ...(figure.zoom ? [figure.zoom.full] : []),
+    ...(figure.pins ?? []).filter((p) => p.value).map((p) => p.value),
+  ]
+}
+
+/** Where a gauge pin sits, in words: "on min" or "from min to high". */
+export function gaugePinPlace(figure, pin) {
+  const name = (id) => figure.marks.find((m) => m.id === id)?.label ?? id
+  return pin.mark ? `on ${name(pin.mark)}` : `from ${name(pin.from)} to ${name(pin.to)}`
+}
+
+/** The axis line under a gauge: "free pages, 0 to 10,000", or that it is a schematic. */
+export function gaugeAxisText(figure, model) {
+  return model.measured ? `${figure.axis}, ${fmt(model.from)} to ${fmt(model.to)}${model.unit && !figure.axis.endsWith(model.unit) ? ` ${model.unit}` : ''}` : `${figure.axis}, schematic`
+}
+
+/** A label inside a sentence: its first letter lower case, so "All RAM" reads "all RAM". */
+export const inSentence = (label) => (label ? label[0].toLowerCase() + label.slice(1) : '')
+
+/** What the zoom bar shows, as a sentence, or '' without a zoom. */
+export function zoomText(figure, model) {
+  if (!model.zoom) return ''
+  const { label, text, bracket } = model.zoom
+  if (!bracket) return `The thin bar is ${inSentence(label)}, ${text}.`
+  return `The thin bar is ${inSentence(label)}, ${text}; the bracket at its foot is the part drawn large, ${percent(bracket.y1 - bracket.y0)} of it.`
+}
+
+/** The caption under a gauge: where its numbers come from, or why it is a schematic. */
+export function gaugeCaption(figure, evidence, imageId, sameOn = 0) {
+  const model = gaugeModel(figure, evidence)
+  const parts = [`${figure.title}.`]
+  if (!model.measured) parts.push(`Schematic: the marks are not measured on ${imageId}, so they are evenly spaced.`)
+  else parts.push('Drawn to scale.')
+  const zoom = zoomText(figure, model)
+  if (zoom) parts.push(zoom)
+  if (figure.curve) parts.push('The curve is schematic: its shape and order are real, the times are not.')
+  if (model.measured) parts.push(sameOn ? sameOnText(sameOn) : measuredOn(gaugeRefs(figure), evidence, imageId))
+  return parts.filter(Boolean).join(' ')
+}
+
+export function gaugeLabel(figure, evidence, { defsByKey = {}, highlight = null } = {}) {
+  const model = gaugeModel(figure, evidence)
+  const tip = (x) => (x.does ? `: ${plainTip(x.does).replace(/\.$/, '')}` : '')
+  const sel = (id) => (id === highlight ? ' (selected)' : '')
+  const marks = [...model.marks].reverse().map((m) => `${m.label} ${m.text}${tip(m)}${sel(m.id)}`)
+  const name = (id) => model.marks.find((m) => m.id === id)?.label ?? id
+  const zones = [...model.zones]
+    .sort((a, b) => b.y1 - a.y1 || b.y0 - a.y0)
+    .map((z) => `${z.label} (${z.from ? (z.to ? `${name(z.from)} to ${name(z.to)}` : `above ${name(z.from)}`) : `below ${name(z.to)}`})${tip(z)}${sel(z.id)}`)
+  const out = [
+    `${figure.title}.`,
+    model.measured ? `A scale of ${gaugeAxisText(figure, model)}, drawn to scale.` : `A schematic scale of ${figure.axis}: the marks are not measured on this kernel.`,
+  ]
+  const zoom = zoomText(figure, model)
+  if (zoom) out.push(zoom)
+  out.push(`Marks from the top: ${marks.join('; ')}.`, `Zones from the top: ${zones.join('; ')}.`)
+  if (model.pins.length) out.push(`Settings on the scale: ${model.pins.map((p) => `${defName(p.key, defsByKey)} ${gaugePinPlace(figure, p)}`).join('; ')}.`)
+  if (model.curve) {
+    const events = model.curve.events.map((e) => `${e.label}${tip(e)}`)
+    out.push(`A schematic curve over time, not to scale${events.length ? `: ${events.join(', then ')}` : ''}.`)
+  }
+  return out.join(' ')
+}
+
 // Any figure -----------------------------------------------------------------
 
 export function figureLabel(figure, evidence, { defsByKey = {}, highlight = null } = {}) {
   if (figure.kind === 'stack') return stackLabel(figure, evidence, highlight)
   if (figure.kind === 'timeline') return timelineLabel(figure, evidence)
   if (figure.kind === 'sideBySide') return sideBySideLabel(figure, defsByKey)
+  if (figure.kind === 'gauge') return gaugeLabel(figure, evidence, { defsByKey, highlight })
   return figure.title ?? ''
+}
+
+/** Every ValueRef a chapter figure shows, for the kernel switcher and the static page. */
+export function figureRefs(figure) {
+  if (!figure) return []
+  if (figure.kind === 'stack') return stackRefs(figure)
+  if (figure.kind === 'timeline') return figure.lines.map((l) => l.value)
+  if (figure.kind === 'gauge') return gaugeRefs(figure)
+  return []
 }
 
 /**
@@ -266,6 +537,16 @@ export function figureLabel(figure, evidence, { defsByKey = {}, highlight = null
  */
 export function pinRefs(figure, pin) {
   const target = pin?.layer
+  if (figure?.kind === 'gauge' && pin) {
+    const drawn = (figure.pins ?? []).find((p) => p.key === pin.key)
+    const zone = figure.zones.find((z) => z.id === target)
+    const markIds = [
+      ...(drawn ? (drawn.mark ? [drawn.mark] : [drawn.from, drawn.to]) : []),
+      ...(zone ? [zone.from, zone.to] : figure.marks.some((m) => m.id === target) ? [target] : []),
+    ]
+    const marks = figure.marks.filter((m) => markIds.includes(m.id)).reverse()
+    return [...(drawn?.value ? [drawn.value] : []), ...marks.map((m) => m.value)]
+  }
   if (!target) return []
   if (figure.kind === 'stack') {
     for (const layer of figure.layers) {

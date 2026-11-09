@@ -14,20 +14,54 @@
  *   A number in a figure: the probe id in the tuner's probes.js, a dotted path
  *   into the probe's captured value, and the unit it is shown in.
  *
+ * Figure words. A `label` (a card's title, a node's text, an edge, a mark or
+ * a zone) names a part in at most BUDGETS.label words; what the part does is
+ * its `does`, a tip: one sentence of RichText (code and bold only, no links or
+ * glossary terms, since a tooltip never holds a control) that the page shows
+ * in a tooltip and the static page inline.
+ *
  * @typedef {{ id: string, title: string, does: string, col: number, row: number, tone?: 'fit', probe?: string, path?: string, unit?: string }} PartsCard  path and unit as on a ValueRef
+ * @typedef {{ id: string, label: string, value?: ValueRef, does?: string }} ScaleSegment
+ *   A stretch of a scale bar: measured (`value`) or, at most once and last, the rest of the total.
+ * @typedef {{ label: string, total: ValueRef, segments: ScaleSegment[] }} ScaleBar
+ *   A bar drawn to scale from the evidence: each measured segment is its share of `total`.
  * @typedef {{ picture: string, cards: PartsCard[], bands?: { label: string, rows: [number, number] }[],
- *   edges: { from: string, to: string, label: string }[] }} PartsMap
+ *   edges: { from: string, to: string, label: string }[], scale?: ScaleBar }} PartsMap
  *   The "Start here" diagram. Edges join cards that share a row or a column.
  *
  * @typedef {{ id: string, label: string, kind: 'bands'|'nodes',
- *   bands?: { id: string, text: string }[], nodes?: { id: string, text: string, sub?: string, probe?: string, path?: string, unit?: string }[],
+ *   bands?: { id: string, text: string, does?: string }[],
+ *   nodes?: { id: string, text: string, sub?: string, does?: string, probe?: string, path?: string, unit?: string }[],
  *   values?: ValueRef[] }} StackLayer
+ * @typedef {{ id: string, label: string, value: ValueRef, does?: string, tone?: 'fit'|'error' }} GaugeMark
+ * @typedef {{ id: string, label: string, does?: string, from?: string, to?: string, tone?: 'fit'|'error' }} GaugeZone
+ *   The stretch between two marks (`from` below, `to` above); no `from` is the
+ *   foot of the scale, no `to` its top.
+ * @typedef {{ key: string, mark?: string, from?: string, to?: string, value?: ValueRef }} GaugePin
+ *   A setting drawn on the scale: on one mark, or on the gap from one mark to another.
+ *   `value` is the setting's own measured value, shown in the pin's panel.
+ * @typedef {{ kind: 'gauge', title: string, axis: string, marks: GaugeMark[], zones: GaugeZone[],
+ *     range?: { from: number, to: number },
+ *     zoom?: { label: string, full: ValueRef, fullPerUnit?: number },
+ *     curve?: { points: [number, number][], events?: { at: number, label: string, does?: string, tone?: 'fit'|'error' }[] },
+ *     pins?: GaugePin[] }} GaugeFigure
+ *   A vertical scale drawn to scale from the evidence on the chosen image.
+ *   `marks` are listed bottom to top in one unit. The scale runs over `range`,
+ *   or from 0 to a round number above the top mark. `zoom` adds a thin bar of
+ *   the whole `full` range (in the marks' unit, or `fullPerUnit` of its unit
+ *   per mark unit) with a bracket on the part the scale shows. `curve` is
+ *   schematic: `[t, level]` with t 0..1 and level 0..marks+1, where 0 is the
+ *   foot, k the k-th mark and marks+1 the top, so it follows the marks as measured.
  * @typedef {{ kind: 'stack', title: string, layers: StackLayer[] }
- *   | { kind: 'timeline', title: string, schematic: true, lines: { id: string, label: string, value: ValueRef }[],
- *       curve: [number, number][], events: { at: number, label: string, tone?: 'fit'|'error' }[] }
+ *   | { kind: 'timeline', title: string, schematic: true, lines: { id: string, label: string, value: ValueRef, does?: string }[],
+ *       curve: [number, number][], events: { at: number, label: string, does?: string, tone?: 'fit'|'error' }[] }
  *   | { kind: 'sideBySide', title: string,
- *       states: { label: string, cells: number, lit: number, setting: { key: string, value: number|string } }[],
- *       backedBy: { vmTest: string } | { probe: string } }} Figure
+ *       states: { label: string, cells: number, lit: number, start?: number, asked?: number, setting: { key: string, value: number|string } }[],
+ *       legend?: { asked?: string, lit: string, off: string },
+ *       backedBy: { vmTest: string } | { probe: string } }
+ *   | GaugeFigure} Figure
+ *   A side-by-side state lights `lit` cells from `start` (0 when unset); `asked`
+ *   is the cell the request was for, drawn in ink, the other lit ones in fit.
  *
  * @typedef {{ key: string, dir: 'raise'|'lower' } | { key: string, to: string|number } | { leave: true, why: string }} Answer
  *   `to` names a value: an option's value for a def with options, else a number
@@ -87,6 +121,11 @@ export const BUDGETS = Object.freeze({
   sentence: 30,
   questions: 3,
   leadSentences: 2,
+  /** Words in a figure label: a card title, node, edge, mark, zone or legend entry. */
+  label: 4,
+  /** A tip (`does`): one sentence of at most this many words. */
+  tip: 25,
+  tipSentences: 1,
 })
 
 /** Words a beginner's text leaves out: each one tells the reader they should already know. */
@@ -104,7 +143,7 @@ export const READ_ONLY_COMMANDS = Object.freeze([
   ['systemctl', 'show'], ['ls'], ['findmnt'], ['udevadm', 'info'],
 ])
 
-export const FIGURE_KINDS = Object.freeze(['stack', 'timeline', 'sideBySide'])
+export const FIGURE_KINDS = Object.freeze(['stack', 'timeline', 'sideBySide', 'gauge'])
 
 const EM_DASH = '—'
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/
@@ -383,6 +422,31 @@ export function validateGuide(guide, ctx) {
     if (banned) fail(path, 'banned word', `"${banned[0]}"`)
   }
 
+  /** A figure label: plain text that names a part in a few words. */
+  function label(path, value) {
+    text(path, value)
+    if (isStr(value) && wordCount(value) > BUDGETS.label) {
+      fail(path, 'figure words', `${wordCount(value)} words in a label, at most ${BUDGETS.label}; move the rest into the part's does`)
+    }
+  }
+
+  /**
+   * A tip (`does`): one sentence the page shows in a tooltip. RichText with
+   * code and bold only, since a tooltip never holds a link or a control.
+   */
+  function tip(path, value) {
+    text(path, value, { rich: true })
+    if (!isStr(value)) return
+    for (const seg of parseRichText(stripFootnotes(value))) {
+      if (seg.type === 'link' || seg.type === 'term') fail(path, 'tooltip', `a ${seg.type === 'link' ? 'link' : 'glossary term'} in a tip; a tooltip holds no control`)
+    }
+    const seen = visibleText(value, { codeAs: 'code' })
+    if (sentences(seen).length > BUDGETS.tipSentences) fail(path, 'figure words', `${sentences(seen).length} sentences in a tip, at most ${BUDGETS.tipSentences}`)
+    if (wordCount(seen) > BUDGETS.tip) fail(path, 'figure words', `${wordCount(seen)} words in a tip, at most ${BUDGETS.tip}`)
+  }
+
+  const isNum = (v) => typeof v === 'number' && Number.isFinite(v)
+
   function command(path, value) {
     for (const why of commandIssues(value)) fail(path, 'command', why)
   }
@@ -439,7 +503,7 @@ export function validateGuide(guide, ctx) {
 
   // ── Parts map ──
   function partsMap(path, parts) {
-    if (!shape(path, parts, ['picture', 'cards', 'edges'], ['bands'])) return
+    if (!shape(path, parts, ['picture', 'cards', 'edges'], ['bands', 'scale'])) return
     text(`${path}.picture`, parts.picture, { rich: true })
     const cards = list(`${path}.cards`, parts.cards, { min: 1 })
     uniqueIds(`${path}.cards`, cards)
@@ -448,8 +512,8 @@ export function validateGuide(guide, ctx) {
     cards.forEach((c, i) => {
       const p = `${path}.cards[${i}]`
       if (!shape(p, c, ['id', 'title', 'does', 'col', 'row'], ['tone', 'probe', 'path', 'unit'])) return
-      text(`${p}.title`, c.title)
-      text(`${p}.does`, c.does)
+      label(`${p}.title`, c.title)
+      tip(`${p}.does`, c.does)
       if (!isInt(c.col, 1)) fail(`${p}.col`, 'figure range', 'must be a whole number from 1')
       if (!isInt(c.row, 1)) fail(`${p}.row`, 'figure range', 'must be a whole number from 1')
       const cell = `${c.col},${c.row}`
@@ -464,7 +528,7 @@ export function validateGuide(guide, ctx) {
       list(`${path}.bands`, parts.bands).forEach((b, i) => {
         const p = `${path}.bands[${i}]`
         if (!shape(p, b, ['label', 'rows'])) return
-        text(`${p}.label`, b.label)
+        label(`${p}.label`, b.label)
         const [from, to] = Array.isArray(b.rows) ? b.rows : []
         if (!Array.isArray(b.rows) || b.rows.length !== 2 || !isInt(from, 1) || !isInt(to, from)) fail(`${p}.rows`, 'figure range', 'must be [from, to] rows with from <= to')
         else if (to > Math.max(...rows)) fail(`${p}.rows`, 'figure range', `row ${to} has no card`)
@@ -473,7 +537,7 @@ export function validateGuide(guide, ctx) {
     list(`${path}.edges`, parts.edges).forEach((e, i) => {
       const p = `${path}.edges[${i}]`
       if (!shape(p, e, ['from', 'to', 'label'])) return
-      text(`${p}.label`, e.label)
+      label(`${p}.label`, e.label)
       const a = byId.get(e.from)
       const b = byId.get(e.to)
       if (!a) fail(`${p}.from`, 'figure range', `"${e.from}" is not a card`)
@@ -481,6 +545,28 @@ export function validateGuide(guide, ctx) {
       if (a && b) {
         if (a === b) fail(p, 'figure range', 'joins a card to itself')
         else if (a.row !== b.row && a.col !== b.col) fail(p, 'figure range', `"${e.from}" and "${e.to}" share neither a row nor a column`)
+      }
+    })
+    if (parts.scale !== undefined) scaleBar(`${path}.scale`, parts.scale)
+  }
+
+  /** A bar drawn to scale: measured segments in the total's unit, then at most one rest. */
+  function scaleBar(path, scale) {
+    if (!shape(path, scale, ['label', 'total', 'segments'])) return
+    label(`${path}.label`, scale.label)
+    valueRef(`${path}.total`, scale.total)
+    const segments = list(`${path}.segments`, scale.segments, { min: 1, max: 4 })
+    uniqueIds(`${path}.segments`, segments)
+    segments.forEach((seg, i) => {
+      const p = `${path}.segments[${i}]`
+      if (!shape(p, seg, ['id', 'label'], ['value', 'does'])) return
+      label(`${p}.label`, seg.label)
+      if (seg.does !== undefined) tip(`${p}.does`, seg.does)
+      if (seg.value === undefined) {
+        if (i !== segments.length - 1) fail(p, 'figure range', 'a segment without a value is the rest of the total, so it comes last')
+      } else {
+        valueRef(`${p}.value`, seg.value)
+        if (isObj(seg.value) && isObj(scale.total) && seg.value.unit !== scale.total.unit) fail(`${p}.value.unit`, 'figure range', `"${seg.value.unit}" is not the total's unit "${scale.total.unit}"; a bar has one scale`)
       }
     })
   }
@@ -505,21 +591,26 @@ export function validateGuide(guide, ctx) {
       layers.forEach((l, i) => {
         const p = `${path}.layers[${i}]`
         if (!shape(p, l, ['id', 'label', 'kind'], ['bands', 'nodes', 'values'])) return
-        text(`${p}.label`, l.label)
+        label(`${p}.label`, l.label)
         if (l.kind === 'bands') {
           if (l.nodes !== undefined) fail(`${p}.nodes`, 'shape', 'a bands layer has no nodes')
           const bands = list(`${p}.bands`, l.bands, { min: 1 })
           uniqueIds(`${p}.bands`, bands, ids)
-          bands.forEach((b, j) => shape(`${p}.bands[${j}]`, b, ['id', 'text']) && text(`${p}.bands[${j}].text`, b.text))
+          bands.forEach((b, j) => {
+            if (!shape(`${p}.bands[${j}]`, b, ['id', 'text'], ['does'])) return
+            label(`${p}.bands[${j}].text`, b.text)
+            if (b.does !== undefined) tip(`${p}.bands[${j}].does`, b.does)
+          })
         } else if (l.kind === 'nodes') {
           if (l.bands !== undefined) fail(`${p}.bands`, 'shape', 'a nodes layer has no bands')
           const nodes = list(`${p}.nodes`, l.nodes, { min: 1 })
           uniqueIds(`${p}.nodes`, nodes, ids)
           nodes.forEach((n, j) => {
             const q = `${p}.nodes[${j}]`
-            if (!shape(q, n, ['id', 'text'], ['sub', 'probe', 'path', 'unit'])) return
-            text(`${q}.text`, n.text)
-            if (n.sub !== undefined) text(`${q}.sub`, n.sub)
+            if (!shape(q, n, ['id', 'text'], ['sub', 'does', 'probe', 'path', 'unit'])) return
+            label(`${q}.text`, n.text)
+            if (n.sub !== undefined) label(`${q}.sub`, n.sub)
+            if (n.does !== undefined) tip(`${q}.does`, n.does)
             itemProbe(q, n)
           })
         } else fail(`${p}.kind`, 'shape', `"${l.kind}" is not bands or nodes`)
@@ -533,8 +624,9 @@ export function validateGuide(guide, ctx) {
       uniqueIds(`${path}.lines`, lines, ids)
       lines.forEach((l, i) => {
         const p = `${path}.lines[${i}]`
-        if (!shape(p, l, ['id', 'label', 'value'])) return
-        text(`${p}.label`, l.label)
+        if (!shape(p, l, ['id', 'label', 'value'], ['does'])) return
+        label(`${p}.label`, l.label)
+        if (l.does !== undefined) tip(`${p}.does`, l.does)
         valueRef(`${p}.value`, l.value)
       })
       let lastT = -Infinity
@@ -546,20 +638,29 @@ export function validateGuide(guide, ctx) {
       })
       list(`${path}.events`, fig.events).forEach((e, i) => {
         const p = `${path}.events[${i}]`
-        if (!shape(p, e, ['at', 'label'], ['tone'])) return
-        text(`${p}.label`, e.label)
+        if (!shape(p, e, ['at', 'label'], ['does', 'tone'])) return
+        label(`${p}.label`, e.label)
+        if (e.does !== undefined) tip(`${p}.does`, e.does)
         if (!inUnit(e.at)) fail(`${p}.at`, 'figure range', 'must be 0..1')
         if (e.tone !== undefined && e.tone !== 'fit' && e.tone !== 'error') fail(`${p}.tone`, 'shape', `"${e.tone}" is not fit or error`)
       })
+    } else if (fig.kind === 'gauge') {
+      gauge(path, fig, ids)
     } else {
-      shape(path, fig, ['kind', 'title', 'states', 'backedBy'])
+      shape(path, fig, ['kind', 'title', 'states', 'backedBy'], ['legend'])
       text(`${path}.title`, fig.title)
-      list(`${path}.states`, fig.states, { min: 2 }).forEach((s, i) => {
+      const states = list(`${path}.states`, fig.states, { min: 2 })
+      states.forEach((s, i) => {
         const p = `${path}.states[${i}]`
-        if (!shape(p, s, ['label', 'cells', 'lit', 'setting'])) return
-        text(`${p}.label`, s.label)
+        if (!shape(p, s, ['label', 'cells', 'lit', 'setting'], ['start', 'asked'])) return
+        label(`${p}.label`, s.label)
         if (!isInt(s.cells, 1)) fail(`${p}.cells`, 'figure range', 'must be a whole number from 1')
-        if (!isInt(s.lit, 0) || (isInt(s.cells, 1) && s.lit > s.cells)) fail(`${p}.lit`, 'figure range', 'must be a whole number from 0 to cells')
+        const start = s.start ?? 0
+        if (s.start !== undefined && !isInt(s.start, 0)) fail(`${p}.start`, 'figure range', 'must be a whole number from 0')
+        if (!isInt(s.lit, 0) || (isInt(s.cells, 1) && isInt(start, 0) && start + s.lit > s.cells)) fail(`${p}.lit`, 'figure range', 'must be a whole number, with start + lit at most cells')
+        if (s.asked !== undefined && (!isInt(s.asked, 0) || !isInt(s.lit, 1) || s.asked < start || s.asked >= start + s.lit)) {
+          fail(`${p}.asked`, 'figure range', 'must be one of the lit cells, counted from 0')
+        }
         if (shape(`${p}.setting`, s.setting, ['key', 'value'])) {
           if (!isDef(s.setting.key)) fail(`${p}.setting.key`, 'def key', `"${s.setting.key}" is not a def key of this tuner`)
           const v = s.setting.value
@@ -567,6 +668,10 @@ export function validateGuide(guide, ctx) {
           else if (typeof v === 'string') text(`${p}.setting.value`, v)
         }
       })
+      if (fig.legend !== undefined && shape(`${path}.legend`, fig.legend, ['lit', 'off'], ['asked'])) {
+        for (const k of ['asked', 'lit', 'off']) if (fig.legend[k] !== undefined) label(`${path}.legend.${k}`, fig.legend[k])
+        if (fig.legend.asked === undefined && states.some((s) => s?.asked !== undefined)) fail(`${path}.legend`, 'shape', 'a state names an asked cell, so the legend needs "asked"')
+      }
       const b = fig.backedBy
       if (isObj(b) && Object.hasOwn(b, 'vmTest')) {
         shape(`${path}.backedBy`, b, ['vmTest'])
@@ -577,6 +682,95 @@ export function validateGuide(guide, ctx) {
       } else fail(`${path}.backedBy`, 'shape', 'must be { vmTest } or { probe }')
     }
     return ids
+  }
+
+  /** Gauges, for the chapter's pin check and the live mark-order check. */
+  const gauges = []
+
+  function gauge(path, fig, ids) {
+    shape(path, fig, ['kind', 'title', 'axis', 'marks', 'zones'], ['range', 'zoom', 'curve', 'pins'])
+    text(`${path}.title`, fig.title)
+    label(`${path}.axis`, fig.axis)
+    const marks = list(`${path}.marks`, fig.marks, { min: 1, max: 5 })
+    uniqueIds(`${path}.marks`, marks, ids)
+    const markIds = marks.map((m) => m?.id)
+    const order = (id) => markIds.indexOf(id)
+    let unit
+    marks.forEach((m, i) => {
+      const p = `${path}.marks[${i}]`
+      if (!shape(p, m, ['id', 'label', 'value'], ['does', 'tone'])) return
+      label(`${p}.label`, m.label)
+      if (m.does !== undefined) tip(`${p}.does`, m.does)
+      valueRef(`${p}.value`, m.value)
+      if (isObj(m.value)) {
+        if (unit === undefined) unit = m.value.unit
+        else if (m.value.unit !== unit) fail(`${p}.value.unit`, 'figure range', `"${m.value.unit}" is not the first mark's unit "${unit}"; a gauge has one scale`)
+      }
+      if (m.tone !== undefined && m.tone !== 'fit' && m.tone !== 'error') fail(`${p}.tone`, 'shape', `"${m.tone}" is not fit or error`)
+    })
+    const zones = list(`${path}.zones`, fig.zones, { min: 1 })
+    uniqueIds(`${path}.zones`, zones, ids)
+    zones.forEach((z, i) => {
+      const p = `${path}.zones[${i}]`
+      if (!shape(p, z, ['id', 'label'], ['does', 'from', 'to', 'tone'])) return
+      label(`${p}.label`, z.label)
+      if (z.does !== undefined) tip(`${p}.does`, z.does)
+      for (const end of ['from', 'to']) if (z[end] !== undefined && order(z[end]) < 0) fail(`${p}.${end}`, 'figure range', `"${z[end]}" is not a mark`)
+      if (z.from !== undefined && z.to !== undefined && order(z.from) >= 0 && order(z.to) >= 0 && order(z.from) >= order(z.to)) {
+        fail(p, 'figure range', `"${z.from}" is not below "${z.to}"; marks are listed bottom to top`)
+      }
+      if (z.tone !== undefined && z.tone !== 'fit' && z.tone !== 'error') fail(`${p}.tone`, 'shape', `"${z.tone}" is not fit or error`)
+    })
+    if (fig.range !== undefined && shape(`${path}.range`, fig.range, ['from', 'to'])) {
+      if (!isNum(fig.range.from) || !isNum(fig.range.to) || fig.range.from >= fig.range.to) fail(`${path}.range`, 'figure range', 'must be { from, to } numbers with from below to')
+    }
+    if (fig.zoom !== undefined && shape(`${path}.zoom`, fig.zoom, ['label', 'full'], ['fullPerUnit'])) {
+      label(`${path}.zoom.label`, fig.zoom.label)
+      valueRef(`${path}.zoom.full`, fig.zoom.full)
+      const per = fig.zoom.fullPerUnit
+      if (per !== undefined && !(isNum(per) && per > 0)) fail(`${path}.zoom.fullPerUnit`, 'figure range', 'must be a number above 0')
+      if (per === undefined && isObj(fig.zoom.full) && unit !== undefined && fig.zoom.full.unit !== unit) {
+        fail(`${path}.zoom.full.unit`, 'figure range', `"${fig.zoom.full.unit}" is not the marks' unit "${unit}"; give fullPerUnit to convert`)
+      }
+    }
+    if (fig.curve !== undefined && shape(`${path}.curve`, fig.curve, ['points'], ['events'])) {
+      let lastT = -Infinity
+      const top = marks.length + 1
+      list(`${path}.curve.points`, fig.curve.points, { min: 2 }).forEach((pt, i) => {
+        const p = `${path}.curve.points[${i}]`
+        if (!Array.isArray(pt) || pt.length !== 2 || !inUnit(pt[0]) || !isNum(pt[1]) || pt[1] < 0 || pt[1] > top) {
+          return fail(p, 'figure range', `must be [t, level], t 0..1 and level 0..${top} (0 the foot, k the k-th mark, ${top} the top)`)
+        }
+        if (pt[0] < lastT) fail(p, 'figure range', 'goes back in time')
+        lastT = pt[0]
+      })
+      if (fig.curve.events !== undefined) {
+        list(`${path}.curve.events`, fig.curve.events).forEach((e, i) => {
+          const p = `${path}.curve.events[${i}]`
+          if (!shape(p, e, ['at', 'label'], ['does', 'tone'])) return
+          label(`${p}.label`, e.label)
+          if (e.does !== undefined) tip(`${p}.does`, e.does)
+          if (!inUnit(e.at)) fail(`${p}.at`, 'figure range', 'must be 0..1')
+          if (e.tone !== undefined && e.tone !== 'fit' && e.tone !== 'error') fail(`${p}.tone`, 'shape', `"${e.tone}" is not fit or error`)
+        })
+      }
+    }
+    const pinKeys = []
+    if (fig.pins !== undefined) {
+      list(`${path}.pins`, fig.pins).forEach((pin, i) => {
+        const p = `${path}.pins[${i}]`
+        if (!isObj(pin)) return fail(p, 'shape', 'must be an object')
+        const onMark = Object.hasOwn(pin, 'mark')
+        if (!shape(p, pin, onMark ? ['key', 'mark'] : ['key', 'from', 'to'], ['value'])) return
+        if (!isDef(pin.key)) fail(`${p}.key`, 'def key', `"${pin.key}" is not a def key of this tuner`)
+        else if (pinKeys.some((k) => k.key === pin.key)) fail(`${p}.key`, 'pins', `"${pin.key}" is drawn twice on this gauge`)
+        else pinKeys.push({ key: pin.key, path: `${p}.key` })
+        for (const end of onMark ? ['mark'] : ['from', 'to']) if (order(pin[end]) < 0) fail(`${p}.${end}`, 'figure range', `"${pin[end]}" is not a mark`)
+        if (!onMark && order(pin.from) >= 0 && order(pin.to) >= 0 && order(pin.from) >= order(pin.to)) fail(p, 'figure range', `"${pin.from}" is not below "${pin.to}"`)
+        if (pin.value !== undefined) valueRef(`${p}.value`, pin.value)
+      })
+    }
+    gauges.push({ path, marks: marks.filter(isObj), pinKeys })
   }
 
   // ── Chapters ──
@@ -615,6 +809,10 @@ export function validateGuide(guide, ctx) {
       text(`${p}.here`, pin.here, { rich: true, budget: BUDGETS.pinHere })
       if (pin.layer !== undefined && !ids.has(pin.layer)) fail(`${p}.layer`, 'pins', `"${pin.layer}" is not an id in this chapter's figure`)
     })
+    const drawn = gauges.find((g) => g.path === `${path}.figure`)
+    for (const { key, path: at } of drawn?.pinKeys ?? []) {
+      if (isDef(key) && !here.has(key)) fail(at, 'pins', `"${key}" is drawn on the gauge but not pinned in this chapter`)
+    }
 
     const questions = list(`${path}.choose`, ch.choose, { min: 1, max: BUDGETS.questions })
     questions.forEach((q, i) => {
@@ -687,6 +885,16 @@ export function validateGuide(guide, ctx) {
         if (!entry || (entry.status !== 'ok' && entry.status !== 'absent')) fail(path, 'evidence', `"${id}" has no ok or absent entry for ${image}`)
         else if (entry.status === 'ok' && refPath !== undefined && resolvePath(entry.value, refPath) === undefined) fail(path, 'evidence', `"${id}" on ${image} has nothing at "${refPath}"`)
         else if (entry.status === 'ok' && scalar && isObj(entry.value)) fail(path, 'evidence', `"${id}" on ${image} is an object; name the field with path (and its unit)`)
+      }
+      // A gauge lists its marks bottom to top; the captures must agree.
+      for (const { path, marks } of gauges) {
+        const values = marks.map((m) => {
+          const entry = isObj(file.probes) && isObj(m.value) && Object.hasOwn(file.probes, m.value.probe) ? file.probes[m.value.probe] : undefined
+          return entry?.status === 'ok' ? (m.value.path ? resolvePath(entry.value, m.value.path) : entry.value) : undefined
+        })
+        if (values.every(isNum) && values.some((v, i) => i > 0 && v < values[i - 1])) {
+          fail(`${path}.marks`, 'figure range', `on ${image} the marks are not in order bottom to top (${values.join(', ')})`)
+        }
       }
     }
   } else if (status !== 'draft') fail('guide', 'shape', `status "${status}" is not draft or live`)

@@ -295,40 +295,18 @@ export const LEARN = {
         limit: 'A clerk sees an address at a glance. The kernel has to look through its queue, and under random loads that look finds nothing.',
       },
       figure: {
-        kind: 'stack',
-        title: 'Three neighbouring reads',
-        layers: [
-          {
-            id: 'arrive',
-            label: 'Requests that arrive',
-            kind: 'nodes',
-            nodes: [
-              { id: 'r1', text: 'Sectors 3 to 6' },
-              { id: 'r2', text: 'Sectors 6 to 7' },
-              { id: 'r3', text: 'Sectors 7 to 9' },
-            ],
-          },
-          {
-            id: 'modes',
-            label: 'queue/nomerges',
-            kind: 'bands',
-            bands: [
-              { id: 'all', text: '0: all merges', does: 'Every kind of merge is tried, the default.' },
-              { id: 'simple', text: '1: simple merge', does: 'Only the one-shot merge with the previous request is tried.' },
-              { id: 'off', text: '2: no merging', does: 'No merge is tried.' },
-            ],
-          },
-          {
-            id: 'result',
-            label: 'What the disk gets',
-            kind: 'nodes',
-            nodes: [
-              { id: 'merged', text: 'One request', sub: 'sectors 3 to 9', does: 'What the disk gets when merging is on.' },
-              { id: 'separate', text: 'Three requests', sub: 'merging off', does: 'What the disk gets when merging is off.' },
-            ],
-          },
-          { id: 'disks', label: 'Merging on each disk', kind: 'nodes', nodes: disks('Nomerges') },
-        ],
+        kind: 'modes',
+        title: 'How hard each disk tries to merge',
+        rows: diskRows(
+          'Nomerges',
+          [
+            { value: 0, label: 'All merges', does: 'Every kind of merge is tried, the default.' },
+            { value: 1, label: 'Simple only', does: 'Only the one-shot merge with the previous request is tried.' },
+            { value: 2, label: 'None', does: 'No merge is tried.' },
+          ],
+          'nvme',
+          'nomerges',
+        ),
       },
       body: [
         'The software staging queues can merge requests for neighbouring [[sectors|sector]]. Requests for sectors 3 to 6, 6 to 7 and 7 to 9 can become one request for 3 to 9[^staging]. That means fewer requests, even on flash, where random access costs no more than reading in order[^staging].',
@@ -336,7 +314,7 @@ export const LEARN = {
         'The kernel counts merges for every disk. Fields 2 and 6 of `/sys/block/<disk>/stat` count the reads and writes it merged[^iostats].',
       ],
       pins: [
-        { key: 'nomerges', layer: 'modes', here: 'Whether the kernel tries to merge neighbouring requests. Keep 0; try 1 only on a fast NVMe drive under purely random I/O at very high request rates.' },
+        { key: 'nomerges', layer: 'nvme', here: 'Whether the kernel tries to merge neighbouring requests. Keep 0; try 1 only on a fast NVMe drive under purely random I/O at very high request rates.' },
       ],
       choose: [
         {

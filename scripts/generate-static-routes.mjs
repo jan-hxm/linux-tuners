@@ -49,7 +49,8 @@ const PAGE_SOURCES = {
   '/': ['src/views/LandingView.vue', 'src/ui/landing.js', 'src/views/LandingSpecimen.vue', 'src/views/landingExample.js', 'src/tuners/registry.js'],
   '/setup': ['src/setup', 'src/tuners/registry.js'],
 }
-const sourcesFor = (route) => PAGE_SOURCES[route.path] ?? [`src/tuners/${route.name}`]
+// A learn route lists its own (routes-meta.js learnRoutesMeta).
+const sourcesFor = (route) => PAGE_SOURCES[route.path] ?? route.sources ?? [`src/tuners/${route.name}`]
 
 function git(...args) {
   return execFileSync('git', args, { cwd: ROOT_DIR, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
@@ -75,8 +76,9 @@ async function main() {
 
   let wrote = 0
   for (const route of ROUTES_META) {
-    // Paths become directories under dist/; refuse anything but one plain segment.
-    if (!/^\/[a-z0-9-]*$/.test(route.path)) throw new Error(`unsafe route path: ${route.path}`)
+    // Paths become directories under dist/; refuse anything but one or two
+    // plain segments (a study guide is /learn/<slug>).
+    if (!/^\/[a-z0-9-]*(\/[a-z0-9-]+)?$/.test(route.path)) throw new Error(`unsafe route path: ${route.path}`)
     if (route.path === '/') continue // root index.html already exists from Vite
     const html = renderForRoute(template, route)
     const outPath = path.join(DIST_DIR, route.path.slice(1), 'index.html')

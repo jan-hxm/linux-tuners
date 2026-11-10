@@ -19,7 +19,18 @@ import { installGuide } from '@/ui/installGuide.js'
 import { controlMetaFor } from '@/ui/controls/meta.js'
 import { LANDING_COPY, routeSummary } from '@/ui/landing.js'
 import { MACHINE_ROLES, tunersForRole } from '@/core/machineRoles.js'
+import { LIVE_GUIDES, LEARN_INDEX_ROUTE, guideFacts, loadGuide } from '@/learn/guides.js'
+import { IMAGES_ORDER, valueFor } from '@/learn/evidence.js'
+import {
+  answerText, backedByText, cardGroups, cellCounts, comparePinPlace, defName, defTitle, edgeRows, figureRefs, formatValue, gaugePinPlace, inSentence, isExample,
+  isRangeOption, itemRef, noText, numberedSources, rangeText, refName, rowPinKey, sameOnEveryImage, scaleRefs, settingText, sideBySideLegend, splitFootnotes,
+  treeNodes, treePinPlace,
+} from '@/ui/learn/figureText.js'
+import { settingHref } from '@/ui/focusSetting.js'
 import { text, code, bold, link, rich, heading, paragraph, list, defs, codeBlock, joinSegments } from './nodes.js'
+
+/** The test images' ids, in the order the pages list them. */
+const IMAGE_IDS = IMAGES_ORDER.map((img) => img.id)
 
 const DOMAINS_BY_ID = Object.fromEntries(TUNER_DOMAINS.map((d) => [d.id, d]))
 
@@ -233,19 +244,290 @@ export function setupDoc() {
   return { title: meta.ogTitle ?? meta.title, url: pageUrl(meta.path), blocks }
 }
 
+// ── Study guides ──────────────────────────────────────────────────────────
+
+/**
+ * @typedef {Object} LoadedGuide  A live guide with its data, as loadStaticGuides() gives it
+ * @property {import('@/learn/guides.js').LiveGuide} entry
+ * @property {import('@/learn/schema.js').Guide} learn
+ * @property {Record<string, import('@/learn/evidence.js').EvidenceFile>} evidence
+ * @property {Record<string, any>} [defsByKey]  the tuner's defs; the domain's unless a test gives its own
+ */
+
+/**
+ * Every live guide with its data, for pageDoc. The guides load lazily (one
+ * chunk each in the app), so the build awaits them once before it writes.
+ * @param {import('@/learn/guides.js').LiveGuide[]} [entries]
+ * @returns {Promise<LoadedGuide[]>}
+ */
+export async function loadStaticGuides(entries = LIVE_GUIDES) {
+  return Promise.all(entries.map(async (entry) => {
+    const { learn, evidence } = await loadGuide(entry)
+    const domain = entry.domain ? await entry.domain() : DOMAINS_BY_ID[entry.tunerId]
+    return { entry, learn, evidence, defsByKey: domain?.defsByKey ?? {} }
+  }))
+}
+
+/**
+ * One value on every image: "Debian 13, kernel 6.12.48: 2,000 pages", or
+ * "not measured"; an example once, as one: "example: 41,000 entries".
+ */
+function measuredRow(ref, evidence) {
+  const at = (r, id) => valueFor(r, id, evidence)
+  if (isExample(ref)) return { term: [code(refName(ref))], desc: [text(`example: ${formatValue(at(ref, IMAGE_IDS[0]), ref.unit, { exact: true })}.`)] }
+  if (sameOnEveryImage([ref], IMAGE_IDS, at)) {
+    return { term: [code(refName(ref))], desc: [text(`${formatValue(at(ref, IMAGE_IDS[0]), ref.unit, { exact: true })} on all ${IMAGE_IDS.length} test kernels.`)] }
+  }
+  const parts = IMAGES_ORDER.map((img) => {
+    const r = valueFor(ref, img.id, evidence)
+    const where = r.kernel ? `${img.label}, kernel ${r.kernel}` : img.label
+    return `${where}: ${formatValue(r, ref.unit, { exact: true })}`
+  })
+  return { term: [code(refName(ref))], desc: [text(`${parts.join('; ')}.`)] }
+}
+
+/**
+ * The values a figure or the scale bar reads: the measured ones on every
+ * kernel, then the examples, each list under its own line.
+ */
+function valueBlocks(refs, evidence) {
+  const measured = refs.filter((r) => !isExample(r))
+  const examples = refs.filter(isExample)
+  return [
+    ...(measured.length ? [paragraph(text('Measured on each kernel:')), defs(measured.map((r) => measuredRow(r, evidence)))] : []),
+    ...(examples.length ? [paragraph(text('Example values, to show the idea:')), defs(examples.map((r) => measuredRow(r, evidence)))] : []),
+  ]
+}
+
+/** Where a drawing's numbers come from: each kernel's capture, example values, or both. */
+function drawnFrom(refs) {
+  const examples = refs.filter(isExample).length
+  if (!examples) return "each kernel's capture"
+  return examples === refs.length ? 'example values' : "each kernel's capture and example values"
+}
+
+/** A part's tip, inline after its name: " (what it does)". The page shows it in a tooltip. */
+const tipInline = (does) => (does ? [text(' ('), ...rich(does.replace(/\.$/, '')), text(')')] : [])
+
+/** A figure as lists: its parts with their tips inline, then each value it shows on every kernel. */
+function figureBlocks(figure, evidence, defsByKey) {
+  const blocks = [heading(3, figure.title)]
+  if (figure.kind === 'stack') {
+    blocks.push(paragraph(text('Layers from the top:')))
+    blocks.push(list(figure.layers.map((layer) => {
+      const items = layer.kind === 'bands'
+        ? (layer.bands ?? []).map((b) => [text(b.text), ...tipInline(b.does)])
+        : (layer.nodes ?? []).map((n) => [text([n.text, n.sub].filter(Boolean).join(', ')), ...tipInline(n.does)])
+      return [bold(`${layer.label}:`), text(' '), ...joinSegments(items, '; '), text('.')]
+    })))
+  } else if (figure.kind === 'timeline') {
+    blocks.push(paragraph(text('A schematic timeline: the order is real, the distances are not.')))
+    blocks.push(paragraph(text('Lines from the top: '), ...joinSegments(figure.lines.map((l) => [text(l.label), ...tipInline(l.does)]), ', '), text('.')))
+    blocks.push(list([...figure.events].sort((a, b) => a.at - b.at).map((e) => [text(e.label), ...tipInline(e.does)]), { ordered: true }))
+  } else if (figure.kind === 'sideBySide') {
+    const legend = sideBySideLegend(figure)
+    blocks.push(list(figure.states.map((st) => [bold(`${st.label}:`), text(` ${settingText(st.setting, defsByKey)}: ${cellCounts(st, legend)}, of ${st.cells}.`)])))
+    const backed = backedByText(figure.backedBy)
+    if (backed) blocks.push(paragraph(text(backed)))
+  } else if (figure.kind === 'gauge') {
+    const name = (id) => figure.marks.find((m) => m.id === id)?.label ?? id
+    blocks.push(paragraph(text(`A scale of ${figure.axis}, drawn to scale from ${drawnFrom(figure.marks.map((m) => m.value))}. Marks from the bottom:`)))
+    blocks.push(list(figure.marks.map((m) => [bold(m.label), ...tipInline(m.does)])))
+    blocks.push(paragraph(text('Zones:')))
+    blocks.push(list(figure.zones.map((z) => [
+      bold(z.label),
+      text(` (${z.from ? (z.to ? `${name(z.from)} to ${name(z.to)}` : `above ${name(z.from)}`) : z.to ? `below ${name(z.to)}` : 'the whole scale'})`),
+      ...(z.does ? [text(': '), ...rich(z.does)] : [text('.')]),
+    ])))
+    if (figure.pins?.length) {
+      blocks.push(paragraph(text('Settings on the scale: '), ...joinSegments(figure.pins.map((p) => [code(defName(p.key, defsByKey)), text(` ${gaugePinPlace(figure, p)}`)]), '; '), text('.')))
+    }
+    if (figure.zoom) blocks.push(paragraph(text(`Beside the scale, a thin bar of ${inSentence(figure.zoom.label)}, with a bracket on the part the scale shows.`)))
+    if (figure.level) blocks.push(paragraph(text('The scale is filled to '), bold(figure.level.label), ...tipInline(figure.level.does), text('.')))
+    if (figure.curve) {
+      blocks.push(paragraph(text('A schematic curve over time beside it: the shape and the order are real, the times are not.')))
+      const events = [...(figure.curve.events ?? [])].sort((a, b) => a.at - b.at)
+      if (events.length) blocks.push(list(events.map((e) => [text(e.label), ...tipInline(e.does)]), { ordered: true }))
+    }
+  } else if (figure.kind === 'compare') {
+    blocks.push(paragraph(text(`Bars on a ${figure.scale === 'log' ? 'log' : 'linear'} scale of ${figure.axis}, drawn from ${drawnFrom(figure.bars.map((b) => b.value))}${figure.groups?.length ? ', by group' : ''}:`)))
+    const groups = figure.groups?.length ? figure.groups.map((g) => ({ ...g, bars: figure.bars.filter((b) => b.group === g.id) })) : [{ label: null, bars: figure.bars }]
+    blocks.push(list(groups.flatMap((g) => g.bars.map((b) => [bold(g.label ? `${g.label}, ${b.label}` : b.label), ...tipInline(b.does)]))))
+    if (figure.marks?.length) blocks.push(paragraph(text('Lines across the bars: '), ...joinSegments(figure.marks.map((m) => [bold(m.label), ...tipInline(m.does)]), '; '), text('.')))
+    if (figure.pins?.length) {
+      blocks.push(paragraph(text('Settings drawn: '), ...joinSegments(figure.pins.map((p) => [code(defName(p.key, defsByKey)), text(` ${comparePinPlace(figure, p)}`)]), '; '), text('.')))
+    }
+  } else if (figure.kind === 'tree') {
+    blocks.push(paragraph(text('A tree from the top:')))
+    blocks.push(list(treeNodes(figure).map((n) => [bold(n.label), text(n.parent ? `, in ${n.parent.label}` : ', at the top'), ...tipInline(n.does)])))
+    if (figure.pins?.length) {
+      blocks.push(paragraph(text('Settings drawn: '), ...joinSegments(figure.pins.map((p) => [code(defName(p.key, defsByKey)), text(` ${treePinPlace(figure, p)}`)]), '; '), text('.')))
+    }
+  } else if (figure.kind === 'modes') {
+    const lights = figure.rows.every((r) => isExample(r.value)) ? 'the example value' : "the one each kernel's capture measured"
+    blocks.push(paragraph(text(`One row of choices per setting; the page lights ${lights}.`)))
+    const optionText = (o) => [
+      text(isRangeOption(o) ? `${o.label} (${rangeText(o)})` : String(o.value) === o.label ? o.label : `${o.label} (${o.value})`),
+      ...tipInline(o.does),
+    ]
+    blocks.push(list(figure.rows.map((r) => {
+      const group = figure.groups?.find((g) => g.id === r.group)?.label
+      return [
+        bold(group ? `${group}, ${r.label}` : r.label),
+        ...tipInline(r.does),
+        text(r.bits ? ': any of ' : ': one of '),
+        ...joinSegments(r.options.map(optionText), ', '),
+        ...(rowPinKey(r) ? [text('. Set by '), code(defName(rowPinKey(r), defsByKey))] : []),
+        text('.'),
+      ]
+    })))
+  }
+  blocks.push(...valueBlocks(figureRefs(figure, defsByKey), evidence))
+  return blocks
+}
+
+/** A body paragraph with its `[^id]` marks as `[n]`, numbered as on the page. */
+function bodyParagraph(para, sources) {
+  const segments = splitFootnotes(para).flatMap((part) => {
+    if (part.text) return rich(part.text)
+    const n = sources.find((s) => s.id === part.note)?.n
+    return n ? [text(`[${n}]`)] : []
+  })
+  return paragraph(segments)
+}
+
+/** A card's measured value on every kernel, for the Start here list. */
+function cardMeasured(card, evidence) {
+  if (!card.probe) return ''
+  const ref = itemRef(card)
+  const at = (r, id) => valueFor(r, id, evidence)
+  if (sameOnEveryImage([ref], IMAGE_IDS, at)) return ` Measured: ${formatValue(at(ref, IMAGE_IDS[0]), ref.unit, { exact: true })} on all ${IMAGE_IDS.length} test kernels.`
+  const values = IMAGES_ORDER.map((img) => `${img.label} ${formatValue(valueFor(ref, img.id, evidence), ref.unit, { exact: true })}`)
+  return ` Measured: ${values.join(', ')}.`
+}
+
+/**
+ * One guide's page: the header, Start here, the chapter map and every
+ * chapter in the template order, figures as lists with their measured values
+ * and the kernel each was measured on, and the chooser as the static flow.
+ * @param {LoadedGuide} guide
+ * @returns {import('./nodes.js').Doc}
+ */
+export function learnDoc({ entry, learn, evidence, defsByKey = {} }) {
+  const url = pageUrl(entry.path)
+  const tune = (key) => pageUrl(settingHref(entry.tunerPath, key))
+  const blocks = [
+    heading(1, learn.title),
+    paragraph(rich(learn.lead)),
+    paragraph(text(guideFacts(learn, IMAGES_ORDER.length).join(' · '))),
+    paragraph(link(`Tune these settings in the ${entry.tunerTitle} tuner`, pageUrl(entry.tunerPath))),
+    heading(2, 'Start here'),
+    paragraph(rich(learn.parts.picture)),
+    list(cardGroups(learn.parts).flatMap((g) => g.cards.map((c) => [
+      bold(`${g.label ? `${g.label}, ` : ''}${c.title}:`),
+      text(' '),
+      ...rich(c.does),
+      text(cardMeasured(c, evidence)),
+    ]))),
+  ]
+  const edges = edgeRows(learn.parts)
+  if (edges.length) blocks.push(paragraph(text('How the parts connect:')), list(edges.map((e) => [text(e.text)])))
+  const scale = learn.parts.scale
+  if (scale) {
+    blocks.push(
+      paragraph(text(`${scale.label}, drawn to scale from ${drawnFrom(scaleRefs(scale))}:`)),
+      list(scale.segments.map((seg) => [bold(seg.label), text(seg.value ? '' : ', the rest'), ...(seg.does ? [text(': '), ...rich(seg.does)] : [text('.')])])),
+      ...valueBlocks(scaleRefs(scale), evidence),
+    )
+  }
+
+  blocks.push(heading(2, 'The chapters'), list(learn.chapters.map((ch) => [
+    link(ch.title, `${url}#${ch.id}`),
+    text(': '),
+    ...rich(ch.oneLine),
+    text(' Settings: '),
+    ...joinSegments(ch.pins.map((p) => [code(defName(p.key, defsByKey))]), ', '),
+    text('.'),
+  ]), { ordered: true }))
+
+  for (const ch of learn.chapters) {
+    const sources = numberedSources(ch)
+    blocks.push(
+      heading(2, ch.title),
+      paragraph(rich(ch.oneLine)),
+      heading(3, 'Picture it'),
+      paragraph(rich(ch.picture.text)),
+      paragraph(bold('Where the picture stops:'), text(' '), rich(ch.picture.limit)),
+      ...figureBlocks(ch.figure, evidence, defsByKey),
+      ...ch.body.map((para) => bodyParagraph(para, sources)),
+      heading(3, 'Settings here'),
+      defs(ch.pins.map((pin) => ({
+        term: [code(defName(pin.key, defsByKey))],
+        desc: [
+          ...(defTitle(pin.key, defsByKey) ? [bold(`${defTitle(pin.key, defsByKey)}.`), text(' ')] : []),
+          ...rich(pin.here),
+          text(' '),
+          link('Tune it', tune(pin.key)),
+        ],
+      }))),
+      heading(3, 'Should you change it?'),
+      list(ch.choose.map((q, i) => [
+        bold(q.q),
+        text(' How to check: '),
+        code(q.check),
+        text(' ('),
+        ...rich(q.hint),
+        text('). Yes: '),
+        ...rich(answerText(q.yes, defsByKey)),
+        text(' No: '),
+        ...rich(noText(ch.choose, i, defsByKey)),
+      ]), { ordered: true }),
+      heading(3, "What you notice if it's wrong"),
+      defs([
+        { term: [text('Too low')], desc: rich(ch.symptoms.low) },
+        { term: [text('Too high')], desc: rich(ch.symptoms.high) },
+      ]),
+      heading(3, 'Look on your machine'),
+      codeBlock(ch.look.cmd),
+      paragraph(rich(ch.look.for)),
+      heading(3, 'Sources'),
+      list(sources.map((src) => [text(`[${src.n}] `), link(src.label, src.url)])),
+    )
+  }
+  return { title: learn.title, url, blocks }
+}
+
+/** The /learn index: every live guide with its lead, facts and tuner. */
+export function learnIndexDoc(guides) {
+  const blocks = [heading(1, LEARN_INDEX_ROUTE.ogTitle), paragraph(text(LEARN_INDEX_ROUTE.description))]
+  for (const { entry, learn } of guides) {
+    blocks.push(
+      heading(2, learn.title),
+      paragraph(rich(learn.lead)),
+      paragraph(text(guideFacts(learn, IMAGES_ORDER.length).join(' · '))),
+      paragraph(link(`Read ${learn.title}`, pageUrl(entry.path)), text(' · '), link(`Open the ${entry.tunerTitle} tuner`, pageUrl(entry.tunerPath))),
+    )
+  }
+  return { title: LEARN_INDEX_ROUTE.ogTitle, url: pageUrl(LEARN_INDEX_ROUTE.path), blocks }
+}
+
 /**
  * The doc for a route, or null for a page with no static text (the legal pages).
  *
  * @param {string} path  A path from ROUTES_META
- * @param {{ now: Date }} options
+ * @param {{ now: Date, guides?: LoadedGuide[] }} options  `guides`: the live
+ *   guides with their data (loadStaticGuides()); without them a learn route has no doc
  * @returns {import('./nodes.js').Doc | null}
  */
-export function pageDoc(path, { now }) {
+export function pageDoc(path, { now, guides = [] }) {
   const entry = LIVE_TUNERS.find((t) => t.path === path)
+  const guide = guides.find((g) => g.entry.path === path)
   const doc =
     path === '/' ? landingDoc()
     : path === '/setup' ? setupDoc()
     : entry ? tunerDoc(DOMAINS_BY_ID[entry.id], entry, { now })
+    : path === LEARN_INDEX_ROUTE.path && guides.length ? learnIndexDoc(guides)
+    : guide ? learnDoc(guide)
     : null
   return doc && withGlossary(doc)
 }

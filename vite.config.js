@@ -13,6 +13,6 @@ export default defineConfig({
     // globs: see src/testEnvironment.test.js.
     environment: 'node',
     setupFiles: ['src/testSetup.js'],
-    include: ['src/**/*.test.js', 'scripts/**/*.test.js'],
+    include: ['src/**/*.test.js', 'scripts/**/*.test.js', 'vm/lib/**/*.test.js'],
   },
 })

@@ -11,6 +11,7 @@
  */
 
 import { LIVE_TUNERS } from './tuners/registry.js'
+import { LIVE_GUIDES, LEARN_INDEX_ROUTE } from './learn/guides.js'
 
 export const SITE_ORIGIN = 'https://linux-tuners.dev'
 export const SITE_NAME = 'linux-tuners.dev'
@@ -30,7 +31,25 @@ export const DEFAULT_LOCALE = 'en_US'
  * @property {number}  [priority]     Sitemap priority 0..1
  * @property {string}  [changefreq]   Sitemap change frequency
  * @property {string}  [jsonLdType]   Schema.org @type for JSON-LD structured data
+ * @property {string[]} [sources]     Files and folders the page's content comes from, for its
+ *                                    sitemap <lastmod> (scripts/generate-static-routes.mjs)
  */
+
+/**
+ * The learn routes (Design.md §5 "Learning pages > Routes and pages"): the
+ * /learn index and one page per live guide, or none at all while no guide is
+ * live. A draft guide gets no route.
+ * @param {import('./learn/guides.js').LiveGuide[]} guides
+ * @returns {RouteMeta[]}
+ */
+export function learnRoutesMeta(guides) {
+  if (!guides.length) return []
+  const guideSources = (g) => [`src/tuners/${g.tunerId}/learn.js`, `src/tuners/${g.tunerId}/probes.js`, 'src/learn/evidence']
+  return [
+    { ...LEARN_INDEX_ROUTE, sources: ['src/views/LearnIndexView.vue', 'src/tuners/registry.js', ...guides.flatMap(guideSources)] },
+    ...guides.map((g) => ({ path: g.path, name: `learn-${g.slug}`, ...g.route, sources: ['src/views/LearnView.vue', ...guideSources(g)] })),
+  ]
+}
 
 /** @type {RouteMeta[]} */
 export const ROUTES_META = [
@@ -57,6 +76,7 @@ export const ROUTES_META = [
     jsonLdType: 'SoftwareApplication',
   },
   ...LIVE_TUNERS.map((t) => ({ path: t.path, name: t.id, ...t.route })),
+  ...learnRoutesMeta(LIVE_GUIDES),
   {
     path: '/imprint',
     name: 'imprint',
@@ -109,6 +129,19 @@ export function jsonLdFor(route) {
       operatingSystem: 'Linux',
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       description: route.description,
+      isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_ORIGIN },
+    }
+  }
+
+  if (route.jsonLdType === 'TechArticle') {
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'TechArticle',
+      headline: route.ogTitle ?? route.title,
+      url,
+      description: route.description,
+      inLanguage: 'en',
+      proficiencyLevel: 'Beginner',
       isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_ORIGIN },
     }
   }

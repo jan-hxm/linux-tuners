@@ -78,12 +78,49 @@ Per image ([suite.mjs](suite.mjs)):
    file would need to lower them.
 9. **systemd drop-ins** for each workload and preset load after
    `daemon-reexec` with no PID 1 warning about our files, and `systemctl show`
-   reports each directive.
+   reports each directive. On cgroup v2 a partial swap cap reaches
+   `memory.swap.max` as the bytes written, and `MemorySwapMax=10%` is a tenth
+   of RAM (not of swap, as the man page says).
 10. **After a reboot**, systemd-sysctl applies the swap, network, security,
    filesystem, huge pages, Db2 IPC and kernel defaults together, systemd-tmpfiles sets the
    THP and KSM files and a small pool is reserved, udev applies a block I/O
    rules file for each kind of disk without a failed write, and the glob lines the
    security file suggests reach the boot interface.
+
+## Capturing the learning pages' evidence
+
+Every number in a learning page's figure comes from a capture on these
+images, committed as `src/learn/evidence/<image>.json`:
+
+```bash
+npm run vm:capture -- --dry-run          # list each probe and its command, boot nothing
+npm run vm:capture                       # every image, VM_PARALLEL at once (default 5)
+npm run vm:capture debian-13 fedora-43   # some images
+```
+
+Each image boots fresh on the suite's guest (3072 MB, the same extra disks,
+conntrack loaded), runs every probe from every `src/tuners/<id>/probes.js`
+and writes the file with its keys sorted, so a recapture diffs by value. A
+probe whose file, key or thread is missing, or whose command fails, is
+recorded as `{ "status": "absent", "reason": ... }`. An image that fails to
+boot keeps its old file and the command exits 1. Review the diff and commit
+it with the guide change that needed it.
+
+Probes are plain data in a closed set of kinds (`vm/lib/probeKinds.mjs`):
+`sysctl`, `file`, `sysfs`, `diskQueue`, `thread`, `zoneinfo`, `vmstatKeys`,
+`meminfoKeys` and `systemctl` (one `systemctl show` property of the manager
+or of a unit). Each kind runs a fixed command with the probe's fields
+checked against strict patterns and quoted into it, so a probe can't run anything else; a new kind of
+measurement is a new kind there, with a parser test against real output in
+`vm/lib/__fixtures__/`.
+
+The suite's last block, **learn evidence is fresh**, reruns every probe at
+the end of `npm run test:vm` and fails, naming the probe and image, when the
+kernel or a probe's result no longer matches the file. Kinds whose value the
+suite's own writes change (sysctl and sysfs values, zone watermarks,
+meminfo sizes, systemctl properties) are held only to the same status and shape; the rest
+(`file`, `thread`, `vmstatKeys`) to the same value. A failure there means:
+recapture.
 
 ## Notes for changing it
 

@@ -60,7 +60,7 @@ export const SYSTEMD_DEFS = [
       ],
     },
     tuningTip: 'Turn it on for observability on servers; the overhead on cgroup v2 is negligible.',
-    kernelDocsUrl: `${SYSTEM_CONF}#DefaultCPUAccounting=`,
+    kernelDocsUrl: `${SYSTEM_CONF}#systemd%20258`,
     contextNote: 'On Kubernetes / container hosts enable this so kubelet and cgroup tooling can attribute CPU time to each workload.',
     kernelDefault: 0,
     kernelMin: 0,
@@ -80,21 +80,21 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Track per-unit memory usage for every service by default.',
     longDesc: {
       what: [
-        'Enables memory accounting for all units, the prerequisite for MemoryHigh=/MemoryMax= limits to be enforced and for `systemctl status` to show a Memory: line. Maps to the per-unit MemoryAccounting= setting.',
+        'Enables memory accounting for all units, so `systemctl status` shows a Memory: line for each and `systemd-cgtop` can rank them. Maps to the per-unit MemoryAccounting= setting. A unit with a memory limit (MemoryHigh=, MemoryMax=, MemorySwapMax=) gets the memory controller turned on either way.',
       ],
       when: [
-        'systemd defaults this to yes on modern systems. Keep it on: memory limits silently do nothing without it, and on [[cgroup]] v2 the memory controller is the one you most want telemetry from.',
+        'systemd defaults this to yes on modern systems. Keep it on: limits still apply without it, but you lose the per-unit numbers for every unit without one, and on [[cgroup]] v2 the memory controller is the one you most want telemetry from.',
       ],
     },
-    tuningTip: 'Leave it on; MemoryHigh/MemoryMax limits are only enforced when memory accounting is active.',
+    tuningTip: 'Leave it on for per-unit memory figures; MemoryHigh/MemoryMax limits apply either way, since a limit turns the controller on for its unit.',
     kernelDocsUrl: `${SYSTEM_CONF}#DefaultMemoryAccounting=`,
-    contextNote: 'Required on container hosts: pod/container memory limits rely on per-unit memory accounting.',
+    contextNote: 'On container hosts it shows the memory of every container unit, including those without a limit.',
     kernelDefault: 1,
     kernelMin: 0,
     kernelMax: 1,
     step: 1,
     unit: 'bool',
-    toggleLabels: { on: 'Memory accounting ENABLED (limits enforceable)', off: 'Memory accounting off (limits will not be enforced)' },
+    toggleLabels: { on: 'Memory accounting ENABLED for all units', off: 'Memory accounting off (units with a limit still count)' },
   },
   {
     key: 'default_io_accounting',
@@ -114,7 +114,7 @@ export const SYSTEMD_DEFS = [
       ],
     },
     tuningTip: 'Enable it when diagnosing disk contention or before relying on IOWeight shaping.',
-    kernelDocsUrl: `${SYSTEM_CONF}#DefaultIOAccounting=`,
+    kernelDocsUrl: `${SYSTEM_CONF}#DefaultMemoryAccounting=`,
     contextNote: 'Useful on container hosts to attribute disk I/O to individual containers competing for the same device.',
     kernelDefault: 0,
     kernelMin: 0,
@@ -134,21 +134,21 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Count tasks (processes + threads) per unit, enabling TasksMax.',
     longDesc: {
       what: [
-        'Enables the pids controller for all units so the number of tasks (processes and threads) each unit has spawned is counted and `systemctl status` shows a Tasks: line. It underpins TasksMax= enforcement.',
+        'Enables the pids controller for all units so the number of tasks (processes and threads) each unit has spawned is counted and `systemctl status` shows a Tasks: line. A unit with a TasksMax= (including the one DefaultTasksMax= gives it) gets the pids controller turned on either way.',
       ],
       when: [
-        'systemd defaults this to yes. With it on, a unit that fork-bombs is capped at its TasksMax instead of exhausting the system-wide PID space and taking the box down.',
+        'systemd defaults this to yes. Keep it on to see the task count of every unit; the cap that stops a fork bomb from exhausting the system-wide PID space comes from TasksMax and DefaultTasksMax, which work with it off too.',
       ],
     },
-    tuningTip: 'Keep it on: it is the safety net that contains runaway fork loops to a single unit.',
-    kernelDocsUrl: `${SYSTEM_CONF}#DefaultTasksAccounting=`,
-    contextNote: 'Container hosts depend on this so a single container cannot exhaust the host PID namespace.',
+    tuningTip: 'Keep it on for per-unit task counts; the fork-bomb cap itself is TasksMax.',
+    kernelDocsUrl: `${SYSTEM_CONF}#DefaultMemoryAccounting=`,
+    contextNote: 'On container hosts it shows how many tasks each container unit runs, next to the TasksMax that caps it.',
     kernelDefault: 1,
     kernelMin: 0,
     kernelMax: 1,
     step: 1,
     unit: 'bool',
-    toggleLabels: { on: 'Tasks accounting ENABLED (TasksMax enforceable)', off: 'Tasks accounting off (TasksMax will not be enforced)' },
+    toggleLabels: { on: 'Tasks accounting ENABLED for all units', off: 'Tasks accounting off (units with a TasksMax still count)' },
   },
   {
     key: 'default_ip_accounting',
@@ -168,7 +168,7 @@ export const SYSTEMD_DEFS = [
       ],
     },
     tuningTip: 'Turn it on only when you specifically need per-service network byte counts; leave off otherwise.',
-    kernelDocsUrl: `${SYSTEM_CONF}#DefaultIPAccounting=`,
+    kernelDocsUrl: `${SYSTEM_CONF}#DefaultMemoryAccounting=`,
     contextNote: 'Rarely enabled host-wide on Kubernetes nodes; the CNI usually owns network metrics instead.',
     kernelDefault: 0,
     kernelMin: 0,
@@ -222,7 +222,7 @@ export const SYSTEMD_DEFS = [
       ],
     },
     tuningTip: 'Usually leave at 1024; raise the hard limit instead and let services lift their own soft limit.',
-    kernelDocsUrl: `${SYSTEM_CONF}#DefaultLimitNOFILE=`,
+    kernelDocsUrl: `${SYSTEM_CONF}#DefaultLimitCPU=`,
     contextNote: 'Connection-heavy services (proxies, databases) on container hosts raise their own soft limit toward the hard value.',
     kernelDefault: 1024,
     kernelMin: 256,
@@ -240,7 +240,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Default hard open-file-descriptor ceiling (RLIMIT_NOFILE).',
     longDesc: {
       what: [
-        'The hard half of the default RLIMIT_NOFILE: the absolute ceiling a unit may raise its soft limit to without privilege. systemd defaults it to 524288.',
+        'The hard half of the default RLIMIT_NOFILE: the absolute ceiling a unit may raise its soft limit to without privilege. systemd 240 and later default it to 524288; older releases used 4096.',
       ],
       when: [
         'This is the value connection-heavy daemons (web servers, proxies, databases) actually care about, because they raise their soft limit up to it at startup. Raise it on hosts that run such services; there is little downside since [[file descriptors|file-descriptor]] are cheap.',
@@ -250,7 +250,7 @@ export const SYSTEMD_DEFS = [
       ],
     },
     tuningTip: 'Raise it on hosts running many high-connection services; keep it ≥ the soft limit.',
-    kernelDocsUrl: `${SYSTEM_CONF}#DefaultLimitNOFILE=`,
+    kernelDocsUrl: `${SYSTEM_CONF}#DefaultLimitCPU=`,
     contextNote: 'Kubernetes nodes commonly raise this to 1048576 so the container runtime and busy pods do not hit the FD ceiling.',
     kernelDefault: 524288,
     kernelMin: 1024,
@@ -268,15 +268,15 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Default locked-in-memory ceiling (RLIMIT_MEMLOCK) per unit.',
     longDesc: {
       what: [
-        'The default RLIMIT_MEMLOCK every unit inherits: how much memory a process may lock into RAM with mlock()/mlockall() so it can never be swapped out. systemd defaults it to 8M.',
+        'The default RLIMIT_MEMLOCK every unit inherits: how much memory a process may lock into RAM with mlock()/mlockall() so it can never be swapped out. systemd 253 and later default it to 8M; older releases used 64K, and Ubuntu 18.04 ships 64M.',
       ],
       when: [
         'Databases (to pin buffers/WAL), crypto daemons (to keep keys out of swap), and increasingly [[eBPF|bpf]] and RDMA workloads need this raised, otherwise their mlock() calls fail. Raise it for those; leave the small default in place elsewhere so a buggy process cannot lock arbitrary amounts of unswappable RAM.',
       ],
     },
     tuningTip: 'Raise it for databases, crypto, eBPF and RDMA workloads; keep it small otherwise.',
-    kernelDocsUrl: `${SYSTEM_CONF}#DefaultLimitMEMLOCK=`,
-    contextNote: 'Container hosts running databases or eBPF-heavy CNIs raise this well above the 8M default.',
+    kernelDocsUrl: `${SYSTEM_CONF}#DefaultLimitCPU=`,
+    contextNote: 'Container hosts running databases or eBPF-heavy CNIs raise this well above the default (8M on systemd 253 and later).',
     kernelDefault: 8388608,
     kernelMin: 0,
     kernelMax: 1073741824,
@@ -313,10 +313,10 @@ export const SYSTEMD_DEFS = [
     step: 1,
     unit: 'weight',
     zones: [
-      { label: '1–50: yields', min: 1, max: 50 },
-      { label: '100: default', min: 100, max: 100 },
-      { label: '200–1000: prioritised', min: 200, max: 1000 },
-      { label: '10000: max', min: 10000, max: 10000 },
+      { label: '1–50: yields', min: 1, max: 50, note: 'This slice gives way to its siblings while the CPU is busy.' },
+      { label: '100: default', min: 100, max: 100, note: 'The kernel default, the same share as any sibling left unset.' },
+      { label: '200–1000: prioritised', min: 200, max: 1000, note: 'This slice gets a larger share of a busy CPU than its siblings at the default.' },
+      { label: '10000: max', min: 10000, max: 10000, note: 'The largest weight: siblings at the default get very little while this slice keeps the CPU busy.' },
     ],
   },
   {
@@ -374,7 +374,7 @@ export const SYSTEMD_DEFS = [
     unit: 'pct',
     zones: [
       { label: 'below MemoryMax: throttle band' },
-      { label: '100%: no soft limit', min: 100, max: 100 },
+      { label: '100%: no soft limit', min: 100, max: 100, note: 'No soft limit: the slice is never slowed for its own memory use.' },
     ],
   },
   {
@@ -406,7 +406,7 @@ export const SYSTEMD_DEFS = [
     unit: 'pct',
     zones: [
       { label: '≥ MemoryHigh: safety cap' },
-      { label: '100%: no hard limit', min: 100, max: 100 },
+      { label: '100%: no hard limit', min: 100, max: 100, note: 'No hard limit: only the memory of the whole machine bounds the slice.' },
     ],
   },
   {
@@ -419,7 +419,7 @@ export const SYSTEMD_DEFS = [
     shortDesc: 'Cap on how much swap this slice may use.',
     longDesc: {
       what: [
-        'Limits the swap (not RAM) the slice may consume, via the [[cgroup]] v2 memory controller. Expressed here as a percentage of total RAM for an at-a-glance budget.',
+        'Limits the swap (not RAM) the slice may consume, via the [[cgroup]] v2 memory controller. Set here as a percentage of total RAM for an at-a-glance budget, and written to the file as that many bytes: systemd reads a percentage here as a share of RAM, but its manual says of swap, so a byte size is the one form that means the same on every version.',
       ],
       when: [
         'Set it to 0 to forbid the slice from swapping at all: the classic database tuning, where you would rather the slice be reclaimed or [[OOM-killed|oom-killer]] than suffer the latency of paging buffers to disk. Leave it at 100% (infinity) to let the slice use swap freely.',
@@ -434,8 +434,8 @@ export const SYSTEMD_DEFS = [
     step: 1,
     unit: 'pct',
     zones: [
-      { label: '0%: no swap for slice', min: 0, max: 0 },
-      { label: '100%: unlimited swap', min: 100, max: 100 },
+      { label: '0%: no swap for slice', min: 0, max: 0, note: 'The memory of this slice is never moved to swap.' },
+      { label: '100%: unlimited swap', min: 100, max: 100, note: 'No swap limit: the slice may use swap freely.' },
     ],
   },
   {
@@ -466,10 +466,10 @@ export const SYSTEMD_DEFS = [
     step: 1,
     unit: 'weight',
     zones: [
-      { label: '1–50: yields', min: 1, max: 50 },
-      { label: '100: default', min: 100, max: 100 },
-      { label: '200–1000: prioritised', min: 200, max: 1000 },
-      { label: '10000: max', min: 10000, max: 10000 },
+      { label: '1–50: yields', min: 1, max: 50, note: 'This slice gives way to its siblings while the disk is busy, where the disk splits time by weight.' },
+      { label: '100: default', min: 100, max: 100, note: 'The default, the same share as any sibling left unset.' },
+      { label: '200–1000: prioritised', min: 200, max: 1000, note: 'This slice gets a larger share of a busy disk, where the disk splits time by weight.' },
+      { label: '10000: max', min: 10000, max: 10000, note: 'The largest weight: siblings at the default get very little disk time while this slice is busy.' },
     ],
   },
   {

@@ -1,0 +1,92 @@
+{
+  "image": "ubuntu-18.04",
+  "kernel": "0.0.4-fixture",
+  "capturedAt": "2000-01-01T00:00:00Z",
+  "guestMemoryMiB": 3072,
+  "probes": {
+    "demo.bufMax": {
+      "status": "ok",
+      "value": 212992
+    },
+    "demo.bufSizes": {
+      "status": "ok",
+      "value": "4096 87380 6291456"
+    },
+    "demo.bufTotal": {
+      "status": "absent",
+      "reason": "fixture: no such key"
+    },
+    "demo.keyMask": {
+      "status": "ok",
+      "value": 1
+    },
+    "demo.meminfo": {
+      "status": "ok",
+      "value": {
+        "AnonPages": 500000,
+        "Cached": 1000000,
+        "MemTotal": 3000000,
+        "SwapTotal": 2000000
+      }
+    },
+    "demo.pageMode": {
+      "status": "ok",
+      "value": "madvise"
+    },
+    "demo.reserve": {
+      "status": "ok",
+      "value": 3600
+    },
+    "demo.schedHdd": {
+      "status": "ok",
+      "value": "bfq"
+    },
+    "demo.schedSsd": {
+      "status": "ok",
+      "value": "none"
+    },
+    "demo.sliceWeight": {
+      "status": "ok",
+      "value": 100
+    },
+    "demo.stalls": {
+      "status": "ok",
+      "value": [
+        "allocstall_dma32",
+        "allocstall_movable",
+        "allocstall_normal"
+      ]
+    },
+    "demo.swaps": {
+      "status": "ok",
+      "value": true
+    },
+    "demo.userWeight": {
+      "status": "absent",
+      "reason": "fixture: no cpu.weight on cgroup v1"
+    },
+    "demo.watermarks": {
+      "status": "ok",
+      "value": {
+        "DMA32": {
+          "high": 3000,
+          "low": 2000,
+          "min": 1000
+        },
+        "Normal": {
+          "high": 5400,
+          "low": 3600,
+          "min": 1800
+        }
+      }
+    },
+    "demo.worker": {
+      "status": "ok",
+      "value": true
+    },
+    "demo.zram": {
+      "reason": "fixture: no zram module",
+      "status": "absent"
+    }
+  }
+}

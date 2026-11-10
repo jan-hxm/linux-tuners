@@ -6,6 +6,6 @@
  */
 
 export { staticSite, injectStatic, llmsTxt } from './site.js'
-export { pageDoc } from './pages.js'
+export { pageDoc, loadStaticGuides } from './pages.js'
 export { toHtml } from './html.js'
 export { toMarkdown } from './markdown.js'

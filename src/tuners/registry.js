@@ -39,6 +39,16 @@
  *                               recommended for, the line the landing card shows
  *                               for them, and when the defaults are fine (the
  *                               "Do I need this?" box on the tuner page)
+ * @property {{ slug: string, status: 'draft' | 'live' }} [guide]
+ *                               The tuner's study guide (live only), at
+ *                               /learn/<slug> (Design.md §5 "Learning pages").
+ *                               Its data is src/tuners/<id>/learn.js and its
+ *                               loader is in src/learn/guides.js. Only a
+ *                               `live` guide gets a route, the "How it works"
+ *                               links and the header's Learn link; a `draft`
+ *                               changes nothing on the site. Flip it only once
+ *                               the guide's evidence is captured and a person
+ *                               has read it as a beginner.
  */
 
 /** @type {TunerEntry[]} */
@@ -68,6 +78,7 @@ export const TUNERS = [
       why: 'How eagerly the kernel swaps, how much memory it keeps free, and when dirty pages reach the disk. Every machine has these, and the defaults ignore its RAM.',
       defaultsFine: 'A small desktop or a lightly loaded machine that never runs short of memory or writes large files.',
     },
+    guide: { slug: 'memory', status: 'live' },
   },
   {
     id: 'security',
@@ -94,6 +105,7 @@ export const TUNERS = [
       why: 'Kernel pointer, ptrace and BPF restrictions plus network spoofing protections. Cheap, and most distributions leave some of them open.',
       defaultsFine: 'A throwaway or isolated test machine, or one whose distribution already ships a hardened profile you have reviewed.',
     },
+    guide: { slug: 'hardening', status: 'live' },
   },
   {
     id: 'filesystem',
@@ -120,10 +132,12 @@ export const TUNERS = [
       why: "The open-file and inotify ceilings that file watchers, databases and container nodes hit first. It sets fs.nr_open, which bounds systemd's file limit.",
       defaultsFine: 'Machines that never hit a "too many open files" or inotify limit error, which covers most servers and desktops.',
     },
+    guide: { slug: 'file-limits', status: 'live' },
   },
   {
     id: 'kernel',
     status: 'live',
+    guide: { slug: 'kernel-limits', status: 'live' },
     question: 'Does it run out of processes, or hang after a crash?',
     path: '/kernel',
     navLabel: 'Kernel',
@@ -172,10 +186,12 @@ export const TUNERS = [
       why: 'Default task and file limits for every service, and CPU, memory and IO caps per slice. Comes after the filesystem and kernel limits it must stay under.',
       defaultsFine: 'A single-purpose machine whose services never compete for CPU, memory or IO and never hit the task or file limits.',
     },
+    guide: { slug: 'systemd-resources', status: 'live' },
   },
   {
     id: 'network',
     status: 'live',
+    guide: { slug: 'networking', status: 'live' },
     question: 'Does it drop connections under load, or fall short of the link speed?',
     path: '/network',
     navLabel: 'Network',
@@ -224,6 +240,7 @@ export const TUNERS = [
       why: 'The I/O scheduler and read-ahead for each kind of disk, where the kernel picks one default for all of them.',
       defaultsFine: "Machines with a single kind of disk where the kernel's default scheduler already suits the workload.",
     },
+    guide: { slug: 'disk-io', status: 'live' },
   },
   {
     id: 'hugepages',
@@ -250,10 +267,12 @@ export const TUNERS = [
       why: 'Huge page pools, Transparent Huge Pages and KSM, which databases and VM hosts depend on and other machines are better off leaving alone.',
       defaultsFine: 'Anything that is not a database or a VM host. Skip it unless your software documents huge pages or KSM.',
     },
+    guide: { slug: 'huge-pages', status: 'live' },
   },
   {
     id: 'sysv-ipc',
     status: 'live',
+    guide: { slug: 'ipc', status: 'live' },
     question: 'Does Oracle, Db2 or older middleware ask for higher IPC limits?',
     path: '/sysv-ipc',
     navLabel: 'IPC',

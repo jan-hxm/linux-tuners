@@ -1,0 +1,798 @@
+{
+  "capturedAt": "2026-11-09T22:01:46Z",
+  "guestMemoryMiB": 3072,
+  "image": "ubuntu-24.04",
+  "kernel": "6.8.0-147-generic",
+  "probes": {
+    "block-io.hddNomerges": {
+      "status": "ok",
+      "value": 0
+    },
+    "block-io.hddReadAhead": {
+      "status": "ok",
+      "value": 128
+    },
+    "block-io.hddRequests": {
+      "status": "ok",
+      "value": 64
+    },
+    "block-io.hddRotational": {
+      "status": "ok",
+      "value": 1
+    },
+    "block-io.hddScheduler": {
+      "status": "ok",
+      "value": "mq-deadline"
+    },
+    "block-io.nvmeNomerges": {
+      "status": "ok",
+      "value": 0
+    },
+    "block-io.nvmeReadAhead": {
+      "status": "ok",
+      "value": 128
+    },
+    "block-io.nvmeRequests": {
+      "status": "ok",
+      "value": 1023
+    },
+    "block-io.nvmeRotational": {
+      "status": "ok",
+      "value": 0
+    },
+    "block-io.nvmeScheduler": {
+      "status": "ok",
+      "value": "none"
+    },
+    "block-io.ssdNomerges": {
+      "status": "ok",
+      "value": 0
+    },
+    "block-io.ssdReadAhead": {
+      "status": "ok",
+      "value": 128
+    },
+    "block-io.ssdRequests": {
+      "status": "ok",
+      "value": 64
+    },
+    "block-io.ssdRotational": {
+      "status": "ok",
+      "value": 0
+    },
+    "block-io.ssdScheduler": {
+      "status": "ok",
+      "value": "mq-deadline"
+    },
+    "block-io.sysBlock": {
+      "status": "ok",
+      "value": true
+    },
+    "block-io.udevd": {
+      "status": "ok",
+      "value": true
+    },
+    "block-io.virtioNomerges": {
+      "status": "ok",
+      "value": 0
+    },
+    "block-io.virtioReadAhead": {
+      "status": "ok",
+      "value": 128
+    },
+    "block-io.virtioRequests": {
+      "status": "ok",
+      "value": 256
+    },
+    "block-io.virtioRotational": {
+      "status": "ok",
+      "value": 1
+    },
+    "block-io.virtioScheduler": {
+      "status": "ok",
+      "value": "none"
+    },
+    "filesystem.aioMaxNr": {
+      "status": "ok",
+      "value": 65536
+    },
+    "filesystem.aioNr": {
+      "status": "ok",
+      "value": 0
+    },
+    "filesystem.fileMax": {
+      "status": "ok",
+      "value": "9223372036854775807"
+    },
+    "filesystem.fileNr": {
+      "status": "ok",
+      "value": true
+    },
+    "filesystem.inotifyDir": {
+      "status": "ok",
+      "value": true
+    },
+    "filesystem.maxQueuedEvents": {
+      "status": "ok",
+      "value": 16384
+    },
+    "filesystem.maxUserInstances": {
+      "status": "ok",
+      "value": 128
+    },
+    "filesystem.maxUserWatches": {
+      "status": "ok",
+      "value": 22387
+    },
+    "filesystem.nrOpen": {
+      "status": "ok",
+      "value": 1048576
+    },
+    "hugepages.compactStall": {
+      "status": "ok",
+      "value": [
+        "compact_stall"
+      ]
+    },
+    "hugepages.kcompactd": {
+      "status": "ok",
+      "value": true
+    },
+    "hugepages.khugepagedDir": {
+      "status": "ok",
+      "value": true
+    },
+    "hugepages.ksmPagesToScan": {
+      "status": "ok",
+      "value": 100
+    },
+    "hugepages.ksmRun": {
+      "status": "ok",
+      "value": 0
+    },
+    "hugepages.ksmShared": {
+      "status": "ok",
+      "value": 0
+    },
+    "hugepages.ksmSharing": {
+      "status": "ok",
+      "value": 0
+    },
+    "hugepages.ksmSleep": {
+      "status": "ok",
+      "value": 20
+    },
+    "hugepages.mapCount": {
+      "status": "ok",
+      "value": 1048576
+    },
+    "hugepages.memTotal": {
+      "status": "ok",
+      "value": {
+        "MemTotal": 2977652
+      }
+    },
+    "hugepages.minFree": {
+      "status": "ok",
+      "value": 67584
+    },
+    "hugepages.numaNode0": {
+      "status": "ok",
+      "value": true
+    },
+    "hugepages.poolMeminfo": {
+      "status": "ok",
+      "value": {
+        "HugePages_Free": 0,
+        "HugePages_Rsvd": 0,
+        "HugePages_Surp": 0,
+        "HugePages_Total": 0,
+        "Hugepagesize": 2048
+      }
+    },
+    "hugepages.poolPages": {
+      "status": "ok",
+      "value": 0
+    },
+    "hugepages.surplusPages": {
+      "status": "ok",
+      "value": 0
+    },
+    "hugepages.thpDefrag": {
+      "status": "ok",
+      "value": "madvise"
+    },
+    "hugepages.thpEnabled": {
+      "status": "ok",
+      "value": "madvise"
+    },
+    "hugepages.thpMeminfo": {
+      "status": "ok",
+      "value": {
+        "AnonHugePages": 0
+      }
+    },
+    "hugepages.vmSysctls": {
+      "status": "ok",
+      "value": true
+    },
+    "hugepages.zoneReclaim": {
+      "status": "ok",
+      "value": 0
+    },
+    "kernel.keyUsers": {
+      "status": "ok",
+      "value": true
+    },
+    "kernel.maxbytes": {
+      "status": "ok",
+      "value": 20000
+    },
+    "kernel.maxkeys": {
+      "status": "ok",
+      "value": 200
+    },
+    "kernel.panic": {
+      "status": "ok",
+      "value": 0
+    },
+    "kernel.panicOnOops": {
+      "status": "ok",
+      "value": 0
+    },
+    "kernel.pidMax": {
+      "status": "ok",
+      "value": 4194304
+    },
+    "kernel.printk": {
+      "status": "ok",
+      "value": "4 4 1 7"
+    },
+    "kernel.rootMaxbytes": {
+      "status": "ok",
+      "value": 25000000
+    },
+    "kernel.rootMaxkeys": {
+      "status": "ok",
+      "value": 1000000
+    },
+    "kernel.softlockupPanic": {
+      "status": "ok",
+      "value": 0
+    },
+    "kernel.sysrq": {
+      "status": "ok",
+      "value": 176
+    },
+    "kernel.sysrqTrigger": {
+      "status": "ok",
+      "value": true
+    },
+    "kernel.threadsMax": {
+      "status": "ok",
+      "value": 22959
+    },
+    "kernel.watchdogThresh": {
+      "status": "ok",
+      "value": 10
+    },
+    "network.availableCc": {
+      "status": "ok",
+      "value": "reno cubic"
+    },
+    "network.baseMss": {
+      "status": "ok",
+      "value": 1024
+    },
+    "network.congestionControl": {
+      "status": "ok",
+      "value": "cubic"
+    },
+    "network.conntrackBuckets": {
+      "status": "ok",
+      "value": 65536
+    },
+    "network.conntrackCount": {
+      "status": "ok",
+      "value": 0
+    },
+    "network.conntrackEstablished": {
+      "status": "ok",
+      "value": 432000
+    },
+    "network.conntrackMax": {
+      "status": "ok",
+      "value": 65536
+    },
+    "network.defaultQdisc": {
+      "status": "ok",
+      "value": "fq_codel"
+    },
+    "network.finTimeout": {
+      "status": "ok",
+      "value": 60
+    },
+    "network.mtuProbing": {
+      "status": "ok",
+      "value": 0
+    },
+    "network.netdevBacklog": {
+      "status": "ok",
+      "value": 1000
+    },
+    "network.netstat": {
+      "status": "ok",
+      "value": true
+    },
+    "network.portRange": {
+      "status": "ok",
+      "value": "32768 60999"
+    },
+    "network.rmemMax": {
+      "status": "ok",
+      "value": 212992
+    },
+    "network.slowStartAfterIdle": {
+      "status": "ok",
+      "value": 1
+    },
+    "network.sockstat": {
+      "status": "ok",
+      "value": true
+    },
+    "network.softnetStat": {
+      "status": "ok",
+      "value": true
+    },
+    "network.somaxconn": {
+      "status": "ok",
+      "value": 4096
+    },
+    "network.synBacklog": {
+      "status": "ok",
+      "value": 256
+    },
+    "network.syncookies": {
+      "status": "ok",
+      "value": 1
+    },
+    "network.tcpRmem": {
+      "status": "ok",
+      "value": "4096 131072 6291456"
+    },
+    "network.tcpWmem": {
+      "status": "ok",
+      "value": "4096 16384 4194304"
+    },
+    "network.twReuse": {
+      "status": "ok",
+      "value": 2
+    },
+    "network.wmemMax": {
+      "status": "ok",
+      "value": 212992
+    },
+    "security.acceptRedirects": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.acceptRedirectsV6": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.acceptSourceRoute": {
+      "status": "ok",
+      "value": 0
+    },
+    "security.bpfDisabled": {
+      "status": "ok",
+      "value": 2
+    },
+    "security.dmesgRestrict": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.ipForward": {
+      "status": "ok",
+      "value": 0
+    },
+    "security.ipv6": {
+      "status": "ok",
+      "value": true
+    },
+    "security.kallsyms": {
+      "status": "ok",
+      "value": true
+    },
+    "security.kptrRestrict": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.maxUserNamespaces": {
+      "status": "ok",
+      "value": 11479
+    },
+    "security.perfParanoid": {
+      "status": "ok",
+      "value": 4
+    },
+    "security.protectedFifos": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.protectedHardlinks": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.protectedRegular": {
+      "status": "ok",
+      "value": 2
+    },
+    "security.protectedSymlinks": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.ptraceScope": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.randomizeVaSpace": {
+      "status": "ok",
+      "value": 2
+    },
+    "security.rpFilter": {
+      "status": "ok",
+      "value": 2
+    },
+    "security.rpFilterDefault": {
+      "status": "ok",
+      "value": 2
+    },
+    "security.sendRedirects": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.suidDumpable": {
+      "status": "ok",
+      "value": 2
+    },
+    "security.synBacklog": {
+      "status": "ok",
+      "value": 256
+    },
+    "security.synCookies": {
+      "status": "ok",
+      "value": 1
+    },
+    "security.threadsMax": {
+      "status": "ok",
+      "value": 22959
+    },
+    "security.yama": {
+      "status": "ok",
+      "value": true
+    },
+    "swap.allocstall": {
+      "status": "ok",
+      "value": [
+        "allocstall_device",
+        "allocstall_dma",
+        "allocstall_dma32",
+        "allocstall_movable",
+        "allocstall_normal"
+      ]
+    },
+    "swap.dentryState": {
+      "status": "ok",
+      "value": true
+    },
+    "swap.dirtyBackgroundRatio": {
+      "status": "ok",
+      "value": 10
+    },
+    "swap.dirtyExpire": {
+      "status": "ok",
+      "value": 3000
+    },
+    "swap.dirtyRatio": {
+      "status": "ok",
+      "value": 20
+    },
+    "swap.dirtyWriteback": {
+      "status": "ok",
+      "value": 500
+    },
+    "swap.kswapd": {
+      "status": "ok",
+      "value": true
+    },
+    "swap.memAnon": {
+      "status": "ok",
+      "value": {
+        "AnonPages": 59136
+      }
+    },
+    "swap.memCache": {
+      "status": "ok",
+      "value": {
+        "Cached": 290452
+      }
+    },
+    "swap.memCommit": {
+      "status": "ok",
+      "value": {
+        "CommitLimit": 1488824,
+        "Committed_AS": 228168
+      }
+    },
+    "swap.memDirty": {
+      "status": "ok",
+      "value": {
+        "Dirty": 3192,
+        "Writeback": 0
+      }
+    },
+    "swap.memSize": {
+      "status": "ok",
+      "value": {
+        "MemTotal": 2977652,
+        "SwapTotal": 0
+      }
+    },
+    "swap.minFree": {
+      "status": "ok",
+      "value": 67584
+    },
+    "swap.overcommitMemory": {
+      "status": "ok",
+      "value": 0
+    },
+    "swap.overcommitRatio": {
+      "status": "ok",
+      "value": 50
+    },
+    "swap.pageCluster": {
+      "status": "ok",
+      "value": 3
+    },
+    "swap.panicOnOom": {
+      "status": "ok",
+      "value": 0
+    },
+    "swap.swapIns": {
+      "status": "ok",
+      "value": [
+        "pswpin"
+      ]
+    },
+    "swap.swapReadahead": {
+      "status": "ok",
+      "value": [
+        "swap_ra",
+        "swap_ra_hit"
+      ]
+    },
+    "swap.swappiness": {
+      "status": "ok",
+      "value": 60
+    },
+    "swap.swaps": {
+      "status": "ok",
+      "value": true
+    },
+    "swap.vfsCachePressure": {
+      "status": "ok",
+      "value": 100
+    },
+    "swap.vmSysctls": {
+      "status": "ok",
+      "value": true
+    },
+    "swap.watermarkScale": {
+      "status": "ok",
+      "value": 10
+    },
+    "swap.zoneWatermarks": {
+      "status": "ok",
+      "value": {
+        "DMA": {
+          "high": 132,
+          "low": 110,
+          "min": 88
+        },
+        "DMA32": {
+          "high": 16658,
+          "low": 13882,
+          "min": 11106
+        },
+        "Device": {
+          "high": 0,
+          "low": 0,
+          "min": 0
+        },
+        "Movable": {
+          "high": 32,
+          "low": 32,
+          "min": 32
+        },
+        "Normal": {
+          "high": 8550,
+          "low": 7125,
+          "min": 5700
+        }
+      }
+    },
+    "systemd.bootDiskScheduler": {
+      "status": "ok",
+      "value": "none"
+    },
+    "systemd.controllers": {
+      "status": "ok",
+      "value": "cpuset cpu io memory hugetlb pids rdma misc"
+    },
+    "systemd.cpuMax": {
+      "status": "ok",
+      "value": "max 100000"
+    },
+    "systemd.cpuStat": {
+      "status": "ok",
+      "value": true
+    },
+    "systemd.cpuWeight": {
+      "status": "ok",
+      "value": 100
+    },
+    "systemd.defaultCpuAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultIoAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultIpAccounting": {
+      "status": "ok",
+      "value": "no"
+    },
+    "systemd.defaultLimitMemlock": {
+      "status": "ok",
+      "value": 8388608
+    },
+    "systemd.defaultLimitMemlockSoft": {
+      "status": "ok",
+      "value": 8388608
+    },
+    "systemd.defaultLimitNofile": {
+      "status": "ok",
+      "value": 524288
+    },
+    "systemd.defaultLimitNofileSoft": {
+      "status": "ok",
+      "value": 1024
+    },
+    "systemd.defaultMemoryAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksAccounting": {
+      "status": "ok",
+      "value": "yes"
+    },
+    "systemd.defaultTasksMax": {
+      "status": "ok",
+      "value": 3443
+    },
+    "systemd.initScope": {
+      "status": "ok",
+      "value": true
+    },
+    "systemd.ioCostQos": {
+      "status": "ok",
+      "value": true
+    },
+    "systemd.memoryCurrent": {
+      "status": "ok",
+      "value": 246501376
+    },
+    "systemd.memoryHigh": {
+      "status": "ok",
+      "value": "max"
+    },
+    "systemd.memoryMax": {
+      "status": "ok",
+      "value": "max"
+    },
+    "systemd.nrOpen": {
+      "status": "ok",
+      "value": 1048576
+    },
+    "systemd.pid1": {
+      "status": "ok",
+      "value": true
+    },
+    "systemd.pidMax": {
+      "status": "ok",
+      "value": 4194304
+    },
+    "systemd.pidsCurrent": {
+      "status": "ok",
+      "value": 40
+    },
+    "systemd.pidsMax": {
+      "status": "ok",
+      "value": "max"
+    },
+    "systemd.subtreeControl": {
+      "status": "ok",
+      "value": "cpu memory pids"
+    },
+    "systemd.swapMax": {
+      "status": "ok",
+      "value": "max"
+    },
+    "systemd.systemSlice": {
+      "status": "ok",
+      "value": true
+    },
+    "systemd.systemSliceTasksMax": {
+      "status": "ok",
+      "value": "infinity"
+    },
+    "systemd.threadsMax": {
+      "status": "ok",
+      "value": 22959
+    },
+    "systemd.userSlice": {
+      "status": "ok",
+      "value": true
+    },
+    "systemd.v1Layout": {
+      "reason": "no /sys/fs/cgroup/systemd",
+      "status": "absent"
+    },
+    "sysv-ipc.msgmax": {
+      "status": "ok",
+      "value": 8192
+    },
+    "sysv-ipc.msgmnb": {
+      "status": "ok",
+      "value": 16384
+    },
+    "sysv-ipc.msgmni": {
+      "status": "ok",
+      "value": 32000
+    },
+    "sysv-ipc.sem": {
+      "status": "ok",
+      "value": "32000 1024000000 500 32000"
+    },
+    "sysv-ipc.shmRmidForced": {
+      "status": "ok",
+      "value": 0
+    },
+    "sysv-ipc.shmall": {
+      "status": "ok",
+      "value": "18446744073692774399"
+    },
+    "sysv-ipc.shmmax": {
+      "status": "ok",
+      "value": "18446744073692774399"
+    },
+    "sysv-ipc.shmmni": {
+      "status": "ok",
+      "value": 4096
+    },
+    "sysv-ipc.sysvipcMsg": {
+      "status": "ok",
+      "value": true
+    },
+    "sysv-ipc.sysvipcSem": {
+      "status": "ok",
+      "value": true
+    },
+    "sysv-ipc.sysvipcShm": {
+      "status": "ok",
+      "value": true
+    }
+  }
+}

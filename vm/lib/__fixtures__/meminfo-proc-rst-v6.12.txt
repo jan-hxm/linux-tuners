@@ -1,0 +1,63 @@
+# /proc/meminfo, the example output in the kernel documentation,
+# Documentation/filesystems/proc.rst at v6.12 ("Example output. You may not
+# have all of these fields."):
+# https://docs.kernel.org/filesystems/proc.html#meminfo
+# Copied verbatim, with the rst indentation removed.
+---
+MemTotal:       32858820 kB
+MemFree:        21001236 kB
+MemAvailable:   27214312 kB
+Buffers:          581092 kB
+Cached:          5587612 kB
+SwapCached:            0 kB
+Active:          3237152 kB
+Inactive:        7586256 kB
+Active(anon):      94064 kB
+Inactive(anon):  4570616 kB
+Active(file):    3143088 kB
+Inactive(file):  3015640 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+Zswap:              1904 kB
+Zswapped:           7792 kB
+Dirty:                12 kB
+Writeback:             0 kB
+AnonPages:       4654780 kB
+Mapped:           266244 kB
+Shmem:              9976 kB
+KReclaimable:     517708 kB
+Slab:             660044 kB
+SReclaimable:     517708 kB
+SUnreclaim:       142336 kB
+KernelStack:       11168 kB
+PageTables:        20540 kB
+SecPageTables:         0 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    16429408 kB
+Committed_AS:    7715148 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:       40444 kB
+VmallocChunk:          0 kB
+Percpu:            29312 kB
+EarlyMemtestBad:       0 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:   4149248 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+Hugetlb:               0 kB
+DirectMap4k:      401152 kB
+DirectMap2M:    10008576 kB
+DirectMap1G:    24117248 kB

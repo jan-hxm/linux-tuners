@@ -41,6 +41,12 @@ describe('SiteFooter', () => {
     expect(names(await footer([{ path: '/glossary', name: 'glossary', component: Empty }]))).toEqual(['Glossary', 'Privacy', 'Imprint', 'Source on GitHub ↗', 'Sponsor ↗'])
   })
 
+  it('links Learn only while a study guide is live (the learn route exists)', async () => {
+    const names = (w) => w.findAll('nav[aria-label="Footer"] a').map((a) => a.text())
+    expect(names(await footer())).not.toContain('Learn')
+    expect(names(await footer([{ path: '/learn', name: 'learn', component: Empty }]))[0]).toBe('Learn')
+  })
+
   it('links Sponsor to GitHub Sponsors in a new tab', async () => {
     const a = (await footer()).get('a[href="https://github.com/sponsors/jan-hxm"]')
     expect(a.text()).toBe('Sponsor ↗')

@@ -9,11 +9,26 @@ import { nextTick } from 'vue'
 import ParameterCard from './ParameterCard.vue'
 import { useTunerStoreFor } from '@/core/createTunerStore.js'
 import { swapDomain } from '@/tuners/swap/index.js'
+import { TUNERS } from '@/tuners/registry.js'
 import { TUNER_STORE_KEY, TUNER_DOMAIN_KEY } from '@/ui/useActiveTuner.js'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { splitFirstSentence } from './firstSentence.js'
 import { DESC_PARTS } from './descParts.js'
 import RichText from './RichText.vue'
+
+// These tests cover the full card layers, which a live guide deliberately
+// replaces with a "How it works" link (ParameterCard.guide.test.js covers that
+// side). Pin the swap entry to a draft guide so they do not depend on which
+// guide the real registry has gone live with.
+const swapEntry = TUNERS.find((t) => t.id === swapDomain.id)
+const registryGuide = swapEntry.guide
+beforeEach(() => {
+  swapEntry.guide = { slug: 'memory', status: 'draft' }
+})
+afterEach(() => {
+  if (registryGuide === undefined) delete swapEntry.guide
+  else swapEntry.guide = registryGuide
+})
 
 function mountCard(paramKey) {
   return mount(ParameterCard, {
@@ -234,7 +249,7 @@ describe('ParameterCard layers (Design.md §7)', () => {
 
   it('puts the first two layer notes in the margin, labelled, and the rest under Learn more', async () => {
     useTunerStoreFor(swapDomain)
-    const wrapper = mountCard('swappiness')
+    const wrapper = mountCard('min_free_kbytes')
     await nextTick()
     expect(wrapper.findAll('h4').map((h) => h.text())).toEqual(['What it does', 'When to change it'])
     await learnMore(wrapper).trigger('click')
@@ -281,7 +296,7 @@ describe('ParameterCard layers (Design.md §7)', () => {
     it('holds two notes on a card too narrow for the wide margin: the first layer note and the origin', async () => {
       stubWidth(768) // beside the graph column at 1280px
       useTunerStoreFor(swapDomain)
-      const wrapper = mountCard('swappiness')
+      const wrapper = mountCard('min_free_kbytes')
       await nextTick()
       const items = marginItems(wrapper)
       expect(items).toHaveLength(2)
@@ -340,9 +355,9 @@ describe('ParameterCard layers (Design.md §7)', () => {
 
   it('shows a margin note to its first sentence, with a real "more" button for the rest', async () => {
     useTunerStoreFor(swapDomain)
-    const wrapper = mountCard('swappiness')
+    const wrapper = mountCard('min_free_kbytes')
     await nextTick()
-    const note = swapDomain.defsByKey.swappiness.longDesc.what
+    const note = swapDomain.defsByKey.min_free_kbytes.longDesc.what
     const { head, tail } = splitFirstSentence(note[0])
     expect(tail || note.length > 1).toBeTruthy() // the fixture has something to hide
     const first = wrapper.get('button.pc-note-more')
@@ -412,7 +427,7 @@ describe('ParameterCard [n] note toggles (Design.md §7)', () => {
 
   it('makes each margin layer note a real button that opens it in place', async () => {
     useTunerStoreFor(swapDomain)
-    const wrapper = mountCard('swappiness')
+    const wrapper = mountCard('min_free_kbytes')
     await nextTick()
     const toggles = wrapper.findAll('aside button[aria-controls]').filter((b) => /^\[\d\]/.test(b.text()))
     expect(toggles.map((b) => b.text().replace(/[+−]$/, ''))).toEqual(['[1]What it does', '[2]When to change it'])

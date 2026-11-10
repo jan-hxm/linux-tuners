@@ -56,9 +56,9 @@ export function generateConfig({ hardware, params, presetLabel, customised, now 
   } else {
     manager.push(commentLine('DefaultCPUAccounting: left out, cgroup v2 always accounts CPU time (systemd 258 removed the option)'))
   }
-  manager.push(...iniDirective('DefaultMemoryAccounting', yesNo(t.default_memory_accounting), 'per-unit memory accounting (required for memory limits)'))
+  manager.push(...iniDirective('DefaultMemoryAccounting', yesNo(t.default_memory_accounting), 'per-unit memory accounting (units with a limit count either way)'))
   manager.push(...iniDirective('DefaultIOAccounting', yesNo(t.default_io_accounting), 'per-unit block-I/O accounting'))
-  manager.push(...iniDirective('DefaultTasksAccounting', yesNo(t.default_tasks_accounting), 'per-unit task counting (required for TasksMax)'))
+  manager.push(...iniDirective('DefaultTasksAccounting', yesNo(t.default_tasks_accounting), 'per-unit task counting (units with a TasksMax count either way)'))
   manager.push(...iniDirective('DefaultIPAccounting', yesNo(t.default_ip_accounting), 'per-unit network accounting (eBPF)'))
   manager.push(...iniDirective('DefaultTasksMax', t.default_tasks_max, `default per-unit task cap (~${pctOfPid(params.default_tasks_max, hardware.pidMax)} of pid_max)`))
   manager.push(...iniDirective('DefaultLimitNOFILE', `${t.default_limit_nofile_soft}:${t.default_limit_nofile_hard}`, 'default open-file-descriptor soft:hard limit'))
@@ -95,12 +95,25 @@ function memoryLines(key, pct, text, hw, comment) {
   return iniDirective(key, `${text}%`, `${comment} ≈ ${gib} GiB of ${hw.ramGiB}`)
 }
 
+/**
+ * MemorySwapMax as a byte size, never a percentage. systemd scales a
+ * percentage there by physical RAM (config_parse_memory_limit in
+ * load-fragment.c, every release from 232 to 258), but its man page says the
+ * percentage is taken of the swap size, so a percentage could change meaning
+ * in a later release. Bytes worked out from the profile's RAM mean the same
+ * thing on every version.
+ */
 function swapLines(pct, text, hw) {
   if (!hasSwapControl(hw)) return [commentLine('MemorySwapMax: left out, it needs cgroup v2')]
   if (pct >= 100) return [commentLine('MemorySwapMax: unset (infinity, slice may swap freely)')]
   if (pct === 0) return iniDirective('MemorySwapMax', '0', 'slice forbidden from using swap (systemd 239+)')
-  const gib = ((hw.ramGiB * pct) / 100).toFixed(1)
-  return iniDirective('MemorySwapMax', `${text}%`, `swap budget ≈ ${gib} GiB`)
+  return iniDirective('MemorySwapMax', systemdSize(swapMaxBytes(pct, hw)), `swap budget, ${text}% of ${hw.ramGiB} GiB RAM`)
+}
+
+/** MemorySwapMax for `pct` percent of the profile's RAM, in whole MiB and at least 1 MiB. */
+export function swapMaxBytes(pct, hw) {
+  const MiB = 1024 * 1024
+  return Math.max(1, Math.round((hw.ramGiB * 1024 * pct) / 100)) * MiB
 }
 
 function describeProfile(hw) {

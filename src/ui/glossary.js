@@ -99,4 +99,275 @@ export const GLOSSARY = Object.freeze({
     definition:
       'Non-uniform memory access: on machines with several CPU sockets (and some large single CPUs), each group of cores has memory attached to it that is faster to reach than the memory of the other groups. Each group with its memory is a NUMA node.',
   },
+  // swap guide
+  swap: {
+    term: 'Swap',
+    definition:
+      'Space on a disk, or in compressed RAM, where the kernel moves program memory when RAM runs short. Reading it back is slower than reading RAM. swapon --show lists the swap a machine has.',
+  },
+  page: {
+    term: 'Page',
+    definition:
+      'The fixed-size block the kernel manages memory in: 4 KiB on x86, and on most other systems. RAM, file cache and swap are all handed out and counted in pages.',
+  },
+  'memory-zone': {
+    term: 'Memory zone',
+    definition:
+      'A range of RAM the kernel manages on its own, such as DMA32 or Normal on x86. Each zone has its own free-memory watermarks, listed in /proc/zoneinfo.',
+  },
+  readahead: {
+    term: 'Readahead',
+    definition:
+      'Reading a few neighbouring pages along with the one a program asked for, on the guess that it needs them next. A right guess saves later reads; a wrong one costs time and memory.',
+  },
+  zram: {
+    term: 'zram',
+    definition:
+      'A swap device in compressed RAM. Swapped-out pages are compressed and kept in memory instead of on a disk, so reading them back usually needs no disk access.',
+  },
+  'dentry-cache': {
+    term: 'Dentry and inode caches',
+    definition:
+      'The kernel keeps the file names it has looked up (dentries) in memory, with file details such as size and owner (inodes). The next lookup of the same path then skips the disk.',
+  },
+  'flusher-thread': {
+    term: 'Flusher thread',
+    definition:
+      'A kernel thread that writes dirty pages to disk in the background, so the programs that changed them can carry on. It also wakes on a timer to write out data that has waited too long.',
+  },
+  overcommit: {
+    term: 'Overcommit',
+    definition:
+      'Promising programs more memory than RAM and swap hold, on the bet that they will not all use what they asked for. Memory a program has asked for but not yet written to takes no RAM.',
+  },
+  'commit-limit': {
+    term: 'Commit limit',
+    definition:
+      'The most memory the kernel will promise in total when overcommit is strict (vm.overcommit_memory = 2). It is all of swap plus a share of RAM. /proc/meminfo shows it as CommitLimit, and what has been promised as Committed_AS.',
+  },
+  'kernel-panic': {
+    term: 'Kernel panic',
+    definition:
+      'The kernel stopping the whole machine on purpose because it cannot safely go on. Every program stops with it; the kernel.panic setting decides whether the machine then reboots on its own.',
+  },
+  // security guide
+  capability: {
+    term: 'Capability',
+    definition:
+      "One slice of root's power that the kernel checks on its own, such as CAP_SYSLOG to read the kernel log or CAP_SYS_PTRACE to trace any process. Root holds them all; a program can be given one without the rest.",
+  },
+  kaslr: {
+    term: 'KASLR',
+    definition:
+      'Kernel address space layout randomisation: the kernel placing its own code and data at different addresses each boot, when it is built for it, so an attack cannot count on where they are.',
+  },
+  aslr: {
+    term: 'ASLR',
+    definition:
+      "Address space layout randomisation: the kernel placing a program's stack, libraries and heap at random addresses each time it starts, so an attack on the program cannot count on where they are.",
+  },
+  vdso: {
+    term: 'vDSO',
+    definition:
+      'A small shared library the kernel maps into every program, so a few frequent system calls, such as reading the clock, run without entering the kernel.',
+  },
+  ptrace: {
+    term: 'ptrace',
+    definition:
+      'The system call that debuggers and tracers such as gdb and strace use to watch another process, stop it, and read or change its memory and registers.',
+  },
+  'core-dump': {
+    term: 'Core dump',
+    definition:
+      "A file holding a copy of a program's memory at the moment it crashed, for a debugger such as gdb to inspect afterwards.",
+  },
+  setuid: {
+    term: 'Setuid program',
+    definition:
+      "A program file marked to run with its owner's rights, often root's, whoever starts it. passwd works this way, so any user can change their own password.",
+  },
+  'sticky-bit': {
+    term: 'Sticky bit',
+    definition:
+      "A permission bit on a folder: files in it can be renamed or deleted only by their owner, the folder's owner or a privileged process. /tmp has it, so users cannot remove each other's files.",
+  },
+  fifo: {
+    term: 'FIFO',
+    definition:
+      'A named pipe: a name in a folder that one program writes into and another reads from. The data passes through the kernel and is never stored on disk.',
+  },
+  spoofing: {
+    term: 'Spoofing',
+    definition:
+      'Sending network packets with a false sender address, so they seem to come from a machine that never sent them.',
+  },
+  'icmp-redirect': {
+    term: 'ICMP redirect',
+    definition:
+      'A message from a router telling a host to send traffic for some destination through a different router on the same network.',
+  },
+  'syn-flood': {
+    term: 'SYN flood',
+    definition:
+      "An attack that sends many requests to open TCP connections and never completes them, to fill the server's list of half-open connections so real clients cannot connect.",
+  },
+
+  // filesystem guide
+  inotify: {
+    term: 'inotify',
+    definition:
+      'A kernel feature that tells a program when files or directories change. The program adds a watch for each file or directory it cares about, and reads the events from a queue. Editors, sync tools and dev servers use it.',
+  },
+  'native-aio': {
+    term: 'Native async I/O',
+    definition:
+      'The kernel interface where a program calls io_setup() to reserve request slots, then queues reads and writes and carries on while they run. Some databases use it. It is not the same as io_uring.',
+  },
+
+  // sysv-ipc guide
+  'sysv-ipc': {
+    term: 'System V IPC',
+    definition:
+      'Three older kernel tools that let programs on one machine work together: shared memory segments, semaphores and message queues. Programs create them with calls such as shmget(), semget() and msgget(), and the kernel limits how many of each may exist.',
+  },
+  'shm-segment': {
+    term: 'Shared memory segment',
+    definition:
+      'A block of memory that the kernel lets several programs use at once. A change one program makes is visible to the others. A segment exists until it is removed, even when no program has it attached.',
+  },
+  semaphore: {
+    term: 'Semaphore',
+    definition:
+      'A counter that programs use to take turns or to wait for each other. A program that needs the counter to be higher than it is waits until another program raises it. System V semaphores are created in groups called sets.',
+  },
+
+  // network guide
+  socket: {
+    term: 'Socket',
+    definition:
+      'The kernel object a program uses for one network connection or one listening port. Each socket has a receive buffer for data that has arrived and a send buffer for data on its way out.',
+  },
+  handshake: {
+    term: 'TCP handshake',
+    definition:
+      'The three packets that open a TCP connection: the client sends SYN, the server answers SYN-ACK, and the client confirms with ACK. Only then does the connection count as established.',
+  },
+  'congestion-control': {
+    term: 'Congestion control',
+    definition:
+      'How TCP decides how much data a connection may have in flight before replies come back, so it fills the path without overflowing it. The kernel can hold several algorithms, such as cubic and reno.',
+  },
+  qdisc: {
+    term: 'Queueing discipline (qdisc)',
+    definition:
+      'The queue in front of a network interface that holds packets waiting to leave and decides which goes next. tc qdisc show lists the ones each interface has.',
+  },
+  mtu: {
+    term: 'MTU',
+    definition:
+      'Maximum transmission unit: the largest packet a network link carries in one piece. A path through tunnels or VPNs can have a smaller one than the links at either end.',
+  },
+  'time-wait': {
+    term: 'TIME-WAIT',
+    definition:
+      'The state a TCP connection stays in for a while after it closes, so late packets from it cannot be mistaken for a new connection between the same addresses and ports.',
+  },
+  nat: {
+    term: 'NAT',
+    definition:
+      'Network address translation: rewriting the addresses or ports of packets on their way through, as home routers and container hosts do. The kernel applies the same rewrite to every packet of a connection.',
+  },
+
+  // block-io guide
+  'block-layer': {
+    term: 'Block layer',
+    definition:
+      'The part of the kernel between filesystems and disk drivers. It turns reads and writes into requests, merges and orders them, and hands them to the driver. Its settings for each disk are files under /sys/block/<disk>/queue.',
+  },
+  'io-scheduler': {
+    term: 'I/O scheduler',
+    definition:
+      'The part of the block layer that decides the order in which waiting requests go to a disk. Each disk has its own: none, mq-deadline, bfq or kyber.',
+  },
+  'hardware-queue': {
+    term: 'Hardware queue',
+    definition:
+      'The last queue in the block layer before the disk driver takes a request. How many a disk has depends on the drive and its driver, and never exceeds the number of CPU cores.',
+  },
+  udev: {
+    term: 'udev',
+    definition:
+      'The service that handles device events from the kernel. When a device appears or changes, it checks its rules against the device, and a matching rule can write a setting for it. Local rules live in /etc/udev/rules.d.',
+  },
+  sector: {
+    term: 'Sector',
+    definition:
+      'A numbered block of a disk. Requests name the sectors they read or write, so the kernel can tell when two requests sit next to each other and merge them.',
+  },
+
+  // systemd guide
+  slice: {
+    term: 'Slice',
+    definition:
+      'A systemd unit that holds other units instead of running a program. Each slice is a cgroup that groups the cgroups below it, so a limit on a slice covers everything inside it. system.slice holds system services and user.slice holds user sessions.',
+  },
+  'cgroup-controller': {
+    term: 'cgroup controller',
+    definition:
+      'The part of the kernel that counts and shares out one kind of resource along the cgroup tree, such as cpu, memory, io or pids. A controller only acts on the groups it is turned on for.',
+  },
+  'resource-limit': {
+    term: 'Resource limit (rlimit)',
+    definition:
+      'A cap the kernel keeps for each process, such as how many files it may have open. Each has a soft value the kernel enforces and a hard value the soft one may be raised to. A new process inherits the limits of the one that started it.',
+  },
+
+  // hugepages guide
+  khugepaged: {
+    term: 'khugepaged',
+    definition:
+      'A kernel thread that scans memory in the background and collapses runs of small pages into huge pages. It starts when transparent huge pages are enabled and stops when they are all off.',
+  },
+  compaction: {
+    term: 'Compaction',
+    definition:
+      'The kernel moving pages around so that free memory gathers into larger blocks in one piece. Huge pages need such a block, and moving pages costs processor time, so programs can briefly slow down while it runs.',
+  },
+  ksm: {
+    term: 'KSM',
+    definition:
+      'Kernel samepage merging: a kernel thread, ksmd, scans memory that programs have marked as mergeable and replaces pages with identical content by one shared copy. A page is copied again when a program writes to it.',
+  },
+  madvise: {
+    term: 'madvise',
+    definition:
+      'A system call with which a program tells the kernel how it expects to use a range of its memory, for example that it wants huge pages there (MADV_HUGEPAGE) or that identical pages in it may be merged (MADV_MERGEABLE).',
+  },
+
+  // kernel guide
+  pid: {
+    term: 'Process ID',
+    definition:
+      'The number the kernel gives each process, and each thread, so it can tell them apart. The kernel hands them out in order and wraps back to a low number when it reaches kernel.pid_max.',
+  },
+  'kernel-key': {
+    term: 'Kernel key',
+    definition:
+      'A record the kernel keeps for security data such as an authentication token or an encryption key. It has a description and may have a payload, the data itself. Keyrings are keys that hold links to other keys.',
+  },
+  oops: {
+    term: 'Oops',
+    definition:
+      'The report the kernel prints when it hits a fault or a BUG in its own code. By default it tries to carry on; kernel.panic_on_oops makes it panic instead.',
+  },
+  'soft-lockup': {
+    term: 'Soft lockup',
+    definition:
+      'A bug that makes the kernel loop in kernel mode for more than twice kernel.watchdog_thresh (20 seconds by default) without giving other tasks a chance to run. The watchdog logs it, and kernel.softlockup_panic can turn it into a panic.',
+  },
+  loglevel: {
+    term: 'Log level',
+    definition:
+      'The urgency of a kernel message, from 0 (emergency) to 7 (debug). The console shows only messages whose level is lower than the console log level.',
+  },
 })

@@ -24,12 +24,14 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { VM } from './lib/vm.mjs'
 import { IMAGES } from './lib/images.mjs'
 import { PERF_OPEN, BPF_MAP, py } from './lib/probes.mjs'
+import { loadProbes, readEvidence, runProbes, staleProbes } from './lib/probeKinds.mjs'
 import { TUNER_DOMAINS } from '@/tuners/domains.js'
 import { isEmitted } from '@/tuners/security/calculations.js'
 import { kernelFileMax, kernelWatches } from '@/tuners/filesystem/calculations.js'
 import { presetParams } from '@/core/createTunerStore.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
 import { defaultTasksMax, kernelThreads } from '@/tuners/kernel/calculations.js'
+import { swapMaxBytes } from '@/tuners/systemd/config.js'
 
 const NOW = new Date('2026-01-01T00:00:00Z')
 // Tuners whose output is sysctl.d files, and tmpfiles.d files for /sys.
@@ -853,6 +855,37 @@ libc.syscall(250, 7, -4)
           expect(mismatches).toEqual([])
         })
       }
+
+      // No preset sets a swap cap between 0 and 100%, so the cases above never
+      // write one. The tuner writes it in bytes because systemd scales a
+      // percentage by RAM while its man page says by swap size; the second
+      // half pins down what systemd does with a percentage, so a release that
+      // changes it shows up here. cgroup v2 only (the tuner leaves it out on v1).
+      it.runIf(image.profile.systemd?.cgroupVersion !== 'v1')('a partial swap cap reaches memory.swap.max as the bytes the comment says', async () => {
+        const memTotal = Number((await vm.run("awk '/MemTotal/ {print $2}' /proc/meminfo")).stdout) * 1024
+        const hardware = { ...systemd.defaultHardware, ...image.profile.systemd, ramGiB: Math.round((memTotal / 1024 ** 3) * 10) / 10 }
+        const params = { ...presetParams(systemd, hardware, {}), memory_swap_max: 25 }
+        const files = systemd.generateConfig({ hardware, params, presetLabel: null, customised: true, now: NOW })
+        const slice = files.find((f) => f.path.endsWith('/50-resources.conf'))
+        const swapMax = `/sys/fs/cgroup/${hardware.targetSlice}/memory.swap.max`
+        const want = String(swapMaxBytes(25, hardware))
+        expect(slice.content).toMatch(/^MemorySwapMax=\d+[KMG]?$/m)
+        try {
+          await vm.sudo('rm -f /etc/systemd/system.conf.d/99-resource-tuning.conf /etc/systemd/system/*.slice.d/50-resources.conf')
+          for (const f of files) await vm.writeFile(f.path, f.content)
+          await vm.sudo('systemctl daemon-reexec')
+          expect((await vm.sysfs([swapMax]))[swapMax]).toBe(want)
+
+          await vm.writeFile(slice.path, '[Slice]\nMemorySwapMax=10%\n')
+          await vm.sudo('systemctl daemon-reexec')
+          const got = Number((await vm.sysfs([swapMax]))[swapMax])
+          // A tenth of RAM, to the page; a tenth of swap would be far off.
+          expect(Math.abs(got - memTotal / 10)).toBeLessThan(1024 * 1024)
+        } finally {
+          await vm.sudo('rm -f /etc/systemd/system.conf.d/99-resource-tuning.conf /etc/systemd/system/*.slice.d/50-resources.conf && systemctl daemon-reexec')
+        }
+      })
+
       afterAll(async () => {
         await vm.sudo('rm -f /etc/systemd/system.conf.d/99-resource-tuning.conf /etc/systemd/system/*.slice.d/50-resources.conf && systemctl daemon-reexec')
       })
@@ -969,6 +1002,22 @@ libc.syscall(250, 7, -4)
         // And at boot.
         await vm.reboot()
         expect(await vm.sysctls(Object.keys(want))).toEqual(want)
+      })
+    })
+
+    // Last, so the probes run on the same VM: the learning pages' evidence
+    // (npm run vm:capture) still holds on this kernel. Values the suite's
+    // writes change compare by shape only (probeKinds.mjs `compare`).
+    describe('learn evidence is fresh', () => {
+      it('every guide probe reads as captured, on the same kernel', async () => {
+        const probes = await loadProbes()
+        if (!Object.keys(probes).length) return
+        const evidence = readEvidence(id)
+        expect(evidence, `${id}: no src/learn/evidence/${id}.json; run npm run vm:capture ${id}`).not.toBeNull()
+        const kernel = (await vm.run('uname -r')).stdout.trim()
+        expect(kernel, `${id}: evidence is from ${evidence.kernel}; run npm run vm:capture ${id}`).toBe(evidence.kernel)
+        const stale = staleProbes(probes, evidence.probes, await runProbes(vm, probes))
+        expect(stale.map((s) => `${s} on ${id}`)).toEqual([])
       })
     })
   })

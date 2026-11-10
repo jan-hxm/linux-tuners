@@ -46,6 +46,7 @@ jobs:
           VITE_ADSENSE_CLIENT: ${{ secrets.VITE_ADSENSE_CLIENT }}
           VITE_ADSENSE_SLOT_LANDING: ${{ secrets.VITE_ADSENSE_SLOT_LANDING }}
           VITE_ADSENSE_SLOT_SWAP: ${{ secrets.VITE_ADSENSE_SLOT_SWAP }}
+          VITE_ADSENSE_SLOT_LEARN: ${{ secrets.VITE_ADSENSE_SLOT_LEARN }}
 
       - name: Upload build artefact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

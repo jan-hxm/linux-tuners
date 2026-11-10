@@ -257,7 +257,11 @@ parameters" and `linux-tuners:compact-parameters` for "Compact", each `'1'`
 when on and removed when off. They are conveniences for the viewer, never
 tuner state, so they are not part of the hash, are never sent anywhere, and
 the page works the same when storage is blocked or throws (the switches start
-off). The privacy policy lists them in section 3. The filter text and "Changed
+off). A third, `linux-tuners:learn-kernel` (`ui/learn/kernelPref.js`), holds
+the VM image id the study guides' kernel switcher last picked, shared by
+every figure on a guide page; it is only ever compared with the image list,
+never rendered, and without it the page starts on the first image. The privacy
+policy lists all three in section 3. The filter text and "Changed
 only" are not remembered at all: they last for the visit. Any other preference worth remembering takes the same
 form: one on/off or enum value per key, prefixed `linux-tuners:`, and a line in
 the policy.
@@ -265,8 +269,10 @@ the policy.
 ### Routes, SEO and build
 
 Route metadata is single-sourced in `src/routes-meta.js`, which lists the
-landing and legal pages and takes each live tuner's route from the registry
-(`src/tuners/registry.js`, see [§9 Registry](#registry)). The router applies
+landing and legal pages, takes each live tuner's route from the registry
+(`src/tuners/registry.js`, see [§9 Registry](#registry)), and adds the learn
+routes for live study guides (`learnRoutesMeta`, see "Learning pages > Routes
+and pages"): `/learn` and `/learn/<slug>`, the only two-segment paths. The router applies
 the head tags client-side, and `npm run build` runs a postbuild step
 (`scripts/generate-static-routes.mjs`) that writes `dist/<route>/index.html`
 with the route's title, OG/Twitter tags, JSON-LD and canonical URL baked in,
@@ -299,7 +305,8 @@ the default profile, the graph blurbs, the config `generateConfig` writes for
 the default profile (one build date for every page) with its install, check
 and undo steps, and the About content. `/` lists every tuner, `/setup` its
 steps; the legal pages get none. The build also writes `dist/<tuner>.md`,
-`dist/index.md`, `dist/llms.txt` (llmstxt.org) and `dist/llms-full.txt`, adds
+`dist/index.md`, `dist/learn.md` and `dist/learn/<slug>.md` for live guides,
+`dist/llms.txt` (llmstxt.org) and `dist/llms-full.txt`, adds
 a `<link rel="alternate" type="text/markdown">` to each tuner's head, appends
 `_headers` rules for those files (Markdown as `text/markdown`, `noindex`, a
 canonical `Link` to the HTML page; the llms files as `text/plain`), and fails
@@ -341,7 +348,9 @@ CMP**, configured in the AdSense dashboard. A custom consent banner existed
 earlier and was removed; reintroducing one would race with the CMP. `AdSlot`
 renders the `<ins>` block only when the publisher ID and the slot ID are both
 set. The IDs come from `VITE_ADSENSE_*` env vars baked in at build time (see
-`.env.example`). Without them, production renders nothing and dev shows a
+`.env.example`). Each tuner page uses the `swap` slot; each study guide has one
+`learn` slot (`VITE_ADSENSE_SLOT_LEARN`) after its last chapter and none
+between chapters. Without them, production renders nothing and dev shows a
 dashed placeholder.
 
 ### Hosting and deploy
@@ -587,6 +596,513 @@ same segments as the tuner page's, §7) as buttons marked
 step's segment is dashed, a blocked one's is `error`. Back and Next are a
 secondary and a primary button under the step, and the files step reads like
 a tuner's export.
+
+### Learning pages
+
+> **Status: built.** All nine tuners have a live guide (memory, hardening,
+> file limits, kernel limits, systemd resources, networking, disk I/O, huge
+> pages, IPC), and their tuner cards link to it instead of carrying the long
+> descriptions. Figures explain first: examples where they help, measured
+> values where the default is the point, distro buttons only where the
+> kernels differ in a way the chapter is about.
+
+One study guide per tuner at `/learn/<slug>`, written for a total beginner,
+with a figure before every explanation. A guide's text cites the official
+docs, and every measured number in a figure comes from a committed VM
+capture; a figure may also show example values to explain an idea, and then
+says they are examples. Being built in waves; the subsections below are
+filled in as each part lands.
+
+#### Guide data and checks
+
+A guide is plain data in `src/tuners/<id>/learn.js` (`LEARN`), with the
+probes its figures read in `src/tuners/<id>/probes.js` (`PROBES`, plain
+data, no Node imports). The shapes are typedefs in `src/learn/schema.js`;
+`validateGuide(guide, { defsByKey, probes, evidence, glossary, status })`
+walks a guide and returns one `{ path, rule, message }` issue per broken
+rule (the message starts with the rule name), and never throws on bad data.
+The guide contract suite, `src/learn/contract.test.js`, runs it over every
+`src/tuners/*/learn.js` (found by glob, with the domain's defs and the
+registry's `guide.status`, `draft` until set) and over the fixture guide,
+and expects no issues.
+
+- **Template.** A chapter is `id`, `title` and nine parts in this order:
+  `oneLine`, `picture` (`text`, `limit`), `figure`, `body`, `pins`,
+  `choose`, `symptoms`, `look`, `sources`. Every part is present, and an
+  unknown field is an issue (it catches typos). Budgets: `oneLine` 30 words,
+  `picture.text` 70, `body` 1 to 3 paragraphs of 70, a pin's `here` 40,
+  1 to 3 questions, a lead of at most two sentences, and no sentence anywhere
+  over 30 words. Words are counted on what the reader sees: markup and
+  footnote marks gone, a code span as one word.
+- **Words.** No "simply", "just", "obviously", "easy" or "of course", and no
+  em dash in any string of the guide, ids and commands included.
+- **RichText.** `lead`, `oneLine`, `picture`, `body`, a pin's `here`,
+  `hint`, `why`, `symptoms` and `look.for` are RichText (`ui/richText.js`)
+  and must parse with nothing left over; titles, labels, figure text, card
+  titles and source labels are plain text with no markup at all, since they
+  also build the figures' `aria-label`s. A tip (`does`) is RichText with
+  code spans and bold only: a link or glossary term in one is a `tooltip`
+  issue, since a tooltip never holds a control.
+- **Figure words.** A label names a part in at most four words
+  (`BUDGETS.label`): a card's `title`, an edge, a band label, a stack
+  layer's label, a node's `text` and `sub`, a band's `text`, a timeline
+  line or event, a side-by-side state and legend word, a gauge's `axis`,
+  mark, zone, zoom, level and curve event, a scale bar's label and segments, a
+  compare figure's `axis`, bar, mark and group, a tree node, a modes row,
+  option and group, and a ValueRef's `label`. A stack layer's `values` are
+  shown by name alone, so one without a `path` needs a `label`.
+  What the part does goes in its `does`, a tip of one sentence of at most 25
+  words (`BUDGETS.tip`), which the page shows in a tooltip and the static
+  page inline. Both are rule `figure words`. Glossary ids must exist. Inline
+  links follow the source host rule.
+- **Sources.** `[^id]` footnote marks are allowed in `body` only; each names
+  an entry in the chapter's `sources`, each source is cited, and a chapter
+  has at least one. A source URL is https on `docs.kernel.org`, `man7.org`
+  or `systemd.io`, with no port or credentials. `schema.js` takes the marks
+  out before `parseRichText` runs (`footnotes()`, `stripFootnotes()`).
+- **Settings.** Every def key of the tuner is pinned in exactly one chapter,
+  once; pins, `Answer.key` and a side-by-side `setting.key` are real def
+  keys. A pin's `layer` names an id in its chapter's figure (a stack layer,
+  band or node, a timeline line, a gauge mark or zone, a compare bar, mark
+  or group, a tree node, or a modes row or group). A setting a figure draws
+  itself (a gauge's, compare's or tree's `pins`, a modes row's `pin`) is a
+  def key pinned in the same chapter, drawn once per figure. Such a pin may
+  carry the setting's own `value` (a ValueRef, measured or an example): a
+  gauge, compare or tree pin as `{ key, ..., value }`, a modes row as
+  `pin: { key, value }` (a plain key otherwise). The last question has a
+  `no`, since a missing `no` means "next question".
+- **Answers.** A question's `yes` and `no` are `{ key, dir: 'raise' |
+  'lower' }`, `{ key, to }` or `{ leave: true, why }`. `to` names a value,
+  for a setting whose values have no order: for a def with `options` it is
+  one of their `value`s (the option id, not its `sysctlValue`); for any
+  other def a number in `kernelMin..kernelMax` on its `step` (1 when unset),
+  so a toggle takes 0 or 1 and a segmented control a segment; a def with
+  neither takes no `to` (`answerValueIssue`, rule `answer value`). It reads
+  "Set `<name>` to `<value>` (`<label words>`)." (`answerText`), the value
+  being what the file gets (`sysctlValue` when the option has one) as a code
+  span, and the words the control's label adds after the value. Answers are
+  RichText in the Chooser, the DecisionFlow and the static flow alike.
+- **Commands.** `look.cmd` and `choose[].check` start with `cat`, `grep`,
+  `awk`, `free`, `swapon --show`, `sysctl`, `dmesg`, `sudo dmesg`,
+  `systemctl show`, `ls`, `findmnt` or `udevadm info`; a pipe feeds only
+  `grep` or `awk`; and there is no `>`, `<`, `;`, `&`, backtick, `$(`,
+  `tee`, `-w` or line break. Per command, arguments that write are refused
+  too: `sysctl` takes only read flags and key names (no `=`, `-p`,
+  `--system`), `dmesg` no clearing or console flags, `swapon --show` only
+  display flags, `udevadm info` no `--cleanup-db`, and an `awk` program no
+  `system`, `getline`, pipe or in-place flag. `commandIssues(cmd)` is the
+  check on its own.
+- **Examples.** A ValueRef is measured (`{ probe, path?, unit, label? }`) or
+  an example (`{ example, unit, label }`, exactly one of `probe` and
+  `example`, `label` required): a number or short word the guide types in
+  because it explains better than the idle 3 GiB test guest would, such as a
+  busy 16 GiB machine. An example number is finite, at least 0 unless its
+  unit is in `SIGNED_UNITS` (only `''`, a plain number such as a signed
+  score), and within `EXAMPLE_LIMITS` for its unit (100 for `%`, 1 PiB for
+  `bytes` and `kB`, the largest safe integer otherwise); a string is at
+  most 40 characters (`exampleIssue`, rule `example`). Examples go
+  wherever a ValueRef does (gauge marks, level and pins, compare bars, marks
+  and pins, tree node values and pins, modes row values and row pins, the
+  scale bar's total and segments, stack values, timeline lines) and are
+  never checked against the evidence. The settings' defaults stay measured.
+- **Kernel buttons.** A figure shows the kernel buttons only when it sets
+  `kernels: true`, for values that differ between the images in a way the
+  chapter is about. `kernels` on a figure with no measured value is rule
+  `kernels`; anything but `true` is `shape`.
+- **Probes and evidence.** Every measured ValueRef, node `probe`, card
+  `probe` and `backedBy.probe` names a probe in the tuner's `probes.js`, and
+  a measured ValueRef has a `unit`, a dotted `path` and an optional `label`. A numeric step of
+  the path on a string value picks one of its whitespace-separated words,
+  counted from 0, as a number when it is one: `path: '2'` on
+  "4096 131072 6291456" is 6291456 (`resolvePath`, which the live evidence
+  check uses too, so a word past the last fails it). A card or node may add `path` and
+  `unit` to its `probe` the same way, and must when the probe's value is
+  an object (a `meminfoKeys` probe): a live guide fails a bare card or node
+  probe whose value is one. A `live` guide needs an evidence file
+  for each of the five images and, in each, an `ok` or `absent` entry for
+  every probe it names, with an `ok` value at each ValueRef's path; a
+  `draft` may miss evidence but nothing else. A `backedBy.vmTest` must be a
+  literal `it()` name in `vm/suite.mjs` (checked by the suite, not the
+  validator).
+- **Figure ranges.** Timeline points and events are 0..1 and time never
+  goes back, `schematic` is `true`, a curve has two points or more; a
+  side-by-side has two states or more with `start + lit <= cells` and
+  `asked` one of the lit cells (and then a legend word for it); parts-map
+  cards sit on distinct cells from column and row 1, edges join two cards
+  sharing a row or a column, and bands cover rows that have cards. A scale
+  bar has one to four segments in its total's unit, and at most one without
+  a value, last (the rest). A gauge's marks share one unit and are listed
+  bottom to top (a live guide's captures must agree on every image); zones
+  and pins name marks, `from` below `to`; `range.from < range.to`; a zoom's
+  `full` is in the marks' unit unless `fullPerUnit` (above 0) converts it; a
+  `level` (`{ label, value, does? }`) is in the marks' unit;
+  curve points are `[t, level]` with t 0..1 not going back and level 0 to
+  marks + 1. A compare figure has `scale` `linear` or `log`, 1 to 12 bars and
+  at most 3 marks in one unit, and with `groups` (at most 6) every bar names
+  one; its pins sit on a bar or a mark. A tree has at most 3 levels and 12
+  nodes, ids unique in the chapter, and pins on its nodes. A modes figure has
+  1 to 12 rows of 2 to 8 options, each value (a number or a string) listed
+  once per row; a `bits` row lists 0 or powers of two; groups as compare.
+  An option is `{ value, label }` or a range of numbers `{ min, max?,
+  label }` (no `max`: no top), such as user namespaces' `{ value: 0, label:
+  'blocked' }, { min: 1, label: 'allowed' }`; ranges overlap neither each
+  other nor a number option, and a `bits` row has none. Where a row's `pin`
+  names a def with `options`, every value option is one the def writes (its
+  `sysctlValue`, else its `value`, compared as text), unless the row says
+  `allValues: true` (rule `mode value`); ranges are not held to it.
+
+`src/learn/evidence.js` holds `IMAGES_ORDER` (the five image ids and the
+labels the kernel switcher shows, in `vm/lib/images.mjs` order, checked
+against it by the suite), `loadEvidence()` (the committed captures, bundled
+through `import.meta.glob`, so it runs under Vite only), `validateEvidence`
+(numbers, strings and booleans as leaves, no control characters or em
+dashes, guest memory 3072 MiB), and `valueFor(ref, imageId)`, which returns
+`{ status: 'ok', value, kernel, capturedAt }`, `{ status: 'absent', reason,
+kernel, capturedAt }` or `{ status: 'missing' }`, walking own properties
+only. A third argument takes other evidence, which is how tests pass the
+fixture captures.
+
+The fixture guide `src/learn/__fixtures__/demo.learn.js` (slug `demo`, with
+its own `DEFS`, probes and five made-up evidence files of round numbers)
+uses every figure kind, template part and optional field (tips on cards,
+nodes, bands, lines and events, the scale bar, `start`/`asked`/`legend`,
+a gauge with `range`, `zoom`, an example `level`, `curve` and pins on a mark
+and a gap, a log compare with groups, an index path, a labelled ref, a
+measured and an example mark, an absent bar and pins on a bar and a mark and
+one with its own example value, a three-level tree with an absent value, an
+example value and a pin, and a grouped modes figure with a `bits` row,
+`allValues`, a value no option names, a row of ranges, a row pin with its
+own example value and an absent row). The timeline's values are all
+examples. The stack, compare, tree and modes figures set `kernels: true`
+and their captures differ, so they show the buttons; the gauge's differ too
+but it does not ask, so it shows Debian 13 alone. It passes as
+`draft` without evidence and as `live` with its fixtures, and the suite
+breaks a copy of it once per rule and checks the issue's path and rule. It
+lives only under `__fixtures__` and is never routed outside tests.
+
+#### Figures
+
+The figures are HTML in the site tokens, drawn from the guide's data
+(`src/ui/learn/`), so they follow the scheme, print, keep their text
+selectable and take their `aria-label` from the same data. The words and the
+geometry live in plain JS (`figureText.js`), which the prerendered page can
+share; the components only lay them out. Figures are drawn to scale from the
+evidence where there is a number, and read as pictures: **a label names a
+part in two or three words, and what it does moves into a tooltip** (the
+part's `does`). With every tooltip closed the figure still reads, and the
+static page keeps every word.
+
+**Tooltips** (`FigureTip.vue`, `TipStrip.vue`, `tipState.js`). The trigger
+is the part itself, a real `<button>` (a card's frame, or a dotted underline
+on a label). It opens after the mouse rests 150 ms, on keyboard focus and on
+a tap or click (a second click closes it); Escape, a tap outside, the mouse
+leaving and focus moving away close it, and one is open at a time on the
+page. It holds the part's name, one sentence (`TipWords.vue`: code and bold
+only) and, for a measured part, a value line with its kernel ("97,076 kB,
+kernel 6.12...", or "on all 5 test kernels"), never a link or a control.
+The sentence and value are always in the page as the button's
+`aria-describedby` (a `hidden` span), so the floating box and the strip are
+`aria-hidden`. From `md` up it floats under the part (`ink` box, `paper`
+text, teleported to `body` and placed in the viewport, so it never makes the
+page scroll sideways; it fades in only without reduced motion); below `md`
+it is a strip under its figure (`TipStrip`, matched by the figure's scope).
+Nothing needed to choose a setting lives only in a tooltip: the pins, the
+panel and the body say it too.
+
+The figure roots are `role="figure"` with the label from the data, since
+their parts are buttons; everything else in them is `aria-hidden`, and no
+button sits inside a hidden box. The side by side, which has no tooltips,
+stays `role="img"`.
+
+- **`PartsMap`** is the guide's "Start here": compact cards (title, and the
+  value where measured; `does` is the tooltip) on a grid from `col`/`row`
+  (a `fit` card in `fit-tint`), light `paper-hover` bands behind rows with a
+  label column, and connectors whose places are CSS `calc()` lengths built
+  from the grid's equal tracks and its gaps, so nothing is measured and no
+  guide sets a pixel; a row edge's label wraps inside the gap. Below `md` it
+  is a list of card buttons by group, top down, and "A to B: label" rows. An
+  optional **scale bar** (`parts.scale`: `{ label, total: ValueRef,
+  segments: [{ id, label, value?, does? }] }`) follows it: each measured
+  segment its share of the total on the chosen image (`ink`, `fit`, `quiet`
+  in order), the rest hatched, the legend entries tooltip buttons with value
+  and share. A total not measured draws no share.
+- **`StackFigure`** draws layers as rows with a 7.5rem label column (the
+  label sits over the row below `md`), bands side by side (stacked on a
+  phone) and node boxes; a band or node with `does` is a tooltip button.
+- **`Timeline`** is schematic: the curve is an SVG path from `curve`, the
+  lines are dashed and spaced evenly in the order listed (line i of n at
+  level (n - i)/(n + 1)), so a guide writes its curve against those levels
+  and the measured values are the lines' labels, never their positions;
+  events are numbered ticks (`fit`, `error` or `quiet`) with their words
+  listed under the plot (a tooltip button where they have `does`), and the
+  caption says the distances aren't real.
+- **`SideBySide`** is one row of squares per state: the lit run from
+  `start`, the one asked for (`asked`) filled `ink`, the others lit filled
+  `fit`, the rest empty `rule-strong` outlines, so lit and unlit differ in
+  fill and lightness; a small legend names them in the figure's `legend`
+  words (default "lit" and "not lit"). Under it, the setting that gives each
+  state and the VM test or probe behind it.
+- **`Gauge`** (`kind: 'gauge'`) is a vertical scale drawn to scale on the
+  chosen image (`gaugeModel`): `marks` (ValueRefs in one unit, bottom to
+  top) are lines with a short label and their value, `zones` the fills
+  between two marks (`fit` tint, an `error` hatch or plain) with their names
+  beside the scale from `md` and as a key below it. The scale runs over
+  `range`, or from 0 to a round number at least 15 % above the top mark
+  (`niceTop`), widened when a mark passes it; ticks sit only at round values
+  inside it. `level` fills the gauge from its foot up to one value, a solid
+  `fit` column inside it named beside it like a mark (a tooltip button with
+  `does`), like liquid in a tank: the memory guide fills its dirty-data
+  gauge to an example 14 % between the two measured marks, which puts the
+  reader in one zone without adding a line to the curve. A schematic gauge
+  draws no level. `zoom` adds a thin bar of the whole `full` range beside it,
+  with a bracket on the part drawn large and dashed lines to the scale
+  (`fullPerUnit` converts, such as 4 kB per page). `curve` is a schematic
+  line beside the scale on the same heights, labelled "time (schematic)",
+  its levels written against the marks (0 the foot, k the k-th mark, marks
+  + 1 the top), so it follows the marks as measured; its events are numbered
+  dots listed under it. `pins` draw settings on the scale, on a mark or on
+  the bar over a gap, as pressed-state buttons that select the chapter's pin
+  (the row under the figure shows them instead below `md`). A mark that is
+  not measured, or marks out of order, turn the gauge into a labelled
+  schematic: marks evenly spaced, no ticks, no bracket, "not measured" in
+  place of every number, and a caption that says so.
+
+- **`CompareFigure`** (`kind: 'compare'`) draws horizontal bars, one per
+  item, on one shared scale (`compareModel`): `linear` from 0 to a round
+  top, or `log` from the power of 2 (byte units) or 10 below the smallest
+  value (one further down when it is a power itself, so its bar has a
+  length) to the one at or above the largest, ticked at every s-th power so
+  there are at most five ticks, never past the ends (4 KiB, 32 KiB, ... or
+  10K, 1M). A row is label, track, value from `md` up (9rem, the track, a
+  value column as wide as the longest setting drawn on a bar), and label
+  and value over a full-width track below it, so every track has the same
+  width and nothing scrolls sideways. A bar not measured keeps its row as
+  a dashed gap with "not present on this kernel" or "not measured", never a
+  zero bar. `marks` are vertical lines across every track, named above the
+  bars in the flow (from x in the left part, ending at x in the right part)
+  so the name wraps rather than leaving the track; `groups` are headings
+  over their bars (a tooltip button with `does`). `pins` are FigurePin
+  buttons under a bar's value or beside a mark's name, from `md` up.
+- **`TreeFigure`** (`kind: 'tree'`) draws a small hierarchy (`root` with
+  `children`, at most 3 levels and 12 nodes) as an indented tree, 1.75rem a
+  level, with 1.5px connector lines (`treeNodes` gives each node its depth
+  and the rails of the levels above that run on). Each node is a box with
+  its label and value (a tooltip button with `does`); `pins` sit beside
+  their node from `md` up. The same drawing serves a phone.
+- **`ModesFigure`** (`kind: 'modes'`) draws one row of segments per setting
+  (`modesModel`, `modeSegments`): the option equal to the measured value
+  lit (`ink` fill, `paper` text, compared as text so 0 and "0" match); a
+  `bits` row lights every option whose bit is set (176 lights 16, 32 and
+  128); a value or bits no option names add one more lit segment, dashed,
+  with the raw value ("438"), so a value is never dropped; an absent value
+  lights nothing and says "not present on this kernel". Segments wrap on a
+  phone; groups head their rows. A range option lights when the number
+  falls in it, and its tooltip adds the number ("Set on this kernel:
+  11,557."); a value in no option is the dashed raw segment as before. A
+  row's `pin` is not drawn in the row: a long setting name there took a
+  column from the options and wrapped them at 1440 px, so the pin row under
+  the figure keeps it at every width, and the row whose setting is pressed is
+  drawn in `fit-tint` (as is the pin's `layer`). A lit option with `does`
+  says "Set on this kernel." in its description ("The example value." for
+  an example).
+
+`FigurePin.vue` is the pressed-state setting button the gauge, compare and
+tree figures share (`drawnPinKeys(figure)` lists the keys each draws, which
+ChapterView shows in its row below `md` only; a modes figure draws none).
+
+**Values.** A value comes only through `evidence`, a function `ref =>
+valueFor(ref, imageId)`, and anything not `ok` reads "not measured" (or
+"not present on this kernel" for an `absent` probe), never a number, in the
+drawing, the tooltip and the label alike. `valueFor` reads an example ref
+as `{ status: 'ok', value, example: true }` on every image, with no kernel,
+so a figure draws it like a measured value; the words say it is one
+(`isExample`): the tooltip's value line ends ", example", the panel lists
+"File cache: 5 GiB (example)" under "Example values" (or "Values" for a
+mix), and the caption follows `measuredOn`: "Example values, to show the
+idea." when every value is one (no kernel line), or for a mix the examples
+by name first ("RAM and Swap are examples, to show the idea. The rest is
+measured on Debian 13, kernel ..."). The scale bar under the parts map
+says the same under its legend (`examplesNote`). A ValueRef is named by its
+`label`, else by the part that shows it (a mark, bar, node, row or line;
+`figureRefs` and `pinRefs` attach it; a pin's own value by its setting's
+name), else by its path, else by the probe id (`refName`). A pin with its
+own value on a compare bar or mark, a tree node or a modes row shows that
+value in the panel in place of the part's (so a setting drawn beside
+another's bar never shows the other's number); a gauge pin's value comes
+before the marks it sits on, which say where the setting acts. A
+number in `bytes` or `kB` (the kernel's KiB) reads in KiB, MiB or GiB with
+one decimal under 100 ("94.8 MiB", "6 MiB", "128 KiB"; `humanBytes`); the
+tooltip, the panel and the static page add the number as measured ("6 MiB
+(6,291,456 bytes)", `formatValue(..., { exact: true })`). Other units read
+as before ("2,000 pages"), and a gauge's marks keep the plain number of
+their axis's unit.
+
+`ChapterView` renders one chapter in the template order and says each thing
+once. The VM captures prove the claims, but the distro they came from
+rarely helps a reader understand a figure, so the kernel switcher is opt-in.
+Above a figure that sets `kernels: true` and whose measured values differ
+between the images (`sameOnEveryImage` over the measured `figureRefs`;
+examples never count), a kernel switcher (`role="group"`, one
+`aria-pressed` button per image of `IMAGES_ORDER`) picks the capture; it is
+a viewer preference (`linux-tuners:learn-kernel`, the image id, checked
+against the list before use and never rendered; `ui/learn/kernelPref.js`)
+shared by every chapter on the page that shows one. Every other figure, and
+its pin panel, shows the first image, Debian 13, with no buttons, and the
+caption "Measured on Debian 13, kernel 6.12.113+deb13-cloud-amd64." When
+every image measured the same value for everything the figure measures, the
+caption reads "Values measured on 5 test kernels, the same on each."
+instead; the static page says such a value once ("10 % on all 5 test
+kernels") and still lists every other value on every kernel. Under the
+figure the pins are mono buttons with a dot (`aria-pressed`, `fit-tint` and
+a `fit` dot when pressed; a second press clears it). The first is selected
+on load, and its `layer` (a layer, band, node, timeline line, gauge mark or
+zone, compare bar, mark or group, tree node, or modes row or group id) is
+drawn in `fit-tint`. The margin panel beside the figure (under
+it on a phone) is `aria-live="polite"` and the one place a setting is
+explained on screen: the setting's name and title, what it changes here,
+the values its `layer` (and, on a figure that draws the setting, the part it
+is drawn on) points at, by name and exact,
+with the kernel they were measured on, the def's docs link and "Tune it".
+There is no "Settings here" section and the look command is not repeated in
+the panel; "Look on your machine" has it once, and the static page keeps a
+"Settings here" list with every pin's `here` as the full-text fallback.
+Footnote marks `[^id]` aren't RichText markup, so the chapter splits them
+out first; each becomes a mono `[n]` link to the chapter's sources (numbered
+by first citation), followed in place like the tuner pages' in-page links,
+and each paragraph's sources sit in the margin beside it. Links render only
+when they are https or a same-site path. The `choose` questions are the
+`Chooser` on screen (one question at a time, Yes and No staying in place so
+focus stays, a polite live line, then a `fit-tint` result with "Open it in
+the tuner" and "Start over", which focus moves to) and the static
+`DecisionFlow` list in print. `learn.a11y.test.js` runs the axe sweep over
+every fixture chapter's states in both schemes, every tooltip open and every
+pin drawn on a gauge, compare or tree figure pressed included.
+
+The static page lists every figure as text: parts with their tips inline
+("Above high (Nothing to do)"), the scale bar's segments, a gauge's marks,
+zones, settings on the scale, zoom and curve events, a compare figure's
+bars by group, its lines and drawn settings, a tree's nodes top down with
+their parent ("web.service, in System services"), a modes figure's rows with
+their options ("one of" or, for bits, "any of", each with its value where
+the label differs) and setting, and then every value the figure reads on
+every kernel, by name and exact ("Start: Debian 13, kernel ...: 128 KiB
+(131,072 bytes); ...", "on all 5 test kernels" when they agree). Examples
+follow under "Example values, to show the idea:" once each ("Busy server:
+example: 41,000 entries."), a gauge's `level` reads "The scale is filled
+to ...", a range option reads "allowed (1 or more)", and a drawing whose
+numbers are examples says it is drawn "from example values" (or "from each
+kernel's capture and example values").
+
+#### Evidence
+
+A figure's measured numbers are never typed in; a value typed in to
+explain is an example ref, which the page always calls one. A guide lists what to
+measure in `src/tuners/<id>/probes.js` as plain data (no imports, so the
+contract suite reads it in jsdom): `PROBES = { '<id>.<name>': { kind, ... } }`,
+every id starting with its tuner's folder name. `npm run vm:capture
+[image...]` (vm/README.md) boots each VM image on the suite's guest
+(3072 MB, its extra disks), runs every probe, and writes
+`src/learn/evidence/<image>.json`: `{ image, kernel, capturedAt,
+guestMemoryMiB, probes: { <id>: { status: 'ok', value } | { status:
+'absent', reason } } }`, keys sorted so a recapture diffs by value.
+Agents never boot VMs; the maintainer captures once per wave, and a guide
+whose probes have no evidence stays `draft`.
+
+The kinds are a closed set in `vm/lib/probeKinds.mjs`. Each holds its
+probe's fields to a strict pattern, builds a fixed command with that one
+field through `quote()`, parses the output, and declares how the
+freshness check compares:
+
+| Kind | Probe | Command | Value | Compare |
+|---|---|---|---|---|
+| `sysctl` | `name: 'vm.min_free_kbytes'` | `sudo sysctl -n <name>` | a number when it is one whole number, else text | present |
+| `file` | `path` under `/proc` or `/sys`, `exists: true` | `sudo test -e <path>` | `true`; a missing file is absent | exact |
+| `sysfs` | `path` under `/sys` | `sudo cat <path>` | the bracketed choice ("always [madvise] never" is `madvise`), else as `sysctl` | present |
+| `diskQueue` | `disk: 'ssd'` (`nvme`, `ssd`, `hdd`, `virtio`), `attr: 'rotational'` | `sudo cat /sys/block/<dev>/queue/<attr>`, the SATA disks found by AHCI port (ata2, ata3) since sda and sdb swap between images | as `sysfs`; an image without that disk is absent | present |
+| `thread` | `name: 'kswapd0'` | `ps -e -o comm=` | whether a process of that exact name runs | exact |
+| `zoneinfo` | none | `cat /proc/zoneinfo` | `{ <zone>: { min, low, high } }` in pages; node 0's zones by name, others `node1-Normal` | present |
+| `vmstatKeys` | `prefix: 'allocstall'` | `cat /proc/vmstat` | the keys `<prefix>` or `<prefix>_*`, sorted (one `allocstall` before 4.8, per zone after) | exact |
+| `meminfoKeys` | `keys: ['MemTotal', ...]` | `cat /proc/meminfo` | `{ <key>: <number as printed> }`, keys the kernel lacks left out | present |
+| `systemctl` | `property: 'DefaultTasksMax'` (`/^[A-Z][A-Za-z0-9]{1,63}$/`), optional `unit: 'system.slice'` (letters, digits, `_ . @ -`, no leading `-`, a unit suffix) | `systemctl show --no-pager --property=<property> --value [<unit>]` as the normal user | as `sysctl` ("infinity" and "yes" stay text); empty output, a property that systemd doesn't export, is absent | present |
+
+What decides absent: a non-zero exit (not stderr, where sudo can warn), a
+missing file, or nothing to parse; the reason is the first stderr line or
+a fixed phrase, cleaned to printable text. Values are only numbers,
+strings, booleans, arrays and plain objects; anything else fails the
+write. The zoneinfo parser counts only the `min`, `low` and `high` lines
+between a zone's `pages free` and `protection:` lines, so it reads 4.15
+through 6.17 (`boost` from 5.16, `promo` and `cma` later) and never the
+per-cpu `high:` lines.
+
+The suite's last block, "learn evidence is fresh", reruns every probe on
+the same VM after the rest of the suite and fails with the probe id and
+image when the kernel differs from the file's or a result has gone stale.
+By then the suite has written its own sysctl, THP and swap settings, which
+is why kinds whose values those writes change compare as `present` (same
+status, same object keys or array items, same value type) and only the
+stable kinds as `exact`. So an `exact` probe must measure something the
+suite leaves as booted (a `file` that the suite creates, such as a zram
+device, would read as stale).
+
+Parser tests (`scripts/vm-probe-kinds.test.js`, in `npm test`) run on real
+output in `vm/lib/__fixtures__/`, each file naming its source: the
+`/proc/meminfo` example in the kernel's `proc.rst`, `/proc/zoneinfo` and
+`/proc/vmstat` posted to the kernel mailing list (2017, 2020, 2024), and a
+2.6.2 `/proc/vmstat` on kernel.org. No real 6.12 zoneinfo was found, so
+that layout is a documented-format fixture from the `mm/vmstat.c` format
+strings with placeholder numbers, marked as such.
+
+#### Routes and pages
+
+`src/learn/guides.js` lists every guide (`GUIDES`, keyed by slug): its tuner,
+its route metadata and lazy loaders for its `learn.js` and `probes.js`, like
+`TUNER_DOMAIN_LOADERS`, so each guide is its own chunk. It is plain JS that
+runs under Node (routes-meta.js reads it in the postbuild). A guide gets a page
+only when its registry entry says `guide: { slug, status: 'live' }`
+(`LIVE_GUIDES`); a `draft` gets no route, no link, no static page and no
+sitemap entry. While no guide is live, `/learn` doesn't exist either, and the
+header's and footer's "Learn" links (shown when a route named `learn` exists,
+like Glossary) stay hidden. `src/learn/guides.test.js` checks that the slugs
+equal the guides the contract suite finds and the registry's.
+
+- **Routes.** `/learn` (`LearnIndexView`: each live guide's title, lead and
+  facts line, and its tuner) and `/learn/<slug>` (`LearnView`). The router
+  loads the guide, its probes, the committed captures and the tuner's domain
+  (for the settings' names and docs links) before it renders, so the views
+  have no loading state. JSON-LD: `TechArticle` for a guide, `CollectionPage`
+  for the index.
+- **The guide page.** A header block (breadcrumb Learn / title, the lead, the
+  facts line from `guideFacts`: chapters, settings, minutes, "Figures measured
+  on N kernels", and "Tune these settings"), "Start here" with the parts map
+  (it has no kernel buttons, so it shows the first image), "The chapters" with the settings each
+  pins, then every chapter through `ChapterView` (`h2`, parts `h3`), each
+  followed by its previous and next chapter. Beside them from `lg` up a sticky
+  chapter rail of in-page links (`aria-current="location"` from
+  `useScrollSpy`); on a phone it is a disclosure button with `aria-expanded`.
+  One `AdSlot` (`learn`) after the last chapter.
+- **"Tune it" links** open `/<tuner>?focus=<key>`, never `#setting-<key>`:
+  the tuner's hash is shared-link state. `ui/focusSetting.js` builds the link;
+  `TunerPage` reads the query once after the router's first scroll, accepts
+  only one value that is an own def key of the domain, drops the query from the
+  URL (the hash stays), opens the card's group and advanced cards and focuses
+  the card (or its group when the profile hides it). Nothing in it reaches the
+  store, the config or the page text.
+- **The tuner page** of a live guide gets a "How it works" link in its title
+  block, and provides `HOW_IT_WORKS_KEY` (`ui/descParts.js`) to the cards: a
+  lookup `(key) => chapterId | null` from `chapterIndex(learn)`, loaded after
+  mount from the guide's `learn.js` only. The router passes the guide as a
+  prop, so a tuner with a draft guide or none loads nothing.
+- **Static text.** The build awaits `loadStaticGuides()` and writes one page
+  per live guide with every chapter in the template order: figures as lists,
+  each value on every image with the kernel it was measured on, the body's
+  marks as `[n]`, the chooser as the decision flow, the settings with their
+  `?focus` links; plus `/learn`, their Markdown copies, a "Guides" section in
+  llms.txt and the guides at the end of llms-full.txt. A learn route without
+  its data fails the build.
+- **Tests** route the fixture guide as live with `vi.mock` of guides.js
+  (`src/learn/__fixtures__/demoKit.js` `mockGuides`): `src/views/learn.test.js`
+  (routes, links, page structure, focus, axe in both schemes), the route sweep
+  in `src/a11y.test.js`, `src/static/learn.test.js` and the static sweep.
 
 ## 6. Adding a tuner
 
@@ -856,32 +1372,54 @@ must follow them, and existing UI must not regress.
   plain-language `title` above its sysctl name, the value (large, mono,
   underlined in `fit` or `mine`), the control and the one-line `shortDesc`.
   The control is labelled by the title and the name together. Its reasons
-  sit beside it in a **margin** of numbered notes (`[1]`, `[2]`, ...), built
-  from today's data in the order of the layers: the `longDesc` parts
-  (`ui/descParts.js`: "What it does", then "When to change it" and "Watch
-  out" where the def has them), the rule of thumb, the context note, and
-  last the origin note (below). Each note shows its **first sentence**
+  sit beside it in a **margin** of numbered notes (`[1]`, `[2]`, ...). The
+  margin's notes, in order: the **zone note**, when the def's current zone
+  has one (zones take an optional plain-text `note`, `{ label, min, max,
+  note }`; the current zone is the first with a note whose bounds hold the
+  value; the card knows no tuner, the text is data); then, **while the
+  tuner has no live guide**, the `longDesc` parts (`ui/descParts.js`: "What
+  it does", then "When to change it" and "Watch out" where the def has
+  them), the rule of thumb and the context note; and last the origin note
+  (below). Each of those long notes shows its **first sentence**
   (`ui/firstSentence.js`) with a "more" button (`aria-expanded`) that opens
-  the rest in place; the notes don't depend on the value, so dragging never
-  changes their height. The margin holds **at most three notes**: the first
-  two and the origin note. The card is a size container and lays itself out
-  by its own width, never by tuner: from 40rem the margin sits beside the
-  column, 16.25rem wide and growing towards **30rem** while the column keeps
-  at least 34rem; a card narrower than that clamp's floor (52.75rem, beside
-  the graph column or on a phone) holds **two notes**, the first and the
-  origin note; below 40rem the notes become `[n]` toggle buttons under the
-  column that open each note in place (the Tufte pattern). The margin's last
-  line holds "Learn more" (the remaining notes, in place), the docs link and
-  "Full reference", which opens the **drawer**: the pro reference, which
-  doesn't repeat `longDesc`: the accepted range and the kernel default with
-  its version note, a "Try it now" command that sets the current value
-  until the next reboot (the domain's `tryCommand`: `sudo sysctl -w`, or
-  `echo | sudo tee` for a sysfs file; systemd and block I/O have none, since
-  their settings are directives and udev rules), the context note, the
-  formula with live values, defaults by workload (named by the profile's
-  option labels), and the sources. The contract suite checks every def's
-  title and parts. Reactive notes that change with the value are planned
-  separately (TODO.md).
+  the rest in place; a zone note is short and shown whole. Dragging across
+  a zone boundary can change the first note, so it is also read out: a
+  visually hidden `aria-live="polite"` region on the card says the new
+  zone's label and note once the value has settled (600 ms, the way
+  `IssueAnnouncer` waits), never while dragging and never for the note
+  already there at mount. The margin holds **at most three notes**: the
+  first two and the origin note. The card is a size container and lays
+  itself out by its own width, never by tuner: from 40rem the margin sits
+  beside the column, 16.25rem wide and growing towards **30rem** while the
+  column keeps at least 34rem; a card narrower than that clamp's floor
+  (52.75rem, beside the graph column or on a phone) holds **two notes**,
+  the first and the origin note; below 40rem the notes become `[n]` toggle
+  buttons under the column that open each note in place (the Tufte
+  pattern). The margin's last line holds "Learn more" (the remaining notes,
+  in place, with the danger note), the docs link and "Full reference",
+  which opens the **drawer**: the pro reference, which doesn't repeat
+  `longDesc`: the accepted range and the kernel default with its version
+  note, a "Try it now" command that sets the current value until the next
+  reboot (the domain's `tryCommand`: `sudo sysctl -w`, or `echo | sudo tee`
+  for a sysfs file; systemd and block I/O have none, since their settings
+  are directives and udev rules), the context note, the formula with live
+  values, defaults by workload (named by the profile's option labels), and
+  the sources.
+
+  **With a live guide** (the registry entry's `guide.status` is `'live'`;
+  absent or `'draft'` changes nothing) the long text has moved to the
+  guide: the card shows no `longDesc` notes, rule of thumb or context note
+  in the margin, and no "Learn more". It keeps the title, sysctl name,
+  value, control, `shortDesc`, the zone note, the origin note and "Full
+  reference", and gains a **"How it works"** link to
+  `/learn/<slug>#<chapter id>` for the chapter that pins the key (a real
+  link; plain clicks go through the router). The chapter comes from a
+  lookup `(paramKey) => chapter id | null`, given to the card by its
+  `howItWorks` prop or by a page providing it under `HOW_IT_WORKS_KEY`
+  (`ui/descParts.js`); a key no chapter pins, or no lookup, shows no link.
+  `longDesc` stays in the defs and the guide reads it: text moves, never
+  copies. The contract suite checks every def's title and parts, and that
+  every zone note is plain text with no em dash on a zone with bounds.
 - **Essential and advanced parameters.** Every def has a `tier`. Each
   section of `ParameterPanel` shows its essential cards and a "Show N
   advanced" button (`aria-expanded`) for the rest. An advanced card is always
@@ -1046,7 +1584,12 @@ src/
   `needThis.js`, `installGuide.js`, `controls/meta.js`), never `vue` or a
   `.vue` file, and nothing in `src/` imports it: only the build (and tests)
   does, so the SPA bundle doesn't change. Text the page and the static layer
-  both show lives in those plain-JS modules, never copied.
+  both show lives in those plain-JS modules, never copied. It reads the study
+  guides through `learn/guides.js` (lazy loaders, awaited once), as it reads
+  tuners through `domains.js`.
+- `learn/` holds the guide schema, the evidence loader and `guides.js`, the
+  one list of guides; `ui/` never imports it (the router passes a tuner page
+  its guide), and `views/LearnView.vue` and the static layer do.
 - Enforced by `src/importBoundaries.test.js`, which scans import statements,
   since the project has no ESLint. Test files are exempt: shared-code tests
   mount real tuners as fixtures.
@@ -1347,7 +1890,10 @@ behaviour goes in only once a VM has shown it; facts found that way so far:
   before 5.13, and Ubuntu 18.04 blocks perf at 3 like Debian.
 - systemd 258 removed `DefaultCPUAccounting=`; on cgroup v2 it was a no-op,
   so it is written for cgroup v1 only. `MemorySwapMax=` works on v2 only, and
-  systemd 237 rejects 0, so it is left out on v1.
+  systemd 237 rejects 0, so it is left out on v1. A swap cap between 0 and
+  100% is written in bytes of the profile's RAM: systemd scales
+  `MemorySwapMax=N%` by RAM in every release (232 to 258), but its man page
+  says by swap size, so a percentage could change meaning.
 - systemd 240+ starts `fs.file-max` at 9223372036854775807; Ubuntu 18.04
   (237) keeps the kernel's ~10% of RAM in KiB. Writing 0 locks every
   unprivileged process, SSH logins included, out of opening files.

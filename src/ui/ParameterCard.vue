@@ -1,9 +1,11 @@
 <script setup>
-import { ref, reactive, computed, nextTick, useId, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, nextTick, useId, inject, watch, onMounted, onBeforeUnmount } from 'vue'
+import { routerKey } from 'vue-router'
 import { useActiveTuner, useTunerDomain } from '@/ui/useActiveTuner.js'
 import { controlFor } from '@/ui/controls/index.js'
 import { valueTypeOf } from '@/core/valueTypes.js'
-import { DESC_PARTS } from '@/ui/descParts.js'
+import { DESC_PARTS, HOW_IT_WORKS_KEY } from '@/ui/descParts.js'
+import { TUNERS } from '@/tuners/registry.js'
 import RichText from '@/ui/RichText.vue'
 import { splitFirstSentence } from '@/ui/firstSentence.js'
 
@@ -13,6 +15,12 @@ const props = defineProps({
   // hairline row of title and name, the control and the value. No notes;
   // the drawer keeps the full reference.
   compact: { type: Boolean, default: false },
+  // Guide lookup (Design.md §7 "Three layers per parameter"): `(paramKey) =>
+  // chapter id | null`, the chapter of the tuner's guide that pins this key.
+  // Overrides the function a page provides under HOW_IT_WORKS_KEY. Only used
+  // while the tuner's registry `guide.status` is 'live'; with neither the
+  // prop nor the provider, a live guide shows no "How it works" link.
+  howItWorks: { type: Function, default: null },
 })
 
 const tuner = useActiveTuner()
@@ -22,6 +30,26 @@ const def = computed(() => domain.defsByKey[props.paramKey])
 const control = computed(() => controlFor(def.value))
 const value = computed(() => tuner.params[props.paramKey])
 const range = computed(() => domain.rangeFor(props.paramKey, tuner.hardware))
+// A live guide takes over the long text: the card drops the longDesc notes
+// and "Learn more" and links to the chapter instead. Read defensively: an
+// entry without `guide`, or a draft one, changes nothing.
+const guide = computed(() => TUNERS.find((t) => t.id === domain.id)?.guide ?? null)
+const guideLive = computed(() => guide.value?.status === 'live')
+const router = inject(routerKey, null)
+const chapterFor = props.howItWorks ?? inject(HOW_IT_WORKS_KEY, null)
+const howItWorksPath = computed(() => {
+  if (!guideLive.value || !guide.value.slug || !chapterFor) return null
+  const chapter = chapterFor(props.paramKey)
+  return chapter ? `/learn/${guide.value.slug}#${chapter}` : null
+})
+function openGuide(event) {
+  // Plain clicks go through the router when there is one (no page load);
+  // modified clicks and a missing router fall back to the link itself.
+  if (!router || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button) return
+  event.preventDefault()
+  router.push(howItWorksPath.value)
+}
+
 const issues = computed(() => tuner.issuesByParam[props.paramKey] ?? [])
 
 const format = (v) => domain.formatValue(v, def.value, tuner.hardware)
@@ -111,7 +139,16 @@ onMounted(() => {
 })
 onBeforeUnmount(() => resizeObserver?.disconnect())
 const marginLayerNotes = computed(() => (narrowCard.value ? NARROW_MARGIN_LAYER_NOTES : MARGIN_LAYER_NOTES))
-const layerNotes = computed(() => [
+// The zone note: the note of the first zone whose bounds hold the value, the
+// margin's first note while the value sits in such a zone. Plain text, kept
+// whole (no "more"). Data first: the card knows no tuner.
+const zoneNote = computed(() => {
+  const v = value.value
+  if (typeof v !== 'number') return null
+  const zone = def.value.zones?.find((z) => z.note && z.min !== undefined && z.max !== undefined && z.min <= v && v <= z.max)
+  return zone ? { id: 'zone', label: zone.label, paras: [zone.note], zone: true } : null
+})
+const layerNotes = computed(() => guideLive.value ? [] : [
   ...DESC_PARTS.filter(({ key }) => def.value.longDesc[key]?.length).map(({ key, label }) => ({
     id: key,
     label,
@@ -125,19 +162,44 @@ const layerNotes = computed(() => [
 // Each margin note shows its first sentence; "more" opens the rest of it in
 // place (the [n] toggle of a narrow card opens the whole note). The notes
 // don't depend on the value, so dragging never changes their height.
+const allNotes = computed(() => (zoneNote.value ? [zoneNote.value, ...layerNotes.value] : layerNotes.value))
 const marginNotes = computed(() =>
-  layerNotes.value.slice(0, marginLayerNotes.value).map((note) => {
+  allNotes.value.slice(0, marginLayerNotes.value).map((note) => {
+    if (note.zone) return { ...note, head: note.paras[0], tail: '', rest: [], hasMore: false }
     const { head, tail } = splitFirstSentence(note.paras[0])
     const rest = note.paras.slice(1)
     return { ...note, head, tail, rest, hasMore: Boolean(tail) || rest.length > 0 }
   }),
 )
-const moreNotes = computed(() => [
-  ...layerNotes.value.slice(marginLayerNotes.value),
+const moreNotes = computed(() => guideLive.value ? [] : [
+  ...allNotes.value.slice(marginLayerNotes.value),
   ...(def.value.dangerousIfZero
     ? [{ id: 'danger', label: 'Danger at 0', paras: ['Setting this to 0 is documented as dangerous.'] }]
     : []),
 ])
+
+// The zone note is read out in a polite live region once the value has
+// settled, like IssueAnnouncer (a drag across zones doesn't chatter). A note
+// there when the card mounts isn't read: it is on the page.
+const ZONE_SETTLE_MS = 600
+const zoneAnnouncement = ref('')
+let zoneTimer = null
+let zoneSaid = zoneNote.value ? `${zoneNote.value.label}: ${zoneNote.value.paras[0]}` : ''
+watch(
+  () => (zoneNote.value ? `${zoneNote.value.label}: ${zoneNote.value.paras[0]}` : ''),
+  (text) => {
+    clearTimeout(zoneTimer)
+    zoneTimer = setTimeout(async () => {
+      if (text === zoneSaid) return
+      zoneSaid = text
+      if (!text) return
+      zoneAnnouncement.value = ''
+      await nextTick()
+      zoneAnnouncement.value = text
+    }, ZONE_SETTLE_MS)
+  },
+)
+onBeforeUnmount(() => clearTimeout(zoneTimer))
 
 // Where the card has no margin (a narrow card, Design.md §7), each
 // margin note is an [n] toggle that opens it in place.
@@ -350,6 +412,7 @@ function openInDrawer() {
 
       <!-- The margin: numbered notes, then Learn more and the sources. -->
       <aside v-if="!compact" class="pc-margin min-w-0 text-[15px] leading-[1.55] [overflow-wrap:anywhere]" :aria-label="`Notes on ${def.title}`">
+        <p class="sr-only" aria-live="polite">{{ zoneAnnouncement }}</p>
         <ol>
           <li
             v-for="(note, i) in marginNotes"
@@ -408,6 +471,12 @@ function openInDrawer() {
         <!-- The margin's last line, under the origin note's text: Learn more
              and the sources, so they add no row of their own to the card. -->
         <p class="pc-links mt-1 flex flex-wrap gap-x-4 pl-[30px] text-sm">
+          <a
+            v-if="howItWorksPath"
+            :href="howItWorksPath"
+            class="inline-flex min-h-6 items-center font-medium text-ink underline underline-offset-[3px] hover:decoration-2"
+            @click="openGuide"
+          >How it works<span class="sr-only">, {{ def.title }}</span></a>
           <button
             v-if="moreNotes.length"
             type="button"
